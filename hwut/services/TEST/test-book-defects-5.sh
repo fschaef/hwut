@@ -9,7 +9,8 @@
 #                 "play-no-launch", "propose-ignore", "runner-words",
 #                 "demo-documents", "play-menu", "accept-first",
 #                 "laws-all", "conf-unread", "unit-algebra", "law-names",
-#                 "genomics", "link-bits"]
+#                 "genomics", "link-bits", "swarm-units",
+#                 "pype-header", "law-constant"]
 # }
 #
 # ---------------------------------------------------------------------------
@@ -135,7 +136,7 @@ unset NO_COLOR CI COLUMNS
 case "$1" in
     --hwut-info)
         echo "The book writers' D-63 onwards and the defect list on a52f2a3;"
-        echo "CHOICES: header-once, pipe-quiet, units-written, exponent-law, zero-law, play-neighbour, play-cut-short, play-no-launch, propose-ignore, runner-words, demo-documents, play-menu, accept-first, laws-all, conf-unread, unit-algebra, law-names, genomics, link-bits;"
+        echo "CHOICES: header-once, pipe-quiet, units-written, exponent-law, zero-law, play-neighbour, play-cut-short, play-no-launch, propose-ignore, runner-words, demo-documents, play-menu, accept-first, laws-all, conf-unread, unit-algebra, law-names, genomics, link-bits, swarm-units, pype-header, law-constant;"
         exit 0 ;;
 esac
 
@@ -479,6 +480,54 @@ EOF2
                'on: <n = quantity(data)> => { print("data", n) }' \
                'on: <else> => { print("other:", pype.line()) }' 'on: <eof> => ignore;' > b.pype
         printf '100 Mb/s\n1 Gb/s\n64 kb/s\n3 kb\n2 Mbit\n' | "$BIN/hwut.pype" b.pype ;;
+    swarm-units)
+        #  RQ-7 (rest), services E-198: 'pood' and 'ppb', one reading each.
+        #  MEASURED before (pint 0.26.2): both undefined.
+        judged() {      # <law> <line printed>: blessed, or the refusal's reason
+            page test-s.sh "tolerance { constraints = [\"$1\"] }" "echo \"$2\""
+            rm -rf GOOD OUT
+            "$BIN/hwut.play" test-s.sh --plain > /dev/null 2>&1
+            printf '%-14s over %-24s : ' "$1" "$2"
+            "$BIN/hwut.accept" test-s.sh > o.txt 2>&1 && echo "blessed" \
+                || grep -m1 '^    constraint ' o.txt \
+                   | sed -E 's/.*, line [0-9]+ -- (.*)$/refused: \1/; t; s/.*/refused: broken/'
+        }
+        judged "m < 50 kg"     "sack ((m: 3 pood))"
+        judged "m < 40 kg"     "sack ((m: 3 pood))"
+        judged "m < 50 m"      "sack ((m: 3 pood))"
+        judged "c < 1 ppm"     "lead ((c: 500 ppb))"
+        judged "c < 1 ppm"     "lead ((c: 1500 ppb))"
+        echo "== pype: what a line binds"
+        printf '%s\n' 'on: <m = quantity(mass)> => { print("mass", m) }' \
+               'on: <c = quantity(ppm)> => { print("ppm", c) }' \
+               'on: <else> => { print("other:", pype.line()) }' 'on: <eof> => ignore;' > s.pype
+        printf '3 pood\n500 ppb\n2 ppm\n7\n' | "$BIN/hwut.pype" s.pype ;;
+    pype-header)
+        #  Book D-71 (services E-199): a test naming 'pype = ...' in its
+        #  header is ended by its SCRIPT (R-70), not by the application.
+        #  MEASURED before: "NOT RECORDED: the stream did not end with
+        #  '<hwut-end>'" -- E-184 read the raw stream.
+        printf '%s\n' 'on: <else> => { print("seen:", pype.line()) }' \
+               'on: <eof> => { print("<hwut-end>") }' > ends.pype
+        printf '%s\n' 'on: <else> => { print("seen:", pype.line()) }' \
+               'on: <eof> => ignore;' > mute.pype
+        for script in ends mute; do
+            { echo '#! /bin/bash'; echo "# @hwut { pype = \"$script.pype\" }"
+              echo 'for w in request grant grant; do echo "$w"; done'; } > test-$script.sh
+            chmod +x test-$script.sh
+            echo "== hwut.play test-$script.sh   (script $script.pype)"
+            "$BIN/hwut.play" test-$script.sh --plain > o.txt 2>&1; echo "exit $?"
+            grep -E "^(NOT )?RECORDED" o.txt | shown
+        done
+        "$BIN/hwut.accept" test-ends.sh > /dev/null 2>&1; echo "accept exit $?"
+        "$BIN/hwut.run" test-ends.sh --plain 2>&1 | grep RESULTS | shown ;;
+    law-constant)
+        #  Book D-72 (services E-199): a law whose only name is a constant.
+        #  MEASURED before: "names no variable -- it constrains nothing".
+        for law in "e > 1 J" "pi > 3" "2 > 1"; do
+            page test-k.sh "tolerance { constraints = [\"$law\"] }" 'echo "energy ((e: 30 J))"'
+            "$BIN/hwut.play" test-k.sh --plain 2>&1 | grep -o "REFUSED: .*"
+        done ;;
     *)
         echo "unknown choice '$1'"; exit 1 ;;
 esac

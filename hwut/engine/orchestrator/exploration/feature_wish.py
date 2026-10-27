@@ -272,19 +272,44 @@ def case_set_of(root, wish):
     # the globs are read once, so a broken one is refused at the door
     for glob in wish.feature_tuple + wish.feature_ext_tuple:
         brace_alternative_tuple(glob)
+    from .tree_explorer import inner_root_tuple
+    #  EVERY BUBBLE ANSWERS FOR ITS OWN RUNS (RQ-9, services E-200): a
+    #  bubble's feature file names its runs, as when hwut is called inside
+    #  it. A refusal stands where EVERY bubble refuses -- an id no bubble
+    #  knows; a bubble that does not know it simply offers none.
+    top_tuple  = (root,) + inner_root_tuple(root)
+    case_set   = frozenset()
+    error_list = []
+    for top in top_tuple:
+        try:
+            case_set |= _bubble_case_set(top, wish)
+        except SelectionError as error:
+            error_list.append(error)
+    if error_list and len(error_list) == len(top_tuple):
+        raise error_list[0]
+    _view_db[mark] = case_set
+    return case_set
+
+
+def _bubble_case_set(top, wish):
+    """
+    RETURN: frozenset of (absolute test file, choice), the runs of the
+            ONE bubble 'top' stands in (no walk below an inner root)
+            that the wish's '-F', '-e' and '-k' want, by that bubble's
+            own central file;
+            raises SelectionError, as 'case_set_of' says, else.
+    """
     from .feature_view  import view_of, ViewRefused
     from .tree_explorer import RootConfMissing
     try:
-        view = view_of(root)
+        view = view_of(top)
     except (ViewRefused, RootConfMissing) as error:
         raise SelectionError("'%s' asks for features: %s"
                              % (_asked_text(wish), error)) from error
-    case_set = frozenset(
+    return frozenset(
         (os.path.normpath(os.path.join(view.asked,
                                        run.path or each.test_path,
                                        run.test)), run.choice)
         for each in selected_leaf_list(view, wish)
         if each.feature_state is not None
         for run in each.feature_state.run_tuple)
-    _view_db[mark] = case_set
-    return case_set

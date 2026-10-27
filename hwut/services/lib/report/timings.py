@@ -44,8 +44,7 @@ import sys
 from   ....engine.bookkeeper.traces import TraceDb, system_key
 from   ..._exit                     import E_ExitCode, guarded
 from ....auxiliary.no_entry import (OUT_DIRECTORY_NAME,
-                                    TRANSIENT_DIRECTORY_NAME, no_entry_f,
-                                    inner_root_f)
+                                    TRANSIENT_DIRECTORY_NAME, no_entry_f)
 
 
 USAGE = ("usage: hwut.report.timings [--table] [-o <file>]\n"
@@ -70,9 +69,9 @@ def directory_list_of(root, recursive_f):
                        if name not in (OUT_DIRECTORY_NAME,
                                        TRANSIENT_DIRECTORY_NAME,
                                        "__pycache__", ".git")
-                       and not no_entry_f(os.path.join(directory, name))
-                       #  A PROJECT OF ITS OWN is not walked (RQ-1).
-                       and not inner_root_f(os.path.join(directory, name))]
+                       #  A BUBBLE OF ITS OWN IS ENTERED (RQ-9, E-200):
+                       #  its traces stand in its own directories.
+                       and not no_entry_f(os.path.join(directory, name))]
         if os.path.isfile(TraceDb(directory).path) \
            or "hwut-traces.csv" in file_list:
             found.append(directory)

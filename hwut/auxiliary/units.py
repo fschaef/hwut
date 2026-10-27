@@ -118,6 +118,8 @@ def _definition_file():
               their long names.
             - BITS (E-195): 'kb', 'Mb', 'Gb' are kilo-, mega-, gigabits, as
               a link speed writes them -- not kilobarn, megabarn, gilbert.
+            - ADDED (RQ-7, E-198): 'ppb' (1e-9, beside pint's 'ppm') and
+              'pood' (16.3804964 kg), symbols of one reading each.
             raises RuntimeError naming the line, where the installed pint
             spells a changed line otherwise.
     """
@@ -173,6 +175,12 @@ centimorgan = 0.01 * morgan = cM
 kilobit = 1e3 * bit = kb
 megabit = 1e6 * bit = Mb
 gigabit = 1e9 * bit = Gb
+
+# hwut (RQ-7, services E-198): units the agent swarm met and pint lacks,
+# each with ONE reading -- a part per billion as 'ppm' beside it; the
+# Russian pood, 40 funt
+ppb = 1e-9
+pood = 16.3804964 * kilogram
 """
 
 
@@ -241,9 +249,12 @@ def bound_value(text, spec):
             quantity = ureg.Quantity(text)
         except Exception:                             # noqa: BLE001
             raise NotThisQuantity(text) from None
+    #  A BARE NUMBER IS NO QUANTITY: it spells no unit at all. NOT pint's
+    #  'unitless', which is True for every dimensionless unit -- MEASURED
+    #  (E-198): '2 ppm', '5 percent' never matched 'quantity(ppm)'.
     if not hasattr(quantity, "dimensionality") \
        or quantity.dimensionality != dimensionality_of(spec) \
-       or quantity.unitless:
+       or quantity.units == ureg.dimensionless:
         raise NotThisQuantity(text)
     #  ABSOLUTE AND DIFFERENCE ARE NOT ONE KIND (ND12): 'quantity(temperature)',
     #  'quantity(degC)', 'quantity(K)' read readings; a difference is

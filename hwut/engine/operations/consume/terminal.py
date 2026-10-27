@@ -49,6 +49,18 @@ def ends_in_terminal(reader):
     return last == TERMINAL_TOKEN
 
 
+def pype_owned_f(configuration, choice_name):
+    """
+    RETURN: True,  a pype script canonicalises the stdout of choice
+                   'choice_name': the SCRIPT ends the stream (its
+                   '<eof>' handler prints '<hwut-end>'), the application
+                   must not;
+            False, else -- the application ends its own stream.
+    """
+    choice = configuration.choice_db.get(choice_name)
+    return choice is not None and "stdout" in choice.canonicalisers
+
+
 #  THE BAD REGIONS (compare C-9, C-21): '##! unaccepted' opens a stretch
 #  nobody has judged, '##! constraint-violation' one where a run found a
 #  constraint broken. The '!' is what makes it a region and not a

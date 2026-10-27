@@ -72,7 +72,7 @@ from .fault     import Fault, E_FaultKind
 from .configuration_tree import DirectorySpec
 from ....auxiliary.no_entry import (TRANSIENT_DIRECTORY_NAME,
                                     below_no_entry_f, no_entry_f,
-                                    own_ground_f)
+                                    own_ground_f, entered)
 
 
 FALLBACK_TEST_DIRECTORY = "TEST"
@@ -163,13 +163,24 @@ class CTreeExploration:
         yield from self.result_tuple
 
 
+#  A 'hwut-root.conf' CLOSES A BUBBLE (RQ-9, services E-200, amending
+#  E-174): from inside there is no way out -- every climb ends at the
+#  NEAREST root; from outside a walk that SELECTS OR RUNS enters every
+#  bubble it meets, the configuration RESET from that bubble's file, so a
+#  case gets one verdict wherever hwut is called. Walks that MAINTAIN a
+#  root's own files (feature registry, sanitize, renovate) stay inside
+#  their bubble: they keep the default, 'boundary_f' True.
+RUN_BOUNDARY_F = False
+
+
 def inner_root_note(relative):
     """
-    RETURN: str, the NOTE a walk says where it stops at an inner
-            'hwut-root.conf' (RQ-1): which directory, and how to run it.
+    RETURN: str, the NOTE a walk that MAINTAINS a root's own files says
+            where it stops at an inner 'hwut-root.conf' (RQ-1, RQ-9):
+            which directory, and where to do it for that bubble. Walks
+            that select or run enter instead ('RUN_BOUNDARY_F').
     """
-    return ("NOTE  %s/: own root, not walked => run inside it, or "
-            "'--no-boundary'" % relative)
+    return "NOTE  %s/: own root, not walked => do it inside it" % relative
 
 
 def inner_root_f(path):
@@ -179,6 +190,22 @@ def inner_root_f(path):
             walk from above does not enter (RQ-1).
     """
     return os.path.isfile(os.path.join(path, ROOT_CONF_NAME))
+
+
+def inner_root_tuple(directory):
+    """
+    RETURN: tuple[str], the ABSOLUTE directories below 'directory' that
+            hold a 'hwut-root.conf' of their own -- the bubbles a walk
+            from 'directory' enters (RQ-9) -- walk order, nested ones
+            included; empty where there is none.
+    """
+    found = []
+    for here, name_list, _file_list in os.walk(os.path.abspath(directory)):
+        name_list[:] = entered(here, name_list, boundary_f=False)
+        for name in name_list:
+            path = os.path.join(here, name)
+            if inner_root_f(path): found.append(path)
+    return tuple(found)
 
 
 def explore_tree_stream(root, interview_runner=None, fault_list=None,
@@ -316,7 +343,8 @@ def _walk_stream(root, relative, effective, interview_runner, fault_list,
             if boundary_f:
                 note_list.append(inner_root_note(child_relative))
                 continue
-            child_effective, reset_fault_list = ascended_spec(path)
+            child_effective, reset_fault_list = ascended_spec(
+                path, root_shown="%s/%s" % (child_relative, ROOT_CONF_NAME))
             fault_list.extend(reset_fault_list)
             child_folded_f = True
             #  NOTHING ABOVE REACHES BELOW an inner root -- its faults
@@ -442,13 +470,16 @@ def root_conf_directory(start):
         here = parent
 
 
-def ascended_spec(start):
+def ascended_spec(start, root_shown=ROOT_CONF_NAME):
     """
     RETURN: [0] DirectorySpec, every 'hwut.conf' ABOVE 'start' folded
                 in OUTERMOST FIRST, so the innermost word wins; the
                 'hwut-root.conf' that ended the climb folded first of
                 all.
-            [1] list[Fault], what the climbed confs got wrong.
+            [1] list[Fault], what the climbed confs got wrong --
+                the root conf named 'root_shown': 'inner/hwut-root.conf'
+                where a walk from outside reset at a bubble (RQ-9), so
+                the reader at the start opens the right file.
 
     Raises RootConfMissing where the climb reaches the file system's
     own root without meeting a 'hwut-root.conf'. A tree with no root
@@ -474,12 +505,12 @@ def ascended_spec(start):
     while True:
         root_path = os.path.join(here, ROOT_CONF_NAME)
         if os.path.isfile(root_path):
-            climbed.append((root_path, ROOT_CONF_NAME))
+            climbed.append((root_path, root_shown, True))
             break
         if not at_start:
             conf_path = os.path.join(here, finder.CONF_NAME)
             if os.path.isfile(conf_path):
-                climbed.append((conf_path, conf_path))
+                climbed.append((conf_path, conf_path, False))
         at_start = False
         parent = os.path.dirname(here)
         if parent == here or transient_ground_f(here):
@@ -494,7 +525,7 @@ def ascended_spec(start):
         here = parent
 
     effective = DirectorySpec(language_setup={}, dependency={})
-    for path, shown in reversed(climbed):        # OUTERMOST FIRST
+    for path, shown, root_f in reversed(climbed):  # OUTERMOST FIRST
         try:
             with open(path, "r", encoding="utf-8") as handle:
                 text = handle.read()
@@ -520,7 +551,7 @@ def ascended_spec(start):
                     "'%s' above a test directory: it names local "
                     "matters and belongs in a test directory's own "
                     "'hwut.conf'" % KEY_OF_FIELD.get(name, name)))
-        if shown != ROOT_CONF_NAME:
+        if not root_f:
             for name in ROOT_CONF_ONLY_FIELD_TUPLE:
                 if getattr(spec, name):
                     fault_list.append(root_only_fault(name, shown,

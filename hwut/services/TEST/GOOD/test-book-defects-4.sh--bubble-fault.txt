@@ -1,0 +1,14 @@
+== above: hwut.run 
+ERROR world/hwut-root.conf:2:5: VOCABULARY: unknown key 'no_such_key'
+   +--- TEST . . . . . . . . . . . . . . . . . . . . . . .       [OK]      2/2
+   '--- world/TEST . . . . . . . . . . . . . . . . . . . .     [FAIL]      0/2
+RESULTS: 2 ok, 2 fail, <t> [sec], <t> [sec] total
+== inside: hwut.run 
+   TEST . . . . . . . . . . . . . . . . . . . . . . . . . .      [OK]      2/2
+RESULTS: 2 ok, 0 fail, <t> [sec], <t> [sec] total
+== above: hwut.run 
+ERROR hwut-root.conf:2:5: VOCABULARY: unknown key 'no_such_key'
+   +--- TEST . . . . . . . . . . . . . . . . . . . . . . .     [FAIL]      0/2
+   '--- world/TEST . . . . . . . . . . . . . . . . . . . .       [OK]      2/2
+RESULTS: 2 ok, 2 fail, <t> [sec], <t> [sec] total
+<hwut-end>

@@ -1,5 +1,5 @@
 # vut-register 5 generation:4 apps:1 marks:0=3
 test;choice;verdict;report;stain;test_id;choice_id
-test-counters.py;clear-all;true;ok;;0;2
-;rr-phase;true;ok;;0;1
-;rr-quiet;true;ok;;0;0
+test-counters.py;clear-all;false;not-equivalent-with-nominal;;0;2
+;rr-phase;false;not-equivalent-with-nominal;;0;1
+;rr-quiet;false;not-equivalent-with-nominal;;0;0

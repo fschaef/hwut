@@ -55,9 +55,8 @@ class StageExecute(I_ExecuteProvider):
         #  choice's stdout, the APPLICATION must not emit '<hwut-end>'
         #  -- the framework says so through the environment, and the
         #  reference runner listens.
-        choice = configuration.choice_db.get(self.choice_name)
-        pype_owned_f = (choice is not None
-                        and "stdout" in choice.canonicalisers)
+        from ..consume.terminal import pype_owned_f as _pype_owned_f
+        pype_owned_f = _pype_owned_f(configuration, self.choice_name)
         #  THE CASE'S CAPS, not the application's (O-20): a choice may
         #  state its own, and this stage knows which choice it is.
         caps = caps_of(configuration, self.choice_name)

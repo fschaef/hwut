@@ -6889,6 +6889,8 @@ DECISION  The walk does not enter an inner root; it says so, one NOTE
 COST      A tree that held an inner root by accident loses those cases
           from the walk above -- said in a NOTE, not silent. Regression:
           nested-root, sub-root.
+AMENDED   2026-10-27 by E-200 (RQ-9): the walk ENTERS an inner root by
+          default; the NOTE remains for walks that maintain a root's files.
 
 
 E-175  QUANTITIES WITH UNITS, IN PYPE AND IN THE COMPARISON
@@ -7454,3 +7456,101 @@ DECISION  The page writes a two-line 'exec <absolute path> "$@"' wrapper
           per program: the interpreter starts by its own path and keeps
           its environment. Any page that narrows PATH does the same.
 COST      None on a machine whose python3 is no venv; the GOOD stands.
+
+
+E-198  'pood' AND 'ppb' IN THE PRESET BASE; A DIMENSIONLESS UNIT BINDS
+       (RQ-7 rest, 2026-10-27)                                        (2026-10-27)
+------------------------------------------------------------------------------
+PROBLEM   MEASURED (pint 0.26.2): of the swarm's list -- cubit, pood, ppb,
+          Mach, st, ulp, flop, currencies -- none is defined. FOUND ON THE
+          WAY: pype's 'quantity(X)' never matched a dimensionless unit;
+          '5 percent' and '2 ppm' fell to '<else>'. The guard against a
+          bare number asked pint's 'unitless', which is True for every
+          dimensionless unit.
+DECISION  The symbols of ONE reading are added to hwut's registry:
+              ppb  = 1e-9                  (beside pint's 'ppm')
+              pood = 16.3804964 kilogram   (40 funt)
+          The guard asks whether the text spells a unit at all
+          ('units == dimensionless'): '2 ppm' binds under 'quantity(ppm)',
+          '7' still does not.
+STAYS     The rest is not one reading each, and comes back to the author:
+          'cubit' (common 0.4572 m, royal 0.5236 m: two readings, ONE
+          dimension -- the first symbol RQ-8's list would hold); 'Mach'
+          (a ratio, or a speed fixed at one temperature); 'st' (stone, a
+          mass; stere, a volume); 'ulp' (its size depends on the value);
+          'flop' (a count; 'flops' a rate or a plural); currencies (no
+          fixed conversion).
+COST      Regression: 'test-book-defects-5.sh swarm-units'.
+
+
+E-199  A PYPE'D STREAM IS ENDED BY ITS SCRIPT, ALSO FOR 'hwut.play';
+       A LAW NAMING ONLY A CONSTANT SAYS SO  (book D-71, D-72)        (2026-10-27)
+------------------------------------------------------------------------------
+PROBLEM   D-71, MEASURED on eb10c2e: a test naming 'pype = "x.pype"' in
+          its header could not be recorded -- "NOT RECORDED: the stream
+          did not end with '<hwut-end>'" -- so never accepted, never run.
+          ROOT: E-184's check read the RAW stream ("the application
+          testifies"); R-70 says a pype'd stream is ended by the SCRIPT,
+          and the application must not print the token
+          ('engine/operations/consume/terminal.py').
+          D-72, MEASURED: 'e > 1 J' over '((e: 30 J))' was refused
+          "names no variable -- it constrains nothing": 'e' is Euler's
+          number, so the law named only a constant, and E-193's message
+          (given where the binding is read) never came.
+DECISION  FIX D-71: who ends a stream is asked in ONE place,
+          'consume.terminal.pype_owned_f' (the run's stage asked it
+          inline); play reads the piped subject where a pype owns stdout,
+          the raw stream else. A script whose '<eof>' prints no token is
+          still not recorded.
+          FIX D-72: a law that names no variable but names constants
+          says so: "'e' is a constant of the constraint namespace
+          (Euler's number) -- a binding cannot carry that name; rename
+          it, in the binding and in the law". A law naming nothing at all
+          keeps its words.
+COST      A pype script that drops the token no longer passes play on the
+          application's word: 'test-face-words.sh pype_call' had such a
+          script; its '<eof>' now prints the token (GOOD unchanged).
+          'test-book-defects-5.sh law-names' re-recorded: its 'e < 3' line
+          now says the constant. Regression: 'test-book-defects-5.sh
+          pype-header' (with a mute script, refused), 'law-constant'.
+
+
+E-200  A 'hwut-root.conf' CLOSES A BUBBLE: NO WAY OUT, EVERY WAY IN
+       (RQ-9, ruled 2026-10-27; amends E-174)                         (2026-10-27)
+------------------------------------------------------------------------------
+PROBLEM   RULED: "A hwut-root.conf file marks the border of a closed hwut
+          bubble ... from inside there is no way out ... from outside, it
+          must dive into every bubble found." MEASURED on eb10c2e (two
+          bubbles): from above, the inner one was not walked (a NOTE);
+          under '--no-boundary' it was, but '--label' gave its runs no
+          label (the outer file is not theirs, the inner one was never
+          read), '-F' refused without an outer feature file, and a broken
+          inner root conf was named 'hwut-root.conf', the outer file's
+          name.
+DECISION  Inside: unchanged -- every climb ends at the nearest root.
+          Outside: every walk that SELECTS OR RUNS (selection, orchestrate,
+          'hwut.execute', 'hwut.report.timings') enters each inner root,
+          the configuration reset from it alone ('RUN_BOUNDARY_F').
+          One case, one verdict wherever hwut is called:
+          - labels: the view at the start carries a view per bubble below
+            ('inner_tuple'); a run is labelled by its bubble's file;
+            'defined' is their union. 'hwut.labels.create/add' write only
+            their own bubble's runs and say what they left: "WARNING: N
+            run(s) in 'world/' not labelled here -- a bubble of its own".
+          - features: '-F', '-e', '-k' ask every bubble's own central
+            file; refused only where every bubble refuses.
+          - a fault of an inner root conf names it by its path from the
+            start ('world/hwut-root.conf'), and fails that bubble alone
+            (E-190).
+          Walks that MAINTAIN a root's own files (feature registry,
+          sanitize, renovate) stay in their bubble and say "NOTE  x/: own
+          root, not walked => do it inside it". '--no-boundary' is still
+          read and asks what is now the default.
+COST      A tree that held an inner root runs its cases from above again,
+          under the inner configuration. A run from above walks the tree
+          once more for inner roots. Regression: 'test-book-defects-4.sh'
+          nested-root (re-recorded: the NOTE goes, world/ runs),
+          bubble-labels, bubble-features, bubble-fault.
+OPEN      Q9.1 '--no-boundary': keep as a word that asks the default, or
+          retire. Q9.2 one report for all bubbles (as built), or a section
+          per bubble.

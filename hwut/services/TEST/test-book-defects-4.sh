@@ -7,7 +7,8 @@
 #     choices  = ["compare-crash", "region-refused", "quoted-rule",
 #                 "help-coverage", "numeral", "nested-root", "quantity",
 #                 "units-list", "sub-root", "tick", "pype-system",
-#                 "system-draw", "quantity-compare", "coverage-arms"]
+#                 "system-draw", "quantity-compare", "coverage-arms",
+#                 "bubble-labels", "bubble-features", "bubble-fault"]
 # }
 #
 # ---------------------------------------------------------------------------
@@ -29,11 +30,13 @@
 #                 exit 0. MEASURED before: libvterm alone, then INSTALLED.
 # numeral         RQ-6: a number binding takes the longest numeral; '5.5'
 #                 is no 'int'. MEASURED before: 'count 5.5' bound n = 5.
-# nested-root     RQ-1: an inner 'hwut-root.conf' is a boundary: from
-#                 above, not walked and a NOTE; from inside, it governs;
-#                 '--no-boundary' walks in under the inner configuration
-#                 alone. MEASURED before: walked from above under the
-#                 outer configuration -- one case, two verdicts.
+# nested-root     RQ-1, amended by RQ-9 (2026-10-27, E-200): an inner
+#                 'hwut-root.conf' closes a bubble: from inside it
+#                 governs; from above the walk ENTERS it under the inner
+#                 configuration alone ('--no-boundary' says the same).
+#                 MEASURED before RQ-1: walked from above under the outer
+#                 configuration -- one case, two verdicts; before RQ-9:
+#                 not walked from above, a NOTE.
 # quantity        RQ-7: '<f = quantity(N)>' binds 30 and 2500 newton,
 #                 leaves '3 kg' unmatched; 'quantity(ms)' reads seconds.
 # units-list      RQ-7: '--unit-types' names 'time', '--units time' names
@@ -72,7 +75,7 @@ unset NO_COLOR CI COLUMNS
 case "$1" in
     --hwut-info)
         echo "The book writers' requirements and defects of 2026-10-24 (RQ-1 onwards, D-58 onwards);"
-        echo "CHOICES: compare-crash, region-refused, quoted-rule, help-coverage, numeral, nested-root, quantity, units-list, sub-root, tick, pype-system, system-draw, quantity-compare, coverage-arms;"
+        echo "CHOICES: compare-crash, region-refused, quoted-rule, help-coverage, numeral, nested-root, quantity, units-list, sub-root, tick, pype-system, system-draw, quantity-compare, coverage-arms, bubble-labels, bubble-features, bubble-fault;"
         exit 0 ;;
 esac
 
@@ -164,8 +167,11 @@ case "$1" in
         ( cd "$W/TEST" && record && "$BIN/hwut.accept" --whole > /dev/null 2>&1 )
         touch "$W/TEST/slow"        # from now on it takes 2 s
         cd "$WORK"
+        #  RQ-9 (services E-200): from above, the bubble 'world/' is
+        #  ENTERED under its own root -- the verdict inside and above agree.
+        #  MEASURED before: a NOTE, and test-slow.sh not run from above.
         echo "== from above"
-        "$BIN/hwut.run" --plain 2>&1 | grep -E "^NOTE  |^END|^RESULTS" | shown
+        "$BIN/hwut.run" --plain --jobs=1 --deterministic 2>&1 | grep -E "^NOTE  |^END|^RESULTS" | shown
         echo "== from inside"
         ( cd world && "$BIN/hwut.run" --plain 2>&1 | grep -E "^END|^RESULTS" | shown )
         echo "== from above, --no-boundary"
@@ -262,6 +268,60 @@ with open(coverage_path(out, "test-gen.py"), "rb") as handle:
     print(format_gathered(unpack_gathered(handle.read())))
 PYEOF2
         ;;
+    bubble-labels|bubble-features|bubble-fault)
+        #  RQ-9 (2026-10-27, services E-200): a 'hwut-root.conf' closes a
+        #  bubble -- from inside no way out, from outside every way in;
+        #  one case, one verdict wherever hwut is called. $WORK holds
+        #  TEST/test-top.sh; world/ is a bubble with world/TEST/test-w.sh.
+        #  MEASURED before: from above, world/ was not walked (a NOTE);
+        #  '--no-boundary' walked it, but '--label' gave its runs no
+        #  label, '-F' refused without the outer feature file, and a
+        #  broken 'world/hwut-root.conf' was named 'hwut-root.conf'.
+        W="$WORK/world"
+        mkdir -p "$W/TEST"
+        cp "$WORK/hwut-root.conf" "$W/hwut-root.conf"
+        page "$W/TEST/test-w.sh" 'choices = ["x", "y"]' 'echo "world $1"'
+        page test-top.sh 'choices = ["x", "y"]' 'echo "top $1"'
+        record; "$BIN/hwut.accept" --whole > /dev/null 2>&1
+        ( cd "$W/TEST" && record && "$BIN/hwut.accept" --whole > /dev/null 2>&1 )
+        cd "$WORK"
+        ran() {          # <where> <args...>: the END and RESULTS lines
+            local where=$1; shift
+            echo "== $where: hwut.run $*"
+            ( [ "$where" = inside ] && cd world
+              "$BIN/hwut.run" "$@" --plain --jobs=1 --deterministic 2>&1 \
+                  | grep -E "^ERROR|^REFUSED|^RESULTS| \. \. \. " | shown )
+        }
+        case "$1" in
+        bubble-labels)
+            echo "== inside: hwut.labels.create slow"
+            ( cd world && "$BIN/hwut.labels.create" slow --glob 'test-*' 2>&1 )
+            echo "== above: hwut.labels.create fast"
+            "$BIN/hwut.labels.create" fast --glob 'test-*' 2>&1
+            echo "== above: the outer file's entries"
+            grep -E "^[.:]" hwut-root.labels
+            ran inside --label slow
+            ran above  --label slow
+            ran above  --label fast ;;
+        bubble-features)
+            printf 'features {\n    childs {\n        flow { title = "a flow" }\n    }\n}\n' \
+                   > "$W/TEST/hwut-features.conf"
+            ( cd world && "$BIN/hwut.features.init" > /dev/null 2>&1 \
+                && "$BIN/hwut.features.register" > /dev/null 2>&1 \
+                && "$BIN/hwut.run" --plain > /dev/null 2>&1 )
+            sed -i 's/choices = \["x", "y"\]/features = ["flow"] choices = ["x", "y"]/' "$W/TEST/test-w.sh"
+            ( cd world && "$BIN/hwut.features.register" > /dev/null 2>&1 \
+                && "$BIN/hwut.run" --plain > /dev/null 2>&1 )
+            ran inside -F flow
+            ran above  -F flow ;;
+        bubble-fault)
+            printf 'hwut {\n    no_such_key = 1\n}\n' > "$W/hwut-root.conf"
+            ran above
+            cp hwut-root.conf "$W/hwut-root.conf"
+            sed -i 's/^hwut {/hwut {\n    no_such_key = 1/' hwut-root.conf
+            ran inside
+            ran above ;;
+        esac ;;
     *)
         echo "unknown choice '$1'"; exit 1 ;;
 esac

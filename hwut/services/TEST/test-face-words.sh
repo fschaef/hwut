@@ -388,7 +388,7 @@ PYTHON
     pype_call)
         page test-p.sh '#     title = "pype"\n#     pype  = "keep.pype"\n' \
              'echo "l1 x"; echo "l2"; echo "l3 x"'
-        printf '#! /usr/bin/env no-such-interpreter\non: "x" => flush;\non: <else> => ignore;\non: <eof> => ignore;\n' \
+        printf '#! /usr/bin/env no-such-interpreter\non: "x" => flush;\non: <else> => ignore;\non: <eof> => { print("<hwut-end>") }\n' \
                > keep.pype
         chmod -x keep.pype
         echo "she-bang: $(head -1 keep.pype)"

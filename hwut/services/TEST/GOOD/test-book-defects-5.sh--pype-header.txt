@@ -1,0 +1,9 @@
+== hwut.play test-ends.sh   (script ends.pype)
+exit 0
+RECORDED: test-ends.sh.txt (digest: <tag>)
+== hwut.play test-mute.sh   (script mute.pype)
+exit 1
+NOT RECORDED: the stream did not end with '<hwut-end>' -- empty, or cut short; a partial subject is never stored as if whole
+accept exit 0
+RESULTS: 1 ok, 0 fail, 1 skip, <t> [sec], <t> [sec] total
+<hwut-end>

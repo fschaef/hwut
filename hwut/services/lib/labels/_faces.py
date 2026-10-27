@@ -110,10 +110,20 @@ def selected_key_tuple(directory, wish, view):
     prefix = os.path.relpath(root, view.boundary)
     found  = selection.of_tree(root, wish, view)
 
-    key_list = [(_boundary_relative(prefix, entry.directory,
-                                    entry.case.source_file),
-                 entry.case.choice)
-                for entry in found.case_list]
+    #  A FILE LABELS ITS OWN BUBBLE (RQ-9, E-200): a run inside an inner
+    #  'hwut-root.conf' is labelled by THAT bubble's file -- said, and
+    #  left out of this one, where nothing would ever read it.
+    key_list    = []
+    bubble_db   = {}
+    for entry in found.case_list:
+        where  = os.path.join(root, entry.directory, entry.case.source_file)
+        bubble = _bubble_of(view, where)
+        if bubble is not None:
+            bubble_db[bubble] = bubble_db.get(bubble, 0) + 1
+            continue
+        key_list.append((_boundary_relative(prefix, entry.directory,
+                                            entry.case.source_file),
+                         entry.case.choice))
 
     #  THE WARNINGS SPEAK IN THE FILE'S TONGUE: an absolute path is a
     #  machine's word, not the author's.
@@ -121,12 +131,30 @@ def selected_key_tuple(directory, wish, view):
                                  _spoken(text.split("'")[1],
                                          view.boundary))
                     for text in found.warning_tuple]
+    for bubble, run_n in sorted(bubble_db.items()):
+        warning_list.append("WARNING: %d run(s) in '%s/' not labelled here "
+                            "-- a bubble of its own (hwut-root.conf) => "
+                            "label them inside it" % (run_n, bubble))
     for glob_text in wish.glob_tuple:
         if glob_text in found.met_set: continue
         warning_list.append("WARNING: the glob '%s' met nothing"
                             % _spoken(glob_text, view.boundary))
     return (tuple(key_list), tuple(sorted(warning_list)),
             found.fault_tuple)
+
+
+def _bubble_of(view, where):
+    """
+    RETURN: str, the inner bubble 'where' (a run's file) lies in, as
+            its path from the directory of 'view's file ('inner'), if
+            it lies in one;
+            None, where 'where' belongs to 'view's own bubble.
+    """
+    from hwut.engine.orchestrator.exploration.tree_explorer \
+                                         import root_conf_directory
+    nearest = root_conf_directory(os.path.dirname(os.path.abspath(where)))
+    if nearest == view.boundary: return None
+    return os.path.relpath(nearest, view.boundary).replace(os.sep, "/")
 
 
 def _spoken(glob_text, boundary):

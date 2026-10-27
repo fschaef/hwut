@@ -488,19 +488,25 @@ def _case_name(case):
     return "%s %s" % (case.source_file, case.choice)
 
 
-def _stream_whole_f(subjects):
+def _stream_whole_f(subjects, configuration, choice_name):
     """
-    RETURN: bool, True if the application's standard output ends with
-            the closing token '<hwut-end>' (R-70), or no standard output
-            is among the subjects to testify;
+    RETURN: bool, True if the standard output ends with the closing
+            token '<hwut-end>' (R-70) as testified by WHOEVER ENDS IT --
+            the pype script where a pype owns the stream (its '<eof>'
+            handler), the application else -- or no standard output is
+            among the subjects to testify;
             False, else -- an empty stream, or one cut short (ND6).
 
-    THE APPLICATION TESTIFIES, NOT ITS PYPE: the RAW stream is read where
-    one was kept -- a pype may well filter the token out of the subject.
+    WHO TESTIFIES IS R-70's ('consume/terminal.py'): a pype'd
+    application must NOT print the token, so its RAW stream never holds
+    it; the piped subject is read. MEASURED before (D-71): every test
+    naming 'pype = ...' in its header said NOT RECORDED. A plain stream
+    is read RAW where kept -- the subject may have been canonicalised.
     """
     from ..._accept_common import token_terminated_f
+    from ....engine.operations.consume.terminal import pype_owned_f
     raw_db = subjects.raw_db or {}
-    if STDOUT in raw_db:
+    if STDOUT in raw_db and not pype_owned_f(configuration, choice_name):
         return token_terminated_f(raw_db[STDOUT])
     if STDOUT not in subjects.reader_db: return True
     return token_terminated_f(subjects.reader_db[STDOUT].open().read())
@@ -581,7 +587,8 @@ async def _play(configuration, choice_name, bookkeeper, plain_f,
         subjects = await provision.provide()
         recorded_db = None
         cut_short_f = subjects is not None \
-                      and not _stream_whole_f(subjects)
+                      and not _stream_whole_f(subjects, configuration,
+                                              choice_name)
         if subjects is not None and not cut_short_f:
             recorded_db = subject_provision.record(store, configuration,
                                                    choice_name, provision,

@@ -15,8 +15,10 @@ rides them. The engine never opens 'hwut-root.labels'; a face builds
 the view here and hands it down.
 ______________________________________________________________________________
 """
+from dataclasses import replace
+
 from hwut.engine.orchestrator.exploration.tree_explorer \
-                        import root_conf_directory
+                        import root_conf_directory, inner_root_tuple
 from .          import _file
 
 
@@ -26,13 +28,22 @@ def view_at(directory):
             assigns in the tree 'directory' stands in -- an EMPTY view
             where the file is absent, which imposes nothing: no label
             exists, no silence, and a selection behaves as one with no
-            view at all.
+            view at all. Every BUBBLE below 'directory' (an inner
+            'hwut-root.conf', RQ-9) brings its own file's view in
+            'inner_tuple'; 'defined' holds the labels of all of them.
 
     Raises RootConfMissing (tree_explorer) where the tree has no
-    boundary, and LabelFileError (_file) where the file cannot be
+    boundary, and LabelFileError (_file) where a file cannot be
     meant -- a face answers the first REFUSED and the second FAULT,
     and does not run: a selection whose silence cannot be determined
     must not guess at it.
     """
     boundary = root_conf_directory(directory)
-    return _file.view_of(boundary, _file.read_entry_db(boundary))
+    view     = _file.view_of(boundary, _file.read_entry_db(boundary))
+    inner_tuple = tuple(_file.view_of(inner, _file.read_entry_db(inner))
+                        for inner in inner_root_tuple(directory))
+    if not inner_tuple: return view
+    defined = view.defined
+    for inner in inner_tuple: defined = defined | inner.defined
+    return replace(view, inner_tuple=inner_tuple, defined=defined)
+

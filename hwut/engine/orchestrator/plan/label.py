@@ -134,6 +134,24 @@ class CLabelView:
     #  sorts them so and refuses a circle. Each holds for a run whose
     #  labels, assigned and derived so far, answer its tree.
     derived:  tuple = ()
+    #  THE BUBBLES BELOW (RQ-9, E-200): one view per inner
+    #  'hwut-root.conf' below 'boundary', each over its OWN file. A run
+    #  in a bubble is labelled by that bubble's file alone -- as it is
+    #  when hwut is called inside it.
+    inner_tuple: tuple = ()
+
+    def view_of_path(self, absolute_path):
+        """
+        RETURN: CLabelView, the view of the bubble 'absolute_path' lies
+                in -- the inner view whose boundary is the NEAREST above
+                it; this view, where no inner one holds it.
+        """
+        found = self
+        for view in self.inner_tuple:
+            if (absolute_path + os.sep).startswith(view.boundary + os.sep) \
+               and len(view.boundary) > len(found.boundary):
+                found = view
+        return found
 
     def silences_f(self):
         """
@@ -146,7 +164,8 @@ class CLabelView:
         """
         return any(STANDARD_LABEL in label_set
                    for label_set in self.entry_db.values()) \
-               or any(label == STANDARD_LABEL for label, _ in self.derived)
+               or any(label == STANDARD_LABEL for label, _ in self.derived) \
+               or any(view.silences_f() for view in self.inner_tuple)
 
     def label_set_of(self, absolute_path, choice):
         """
@@ -155,12 +174,15 @@ class CLabelView:
                 empty where it assigns none or where the path lies
                 outside the boundary.
         """
+        bubble = self.view_of_path(os.path.abspath(absolute_path))
+        if bubble is not self:
+            return bubble.label_set_of(absolute_path, choice)
         relative = os.path.relpath(absolute_path, self.boundary)
         relative = relative.replace(os.sep, "/")
         if relative.startswith("../"): return frozenset()
         #  NOTHING CROSSES A BOUNDARY (RQ-1): a run inside an inner
-        #  'hwut-root.conf' -- reached only under '--no-boundary' -- is
-        #  not labelled by this file.
+        #  'hwut-root.conf' is not labelled by this file -- its own
+        #  bubble's view answers above (RQ-9); one no view holds, none.
         here = os.path.dirname(os.path.abspath(absolute_path))
         while len(here) > len(self.boundary):
             if os.path.isfile(os.path.join(here, "hwut-root.conf")):

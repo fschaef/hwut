@@ -1,0 +1,4 @@
+REFUSED: constraint 'e > 1 J' names no variable: 'e' is a constant of the constraint namespace (Euler's number) -- a binding cannot carry that name; rename it, in the binding and in the law
+REFUSED: constraint 'pi > 3' names no variable: 'pi' is a constant of the constraint namespace (the circle's ratio) -- a binding cannot carry that name; rename it, in the binding and in the law
+REFUSED: constraint '2 > 1' names no variable -- it constrains nothing
+<hwut-end>

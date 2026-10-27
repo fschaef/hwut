@@ -1,0 +1,24 @@
+== inside: hwut.labels.create slow
+slow: created, 2 members -- a snapshot of what the wish selected
+    + ./TEST/test-w.sh x
+    + ./TEST/test-w.sh y
+== above: hwut.labels.create fast
+WARNING: 2 run(s) in 'world/' not labelled here -- a bubble of its own (hwut-root.conf) => label them inside it
+fast: created, 2 members -- a snapshot of what the wish selected
+    + ./TEST/test-top.sh x
+    + ./TEST/test-top.sh y
+== above: the outer file's entries
+./TEST/test-top.sh x : fast
+:/: y                : fast
+== inside: hwut.run --label slow
+   TEST . . . . . . . . . . . . . . . . . . . . . . . . . .      [OK]      2/2
+RESULTS: 2 ok, 0 fail, <t> [sec], <t> [sec] total
+== above: hwut.run --label slow
+   +--- TEST . . . . . . . . . . . . . . . . . . . . . . .       [OK]      0/0
+   '--- world/TEST . . . . . . . . . . . . . . . . . . . .       [OK]      2/2
+RESULTS: 2 ok, 0 fail, 2 skip, <t> [sec], <t> [sec] total
+== above: hwut.run --label fast
+   +--- TEST . . . . . . . . . . . . . . . . . . . . . . .       [OK]      2/2
+   '--- world/TEST . . . . . . . . . . . . . . . . . . . .       [OK]      0/0
+RESULTS: 2 ok, 0 fail, 2 skip, <t> [sec], <t> [sec] total
+<hwut-end>

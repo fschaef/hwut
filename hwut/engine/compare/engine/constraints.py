@@ -300,6 +300,22 @@ class ConstraintExpression:
                         "constraint for '%s': %r: only numeric and string "
                         "constants are allowed" % (self.variable, self.text))
         if not depend_set:
+            #  ONLY CONSTANTS NAMED (book D-72): 'e > 1 J' meant a binding
+            #  'e', which a law reads as Euler's number -- say the name and
+            #  the remedy, as E-193 does where the binding is read.
+            constant_list = sorted({node.id for node in ast.walk(tree)
+                                    if isinstance(node, ast.Name)
+                                    and node.id in SAFE_CONSTANT_DB})
+            if constant_list:
+                raise ConstraintSpecError(
+                    "constraint for '%s': %r names no variable: %s -- a "
+                    "binding cannot carry that name; rename it, in the "
+                    "binding and in the law"
+                    % (self.variable, self.text,
+                       "; ".join("'%s' is a constant of the constraint "
+                                 "namespace (%s)"
+                                 % (name, _CONSTANT_SAID_DB.get(name, name))
+                                 for name in constant_list)))
             raise ConstraintSpecError(
                 "constraint for '%s': %r names no variable -- it "
                 "constrains nothing" % (self.variable, self.text))

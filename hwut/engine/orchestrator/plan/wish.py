@@ -242,11 +242,11 @@ HELP = """SELECTION -- the wish; an absent keyword asks nothing
     -e, --feature-ext <id>
                         the runs linked to the feature of that external
                         id ('*' any characters); with '-F' a union
-    --no-boundary       walk INTO an inner 'hwut-root.conf' (RQ-1): a
-                        project of its own, which a walk from above
-                        otherwise stops at and names in a NOTE. Its
-                        configuration is reset from that file alone --
-                        nothing above it reaches below it. Selects
+    --no-boundary       walk INTO an inner 'hwut-root.conf' (RQ-1) --
+                        what every run does since RQ-9: a bubble of its
+                        own is entered, its configuration reset from
+                        that file alone, nothing above reaching below.
+                        Accepted for the scripts that say it. Selects
                         nothing by itself
     -k, --keys <expr>   the runs linked to features whose effective keys
                         satisfy the expression ('AND', 'OR', 'NOT',
@@ -300,8 +300,9 @@ class Wish:
     keys_spec:         str | None = None
     #  FEATURES BY THEIR EXTERNAL ID (R-96): what a customer holds.
     feature_ext_tuple: tuple = ()
-    #  THE WALK ENTERS INNER ROOTS (RQ-1, '--no-boundary'). A word about
-    #  the WALK, not the cases: it states nothing of what is wanted.
+    #  THE WALK ENTERS INNER ROOTS (RQ-1, '--no-boundary') -- the default
+    #  since RQ-9 (E-200); the word stays readable. It states nothing of
+    #  what is wanted.
     no_boundary_f:     bool  = False
     #  THE RECORDINGS A WISHLIST NAMES BY DIGEST (E-168): pairs
     #  '(<literal target>, <tag>)', the target as the list's line

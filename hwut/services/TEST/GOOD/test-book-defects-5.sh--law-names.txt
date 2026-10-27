@@ -1,5 +1,5 @@
 x < 3                  over ((e: 30 J)) and ((x: 1))           : refused: 'e' is a constant of the constraint namespace (Euler's number) -- rename the binding
-e < 3                  over ((e: 30 J))                        : play: FAULT: test-u.sh:2:37: REFUSED: constraint 'e < 3' names no variable -- it constrains nothing
+e < 3                  over ((e: 30 J))                        : play: FAULT: test-u.sh:2:37: REFUSED: constraint 'e < 3' names no variable: 'e' is a constant of the constraint namespace (Euler's number) -- a binding cannot carry that name; rename it, in the binding and in the law
 x < 10 ** 10 ** 10     over ((x: 1))                           : play: FAULT: test-u.sh:2:37: REFUSED: constraint 'x < 10 ** 10 ** 10': an exponent must be a number of magnitude at most 64 ('x ** 2', 's ** -1'), not '10 ** 10'
 x ** 2 < 10 m**2       over ((x: 3 m))                         : blessed
 s < 3 m*s              over ((s: 2 kg))                        : refused: '3 m*s' reads 's' as a unit, and a binding is called 's' -- write '* s' apart

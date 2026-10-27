@@ -1,0 +1,11 @@
+m < 50 kg      over sack ((m: 3 pood))       : blessed
+m < 40 kg      over sack ((m: 3 pood))       : refused: broken
+m < 50 m       over sack ((m: 3 pood))       : refused: the units do not compare: pood ([mass]) against m ([length])
+c < 1 ppm      over lead ((c: 500 ppb))      : blessed
+c < 1 ppm      over lead ((c: 1500 ppb))     : refused: broken
+== pype: what a line binds
+mass 49.141489199999995
+ppm 0.5
+ppm 2.0
+other: 7
+<hwut-end>

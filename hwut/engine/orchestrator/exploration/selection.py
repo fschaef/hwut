@@ -43,7 +43,7 @@ from   dataclasses import dataclass
 
 from   .explorer         import explore
 from   .tree_explorer    import (explore_tree, explore_tree_stream,
-                                 ascended_spec)
+                                 ascended_spec, RUN_BOUNDARY_F)
 from   .task_list       import CTestTaskListAll
 from   .task_list_query  import CTestTaskListQuery
 from   ..plan.label      import swallowed_warning_tuple
@@ -161,7 +161,7 @@ def of_tree(root, wish, label_view=None, base_f=None):
     Raises SelectionError and RootConfMissing out of the walk,
     unchanged.
     """
-    exploration = explore_tree(root, boundary_f=not wish.no_boundary_f)
+    exploration = explore_tree(root, boundary_f=RUN_BOUNDARY_F)
     case_list     = []
     result_db     = {}
     bookkeeper_db = {}
@@ -249,7 +249,7 @@ def of_tree_stream(root, wish, label_view=None, base_f=None,
     for directory, result in explore_tree_stream(
                                  root, fault_list=fault_list,
                                  note_list=note_list,
-                                 boundary_f=not wish.no_boundary_f):
+                                 boundary_f=RUN_BOUNDARY_F):
         bookkeeper = Bookkeeper(os.path.join(root, directory),
                                 naming_of(result.app_set)) \
                      if want_f else None
@@ -305,7 +305,8 @@ def directory_tuple(root, wish):
     which face asked.
     """
     if wish.states_nothing_f():
-        return tuple(directory for directory, _ in explore_tree(root))
+        return tuple(directory for directory, _
+                     in explore_tree(root, boundary_f=RUN_BOUNDARY_F))
     found = of_tree(root, wish)
     seen  = []
     for entry in found.case_list:
@@ -324,7 +325,7 @@ def all_of_tree(root):
     the runs no label mentions at all -- and only the walk knows them.
     No Bookkeeper is made: nothing here asks the base.
     """
-    exploration = explore_tree(root)
+    exploration = explore_tree(root, boundary_f=RUN_BOUNDARY_F)
     case_list   = []
     result_db   = {}
     for directory, result in exploration:
