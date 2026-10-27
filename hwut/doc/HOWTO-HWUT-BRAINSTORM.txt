@@ -799,3 +799,20 @@ BIN DISCIPLINE
       or 'app_defaults'), and a test carrying its own header is not
       named under 'apps' too ("one file, one carrier"). Ask of a fixture:
       'hwut.config.show' reads it back with no fault?
+    - A PAGE THAT NARROWS PATH WRAPS ITS PROGRAMS, NEVER LINKS THEM.
+      Measured 2026-10-27 (services E-197): 'test-book-defects-4.sh
+      help-coverage' hid 'coverage' by symlinking python3 into a
+      directory of its own. A venv's python started through such a link
+      runs as the BASE interpreter (sys.prefix '/usr/local', not the
+      venv): the venv's modules gone, 'hwut.help' exited 1 on the
+      author's machine and 0 here. A two-line 'exec <abs path> "$@"'
+      wrapper keeps the environment. Ask of a narrowed PATH: does
+      'python3 -c "import sys; print(sys.prefix)"' still name the venv?
+    - A FAILURE THAT PASSES ALONE IS A CAUSE NOT YET NAMED. Measured
+      2026-10-26 (services E-196): twelve cases of three interactive
+      pages failed "not run; process already dead" on every fresh tree's
+      first pass, green alone, for days called a flake. The session was
+      launched when a slot freed and its 300 s wall clock ran out while
+      its choices queued behind other tests. Reproduce on a fresh
+      extraction, instrument a throwaway copy, read the session's record:
+      the containment was named there all along
