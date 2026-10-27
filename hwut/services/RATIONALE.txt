@@ -7401,3 +7401,38 @@ DECISION  RULED (i): kilo-, mega-, gigabits, as a link speed writes them --
           'megabarn' theirs. '--units data' shows k, M, G, T (no 'mbyte').
 STAYS     'Tb' (terabarn) and a bare 'b' (barn): not asked.
 COST      Regression: 'test-book-defects-5.sh link-bits'.
+
+
+E-196  A SESSION'S WALL CLOCK STARTS WITH ITS TEST RUN  (ruled 2026-10-26)
+                                                                      (2026-10-26)
+------------------------------------------------------------------------------
+PROBLEM   MEASURED: on a fresh tree's full pass, every choice of
+          'services/TEST/test-plan.py', 'test-play.py' and
+          'test-sanitize-books.py' (12 cases) failed "not run; process
+          already dead" -- each run alone, all green. The scheduler
+          LAUNCHED an 'interactive' page's session when a slot came
+          free; its choices waited their turn behind other tests; the
+          session's 300 s wall clock ran out in the wait
+          (FAIL_WALL_CLOCK_EXCEEDED, measured in the session's record),
+          and the report hid the cap.
+DECISION  RULED: "the wall clock is not something to be specified
+          precisely ... it should mark the range of sanity ... wall clock
+          starts when test run starts ... the cap on time should be very
+          generous and only catch the disaster case."
+          - A session the orchestrator holds is OPENED (its room
+            reserved) and LAUNCHED at its first choice
+            ('MultiExecute.held_f').
+          - A choice a cap left unserved still reads 'session-gone', and
+            the HINTS detail names the cap ('cap 300.0 s, ran 300.0 s').
+          - An application that ends on its own before answering
+            ('exit 7') stays 'not run; process already dead' -- not
+            "killed by supervisor", which the first cut said once its
+            choice was in flight at the end.
+STAYS     The default caps; a session's choices are still scheduled one
+          by one, so its later choices may wait while it idles -- under a
+          generous cap, no disaster.
+FOUND     The session's record showed 512 s of CPU in 300 s for a process
+          that idles at 0 s: the session's cpu figure is not its own.
+          Not chased here.
+COST      Regression: 'engine/operations/run/TEST/test-multi-execute.py
+          held'.

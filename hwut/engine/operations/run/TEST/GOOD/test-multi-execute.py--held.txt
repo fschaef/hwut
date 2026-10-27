@@ -1,0 +1,8 @@
+INSPECT: held:  launched 0 time(s) while the choice waited; report ok
+         early: report test-app-session-gone, detail 'cap 1.0 s'
+  OK  : nothing launched while the choice waited
+  OK  : the waiting choice is served: the clock started with it
+  OK  : launched at once, the same wait is the wall clock's
+  OK  : and the never-served choice names the cap that ended it
+SUCCESS: the wall clock starts when the test run starts.
+<hwut-end>

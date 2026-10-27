@@ -4,6 +4,7 @@
 #     title      = "The multi-executor: one application call, many choices"
 #     choices {
 #         files   { features = ["session-file-subjects"] }
+#         held    { features = ["session-clock-at-first-choice"] }
 #         plugged { features = ["one-call-many-choices", "cadence-in-delivery"] }
 #         refused { features = ["session-needs-registered-capability"] }
 #         session { features = ["one-call-many-choices", "session-record-on-every-choice"] }
@@ -19,7 +20,7 @@ ______________________________________________________________________________
 PURPOSE: The multi-executor -- many choices of one test application
          through ONE supervised call, driven interactively.
 
-CHOICES: session, plugged, status, unknown, refused, files;
+CHOICES: session, plugged, status, unknown, refused, files, held;
 
 DESCRIPTION:
 
@@ -40,6 +41,12 @@ unknown   a choice the application does not know 'fail's: product None,
           named report -- and the session survives to serve the next
           real choice.
 
+held      THE WALL CLOCK STARTS WITH THE TEST RUN (services E-196): a
+          session an orchestrator opens is not launched until its first
+          choice is asked. Under a 1 s wall clock, a choice that waits
+          2 s in the queue is served; the same wait after a launch is
+          the cap's.
+
 refused   a configuration that does not register 'interactive' is
           refused at the door, by name; so is a choice name the
           blank-separated wire cannot carry.
@@ -50,6 +57,7 @@ import shutil
 import sys
 import asyncio
 import tempfile
+from dataclasses import replace
 import config                                                       # noqa: F401
 
 from hwut.test_writing_support.python.hwut_runner import HwutRunner    # noqa: E402
@@ -337,6 +345,46 @@ def test_unknown():
     _verdict(ok, "a refusal is named; the session runs on.")
 
 
+def test_held():
+    """A HELD session launches at its first choice (E-196)."""
+    configuration = _interactive_configuration()
+    configuration = replace(configuration,
+                            caps=replace(configuration.caps,
+                                         max_wall_clock_sec=1.0))
+
+    async def scene(launch_early_f):
+        """RETURN: (int, Supply), the launches before the first choice was
+        asked, and that choice's supply after a 2 s wait in the queue."""
+        m = MultiExecute(configuration)
+        m.held_f = True
+        if launch_early_f: await m.start()
+        await asyncio.sleep(2.0)
+        before_n = _launch_count(configuration)
+        supply = await m.provider("alpha").supply()
+        await m.close(); m.discard()
+        return before_n, supply
+
+    before_n, held = asyncio.run(scene(False))
+    os.remove(os.path.join(configuration.test_directory, "launch.log"))
+    _, early = asyncio.run(scene(True))
+    print("INSPECT: held:  launched %i time(s) while the choice waited; "
+          "report %s" % (before_n, held.report.value))
+    #  The detail's 'ran N s' is this machine's (E-36): only its cap is said.
+    print("         early: report %s, detail %r" % (early.report.value,
+          (early.detail or "").split(",")[0]))
+    ok = _check([
+        (before_n == 0, "nothing launched while the choice waited"),
+        (held.report is E_TestRunResult.OK
+         and held.product[0]["stdout"].startswith("alpha speaks"),
+         "the waiting choice is served: the clock started with it"),
+        (early.report is not E_TestRunResult.OK,
+         "launched at once, the same wait is the wall clock's"),
+        ((early.detail or "").startswith("cap 1.0 s"),
+         "and the never-served choice names the cap that ended it"),
+    ])
+    _verdict(ok, "the wall clock starts when the test run starts.")
+
+
 def test_refused():
     """Refusals at the door: no registered capability, no travelable
     name."""
@@ -385,5 +433,6 @@ HwutRunner(
         "status":  test_status,
         "unknown": test_unknown,
         "refused": test_refused,
+        "held":    test_held,
     },
 ).run()

@@ -153,6 +153,11 @@ class MultiExecute(I_MultiProvider):
                                      # session ended before 'bye'; the
                                      # cap, if any, is ITS (O-21)
         self._started      = False
+        #  HELD BY AN ORCHESTRATOR (E-196): the session is opened, its
+        #  process LAUNCHED AT THE FIRST CHOICE -- the wall clock starts
+        #  when the test run starts, not while the choices wait their
+        #  turn behind other tests.
+        self.held_f        = False
         self._closed       = False
 
     # -- the session ---------------------------------------------------
@@ -405,7 +410,7 @@ class ChoiceExecute(I_ProxyProvider, I_ExecuteProvider):
                 the application is behavior, not provision failure.
         """
         session = self.multi
-        if not session._started:
+        if not session._started and not session.held_f:
             #  THE ONE-SHOT MODE: nobody holds the session -- run it
             #  for this one choice and spend it (the standalone law).
             await session.run([self.choice_name])
@@ -415,6 +420,8 @@ class ChoiceExecute(I_ProxyProvider, I_ExecuteProvider):
             #  THE HELD MODE: an orchestrator opened the session and
             #  will close it; this choice submits its ticket and
             #  WAITS -- the session stays standing for its siblings.
+            #  The first choice launches the process (E-196).
+            await session.start()
             ticket = session.submit(self.choice_name)
             answer = await ticket
         record = (session.record,) if session.record is not None else ()
@@ -493,16 +500,18 @@ def _session_gone_report(session, choice_name, in_flight_f=None):
                 choice: the cap's own token where the session died of
                 a cap and this choice was the one in flight;
                 'TEST_APP_SESSION_GONE' where another choice was, or
-                the session ended without a cap and this one was never
-                served; 'TEST_APP_CONTAINED' for a containment the
-                table cannot name.
-            [1] str, the cap and its numbers ('cap 4, peak 42'), or
+                the session ended without a cap before answering this
+                one; 'TEST_APP_CONTAINED' for a terminating signal
+                without a cap ('in_flight_f' True).
+            [1] str, the cap and its numbers ('cap 4, peak 42') -- also
+                for a choice never served where a cap ended the session;
                 None where there is nothing to measure.
 
     'in_flight_f' None: decided from 'session.died_during'; True: the
     caller knows this choice's command was the one that ended.
     """
     record = session.record
+    signalled_f = in_flight_f is True    # the caller saw a terminating signal
     if in_flight_f is None:
         token       = session._token(choice_name)
         in_flight_f = (session.died_during == token)
@@ -512,8 +521,17 @@ def _session_gone_report(session, choice_name, in_flight_f=None):
                      and containment is not E_Containment.FAIL_COMPLETED
     if ended_by_cap_f and in_flight_f:
         return token_of(containment), detail_of(record, session.configuration.caps)
-    if in_flight_f:
+    #  A SIGNAL WITHOUT A CAP is a containment the table cannot name. An
+    #  application that simply ENDED -- 'exit 7' before answering, its
+    #  choice the one asked -- was not killed: it never served (E-196).
+    if signalled_f:
         return E_TestRunResult.TEST_APP_CONTAINED, None
+    #  A CAP ENDED THE SESSION ON ANOTHER CHOICE, OR WHILE NONE WAS ASKED
+    #  (E-196): this one was never served, and the cap is said -- "process
+    #  already dead" alone sent a reader looking for a crash.
+    if ended_by_cap_f:
+        return E_TestRunResult.TEST_APP_SESSION_GONE, \
+               detail_of(record, session.configuration.caps)
     return E_TestRunResult.TEST_APP_SESSION_GONE, None
 
 

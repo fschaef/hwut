@@ -266,15 +266,19 @@ class TestRunDispatcher(I_Dispatcher):
         RETURN: bool, the session stood up. The application call is
                 LAZY (R-46): a dead command surfaces as the first
                 choice's launch failure, which the wire lifts back to
-                'launch-failed' (O-6).
+                'launch-failed' (O-6). The process itself starts with
+                the first choice (services E-196).
         """
         configuration = self.config_db[node.file]
         #  ONE PROCESS SERVES THE SESSION: its room is held as long.
         answer = await self._room(node, configuration, None)
         if not answer.granted_f: return False
         self.disk_db[node.file] = answer
+        #  OPENED, NOT LAUNCHED (E-196): the process starts with the
+        #  first choice, so its wall clock measures the run, not the
+        #  queue the choices wait in.
         multi = MultiExecute(configuration)
-        await multi.start()
+        multi.held_f = True
         self.session_db[node.file] = multi
         return True
 
