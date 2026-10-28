@@ -39,7 +39,8 @@ tolerant comparison.
  * .regions_f: False -- '##!' and '####' are ordinary content.
  * .ignored_line_begin_marker, .ignored_line_end_marker:
     define a marker at the for the begin/end of a line. If such a marker appears
-    the line is ignored.
+    the line is ignored. Both are None where '.ignored_line_f' is False:
+    then no line is ignored for its markers.
 
 The 'PatternFinder' serves as lexical analyzer for 'chunk_pipe.py'.
 ________________________________________________________________________________
@@ -174,8 +175,15 @@ class PatternFinder:
         self.strip_whitespace_f         = config.strip_whitespace_f
         self.whitespace_f               = config.whitespace_f
         self.numeric_tolerance_ratio    = config.numeric_tolerance_ratio
-        self.ignored_line_begin_marker  = config.ignored_line_begin_marker
-        self.ignored_line_end_marker    = config.ignored_line_end_marker
+        #  COMMENT LINES OFF ('tolerance { comment = false }'): no marker
+        #  stands, and no line is ignored for carrying one -- 'None' is
+        #  the one spelling every reader of the markers honours.
+        if config.ignored_line_f:
+            self.ignored_line_begin_marker = config.ignored_line_begin_marker
+            self.ignored_line_end_marker   = config.ignored_line_end_marker
+        else:
+            self.ignored_line_begin_marker = None
+            self.ignored_line_end_marker   = None
         #  REGION FRAMING is a lexical feature like the rest, and like
         #  the rest its switch travels with the finder (C-4): the one
         #  reader of it is 'line_scanner.classify'.
@@ -262,6 +270,7 @@ class PatternFinder:
         """
         if not line: return True
         if line.isspace(): return True
+        if self.ignored_line_begin_marker is None: return False
         # startswith/endswith support single string or tuple of strings
         if line.startswith(self.ignored_line_begin_marker): return True
         if line.endswith(self.ignored_line_end_marker): return True

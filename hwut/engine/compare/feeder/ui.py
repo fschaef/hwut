@@ -127,8 +127,10 @@ async def feed(config, subject_stream, nominal_stream,
                      analogy_f                  = pf.analogy_f,
                      whitespace_f               = pf.whitespace_f,
                      numeric_tolerance_ratio    = pf.numeric_tolerance_ratio,
-                     ignored_line_begin_marker  = pf.ignored_line_begin_marker,
-                     ignored_line_end_marker    = pf.ignored_line_end_marker,
+                     ignored_line_begin_marker  = pf.ignored_line_begin_marker
+                                                  if pf.ignored_line_f else None,
+                     ignored_line_end_marker    = pf.ignored_line_end_marker
+                                                  if pf.ignored_line_f else None,
                      analogy_begin_marker       = pf.analogy_begin_marker,
                      analogy_end_marker         = pf.analogy_end_marker)
 

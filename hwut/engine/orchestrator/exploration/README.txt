@@ -40,8 +40,8 @@ Four gates, in order. A file passes all four or it is no test application.
 
   1  IT IS A CANDIDATE.  A regular file in the TEST directory, the walk one
      directory deep. NOT a candidate:
-       - the default ignore globs '*.txt', '*.xml', '*.json', '*.pype', and
-         the directory's own 'ignore' globs -- silent;
+       - the default ignore globs '*.txt', '*.xml', '*.json', '*.pype',
+         '*.pypes', and the directory's own 'ignore' globs -- silent;
        - THE FRAMEWORK'S OWN FILES, by name, never by glob: 'hwut.conf',
          'hwut-root.conf', 'hwut-info.dat', 'hwut-traces.csv',
          'hwut-root.labels';
@@ -891,8 +891,9 @@ refused): a file whose name matches 'REFUSED_NAME_GLOB_TUPLE' ('*~',
 '*.copy', '*.swp', '*.tmp') is no candidate and is named, with its
 reason, in 'ExplorationResult.refused_tuple'. An ignored file ('ignore'
 in 'hwut.conf', the default globs) is silent; a refused one is reported.
-'*.pype' is among the default globs: a pype is a CANONICALISER the test
-names, never a candidate, and the nominal gate never sees it.
+'*.pype' and '*.pypes' are among the default globs: a pype, and a system
+of pypes, is a CANONICALISER the test names, never a candidate, and the
+nominal gate never sees it.
 
 THE TOLERANCE SCOPE (E-42) holds every lexical tolerance and there is no
 second place one may be written:

@@ -391,14 +391,18 @@ class TuiDisplay(DisplayAdapter):
             numeric = "numeric=+/-%g" % item.numeric_tolerance_ratio
         else:
             numeric = "numeric=exact"
+        if item.ignored_line_begin_marker is None:     # comment lines OFF
+            ignored = "ignored off"
+        else:
+            ignored = "ignored '%s..%s'" % (item.ignored_line_begin_marker,
+                                            item.ignored_line_end_marker)
         self._write("setup | %s | analogy=%s '%s..%s' | whitespace=%s | "
-                    "ignored '%s..%s'\n"
+                    "%s\n"
                     % (numeric,
                        "on" if item.analogy_f else "off",
                        item.analogy_begin_marker, item.analogy_end_marker,
                        "tolerant" if item.whitespace_f else "strict",
-                       item.ignored_line_begin_marker,
-                       item.ignored_line_end_marker))
+                       ignored))
         if self.reading_f:
             self._write("reading | {numeric} ~analogy~ <pattern> "
                         "!binding! |nothing|\n")

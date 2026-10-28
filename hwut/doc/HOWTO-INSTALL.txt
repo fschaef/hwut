@@ -32,7 +32,7 @@ begins, status 0:
 A FIRST GREEN RUN, in any form:
 
     hwut.demo.python ~/hwut-demo
-    cd ~/hwut-demo/TEST && hwut --plain        RESULTS: 6 ok, 0 fail
+    cd ~/hwut-demo/TEST && hwut --plain        RESULTS: 28 ok, 0 fail
 
 TAB COMPLETION: 'hwut --command-line-setup', then doc/HOWTO-COMPLETION.txt.
 

@@ -9,15 +9,27 @@
 # one verdict line per exchange, sorted, and every breach of the law,
 # sorted. The test application only reports what happens, as it happens.
 
+# TIME AS INPUT: every 0.25 s of reading, '<tick 0.25>', '<tick 0.5>', ...
+# is dispatched in the active mode as a line would be. No handler names
+# it; it gives the wait guard below a moment to look, even while no line
+# arrives.
+tick: 0.25 => "<tick {time_sec}>"
+
 SERVING is: ANY
 SERVING/on: <entry> => {
     open_db = {}                   # id -> responses seen so far
+    asked_db = {}                  # id -> pype.time() of its request
+    late_set = set()
     breach_set = set()
+    def overdue():
+        return [id for id in asked_db if open_db.get(id) == 0
+                and id not in late_set and pype.time() - asked_db[id] > 1.0]
 }
 SERVING/on: "request" <id = int> => {
     if id in open_db:
         breach_set.add("request %d sent twice" % id)
     open_db.setdefault(id, 0)
+    asked_db.setdefault(id, pype.time())
 }
 SERVING/on: "response" <id = int> => {
     if id not in open_db:
@@ -26,6 +38,12 @@ SERVING/on: "response" <id = int> => {
         open_db[id] += 1
 }
 SERVING/on: "shutdown" => goto CLOSED;
+# A WAIT GUARD: a condition, not a pattern -- tried on every line and
+# every tick, after the patterns above. A request waiting longer than 1 s
+# is LATE: no breach of the law, a fact of the service.
+SERVING/on: if ( overdue() ) => {
+    late_set.update(overdue())
+}
 
 CLOSED is: ANY
 CLOSED/on: "request" <id = int> => {
@@ -39,8 +57,9 @@ ANY/on: <else> => ignore;
 ANY/on: <eof> => {
     for id in sorted(open_db):
         n = open_db[id]
-        print("exchange %d: %s" % (id, "answered" if n == 1 else
-              "NOT answered" if n == 0 else "answered %d times" % n))
+        print("exchange %d: %s%s" % (id, "answered" if n == 1 else
+              "NOT answered" if n == 0 else "answered %d times" % n,
+              ", late (over 1 s)" if id in late_set else ""))
     for breach in sorted(breach_set):
         print("BREACH: " + breach)
     print("law: " + ("kept" if not breach_set and all(n == 1 for n in open_db.values()) else "BROKEN"))

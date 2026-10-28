@@ -92,7 +92,8 @@ def is_insignificant_line(string, ignored_line_begin_marker,
                                   ignored_line_end_marker):
     """RETURNS: True, if 'string' is a line WITHOUT significance for the
                       equivalence consideration: blank, or carrying the
-                      ignored-line markers.
+                      ignored-line markers (None for both: comment lines
+                      are switched off, only a blank line is without).
                 False, else.
 
     THE single definition of 'the Judge does not see this line'. Two users:
@@ -106,6 +107,8 @@ def is_insignificant_line(string, ignored_line_begin_marker,
     stripped = string.strip()
     if not stripped:
         return True
+    if ignored_line_begin_marker is None:      # comment lines OFF
+        return False
     return (   stripped.startswith(ignored_line_begin_marker)
             or stripped.endswith(ignored_line_end_marker))
 

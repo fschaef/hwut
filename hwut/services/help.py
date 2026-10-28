@@ -56,9 +56,9 @@ DESCRIPTION
        Judged now, by the gate the run asks; no book holds the case.
 
        A FILE THAT IS NOT SEEN is ignored: the default set ('*.txt',
-       '*.xml', '*.json', '*.pype'), the backup-shaped names ('*~',
-       '#*#', '*.bak', '*.backup', '*.orig', '*.old', '*.save', '*.rej',
-       '*.copy', '*.swp', '*.tmp'), and the globs of 'ignore' in
+       '*.xml', '*.json', '*.pype', '*.pypes'), the backup-shaped names
+       ('*~', '#*#', '*.bak', '*.backup', '*.orig', '*.old', '*.save',
+       '*.rej', '*.copy', '*.swp', '*.tmp'), and the globs of 'ignore' in
        'hwut.conf'. 'admit' in 'hwut.conf' takes a glob out of all of
        them -- a backup-shaped name meant as a test is one again:
 

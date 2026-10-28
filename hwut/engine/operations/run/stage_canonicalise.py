@@ -25,21 +25,23 @@ from   ..configuration            import caps_of
 #  THE PYPE CALL IS FORMED HERE, and nowhere else (E-28). A stated
 #  canonicaliser whose first word is a '.pype' script is run by THE
 #  INTERPRETER -- this Python, 'hwut_pype.py' -- with the script as its
-#  first argument. The script's she-bang line and execute bit are for
-#  a shell and a person; inside the framework neither decides whether a
-#  test's stream can be canonicalised. A first word that is not a
-#  '.pype' script is a command of the author's own and runs as stated.
+#  first argument. A '.pypes' SYSTEM (pype manual 14) is the same
+#  interpreter's word and is run the same way. The script's she-bang
+#  line and execute bit are for a shell and a person; inside the
+#  framework neither decides whether a test's stream can be
+#  canonicalised. A first word that is neither is a command of the
+#  author's own and runs as stated.
 def pype_call(stated_argv):
     """
     RETURN: list[str], the argv the procsitter runs for a stated
             canonicaliser: '[python, hwut_pype.py, <script>, ...]'
-            where the first word names a '.pype' script; the argv
-            unchanged otherwise.
+            where the first word names a '.pype' script or a '.pypes'
+            system; the argv unchanged otherwise.
     """
     import sys
     from ....test_writing_support.hwut_pype import hwut_pype
     argv = list(stated_argv)
-    if argv and argv[0].endswith(".pype"):
+    if argv and argv[0].endswith((".pype", ".pypes")):
         return [sys.executable, hwut_pype.__file__] + argv
     return argv
 

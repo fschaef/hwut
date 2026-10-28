@@ -55,11 +55,12 @@ OWN_FILE_TUPLE     = (CONF_NAME, ROOT_CONF_NAME, "hwut-info.dat",
                       REGISTRY_FILE_NAME)
 #  A PYPE IS A CANONICALISER, NOT A TEST. It stands beside the test
 #  that names it ('pype = "strip.pype"') and filters that test's
-#  output; it is never a candidate and the nominal gate (E-41) never
+#  output -- and so does a SYSTEM of pypes ('pype = "flow.pypes"'); it
+#  is never a candidate and the nominal gate (E-41) never
 #  sees it. Ignored by NAME here, rather than left for the header
 #  reader to find no '@hwut' in -- a file that is not a test should
 #  not be READ as one to be found not to be one.
-DEFAULT_IGNORE_SET = ("*.txt", "*.xml", "*.json", "*.pype")
+DEFAULT_IGNORE_SET = ("*.txt", "*.xml", "*.json", "*.pype", "*.pypes")
 
 #  BACKUP-SHAPED NAMES ARE IGNORED (ruled 2026-10-17, superseding their
 #  refusal by name, E-41): silent, as every ignored name is. 'admit' in

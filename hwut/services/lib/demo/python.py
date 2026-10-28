@@ -12,7 +12,8 @@ PURPOSE: THE 'hwut.demo.python' COMMAND LINE -- a demonstration tree of
 
     cd <dir>/TEST && hwut --plain
 
-runs green: six test cases, six ok. Nothing outside <dir> is written.
+runs green: twenty-eight test cases, twenty-eight ok. Nothing outside
+<dir> is written.
 
 REFUSED where <dir> stands and is not empty: the demonstration lands in
 a place of its own, never over what stands.
