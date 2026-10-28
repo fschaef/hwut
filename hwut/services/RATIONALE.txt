@@ -7552,8 +7552,8 @@ COST      A tree that held an inner root runs its cases from above again,
           nested-root (re-recorded: the NOTE goes, world/ runs),
           bubble-labels, bubble-features, bubble-fault.
 OPEN      Q9.1 '--no-boundary': keep as a word that asks the default, or
-          retire. Q9.2 one report for all bubbles (as built), or a section
-          per bubble.
+          retire -- RULED 2026-10-28: retired, see E-202. Q9.2 one report
+          for all bubbles (as built), or a section per bubble.
 
 
 E-201  A COVERAGE REMEDY NAMES WHAT THIS BUILD READS; A FAILING PYPE
@@ -7589,3 +7589,45 @@ FOUND     'test-cov.py to_humans' printed how many 0x0A bytes a
           law). The page now says "[a binary record written to stdout]";
           the round trip proves the record. Re-recorded.
 
+
+
+E-202  A WISHLIST LINE MAY BE A RULE; '--no-bubbles' REPLACES
+       '--no-boundary'  (ruled 2026-10-28)                            (2026-10-28)
+------------------------------------------------------------------------------
+PROBLEM   A wishlist could only WANT: every line was a target, OR'ed. Not
+          entering a sub-directory, excluding a run, or staying out of the
+          bubbles below (RQ-9) could be said on the command line alone --
+          '!a/vendor/' in a list selected nothing, silently. And since
+          RQ-9 '--no-boundary' asked what every walk does; the opposite had
+          no word.
+DECISION  RULED, on development's proposal of 2026-10-28: a line may be a
+          RULE, the command line's own words in '.gitignore''s spelling --
+              <target>        wanted               '--glob'
+              !<target>       not wanted           '--exclude'
+              <dir-glob>/     a directory wanted   '--dir'
+              !<dir-glob>/    not entered          '--exclude-dir'
+              !<hwut-root>    no bubble entered    '--no-bubbles'
+          A trailing '/' makes a directory line (a target names a file).
+          Directory lines keep their order among the command line's, and
+          the LAST ONE MATCHING decides -- grep's rule, already the rule
+          of '--dir'/'--exclude-dir', and '.gitignore''s. './' is the
+          list's own directory in every kind of line. A list of rules
+          alone narrows as its words would ('a/' wants everything under
+          'a'); an EMPTY list still wants nothing. No second glob dialect:
+          the globs are fnmatch's, as everywhere. Refused by name:
+          '<hwut-root>' without '!' (it asks the default), any other
+          '<...>', a bare '!', '--digest' after '!'. A face that reads a
+          list's targets alone ('hwut.config.ignore --wishlist') refuses
+          a rule line rather than dropping it.
+          '--no-bubbles' (also 'hwut.execute') keeps the walk out of every
+          inner 'hwut-root.conf' and says a NOTE per bubble passed.
+          '--no-boundary' is RETIRED: "'--no-boundary' is retired: a walk
+          enters every inner 'hwut-root.conf' (RQ-9) => drop it;
+          '--no-bubbles' stays out", exit 2.
+STAYS     fnmatch's '*' crosses '/': 'a/*/x' matches 'a/b/c/x' -- open,
+          with the author.
+COST      Scripts saying '--no-boundary' are refused. 20 GOODs quoting the
+          usage line or the wish's help re-recorded, each diff read: the
+          word alone (and the help paragraph of 'test-plan.py help').
+          Regression: 'test-book-defects-4.sh' wishlist-rules, nested-root
+          (re-recorded).

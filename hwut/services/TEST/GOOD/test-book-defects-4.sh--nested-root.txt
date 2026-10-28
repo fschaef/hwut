@@ -5,10 +5,12 @@ RESULTS: 1 ok, 1 fail, <t> [sec], <t> [sec] total
 == from inside
 END   test-slow.sh ........................................ killed [FAIL]  ||0
 RESULTS: 0 ok, 1 fail, <t> [sec], <t> [sec] total
-== from above, --no-boundary
+== from above, --no-bubbles
+NOTE  world/: own root, not walked => do it inside it
 END   test-top.sh .................................................. [OK]  ||0
-END   test-slow.sh ........................................ killed [FAIL]  ||0
-RESULTS: 1 ok, 1 fail, <t> [sec], <t> [sec] total
+RESULTS: 1 ok, 0 fail, <t> [sec], <t> [sec] total
+== from above, --no-boundary (retired)
+REFUSED: '--no-boundary' is retired: a walk enters every inner 'hwut-root.conf' (RQ-9) => drop it; '--no-bubbles' stays out
 == hwut.report.list from above
 ./TEST/test-top.sh
 ./world/TEST/test-slow.sh

@@ -550,12 +550,13 @@ the enclosing project's 'hwut-root.conf' as its own.
 A 'hwut-root.conf' CLOSES A BUBBLE (RQ-9, services E-200). From inside
 there is no way out: every climb -- configuration, labels, features --
 ends at the NEAREST root. From outside every way in: a walk that selects
-or runs ('RUN_BOUNDARY_F') enters each inner root it meets and resets the
-configuration from that file alone, so a case has one verdict wherever
-hwut is called; labels and features of a run are its bubble's
-('inner_root_tuple'). A walk that MAINTAINS a root's own files (feature
-registry, sanitize, renovate) stays in its bubble and names each inner
-root it passes in a NOTE.
+or runs enters each inner root it meets and resets the configuration from
+that file alone, so a case has one verdict wherever hwut is called;
+labels and features of a run are its bubble's ('inner_root_tuple'). The
+wish may stay out -- '--no-bubbles', or '!<hwut-root>' in a wishlist
+(E-202) -- and the walk then names each bubble it passes in a NOTE, as a
+walk that MAINTAINS a root's own files (feature registry, sanitize,
+renovate) always does.
 
 'language-setup' and 'variant_group' are the ROOT'S ALONE (R-73, E-9):
 a language's tooling and a run's dimensions are read in one place, and a

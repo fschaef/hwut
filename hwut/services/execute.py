@@ -53,8 +53,8 @@ from   hwut.engine.orchestrator.exploration.task_list_query \
 from   hwut.engine.orchestrator.exploration.tree_explorer \
                                             import (explore_tree_stream,
                                                     ascended_spec,
-                                                    inherited_spec,
-                                                    RUN_BOUNDARY_F)
+                                                    inherited_spec)
+from ..engine.orchestrator.plan.wish import NO_BOUNDARY_RETIRED_TEXT
 from ..auxiliary.no_entry import entered
 from ._exit import E_ExitCode
 from ..engine.procsitter.api import spawn
@@ -62,7 +62,7 @@ from ..engine.orchestrator.run.adapter import script_config_of
 
 
 USAGE = "usage: hwut.execute [-i] [--default=<script>] [-q] [+x] " \
-        "[--no-boundary] [--directory=<path>] <target> [<argument> ...]\n" \
+        "[--no-bubbles] [--directory=<path>] <target> [<argument> ...]\n" \
         "       hwut.execute [-q] [--dir|--exclude-dir <glob>]... [--directory=<path>] " \
         "-c \"<commands>\""
 
@@ -183,7 +183,7 @@ def _read_command_line(argv, write):
     result = {"target": None, "pass_through": [], "ignore_f": False,
               "default": None, "quiet_f": False, "plus_x_f": False,
               "directory": ".", "dir_tuple": (), "dir_rule_tuple": (),
-              "command": None, "boundary_f": RUN_BOUNDARY_F}
+              "command": None, "boundary_f": False}
     i = 0
     while i < len(argv):
         argument = argv[i]
@@ -193,9 +193,11 @@ def _read_command_line(argv, write):
             return "help"
         elif argument in ("-i", "--ignore"):  result["ignore_f"] = True
         elif argument in ("-q", "--quiet"):   result["quiet_f"]  = True
-        #  THE WISH'S OWN WORD (RQ-1): walk into inner roots -- the
-        #  default since RQ-9 (E-200), accepted for scripts that say it.
-        elif argument == "--no-boundary":     result["boundary_f"] = False
+        #  THE WISH'S OWN WORD (RQ-9, E-202): stay out of inner bubbles.
+        elif argument == "--no-bubbles":      result["boundary_f"] = True
+        elif argument == "--no-boundary":
+            write("REFUSED: %s" % NO_BOUNDARY_RETIRED_TEXT); write(USAGE)
+            return None
         elif argument == "+x":                result["plus_x_f"] = True
         elif argument.startswith("--default="):
             result["default"] = argument[len("--default="):]
@@ -280,7 +282,7 @@ def _test_directory_plan(arguments):
     return [(relative, None, False)
             for relative, _result in explore_tree_stream(
                                          arguments["directory"],
-                                         boundary_f=RUN_BOUNDARY_F)
+                                         boundary_f=arguments["boundary_f"])
             if wanted_f(relative.replace(os.sep, "/"))]
 
 
@@ -308,7 +310,7 @@ def _phase_one(arguments):
     found_any_f  = False
 
     wanted_f = _wanted_f_of(arguments["dir_rule_tuple"])
-    for relative in _walk(root, arguments.get("boundary_f", RUN_BOUNDARY_F)):
+    for relative in _walk(root, arguments.get("boundary_f", False)):
         if not wanted_f(relative): continue
         directory = os.path.normpath(os.path.join(root, relative))
         text      = finder.conf_text(directory)

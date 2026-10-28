@@ -457,7 +457,24 @@ class CTestTaskListQuery(CTestTaskList):
                       + tuple(("-", text)
                               for text in self.wish.exclude_dir_tuple)
         if not rule_tuple or self.directory is None: return False
-        return dir_ruled_out_f(self.directory, rule_tuple)
+        return dir_ruled_out_f(self.directory,
+                               tuple((sign, self._rooted(glob_text))
+                                     for sign, glob_text in rule_tuple))
+
+    def _rooted(self, glob_text):
+        """
+        RETURN: str, 'glob_text' as a path relative to the run's root, '/'
+                between -- where a wishlist made it ABSOLUTE by its './'
+                (E-202); a glob naming nothing below the root becomes one
+                no directory matches. Any other glob as it stands.
+        """
+        if not os.path.isabs(glob_text) or self.root is None:
+            return glob_text
+        root = os.path.abspath(self.root).replace(os.sep, "/").rstrip("/")
+        if glob_text == root:          return "*"     # the whole tree
+        if glob_text.startswith(root + "/"):
+            return glob_text[len(root) + 1:]
+        return "/\0"                  # outside the tree: matches nothing
 
     def _excluded_f(self, case):
         """

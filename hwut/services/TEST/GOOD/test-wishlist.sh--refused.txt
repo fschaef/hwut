@@ -7,7 +7,7 @@ STDOUT {
                             [--wishlist <file>]... [-l|--label <expr>]
                             [--language=<name>]... [--faster-than=<sec>]
                             [-F|--feature <id-glob>]... [-e|--feature-ext <id>]...
-                            [-k|--keys <expr>] [--no-boundary]
+                            [-k|--keys <expr>] [--no-bubbles]
                             [<file-glob> [choice-glob]...] [--directory=<path>]
 }
 STATUS: 2
@@ -19,7 +19,7 @@ STDOUT {
                             [--wishlist <file>]... [-l|--label <expr>]
                             [--language=<name>]... [--faster-than=<sec>]
                             [-F|--feature <id-glob>]... [-e|--feature-ext <id>]...
-                            [-k|--keys <expr>] [--no-boundary]
+                            [-k|--keys <expr>] [--no-bubbles]
                             [<file-glob> [choice-glob]...] [--directory=<path>]
 }
 STATUS: 2
@@ -31,7 +31,7 @@ STDOUT {
                             [--wishlist <file>]... [-l|--label <expr>]
                             [--language=<name>]... [--faster-than=<sec>]
                             [-F|--feature <id-glob>]... [-e|--feature-ext <id>]...
-                            [-k|--keys <expr>] [--no-boundary]
+                            [-k|--keys <expr>] [--no-bubbles]
                             [<file-glob> [choice-glob]...] [--directory=<path>]
 }
 STATUS: 2
@@ -43,7 +43,7 @@ STDOUT {
                             [--wishlist <file>]... [-l|--label <expr>]
                             [--language=<name>]... [--faster-than=<sec>]
                             [-F|--feature <id-glob>]... [-e|--feature-ext <id>]...
-                            [-k|--keys <expr>] [--no-boundary]
+                            [-k|--keys <expr>] [--no-bubbles]
                             [<file-glob> [choice-glob]...] [--directory=<path>]
 }
 <hwut-end>

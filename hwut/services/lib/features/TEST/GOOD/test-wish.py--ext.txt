@@ -28,7 +28,7 @@
                             [--wishlist <file>]... [-l|--label <expr>]
                             [--language=<name>]... [--faster-than=<sec>]
                             [-F|--feature <id-glob>]... [-e|--feature-ext <id>]...
-                            [-k|--keys <expr>] [--no-boundary]
+                            [-k|--keys <expr>] [--no-bubbles]
                             [<file-glob> [choice-glob]...] [--directory=<path>]
     exit 2
 >>> --feature-ext=
@@ -39,7 +39,7 @@
                             [--wishlist <file>]... [-l|--label <expr>]
                             [--language=<name>]... [--faster-than=<sec>]
                             [-F|--feature <id-glob>]... [-e|--feature-ext <id>]...
-                            [-k|--keys <expr>] [--no-boundary]
+                            [-k|--keys <expr>] [--no-bubbles]
                             [<file-glob> [choice-glob]...] [--directory=<path>]
     exit 2
 <hwut-end>

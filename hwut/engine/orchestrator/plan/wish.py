@@ -60,7 +60,13 @@ PURPOSE: THE WISH -- what the command line states about which tests are
                         and file, a choice following (disc-8). The
                         lines join the '--glob' targets and are OR'ed
                         with them. 'hwut.report.list' PRINTS this form,
-                        so the round trip closes.
+                        so the round trip closes. A line may also be a
+                        RULE (E-202): '!<target>' is '--exclude',
+                        '<dir-glob>/' is '--dir', '!<dir-glob>/' is
+                        '--exclude-dir', '!<hwut-root>' is
+                        '--no-bubbles'; directory lines keep their
+                        order among the command line's, the last one
+                        matching deciding.
 THE SHORT FORM OF HWUT 1.0 lives here too ('desugar_positional',
 'with_targets'): a face may take BARE WORDS -- 'hwut.run test-app.sh
 one' -- the first naming files, every further one a choice, globbing
@@ -185,7 +191,7 @@ USAGE_TOKEN_TUPLE = ("[--fail]", "[--pass]", "[--since=<point>]",
                      "[--language=<name>]...", "[--faster-than=<sec>]",
                      "[-F|--feature <id-glob>]...",
                      "[-e|--feature-ext <id>]...", "[-k|--keys <expr>]",
-                     "[--no-boundary]")
+                     "[--no-bubbles]")
 
 HELP = """SELECTION -- the wish; an absent keyword asks nothing
     --fail              the last recorded run's verdict was negative
@@ -217,7 +223,12 @@ HELP = """SELECTION -- the wish; an absent keyword asks nothing
                         '--exclude-dir a --dir a/keep' keeps 'a/keep'.
     --wishlist <file>   the file's lines as targets, '#' comments and
                         blanks dropped, './' meaning the file's own
-                        directory
+                        directory; a line may be a rule instead:
+                            !<target>       not wanted ('--exclude')
+                            <dir-glob>/     wanted ('--dir')
+                            !<dir-glob>/    not entered ('--exclude-dir')
+                            !<hwut-root>    '--no-bubbles'
+                        the last directory line matching decides
     --glob <target>     a target: a file name, or a file name and a
                         choice name with one blank between, either
                         carrying fnmatch's '*', '?' and '[ ]':
@@ -242,11 +253,9 @@ HELP = """SELECTION -- the wish; an absent keyword asks nothing
     -e, --feature-ext <id>
                         the runs linked to the feature of that external
                         id ('*' any characters); with '-F' a union
-    --no-boundary       walk INTO an inner 'hwut-root.conf' (RQ-1) --
-                        what every run does since RQ-9: a bubble of its
-                        own is entered, its configuration reset from
-                        that file alone, nothing above reaching below.
-                        Accepted for the scripts that say it. Selects
+    --no-bubbles        do not enter an inner 'hwut-root.conf' (RQ-9):
+                        by default the walk enters every bubble below,
+                        each under its own configuration. Selects
                         nothing by itself
     -k, --keys <expr>   the runs linked to features whose effective keys
                         satisfy the expression ('AND', 'OR', 'NOT',
@@ -300,10 +309,11 @@ class Wish:
     keys_spec:         str | None = None
     #  FEATURES BY THEIR EXTERNAL ID (R-96): what a customer holds.
     feature_ext_tuple: tuple = ()
-    #  THE WALK ENTERS INNER ROOTS (RQ-1, '--no-boundary') -- the default
-    #  since RQ-9 (E-200); the word stays readable. It states nothing of
-    #  what is wanted.
-    no_boundary_f:     bool  = False
+    #  THE WALK STAYS OUT OF INNER BUBBLES (RQ-9, E-202): '--no-bubbles',
+    #  or '!<hwut-root>' in a wishlist. By default a walk that selects
+    #  enters every inner 'hwut-root.conf'. A word about the WALK: it
+    #  states nothing of what is wanted.
+    no_bubbles_f:      bool  = False
     #  THE RECORDINGS A WISHLIST NAMES BY DIGEST (E-168): pairs
     #  '(<literal target>, <tag>)', the target as the list's line
     #  expanded. Read by 'hwut.accept' alone; every other face refuses.
@@ -377,7 +387,7 @@ class Wish:
         part_list = []
         if self.fail_f:                 part_list.append("--fail")
         if self.unaccepted_f:           part_list.append("--unaccepted")
-        if self.no_boundary_f:          part_list.append("--no-boundary")
+        if self.no_bubbles_f:           part_list.append("--no-bubbles")
         if self.pass_f:                 part_list.append("--pass")
         if self.since_spec is not None:
             part_list.append("--since=%s" % self.since_spec)
@@ -425,7 +435,7 @@ def parse_wish(argv, digest_f=False):
     """
     fail_f     = False
     unaccepted_f = False
-    no_boundary_f = False
+    no_bubbles_f = False
     pass_f     = False
     since_spec = None
     until_spec = None
@@ -450,7 +460,10 @@ def parse_wish(argv, digest_f=False):
         index   += 1
         if   argument == "--fail":  fail_f = True
         elif argument == "--unaccepted": unaccepted_f = True
-        elif argument == "--no-boundary": no_boundary_f = True
+        elif argument == "--no-bubbles": no_bubbles_f = True
+        elif argument == "--no-boundary":
+            #  RETIRED (RQ-9, E-202): it asked what every walk now does.
+            raise WishError(NO_BOUNDARY_RETIRED_TEXT)
         elif argument == "--pass":  pass_f = True
         elif argument.startswith("--since="):
             since_spec = _validated(argument[len("--since="):], argument)
@@ -491,17 +504,32 @@ def parse_wish(argv, digest_f=False):
         elif argument == "--wishlist":
             if index >= len(argv):
                 raise WishError("'--wishlist' stands without a file")
-            target_tuple, found = _wishlist_read(argv[index], digest_f)
-            glob_list.extend(target_tuple)
-            digest_list.extend(found)
-            wishlist_f = True
+            listed = _wishlist_read(argv[index], digest_f)
+            glob_list.extend(listed.target_tuple)
+            digest_list.extend(listed.digest_tuple)
+            exclude_list.extend(listed.exclude_tuple)
+            for sign, glob_text in listed.dir_rule_tuple:
+                (dir_list if sign == "+" else exclude_dir_list).append(glob_text)
+            dir_rule_list.extend(listed.dir_rule_tuple)
+            no_bubbles_f = no_bubbles_f or listed.no_bubbles_f
+            #  A LIST OF RULES ALONE wants what its rules leave, as the
+            #  same words on the command line would; an EMPTY list wants
+            #  nothing (E-202).
+            wishlist_f = wishlist_f or _states_targets_f(listed)
             index += 1
         elif argument.startswith("--wishlist="):
-            target_tuple, found = _wishlist_read(
-                argument[len("--wishlist="):], digest_f)
-            glob_list.extend(target_tuple)
-            digest_list.extend(found)
-            wishlist_f = True
+            listed = _wishlist_read(argument[len("--wishlist="):], digest_f)
+            glob_list.extend(listed.target_tuple)
+            digest_list.extend(listed.digest_tuple)
+            exclude_list.extend(listed.exclude_tuple)
+            for sign, glob_text in listed.dir_rule_tuple:
+                (dir_list if sign == "+" else exclude_dir_list).append(glob_text)
+            dir_rule_list.extend(listed.dir_rule_tuple)
+            no_bubbles_f = no_bubbles_f or listed.no_bubbles_f
+            #  A LIST OF RULES ALONE wants what its rules leave, as the
+            #  same words on the command line would; an EMPTY list wants
+            #  nothing (E-202).
+            wishlist_f = wishlist_f or _states_targets_f(listed)
         elif argument in ("--label", "-l") \
                 or argument.startswith("--label=") \
                 or argument.startswith("-l="):
@@ -622,7 +650,7 @@ def parse_wish(argv, digest_f=False):
                  faster_than_ms, unaccepted_f, tuple(dir_rule_list),
                  tuple(feature_list), keys_spec, tuple(feature_ext_list),
                  digest_tuple=tuple(digest_list),
-                 no_boundary_f=no_boundary_f),
+                 no_bubbles_f=no_bubbles_f),
             rest_list)
 
 
@@ -630,32 +658,82 @@ def parse_wish(argv, digest_f=False):
 _DIGEST_SUFFIX_RE = re.compile(r"\s+--digest=(\S+)\s*$")
 _GLOB_MARK_TUPLE  = ("*", "?", "[")
 
+#  THE ONE RESERVED WORD OF A WISHLIST (RQ-9, E-202): '!<hwut-root>'
+#  keeps the walk out of every inner 'hwut-root.conf'.
+BUBBLE_WORD = "<hwut-root>"
+
+#  '--no-boundary' asked, before RQ-9, what every walk now does.
+NO_BOUNDARY_RETIRED_TEXT = (
+    "'--no-boundary' is retired: a walk enters every inner "
+    "'hwut-root.conf' (RQ-9) => drop it; '--no-bubbles' stays out")
+
+
+@dataclass(frozen=True)
+class CWishlist:
+    """What one wishlist file states, its lines sorted into the wish's
+    own fields, each in file order."""
+    target_tuple:   tuple = ()     # wanted targets ('--glob')
+    digest_tuple:   tuple = ()     # (<literal target>, <tag>)
+    exclude_tuple:  tuple = ()     # '!<target>'       ('--exclude')
+    dir_rule_tuple: tuple = ()     # ('+'|'-', <glob>) ('--dir', '--exclude-dir')
+    no_bubbles_f:   bool  = False  # '!<hwut-root>'    ('--no-bubbles')
+
+
+def _states_targets_f(listed):
+    """
+    RETURN: True,  the list 'listed' speaks of WANTED targets: it holds
+                   one, or it holds no line at all -- an empty list
+                   wants nothing;
+            False, it holds rules alone ('!...', '<dir>/', '!<hwut-root>'),
+                   which narrow like their command-line words.
+    """
+    return bool(listed.target_tuple) \
+           or not (listed.exclude_tuple or listed.dir_rule_tuple
+                   or listed.no_bubbles_f)
+
 
 def wishlist_target_tuple(file_name):
     """
     RETURN: tuple[str], the targets a wishlist file states, as
-            '_wishlist_read' reads them, if success.
+            '_wishlist_read' reads them, if success;
             raises WishError, else -- also where a line carries a
-            '--digest', which only 'hwut.accept' reads.
+            '--digest', which only 'hwut.accept' reads, or a rule of
+            another kind ('!...', '.../'): a face that reads targets
+            alone must not drop a line silently.
     """
-    return _wishlist_read(file_name, False)[0]
+    listed = _wishlist_read(file_name, False)
+    if listed.exclude_tuple or listed.dir_rule_tuple or listed.no_bubbles_f:
+        raise WishError("'%s': this face reads targets alone -- no '!' "
+                        "line, no directory line ('<dir>/'), no '%s'"
+                        % (file_name, BUBBLE_WORD))
+    return listed.target_tuple
 
 
 def _wishlist_read(file_name, digest_f):
     """
-    RETURN: [0] tuple[str], the targets the wishlist file states, in
-                file order, if success;
-            [1] tuple[(str, str)], '(<target>, <tag>)' for every line
-                ending in '--digest=<tag>', the target as in [0];
+    RETURN: CWishlist, what the file states, line kind by line kind,
+            each in file order, if success;
             raises WishError naming file and line, else.
 
-    A '--digest' stands only after a LITERAL target -- a glob names a
-    set nobody has looked at yet (E-168) -- and only where the caller
-    reads it ('digest_f', 'hwut.accept'); every other face refuses it
-    by name, so a check written in the list is never silently dropped.
+    ONE LINE, ONE RULE (E-202):
+        <target>              wanted                   '--glob'
+        !<target>             not wanted               '--exclude'
+        <dir-glob>/           a directory wanted       '--dir'
+        !<dir-glob>/          a directory not entered  '--exclude-dir'
+        !<hwut-root>          no inner bubble entered  '--no-bubbles'
+    A trailing '/' makes a DIRECTORY line: a target names a file and
+    never ends in one. Directory lines keep their order among the
+    command line's own '--dir'/'--exclude-dir', and the LAST ONE
+    MATCHING decides -- grep's rule, and '.gitignore''s.
 
-    One target per line, '#' comments and blank lines dropped, a
-    leading './' replaced by the file's OWN directory.
+    A '--digest' stands only after a LITERAL wanted target -- a glob
+    names a set nobody has looked at yet (E-168) -- and only where the
+    caller reads it ('digest_f', 'hwut.accept'); every other face
+    refuses it by name, so a check written in the list is never
+    silently dropped.
+
+    '#' comments and blank lines dropped; a leading './' replaced by
+    the file's OWN directory.
 
     Raises WishError naming the file where it cannot be read: a
     wishlist that is not there is a command line that cannot be read,
@@ -678,36 +756,71 @@ def _wishlist_read(file_name, digest_f):
     #  path relative to wherever the reader happens to stand. That is
     #  what lets a list travel with the tree it describes.
     here = os.path.abspath(os.path.dirname(file_name) or ".")
-    target_list = []
-    digest_list = []
+    def grounded(text):
+        """RETURN: str, 'text' with a leading './' made the list's own
+                   directory; 'text' as it stands, else."""
+        if not text.startswith("./"): return text
+        return "%s/%s" % (here.replace(os.sep, "/").rstrip("/"), text[2:])
+
+    target_list  = []
+    digest_list  = []
+    exclude_list = []
+    rule_list    = []
+    no_bubbles_f = False
+    previous     = None            # the last target line, '!' or not
     for number, line in enumerate(line_list, start=1):
         text = line.strip()
         if not text or text.startswith("#"): continue
+        def refused(why):
+            """RETURN: WishError naming file, line and 'why'."""
+            return WishError("'%s', line %d: %s" % (file_name, number, why))
+        negated_f = text.startswith("!")
+        if negated_f:
+            text = text[1:].strip()
+            if not text: raise refused("'!' negates nothing")
+        if text.startswith("<") and text.endswith(">"):
+            if text != BUBBLE_WORD:
+                raise refused("'%s' is no word of a wishlist; the one "
+                              "reserved word is '!%s'" % (text, BUBBLE_WORD))
+            if not negated_f:
+                raise refused("'%s' alone asks the default -- every walk "
+                              "enters inner bubbles; '!%s' stays out"
+                              % (BUBBLE_WORD, BUBBLE_WORD))
+            no_bubbles_f = True
+            continue
         tag   = None
         match = _DIGEST_SUFFIX_RE.search(text)
         if match is not None:
             if not digest_f:
-                raise WishError("'%s', line %d: '--digest' is read by "
-                                "'hwut.accept' alone" % (file_name, number))
+                raise refused("'--digest' is read by 'hwut.accept' alone")
+            if negated_f:
+                raise refused("'--digest' after '!' -- a digest blesses a "
+                              "recording; an excluded run has none to bless")
             tag  = match.group(1)
             text = text[:match.start()].rstrip()
             if any(mark in text for mark in _GLOB_MARK_TUPLE):
-                raise WishError("'%s', line %d: '--digest' follows a glob "
-                                "-- a digest names ONE recording; name the "
-                                "test run literally" % (file_name, number))
+                raise refused("'--digest' follows a glob -- a digest names "
+                              "ONE recording; name the test run literally")
+        if text.endswith("/") and not text.startswith(":"):
+            glob_text = grounded(text).rstrip("/")
+            if not glob_text: raise refused("'/' names no directory")
+            rule_list.append(("-" if negated_f else "+", glob_text))
+            continue
         if text.startswith(":"):
-            previous = target_list[-1] if target_list else None
             try:
                 text = expanded_target(text, previous)
             except ElisionError as error:
-                raise WishError("'%s', line %d: %s"
-                                % (file_name, number, error)) from None
-        elif text.startswith("./"):
-            text = "%s/%s" % (here.replace(os.sep, "/").rstrip("/"),
-                              text[2:])
+                raise refused(str(error)) from None
+        else:
+            text = grounded(text)
+        previous = text
+        if negated_f:
+            exclude_list.append(text)
+            continue
         target_list.append(text)
         if tag is not None: digest_list.append((text, tag))
-    return tuple(target_list), tuple(digest_list)
+    return CWishlist(tuple(target_list), tuple(digest_list),
+                     tuple(exclude_list), tuple(rule_list), no_bubbles_f)
 
 
 def desugar_positional(word_list):

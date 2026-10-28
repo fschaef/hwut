@@ -8,7 +8,7 @@ $ hwut.plan --since=noon
                      [--wishlist <file>]... [-l|--label <expr>]
                      [--language=<name>]... [--faster-than=<sec>]
                      [-F|--feature <id-glob>]... [-e|--feature-ext <id>]...
-                     [-k|--keys <expr>] [--no-boundary]
+                     [-k|--keys <expr>] [--no-bubbles]
                      [<file-glob> [choice-glob]...] [--directory=<path>]
     [status 2]
 
@@ -21,7 +21,7 @@ $ hwut.plan --fail --pass
                      [--wishlist <file>]... [-l|--label <expr>]
                      [--language=<name>]... [--faster-than=<sec>]
                      [-F|--feature <id-glob>]... [-e|--feature-ext <id>]...
-                     [-k|--keys <expr>] [--no-boundary]
+                     [-k|--keys <expr>] [--no-bubbles]
                      [<file-glob> [choice-glob]...] [--directory=<path>]
     [status 2]
 
@@ -34,7 +34,7 @@ $ hwut.plan --sideways
                      [--wishlist <file>]... [-l|--label <expr>]
                      [--language=<name>]... [--faster-than=<sec>]
                      [-F|--feature <id-glob>]... [-e|--feature-ext <id>]...
-                     [-k|--keys <expr>] [--no-boundary]
+                     [-k|--keys <expr>] [--no-bubbles]
                      [<file-glob> [choice-glob]...] [--directory=<path>]
     [status 2]
 <hwut-end>

@@ -10,7 +10,7 @@ STDERR {
                                  [-l|--label <expr>] [--language=<name>]...
                                  [--faster-than=<sec>] [-F|--feature <id-glob>]...
                                  [-e|--feature-ext <id>]... [-k|--keys <expr>]
-                                 [--no-boundary] [--output=<path>]
+                                 [--no-bubbles] [--output=<path>]
                                  [--target <name>]... [--session] [--lock] [--out]
                                  [--orphans] [--books] [--constraints]
                                  [--relations] [--transient] [--directory=<path>]
@@ -27,7 +27,7 @@ STDERR {
                                  [-l|--label <expr>] [--language=<name>]...
                                  [--faster-than=<sec>] [-F|--feature <id-glob>]...
                                  [-e|--feature-ext <id>]... [-k|--keys <expr>]
-                                 [--no-boundary] [--output=<path>]
+                                 [--no-bubbles] [--output=<path>]
                                  [--target <name>]... [--session] [--lock] [--out]
                                  [--orphans] [--books] [--constraints]
                                  [--relations] [--transient] [--directory=<path>]
@@ -44,7 +44,7 @@ STDERR {
                                  [-l|--label <expr>] [--language=<name>]...
                                  [--faster-than=<sec>] [-F|--feature <id-glob>]...
                                  [-e|--feature-ext <id>]... [-k|--keys <expr>]
-                                 [--no-boundary] [--output=<path>]
+                                 [--no-bubbles] [--output=<path>]
                                  [--target <name>]... [--session] [--lock] [--out]
                                  [--orphans] [--books] [--constraints]
                                  [--relations] [--transient] [--directory=<path>]

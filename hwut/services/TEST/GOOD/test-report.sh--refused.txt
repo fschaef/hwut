@@ -7,7 +7,7 @@ STDOUT {
                        [--wishlist <file>]... [-l|--label <expr>]
                        [--language=<name>]... [--faster-than=<sec>]
                        [-F|--feature <id-glob>]... [-e|--feature-ext <id>]...
-                       [-k|--keys <expr>] [--no-boundary]
+                       [-k|--keys <expr>] [--no-bubbles]
                        [<file-glob> [choice-glob]...]
                        [--format=traditional|junit|tap|json] [--out=<path>]
                        [--width=<n>] [--plain] [--color] [--directory=<path>]
@@ -21,7 +21,7 @@ STDOUT {
                        [--wishlist <file>]... [-l|--label <expr>]
                        [--language=<name>]... [--faster-than=<sec>]
                        [-F|--feature <id-glob>]... [-e|--feature-ext <id>]...
-                       [-k|--keys <expr>] [--no-boundary]
+                       [-k|--keys <expr>] [--no-bubbles]
                        [<file-glob> [choice-glob]...]
                        [--format=traditional|junit|tap|json] [--out=<path>]
                        [--width=<n>] [--plain] [--color] [--directory=<path>]
@@ -35,7 +35,7 @@ STDOUT {
                        [--wishlist <file>]... [-l|--label <expr>]
                        [--language=<name>]... [--faster-than=<sec>]
                        [-F|--feature <id-glob>]... [-e|--feature-ext <id>]...
-                       [-k|--keys <expr>] [--no-boundary]
+                       [-k|--keys <expr>] [--no-bubbles]
                        [<file-glob> [choice-glob]...]
                        [--format=traditional|junit|tap|json] [--out=<path>]
                        [--width=<n>] [--plain] [--color] [--directory=<path>]
@@ -49,7 +49,7 @@ STDOUT {
                        [--wishlist <file>]... [-l|--label <expr>]
                        [--language=<name>]... [--faster-than=<sec>]
                        [-F|--feature <id-glob>]... [-e|--feature-ext <id>]...
-                       [-k|--keys <expr>] [--no-boundary]
+                       [-k|--keys <expr>] [--no-bubbles]
                        [<file-glob> [choice-glob]...]
                        [--format=traditional|junit|tap|json] [--out=<path>]
                        [--width=<n>] [--plain] [--color] [--directory=<path>]

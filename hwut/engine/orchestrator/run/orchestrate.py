@@ -29,7 +29,7 @@ from dataclasses import dataclass
 from datetime    import datetime, timezone
 
 from ...bookkeeper.api       import Bookkeeper
-from ..exploration.tree_explorer   import explore_tree, RUN_BOUNDARY_F
+from ..exploration.tree_explorer   import explore_tree
 from ..plan.form                   import E_NodeKind
 from ..plan.confinement            import uncapped_refusal_f
 from ..plan.determine              import EMPTY_SELECTION_STR
@@ -570,7 +570,7 @@ def orchestrate(root, wish, build_interview=None, label_view=None):
     ('services/lib/labels.view_at') and hands it in, and 'None' means no
     label knowledge reaches the selection (disc-8).
     """
-    tree = explore_tree(root, boundary_f=RUN_BOUNDARY_F)
+    tree = explore_tree(root, boundary_f=wish.no_bubbles_f)
     factory = None
     if wish.asks_base_f():
         def factory(directory):

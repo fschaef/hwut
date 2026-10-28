@@ -1,0 +1,32 @@
+== rules.txt
+   | # a, without its vendored copy, but keep one there
+   | a/
+   | !a/vendor/
+   | a/vendor/keep/
+   | !test-t.sh y
+./a/TEST/test-t.sh x
+./a/vendor/keep/TEST/test-t.sh x
+== all.txt
+   | test-t.sh x
+./a/TEST/test-t.sh x
+./a/vendor/TEST/test-t.sh x
+./a/vendor/keep/TEST/test-t.sh x
+./world/TEST/test-t.sh x
+== stay.txt
+   | test-t.sh x
+   | !<hwut-root>
+NOTE  world/: own root, not walked => do it inside it
+./a/TEST/test-t.sh x
+./a/vendor/TEST/test-t.sh x
+./a/vendor/keep/TEST/test-t.sh x
+REFUSED: 'bad.txt', line 1: '<hwut-root>' alone asks the default -- every walk enters inner bubbles; '!<hwut-root>' stays out
+REFUSED: 'bad.txt', line 1: '<nothing>' is no word of a wishlist; the one reserved word is '!<hwut-root>'
+REFUSED: 'bad.txt', line 1: '!' negates nothing
+REFUSED: 'bad.txt', line 1: '--digest' is read by 'hwut.accept' alone
+== empty.txt
+== a/local.txt
+   | ./
+   | !./vendor/
+./a/TEST/test-t.sh x
+./a/TEST/test-t.sh y
+<hwut-end>

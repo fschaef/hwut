@@ -2,7 +2,7 @@ NAME
     hwut.execute -- run one user-defined target over the tree
 
 USAGE
-    hwut.execute [-i] [--default=<script>] [-q] [+x] [--no-boundary]
+    hwut.execute [-i] [--default=<script>] [-q] [+x] [--no-bubbles]
                  [--directory=<path>] <target> [<argument> ...]
     hwut.execute [-q] [--dir|--exclude-dir <glob>]...
                  [--directory=<path>] -c "<commands>"

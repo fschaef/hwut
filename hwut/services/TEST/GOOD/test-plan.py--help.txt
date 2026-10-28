@@ -11,7 +11,7 @@ $ hwut.plan --help
                   [--wishlist <file>]... [-l|--label <expr>]
                   [--language=<name>]... [--faster-than=<sec>]
                   [-F|--feature <id-glob>]... [-e|--feature-ext <id>]...
-                  [-k|--keys <expr>] [--no-boundary]
+                  [-k|--keys <expr>] [--no-bubbles]
                   [<file-glob> [choice-glob]...] [--directory=<path>]
 
     DESCRIPTION
@@ -50,7 +50,12 @@ $ hwut.plan --help
                             '--exclude-dir a --dir a/keep' keeps 'a/keep'.
         --wishlist <file>   the file's lines as targets, '#' comments and
                             blanks dropped, './' meaning the file's own
-                            directory
+                            directory; a line may be a rule instead:
+                                !<target>       not wanted ('--exclude')
+                                <dir-glob>/     wanted ('--dir')
+                                !<dir-glob>/    not entered ('--exclude-dir')
+                                !<hwut-root>    '--no-bubbles'
+                            the last directory line matching decides
         --glob <target>     a target: a file name, or a file name and a
                             choice name with one blank between, either
                             carrying fnmatch's '*', '?' and '[ ]':
@@ -75,11 +80,9 @@ $ hwut.plan --help
         -e, --feature-ext <id>
                             the runs linked to the feature of that external
                             id ('*' any characters); with '-F' a union
-        --no-boundary       walk INTO an inner 'hwut-root.conf' (RQ-1) --
-                            what every run does since RQ-9: a bubble of its
-                            own is entered, its configuration reset from
-                            that file alone, nothing above reaching below.
-                            Accepted for the scripts that say it. Selects
+        --no-bubbles        do not enter an inner 'hwut-root.conf' (RQ-9):
+                            by default the walk enters every bubble below,
+                            each under its own configuration. Selects
                             nothing by itself
         -k, --keys <expr>   the runs linked to features whose effective keys
                             satisfy the expression ('AND', 'OR', 'NOT',

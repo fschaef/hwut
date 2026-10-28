@@ -101,8 +101,9 @@ def entered(directory, name_list, boundary_f=True):
     """RETURN: list of str, the names of 'name_list' -- sub-directories
     of 'directory' -- that a walk goes on into, sorted: those 'no_entry_f'
     does not close, whose name does not begin with '.', and -- where
-    'boundary_f' holds, as it does unless '--no-boundary' said otherwise
-    -- that start no project of their own (RQ-1)."""
+    'boundary_f' holds -- a walk that maintains a root's own files, or
+    a wish saying '--no-bubbles' -- that start no bubble of their own
+    (RQ-1, RQ-9)."""
     return sorted(name for name in name_list
                   if not name.startswith(".")
                   and not no_entry_f(os.path.join(directory, name))

@@ -167,10 +167,11 @@ class CTreeExploration:
 #  E-174): from inside there is no way out -- every climb ends at the
 #  NEAREST root; from outside a walk that SELECTS OR RUNS enters every
 #  bubble it meets, the configuration RESET from that bubble's file, so a
-#  case gets one verdict wherever hwut is called. Walks that MAINTAIN a
-#  root's own files (feature registry, sanitize, renovate) stay inside
-#  their bubble: they keep the default, 'boundary_f' True.
-RUN_BOUNDARY_F = False
+#  case gets one verdict wherever hwut is called -- unless the wish says
+#  '--no-bubbles' ('Wish.no_bubbles_f', E-202), which the selecting
+#  walks hand in as 'boundary_f'. Walks that MAINTAIN a root's own files
+#  (feature registry, sanitize, renovate) stay inside their bubble:
+#  they keep the default, 'boundary_f' True.
 
 
 def inner_root_note(relative):
@@ -178,7 +179,8 @@ def inner_root_note(relative):
     RETURN: str, the NOTE a walk that MAINTAINS a root's own files says
             where it stops at an inner 'hwut-root.conf' (RQ-1, RQ-9):
             which directory, and where to do it for that bubble. Walks
-            that select or run enter instead ('RUN_BOUNDARY_F').
+            that select or run enter, unless the wish says
+            '--no-bubbles' -- then they say this NOTE too.
     """
     return "NOTE  %s/: own root, not walked => do it inside it" % relative
 
@@ -234,7 +236,7 @@ def explore_tree_stream(root, interview_runner=None, fault_list=None,
     AN INNER 'hwut-root.conf' IS A BOUNDARY (RQ-1): a project of its own
     starts there, and the walk does not enter it -- 'note_list', the
     caller's accumulator, receives one NOTE per inner root. With
-    'boundary_f' False ('--no-boundary') the walk enters, and at the
+    'boundary_f' False (a selecting walk) the walk enters, and at the
     inner root the configuration is RESET from that file alone: nothing
     above it reaches below it, root-only keys included.
     """
@@ -318,7 +320,7 @@ def _walk_stream(root, relative, effective, interview_runner, fault_list,
     """
     directory = os.path.normpath(os.path.join(root, relative))
     #  'folded_f': the level's own confs are in 'effective' already --
-    #  an inner root under '--no-boundary', whose reset read them.
+    #  an inner root entered, whose reset read them.
     if not folded_f:
         before_n  = len(fault_list)
         effective = _folded(directory, relative, effective, fault_list)
@@ -337,7 +339,7 @@ def _walk_stream(root, relative, effective, interview_runner, fault_list,
         child_effective, child_folded_f = effective, False
         if inner_root_f(path):
             #  A PROJECT OF ITS OWN (RQ-1): not entered, and said; or,
-            #  under '--no-boundary', entered with the configuration
+            #  where entered, entered with the configuration
             #  RESET from the inner root alone ("we do not inherit into
             #  hwut-root.conf").
             if boundary_f:

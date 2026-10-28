@@ -8,7 +8,8 @@
 #                 "help-coverage", "numeral", "nested-root", "quantity",
 #                 "units-list", "sub-root", "tick", "pype-system",
 #                 "system-draw", "quantity-compare", "coverage-arms",
-#                 "bubble-labels", "bubble-features", "bubble-fault"]
+#                 "bubble-labels", "bubble-features", "bubble-fault",
+#                 "wishlist-rules"]
 # }
 #
 # ---------------------------------------------------------------------------
@@ -33,7 +34,8 @@
 # nested-root     RQ-1, amended by RQ-9 (2026-10-27, E-200): an inner
 #                 'hwut-root.conf' closes a bubble: from inside it
 #                 governs; from above the walk ENTERS it under the inner
-#                 configuration alone ('--no-boundary' says the same).
+#                 configuration alone; '--no-bubbles' stays out, with a
+#                 NOTE, and the retired '--no-boundary' is refused (E-202).
 #                 MEASURED before RQ-1: walked from above under the outer
 #                 configuration -- one case, two verdicts; before RQ-9:
 #                 not walked from above, a NOTE.
@@ -75,7 +77,7 @@ unset NO_COLOR CI COLUMNS
 case "$1" in
     --hwut-info)
         echo "The book writers' requirements and defects of 2026-10-24 (RQ-1 onwards, D-58 onwards);"
-        echo "CHOICES: compare-crash, region-refused, quoted-rule, help-coverage, numeral, nested-root, quantity, units-list, sub-root, tick, pype-system, system-draw, quantity-compare, coverage-arms, bubble-labels, bubble-features, bubble-fault;"
+        echo "CHOICES: compare-crash, region-refused, quoted-rule, help-coverage, numeral, nested-root, quantity, units-list, sub-root, tick, pype-system, system-draw, quantity-compare, coverage-arms, bubble-labels, bubble-features, bubble-fault, wishlist-rules;"
         exit 0 ;;
 esac
 
@@ -174,8 +176,10 @@ case "$1" in
         "$BIN/hwut.run" --plain --jobs=1 --deterministic 2>&1 | grep -E "^NOTE  |^END|^RESULTS" | shown
         echo "== from inside"
         ( cd world && "$BIN/hwut.run" --plain 2>&1 | grep -E "^END|^RESULTS" | shown )
-        echo "== from above, --no-boundary"
-        "$BIN/hwut.run" --plain --no-boundary --jobs=1 --deterministic 2>&1 | grep -E "^NOTE  |^END|^RESULTS" | shown
+        echo "== from above, --no-bubbles"
+        "$BIN/hwut.run" --plain --no-bubbles --jobs=1 --deterministic 2>&1 | grep -E "^NOTE  |^END|^RESULTS" | shown
+        echo "== from above, --no-boundary (retired)"
+        "$BIN/hwut.run" --plain --no-boundary 2>&1 | grep -E "^REFUSED|retired" | shown
         echo "== hwut.report.list from above"
         "$BIN/hwut.report.list" 2>&1 ;;
     quantity)
@@ -322,6 +326,39 @@ PYEOF2
             ran inside
             ran above ;;
         esac ;;
+    wishlist-rules)
+        #  E-202 (2026-10-27): a wishlist line may be a RULE -- '!<target>'
+        #  '--exclude', '<dir>/' '--dir', '!<dir>/' '--exclude-dir',
+        #  '!<hwut-root>' '--no-bubbles'; the last directory line matching
+        #  decides. MEASURED before: every line was a wanted target --
+        #  '!a/vendor/' selected nothing, silently.
+        for d in a/TEST a/vendor/TEST a/vendor/keep/TEST world/TEST; do
+            mkdir -p "$WORK/$d"
+            page "$WORK/$d/test-t.sh" 'choices = ["x", "y"]' 'echo "$1"'
+        done
+        cp "$WORK/hwut-root.conf" "$WORK/world/hwut-root.conf"
+        cd "$WORK"
+        listed() {      # <file>: what 'hwut.report.list' selects by it
+            echo "== $1"; sed 's/^/   | /' "$1"
+            "$BIN/hwut.report.list" --wishlist "$1" 2>&1 | shown
+        }
+        printf '%s\n' '# a, without its vendored copy, but keep one there' \
+               'a/' '!a/vendor/' 'a/vendor/keep/' '!test-t.sh y' > rules.txt
+        listed rules.txt
+        printf '%s\n' 'test-t.sh x' > all.txt
+        listed all.txt
+        printf '%s\n' 'test-t.sh x' '!<hwut-root>' > stay.txt
+        listed stay.txt
+        for bad in '<hwut-root>' '!<nothing>' '!' '!a/ --digest=abc'; do
+            printf '%s\n' "$bad" > bad.txt
+            "$BIN/hwut.report.list" --wishlist bad.txt 2>&1 | grep -v "^ \|^usage" | shown
+        done
+        : > empty.txt
+        listed empty.txt
+        #  './' IN A DIRECTORY LINE is the list's own directory: a list
+        #  kept in 'a/' travels with it.
+        printf '%s\n' './' '!./vendor/' > a/local.txt
+        listed a/local.txt ;;
     *)
         echo "unknown choice '$1'"; exit 1 ;;
 esac
