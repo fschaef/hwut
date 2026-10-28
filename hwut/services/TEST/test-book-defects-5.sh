@@ -10,7 +10,8 @@
 #                 "demo-documents", "play-menu", "accept-first",
 #                 "laws-all", "conf-unread", "unit-algebra", "law-names",
 #                 "genomics", "link-bits", "swarm-units",
-#                 "pype-header", "law-constant"]
+#                 "pype-header", "law-constant", "cov-remedy",
+#                 "pype-effect-fault"]
 # }
 #
 # ---------------------------------------------------------------------------
@@ -136,7 +137,7 @@ unset NO_COLOR CI COLUMNS
 case "$1" in
     --hwut-info)
         echo "The book writers' D-63 onwards and the defect list on a52f2a3;"
-        echo "CHOICES: header-once, pipe-quiet, units-written, exponent-law, zero-law, play-neighbour, play-cut-short, play-no-launch, propose-ignore, runner-words, demo-documents, play-menu, accept-first, laws-all, conf-unread, unit-algebra, law-names, genomics, link-bits, swarm-units, pype-header, law-constant;"
+        echo "CHOICES: header-once, pipe-quiet, units-written, exponent-law, zero-law, play-neighbour, play-cut-short, play-no-launch, propose-ignore, runner-words, demo-documents, play-menu, accept-first, laws-all, conf-unread, unit-algebra, law-names, genomics, link-bits, swarm-units, pype-header, law-constant, cov-remedy, pype-effect-fault;"
         exit 0 ;;
 esac
 
@@ -528,6 +529,34 @@ EOF2
             page test-k.sh "tolerance { constraints = [\"$law\"] }" 'echo "energy ((e: 30 J))"'
             "$BIN/hwut.play" test-k.sh --plain 2>&1 | grep -o "REFUSED: .*"
         done ;;
+    cov-remedy)
+        #  Book D-73 (services E-201): the no-tool refusal names what this
+        #  build READS; a reader-less candidate stays listed (it refuses by
+        #  name where a machine has it -- registry D-2) but is never the
+        #  remedy. MEASURED before: "looked for 'coverage', 'slipcover',
+        #  'trace'" and nothing more.
+        mkdir -p "$WORK/nocov"
+        for p in python3 sh dirname readlink env bash; do    # E-197: wrappers
+            printf '#!/bin/sh\nexec %s "$@"\n' "$(command -v $p)" > "$WORK/nocov/$p"
+            chmod +x "$WORK/nocov/$p"
+        done
+        printf 'hwut {\n    language-setup { python { extensions = [".py"] interpreter = "python3"\n        coverage = ["coverage", "slipcover", "trace"] } }\n}\n' > "$WORK/hwut-root.conf"
+        printf '#! /usr/bin/env python3\n# @hwut { choices = ["x"] }\nprint("hi")\nprint("<hwut-end>")\n' > test-a.py
+        chmod +x test-a.py
+        echo "== no tool on PATH"
+        PATH="$WORK/nocov" "$BIN/hwut.cov.run" --plain --dont-ask 2>&1 | grep -E "^ERROR" | shown
+        echo "== only 'slipcover' on PATH"
+        printf '#!/bin/sh\nexit 0\n' > "$WORK/nocov/slipcover"; chmod +x "$WORK/nocov/slipcover"
+        PATH="$WORK/nocov" "$BIN/hwut.cov.run" --plain --dont-ask 2>&1 | grep -E "^ERROR" \
+            | sed -E "s/this build knows .*/this build knows .../" | shown ;;
+    pype-effect-fault)
+        #  services E-201: an effect that raises is one line -- the
+        #  script's line, the exception, the input line -- not hwut's
+        #  frames. MEASURED before: a Python traceback of eight frames.
+        printf 'on: <entry> => {\n    n = 0\n}\non: "x" => {\n    n += 1\n    y = 1 / (n - 2)\n}\non: <else> => ignore;\non: <eof> => ignore;\n' > div.pype
+        printf 'x\nx\nx\n' | "$BIN/hwut.pype" div.pype 2>&1; echo "exit $?"
+        printf 'on: "x" => { pype.nosuch() }\non: <else> => ignore;\non: <eof> => ignore;\n' > bad.pype
+        echo x | "$BIN/hwut.pype" bad.pype 2>&1; echo "exit $?" ;;
     *)
         echo "unknown choice '$1'"; exit 1 ;;
 esac

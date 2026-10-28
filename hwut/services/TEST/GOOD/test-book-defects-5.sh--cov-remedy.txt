@@ -1,0 +1,5 @@
+== no tool on PATH
+ERROR CoverageRefused: no coverage tool for language 'python' is available here; looked for 'coverage', 'slipcover', 'trace' -- read by this build: 'coverage' => install it
+== only 'slipcover' on PATH
+ERROR CoverageRefused: no framework is registered for coverage tool 'slipcover'; this build knows ...
+<hwut-end>

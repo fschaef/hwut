@@ -161,5 +161,26 @@ def elect(language, candidate_tuple, available=is_available):
         if available(tool): return tool
     raise CoverageRefused(
         "no coverage tool for language '%s' is available here; looked "
-        "for %s" % (language, ", ".join("'%s'" % t
-                                         for t in candidate_tuple)))
+        "for %s%s" % (language, ", ".join("'%s'" % t
+                                           for t in candidate_tuple),
+                      _remedy(candidate_tuple)))
+
+
+def _remedy(candidate_tuple):
+    """
+    RETURN: str, what to install, appended to the no-tool refusal: the
+            candidates this build READS -- ' -- read by this build:
+            'coverage' => install one'; or that it reads none of them.
+
+    A candidate without a reader stays listed (it refuses by name where
+    a machine has it), but it is never offered as the remedy. MEASURED
+    before (book D-73): "looked for 'coverage', 'slipcover', 'trace'"
+    -- installing 'slipcover' then met "no framework is registered".
+    """
+    from .reader import registered_tuple
+    readable = [t for t in candidate_tuple if t in registered_tuple()]
+    if not readable:
+        return " -- read by this build: none of them => hwut.cov.formats"
+    return " -- read by this build: %s => install %s" \
+           % (", ".join("'%s'" % t for t in readable),
+              "it" if len(readable) == 1 else "one")

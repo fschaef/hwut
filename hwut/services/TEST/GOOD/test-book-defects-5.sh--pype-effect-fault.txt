@@ -1,0 +1,5 @@
+pype: div.pype:6: effect failed -- ZeroDivisionError: division by zero -- input <stdin>:2 'x'
+exit 1
+pype: bad.pype:1: effect failed -- AttributeError: 'PypeInfo' object has no attribute 'nosuch' -- input <stdin>:1 'x'
+exit 1
+<hwut-end>

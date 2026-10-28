@@ -80,6 +80,7 @@ import config                                                    # noqa F401
 from   config import HwutRunner                                  # noqa F401,E402
 
 from hwut.services.lib.cov.conv.to_humans import main as humans_main  # noqa E402
+from hwut.services.lib.cov.conv.to_humans import form_of_bytes          # noqa E402
 from hwut.services.lib.cov.conv.to_lcov import main as lcov_main    # noqa E402
 from hwut.services.lib.cov.conv.to_html import main as html_main    # noqa E402
 from hwut.services.lib.cov.conv.to_cobertura import main as cobertura_main  # noqa E402
@@ -127,7 +128,14 @@ def call(face, argument_list, directory):
                               .split("\n"):
             print("    %s" % piece if piece else "")
     data = b"".join(chunk_list)
-    if data:
+    if data and form_of_bytes(data) == "binary":
+        #  A BINARY RECORD IS NAMED, NOT MEASURED: it is zlib-compressed,
+        #  and its bytes are the machine's zlib's -- MEASURED: zlib-ng
+        #  ('1.3.1.zlib-ng') wrote no 0x0A where the author's zlib wrote
+        #  one, and the page said '0 line(s)' against a GOOD's '1'. The
+        #  round trip below proves the record.
+        print("    [a binary record written to stdout]")
+    elif data:
         #  LINES, not bytes: a tracefile carries the fixture's path,
         #  whose length is the machine's (O-30).
         print("    [%i line(s) written to stdout]" % data.count(b"\n"))

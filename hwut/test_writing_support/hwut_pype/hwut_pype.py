@@ -1391,6 +1391,38 @@ class Interpreter:
         """
         self.request = ("pop",)
 
+    def _run_effect(self, code, handler):
+        """
+        RETURN: None, the effect 'code' of 'handler' ran;
+                raises PypeError, else: the SCRIPT's line that raised,
+                the exception, and the input line it was handling --
+                never hwut's own frames. MEASURED before: a handler
+                calling 'pype.nosuch()' printed eight frames of the
+                interpreter above the one line that named the fault.
+        A closed pipe ends the run as before (D-64): BrokenPipeError
+        passes.
+        """
+        try:
+            if self.trace_style is not None:
+                sys.settrace(self._python_tracer)
+                try:     exec(code, self.namespace)
+                finally: sys.settrace(None)
+            else:
+                exec(code, self.namespace)
+        except (PypeError, BrokenPipeError):
+            raise
+        except Exception as error:                    # noqa: BLE001
+            where = handler.where
+            tb    = error.__traceback__
+            while tb is not None:
+                if tb.tb_frame.f_code.co_filename == code.co_filename:
+                    where = "%s:%d" % (code.co_filename, tb.tb_lineno)
+                tb = tb.tb_next
+            raise PypeError("%s: effect failed -- %s: %s -- input %s:%d %r"
+                            % (where, type(error).__name__, error,
+                               self.input_name, self.current_line_n,
+                               self.current_line)) from None
+
     def fire(self, handler):
         """RETURN: None. Runs the handler's actions in definition order.
 
@@ -1401,12 +1433,7 @@ class Interpreter:
         """
         for action in handler.action_list:
             if action.code is not None:
-                if self.trace_style is not None:
-                    sys.settrace(self._python_tracer)
-                    try:     exec(action.code, self.namespace)
-                    finally: sys.settrace(None)
-                else:
-                    exec(action.code, self.namespace)
+                self._run_effect(action.code, handler)
             if action.flush_f:
                 self.trace(handler.where, "effect: flush ;",
                            "        effect: flush ;")

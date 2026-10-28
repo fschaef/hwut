@@ -1,5 +1,5 @@
 $ hwut.cov.conv.to_humans <dir>/r.cover.txt
-    [1 line(s) written to stdout]
+    [a binary record written to stdout]
     [status 0]
 $ hwut.cov.conv.to_humans <dir>/r.cover
     [13 line(s) written to stdout]
