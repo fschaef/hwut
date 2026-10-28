@@ -1,0 +1,11 @@
+== hwut.move --dont-ask
+    feature 'same-seed' stays in the source, still linked there: the moved test links it as '<id>:same-seed'
+== formation/TEST holds
+test-a.sh
+== the moved test links
+# @hwut { features = ["<id>:same-seed"] choices = ["x"] }
+== hwut.features.register
+HINTS
+    1 leaf(s) in no aggregate => hwut.features.tree
+nothing to register below '.'
+<hwut-end>

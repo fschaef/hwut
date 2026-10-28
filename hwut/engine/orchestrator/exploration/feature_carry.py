@@ -39,6 +39,10 @@ ______________________________________________________________________________
 import os
 from   dataclasses import dataclass
 
+#  A FEATURE FILE THAT DEFINES NOTHING YET -- the frame a first carried
+#  definition is written into.
+EMPTY_FEATURE_FILE_TEXT = "features {\n    childs {\n    }\n}\n"
+
 from .                      import amend
 from .explorer              import explore
 from .feature_relation      import linked_name_tuple, read_feature_file
@@ -231,10 +235,16 @@ def test_moved(root, source_directory, target_directory, name_set,
     source_path, target_path = below(source_directory), \
                                below(target_directory)
     said_list = []
-    if not os.path.isfile(target_file):
-        write_atomic(target_file, "features {\n    childs {\n    }\n}\n")
-        said_list.append("'%s' written in the target directory"
-                         % FEATURE_FILE_NAME)
+    #  THE TARGET'S FILE IS WRITTEN WHEN A DEFINITION GOES INTO IT, not
+    #  before: a test whose features all stay in the source (still linked
+    #  there) leaves no empty file behind. MEASURED before (book D-74): an
+    #  empty 'hwut-features.conf' in the target, and 'hwut.features.register'
+    #  then gave that directory an id of its own for no feature.
+    def target_text_now():
+        """RETURN: str, the target's feature file as it stands, or the
+        empty one it would be -- nothing written."""
+        if os.path.isfile(target_file): return _read(target_file)
+        return EMPTY_FEATURE_FILE_TEXT
     for name in carried_list:
         source_text = _read(source_file)
         found = _definition_entry(source_text, name)
@@ -257,7 +267,7 @@ def test_moved(root, source_directory, target_directory, name_set,
                              "there: the moved test links it as '%s'"
                              % (name, internal))
             continue
-        target_text = _read(target_file)
+        target_text = target_text_now()
         standing = _definition_entry(target_text, name)
         if standing is not None:
             #  THE TARGET DEFINES THAT NAME ALREADY. Written alike, the
@@ -280,6 +290,9 @@ def test_moved(root, source_directory, target_directory, name_set,
                 said_list.append("feature '%s' stands in both, written "
                                  "differently: both left" % name)
             continue
+        if not os.path.isfile(target_file):
+            said_list.append("'%s' written in the target directory"
+                             % FEATURE_FILE_NAME)
         write_atomic(target_file, _added(target_text, name, body))
         said = "feature '%s' -> %s" % (name, target_path)
         if staying_f:

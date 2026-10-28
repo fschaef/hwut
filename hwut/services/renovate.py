@@ -184,6 +184,10 @@ def printed(result, write):
         write("")
         write("%i change(s) reported, none written: '--apply' writes them."
               % result.change_n)
+    #  A BUBBLE BELOW IS RENOVATED FROM INSIDE IT (E-200, book D-76).
+    from ..engine.orchestrator.exploration.tree_explorer \
+                                         import inner_root_note_tuple
+    for note in inner_root_note_tuple(result.root): write(note)
     return E_ExitCode.FAULT if result.fault_f else E_ExitCode.OK
 
 

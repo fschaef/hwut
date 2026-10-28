@@ -1,0 +1,11 @@
+== hwut.move world/TEST/test-a.sh formation/TEST/  (answered 'n')
+TO FOLLOW THE NEW NAME:
+  world/TEST/test-a.sh -> formation/TEST/test-a.sh -- 3 file(s), the book entry, the register id, the coverage seats
+      world/TEST/GOOD/test-a.sh--x.txt -> formation/TEST/GOOD/test-a.sh--x.txt
+      world/TEST/OUT/test-a.sh--x.txt -> formation/TEST/OUT/test-a.sh--x.txt
+      world/TEST/TMP/store/test-a.sh--x.stdout.when -> formation/TEST/TMP/store/test-a.sh--x.stdout.when
+NOTE  application 'test-a.sh' stands under the OLD name -- git mv world/TEST/test-a.sh formation/TEST/test-a.sh (E-16)
+
+Proceed? [y/N] 
+NOTE: nothing was renamed
+<hwut-end>

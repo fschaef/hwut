@@ -1,0 +1,11 @@
+== hwut.features.register
+nothing to register below '.'
+NOTE  editor/: own root, not walked => do it inside it
+== hwut.sanitize.propose
+NOTE  editor/: own root, not walked => do it inside it
+== hwut.renovate
+nothing to renovate below '.'
+NOTE  editor/: own root, not walked => do it inside it
+== hwut.sanitize root editor
+nothing to do: root editor -- a bubble stands: 'editor/hwut-root.conf'
+<hwut-end>

@@ -11,7 +11,8 @@
 #                 "laws-all", "conf-unread", "unit-algebra", "law-names",
 #                 "genomics", "link-bits", "swarm-units",
 #                 "pype-header", "law-constant", "cov-remedy",
-#                 "pype-effect-fault"]
+#                 "pype-effect-fault", "bubble-note", "move-one-base",
+#                 "move-no-empty"]
 # }
 #
 # ---------------------------------------------------------------------------
@@ -137,7 +138,7 @@ unset NO_COLOR CI COLUMNS
 case "$1" in
     --hwut-info)
         echo "The book writers' D-63 onwards and the defect list on a52f2a3;"
-        echo "CHOICES: header-once, pipe-quiet, units-written, exponent-law, zero-law, play-neighbour, play-cut-short, play-no-launch, propose-ignore, runner-words, demo-documents, play-menu, accept-first, laws-all, conf-unread, unit-algebra, law-names, genomics, link-bits, swarm-units, pype-header, law-constant, cov-remedy, pype-effect-fault;"
+        echo "CHOICES: header-once, pipe-quiet, units-written, exponent-law, zero-law, play-neighbour, play-cut-short, play-no-launch, propose-ignore, runner-words, demo-documents, play-menu, accept-first, laws-all, conf-unread, unit-algebra, law-names, genomics, link-bits, swarm-units, pype-header, law-constant, cov-remedy, pype-effect-fault, bubble-note, move-one-base, move-no-empty;"
         exit 0 ;;
 esac
 
@@ -557,6 +558,55 @@ EOF2
         printf 'x\nx\nx\n' | "$BIN/hwut.pype" div.pype 2>&1; echo "exit $?"
         printf 'on: "x" => { pype.nosuch() }\non: <else> => ignore;\non: <eof> => ignore;\n' > bad.pype
         echo x | "$BIN/hwut.pype" bad.pype 2>&1; echo "exit $?" ;;
+    bubble-note)
+        #  Book D-76 (services E-203): a face that MAINTAINS a root's own
+        #  files names each inner bubble it does not enter (E-200).
+        #  MEASURED before: 'nothing to register below '.'' and an empty
+        #  proposal, 'editor/' unnamed.
+        mkdir -p "$WORK/editor/TEST"
+        cp "$WORK/hwut-root.conf" "$WORK/editor/hwut-root.conf"
+        page "$WORK/editor/TEST/test-e.sh" 'features = ["empty"] choices = ["x"]' 'echo "$1"'
+        printf 'features {\n    childs {\n        empty { title = "e" }\n    }\n}\n' \
+               > "$WORK/editor/TEST/hwut-features.conf"
+        page test-t.sh 'choices = ["x"]' 'echo "$1"'
+        cd "$WORK"
+        "$BIN/hwut.features.init" > /dev/null 2>&1
+        echo "== hwut.features.register";   "$BIN/hwut.features.register" 2>&1 | shown
+        echo "== hwut.sanitize.propose";    "$BIN/hwut.sanitize.propose" -o f.txt 2>&1 | shown
+        echo "== hwut.renovate";            "$BIN/hwut.renovate" 2>&1 | shown
+        echo "== hwut.sanitize root editor"; "$BIN/hwut.sanitize" root editor 2>&1 | shown ;;
+    move-one-base|move-no-empty)
+        #  Book D-75 (move-one-base): a move across directories writes every
+        #  path from where hwut was called. MEASURED before: "in
+        #  'world/TEST':" over 'test-a.sh -> formation/TEST/test-a.sh', and a
+        #  'git mv' hint that failed where it was typed.
+        #  Book D-74 (move-no-empty): a moved test whose feature stays in the
+        #  source (still linked there) writes no feature file into the
+        #  target. MEASURED before: an empty 'hwut-features.conf', and
+        #  'hwut.features.register' gave the target an id for no feature.
+        mkdir -p "$WORK/world/TEST" "$WORK/formation/TEST"
+        for t in a b; do
+            page "$WORK/world/TEST/test-$t.sh" 'features = ["same-seed"] choices = ["x"]' 'echo "$1"'
+        done
+        printf 'features {\n    childs {\n        same-seed { title = "s" }\n    }\n}\n' \
+               > "$WORK/world/TEST/hwut-features.conf"
+        cd "$WORK"
+        "$BIN/hwut.features.init" > /dev/null 2>&1
+        "$BIN/hwut.features.register" > /dev/null 2>&1
+        ( cd world/TEST && record && "$BIN/hwut.accept" --whole > /dev/null 2>&1 )
+        ids() { sed -E 's/[A-Za-z0-9_-]{8}:same-seed/<id>:same-seed/g'; }
+        if [ "$1" = move-one-base ]; then
+            echo "== hwut.move world/TEST/test-a.sh formation/TEST/  (answered 'n')"
+            echo n | "$BIN/hwut.move" world/TEST/test-a.sh formation/TEST/ 2>&1 | shown
+        else
+            mv world/TEST/test-a.sh formation/TEST/
+            echo "== hwut.move --dont-ask"
+            "$BIN/hwut.move" world/TEST/test-a.sh formation/TEST/test-a.sh --dont-ask 2>&1 \
+                | grep -E "feature|written" | ids | shown
+            echo "== formation/TEST holds"; ls formation/TEST | grep -v "^GOOD$\|^OUT$\|^TMP$"
+            echo "== the moved test links"; sed -n 2p formation/TEST/test-a.sh | ids
+            echo "== hwut.features.register"; "$BIN/hwut.features.register" 2>&1 | shown
+        fi ;;
     *)
         echo "unknown choice '$1'"; exit 1 ;;
 esac

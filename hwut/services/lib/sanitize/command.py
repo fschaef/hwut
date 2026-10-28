@@ -220,11 +220,11 @@ class CContext:
             where = os.path.join(sanitize.shown(self.base, standing),
                                  _boundary.ROOT_CONF_NAME)
             if os.path.normpath(standing) == directory:
-                return CDone(E_Done.NOTHING, "a boundary stands: '%s'" % where)
+                return CDone(E_Done.NOTHING, "a bubble stands: '%s'" % where)
             #  BELOW A ROOT (RQ-1, ruled 2026-10-24): an inner root cuts a
             #  project out of the tree -- done only when asked by its name.
             return CDone(E_Done.REFUSED,
-                         "a boundary stands above: '%s' => a project of "
+                         "a bubble stands above: '%s' => a bubble of "
                          "its own here: 'hwut.sanitize sub-root %s'"
                          % (where, word_tuple[0]))
         return self._root_written(directory)
@@ -249,7 +249,7 @@ class CContext:
                          "no tree stands above => 'hwut.sanitize root %s'"
                          % word_tuple[0])
         if os.path.normpath(standing) == directory:
-            return CDone(E_Done.NOTHING, "a boundary stands: '%s'"
+            return CDone(E_Done.NOTHING, "a bubble stands: '%s'"
                          % os.path.join(sanitize.shown(self.base, standing),
                                         _boundary.ROOT_CONF_NAME))
         return self._root_written(directory)

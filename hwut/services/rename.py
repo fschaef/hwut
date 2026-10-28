@@ -84,6 +84,7 @@ EXIT STATUS (E-1, services/_exit.py):
 ______________________________________________________________________________
 """
 from pathlib import Path
+import os
 import sys
 from typing import Callable, Optional, Union
 
@@ -180,14 +181,29 @@ class Rename:
         directories."""
         return self.source is not self.target
 
+    def said(self, path: Union[str, Path]) -> str:
+        """
+        RETURN: str, 'path' as the preview writes it: from the SOURCE
+                test directory where the rename stays in it ('GOOD/x');
+                from where hwut was called where it crosses directories
+                ('world/TEST/GOOD/x') -- ONE base per preview, so a line
+                such as the 'git mv' hint can be typed as it stands.
+                MEASURED before (book D-75): 'test-f.sh ->
+                formation/TEST/test-f.sh' under "in 'world/TEST'".
+        """
+        if not self.across_f: return _shown(self.source, path)
+        return os.path.relpath(str(path))
+
     def text(self) -> str:
         """RETURN: str, 'app [choice] -> [dir/]app' [choice]', as
         announced."""
         head = self.test if self.choice is None \
                else f"{self.test} {self.choice}"
+        if self.across_f:
+            head = self.said(Path(self.source.directory) / head)
         if self.whole_test_f:
             tail = self.fresh_test if not self.across_f \
-                   else str(Path(self.target.directory) / self.fresh_test)
+                   else self.said(Path(self.target.directory) / self.fresh_test)
         else:
             tail = f"{self.test} {self.fresh_choice}"
         return f"{head} -> {tail}"
@@ -442,12 +458,12 @@ class Rename:
         old_f, new_f = old_path.is_file(), new_path.is_file()
         if self.whole_test_f:
             if old_f and new_f:
-                return note_list, (f"application stands under BOTH names: '{_shown(self.source, old_path)}' "
-                                   f"and '{_shown(self.source, new_path)}' -- decide which is the test first")
+                return note_list, (f"application stands under BOTH names: '{self.said(old_path)}' "
+                                   f"and '{self.said(new_path)}' -- decide which is the test first")
             if old_f:
                 note_list.append(f"NOTE  application '{self.test}' stands under the OLD "
-                                 f"name -- git mv {_shown(self.source, old_path)} "
-                                 f"{_shown(self.source, new_path)} (E-16)")
+                                 f"name -- git mv {self.said(old_path)} "
+                                 f"{self.said(new_path)} (E-16)")
             elif not new_f:
                 note_list.append(f"NOTE  application stands under NEITHER name "
                                  f"-- nothing to run under '{self.fresh_test}'")
@@ -644,12 +660,13 @@ def main(argv=None, write=None, read_line=None):
         write(f"REFUSED: '{rename.fresh_choice}' already stands among the choices of '{rename.test}'")
         return E_ExitCode.REFUSED
 
-    write(f"TO FOLLOW THE NEW NAME, in '{rename.source.directory}':")
+    write("TO FOLLOW THE NEW NAME:" if rename.across_f else
+          f"TO FOLLOW THE NEW NAME, in '{rename.source.directory}':")
     pair_tuple = rename.move_tuple()
     register_desc = "id, the coverage seats" if rename.across_f else "name"
     write(f"  {rename.text()} -- {len(pair_tuple)} file(s), the book entry, the register {register_desc}")
     for source_path, target_path in pair_tuple:
-        write(f"      {_shown(rename.source, source_path)} -> {_shown(rename.source, target_path)}")
+        write(f"      {rename.said(source_path)} -> {rename.said(target_path)}")
     if not pair_tuple:
         write("  (no recorded artefact stands; the book and the "
               "register are still asked)")

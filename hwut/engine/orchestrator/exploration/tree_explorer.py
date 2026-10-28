@@ -210,6 +210,26 @@ def inner_root_tuple(directory):
     return tuple(found)
 
 
+def inner_root_note_tuple(directory):
+    """
+    RETURN: tuple[str], one NOTE per OUTERMOST inner 'hwut-root.conf'
+            below 'directory' -- 'NOTE  editor/: own root, not walked =>
+            do it inside it', the path from 'directory' -- what a face
+            that MAINTAINS a root's own files says of the bubbles it does
+            not enter (E-200); empty where there is none.
+
+    MEASURED before (book D-76): 'hwut.features.register' and
+    'hwut.sanitize.propose' passed an inner project in silence.
+    """
+    top = os.path.abspath(directory)
+    found = []
+    for path in inner_root_tuple(top):
+        if any(path.startswith(outer + os.sep) for outer in found): continue
+        found.append(path)
+    return tuple(inner_root_note(os.path.relpath(path, top).replace(os.sep, "/"))
+                 for path in found)
+
+
 def explore_tree_stream(root, interview_runner=None, fault_list=None,
                         note_list=None, boundary_f=True):
     """

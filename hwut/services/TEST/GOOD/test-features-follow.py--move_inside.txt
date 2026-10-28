@@ -1,6 +1,6 @@
 
 --- hwut.move test-side.sh ../../TEST, inside engine/compare/core/TEST ---
-    TO FOLLOW THE NEW NAME, in '.':
+    TO FOLLOW THE NEW NAME:
       test-side.sh -> ../../TEST/test-side.sh -- 0 file(s), the book entry, the register id, the coverage seats
       (no recorded artefact stands; the book and the register are still asked)
     test-side.sh -> ../../TEST/test-side.sh:

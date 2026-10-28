@@ -62,7 +62,7 @@ relative to '--directory' (the current directory where none is given):
                                  pijul, fossil), the current directory,
                                  and 'q' to quit
                                  BELOW A ROOT IT REFUSES, naming 'sub-root'
-    sub-root <dir>               a project of its own inside a tree
+    sub-root <dir>               a bubble of its own inside a tree
                                  (RQ-1): 'hwut-root.conf' is written into
                                  <dir> though a root stands above; a walk
                                  from above stops there with a NOTE. No
@@ -890,13 +890,13 @@ def main(argv=None, write=None, ask=None):
             standing = None
         if standing is not None:
             if os.path.abspath(standing) == os.path.abspath(base):
-                write("nothing to do: a boundary stands: '%s'"
+                write("nothing to do: a bubble stands: '%s'"
                       % os.path.join(shown(base, standing), ROOT_CONF_NAME))
                 return E_ExitCode.OK
             #  BELOW A ROOT, 'root' WOULD CUT A PROJECT OUT OF A TREE
             #  (RQ-1): refused, and the verb that does it on purpose said.
-            write("REFUSED: root -- a boundary stands above: '%s' => "
-                  "a project of its own here: 'hwut.sanitize sub-root .'"
+            write("REFUSED: root -- a bubble stands above: '%s' => "
+                  "a bubble of its own here: 'hwut.sanitize sub-root .'"
                   % os.path.join(shown(base, standing), ROOT_CONF_NAME))
             return E_ExitCode.REFUSED
         if ask is None:

@@ -116,6 +116,7 @@ EXIT: OK where something was proposed, EMPTY where nothing is insane,
 REFUSED where the command line cannot be read or names a target no
 directory binds.
 """
+from hwut.engine.orchestrator.exploration.tree_explorer import inner_root_note_tuple
 from ..face import write_refusal
 import os
 import sys
@@ -297,6 +298,9 @@ def main(argv=None, write=None, err=None):
     if arguments.target: aspect_set.add("target")
 
     for note in note_list: err("NOTE: %s" % note)
+    #  A BUBBLE BELOW IS PROPOSED FOR INSIDE IT (E-200): named, not passed
+    #  in silence (book D-76).
+    for note in inner_root_note_tuple(root): err(note)
 
     text = proposal_text(issue_list, os.getcwd(),
                          head_list_of(directory, aspect_set))
