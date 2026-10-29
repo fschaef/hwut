@@ -1,0 +1,15 @@
+stock, item;qty (also written to stock.csv):
+##! table key=0 sep={;}
+pear;4
+plum;6
+apple;12
+####
+the frame, around the delivery and the sale:
+##! potpourri
+before delivery.json   stock adds up
+after  delivery.json   stock adds up
+before shop.py sell    stock adds up
+after  shop.py sell    stock adds up
+####
+before shop.py report  stock adds up
+<hwut-end>

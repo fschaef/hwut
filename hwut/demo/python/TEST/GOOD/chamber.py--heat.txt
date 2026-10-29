@@ -1,0 +1,65 @@
+## climate chamber, 20 degC -> 40 degC, one sample per second
+## '##' lines are for the reader: the comparison skips them.
+configuration, as loaded (YAML: whitespace is meaning):
+##! verbatim
+chamber:
+  plant:
+    time_constant_s: 300
+    heater_rate_K_per_s: 0.15
+  controller:
+    kind: PI
+    kp: 0.6
+    ki: 0.01
+    output: [-1.0, 1.0]
+  sensors: [top, middle, bottom, door]
+####
+sensors at the end, in K (the order is the bus's):
+    sensor  calibrated           reading_K
+##! table key=0 ignore=1 numeric={2:0.0005}
+    bottom  2026-10-28T08:34:59     313.04
+    top     2026-10-28T08:34:59     313.29
+    door    2026-10-28T08:34:59     312.78
+    middle  2026-10-28T08:34:59     313.17
+####
+step response, t in s against T in degC; envelope 20.0 .. 40.5:
+##! point-cloud limit=0.5 constraint={y >= 19.9 and y <= 40.6}
+        0   19.99
+       20   22.92
+       40   25.62
+       60   28.16
+       80   30.52
+      100   32.79
+      120   34.84
+      140   36.82
+      160   38.63
+      180   39.43
+      200   39.73
+      220   39.79
+      240   39.87
+      260   39.96
+      280   39.95
+      300   40.00
+      320   39.98
+      340   39.98
+      360   39.98
+      380   40.01
+      400   39.96
+####
+the same, as a picture ('|' the setpoint):
+##! ignore
+       0 s    *                                       |
+      40 s               *                            |
+      80 s                         *                  |
+     120 s                                  *         |
+     160 s                                         *  |
+     200 s                                           *|
+     240 s                                            *
+     280 s                                            *
+     320 s                                            *
+     360 s                                            *
+     400 s                                            *
+####
+overshoot  ((overshoot: 0.04 K))          law <= 0.5 K
+settled    ((settle: 200 s))             law <= 4 min
+chamber    ((verdict: "settled"))
+<hwut-end>

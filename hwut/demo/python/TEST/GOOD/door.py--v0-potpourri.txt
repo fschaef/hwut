@@ -1,0 +1,26 @@
+first in the queue: ((5366))
+##! potpourri
+badge ((5366)) granted
+latch released for ((5366))
+door opened by ((5366))
+latch thrown after ((5366))
+door closed behind ((5366))
+badge ((71b6)) granted
+latch released for ((71b6))
+door opened by ((71b6))
+latch thrown after ((71b6))
+door closed behind ((71b6))
+badge ((6b47)) granted
+latch released for ((6b47))
+door opened by ((6b47))
+latch thrown after ((6b47))
+door closed behind ((6b47))
+badge ((3069)) denied
+badge ((2a5f)) granted
+latch released for ((2a5f))
+door opened by ((2a5f))
+latch thrown after ((2a5f))
+door closed behind ((2a5f))
+badge ((339a)) denied
+####
+<hwut-end>

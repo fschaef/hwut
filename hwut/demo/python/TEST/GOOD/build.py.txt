@@ -1,0 +1,18 @@
+configure: checking for cc... cc
+configure: checking for ar... ar
+configure: 2 checks
+app (make[1]):
+    compiled  app/cli.c, app/main.c
+    built     program app/demo of app/main.o, app/cli.o, lib/libcore.a, app/plugins/libplug.a
+app/plugins (make[2]):
+    compiled  app/plugins/png.c, app/plugins/svg.c
+    built     archive app/plugins/libplug.a of 2 objects
+lib (make[1]):
+    compiled  lib/map.c, lib/num.c, lib/str.c
+    built     archive lib/libcore.a of 3 objects
+warnings, sorted:
+    app/plugins/svg.c:3:1: warning: implicit declaration of 'xml_open'
+    lib/num.c:14:9: warning: unused variable 'n'
+compile time ((compile: 0.62 s))  law < 5 s
+breaches     ((breaches: 0))
+<hwut-end>

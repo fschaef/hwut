@@ -1,0 +1,88 @@
+#! /usr/bin/env hwut.pype
+# build.pype -- the second stage of 'build.pypes': the summary of a
+# recursive build, the same whatever order the directories finished in.
+#
+#     CONFIGURE   'configure:' lines pass unchanged; the top directory's
+#                 'make: Entering' starts the build
+#     BUILD       the top level: 'make[N]: Entering' PUSHES a directory
+#     DIR         one directory; a nested 'Entering' pushes again, its
+#                 'Leaving' POPS back to where it was entered from
+#     DONE        after the top directory's 'make: Leaving'
+#
+# Every mode but CONFIGURE inherits the compiler's vocabulary, imported
+# below. The first mode defined is the start: CONFIGURE.
+
+CONFIGURE/on: <bof> => {
+    record_db, stack = {}, []          # directory -> what it did
+    warning_set, breach_list = set(), []
+    compile_s, check_n = 0.0, 0
+    def note(**fact_db):
+        record = record_db[stack[-1]]
+        for key, value in fact_db.items():
+            record.setdefault(key, []).append(value)
+}
+CONFIGURE/on: <bol> "configure: checking" => {
+    check_n += 1
+}
+and: flush;
+CONFIGURE/on: <bol> "make: Entering directory" => goto BUILD;
+CONFIGURE/on: <else> => {
+    breach_list.append("not understood before the build: " + pype.line())
+}
+CONFIGURE/on: <eof> => {
+    breach_list.append("the build never started")
+}
+and: goto DONE;
+# '<exit>' fires when the mode is left -- here once, for good.
+CONFIGURE/on: <exit> => {
+    print("configure: %d checks" % check_n)
+}
+
+# THE COMPILER'S VOCABULARY, from a file of its own.
+import: "compiler.pype"
+
+# ENTERING A DIRECTORY, at the top level or nested: the glob binds the
+# name with its quotes, '<eol>' demands nothing follows it.
+BUILD is: COMPILER
+BUILD/on: <bol> "make[" <level = int> "]: Entering directory" <name = "'*'"> <eol> => {
+    stack.append(name.strip("'"))
+    record_db[stack[-1]] = {"level": [level]}
+}
+and: push DIR;
+BUILD/on: <bol> "make: Leaving directory" => goto DONE;
+
+DIR is: COMPILER
+DIR/on: <bol> "make[" <level = int> "]: Entering directory" <name = "'*'"> <eol> => {
+    stack.append(name.strip("'"))
+    record_db[stack[-1]] = {"level": [level]}
+}
+and: push DIR;
+DIR/on: <bol> "make[" <int> "]: Leaving directory" => {
+    stack.pop()
+}
+and: pop;
+# A REPEAT GROUP: one '<part[i]>' per word after the product, however many.
+DIR/on: "ar rcs" <archive = "*.a"> +( i : <part[i] = "*.o"> ) => {
+    note(product="archive %s of %d objects" % (archive, i))
+}
+DIR/on: "ld -o" <program = "*"> +( i : <part[i] = "*"> ) => {
+    note(product="program %s of %s" % (program, ", ".join(part[k] for k in sorted(part))))
+}
+
+DONE is: COMPILER
+DONE/on: <eof> => {
+    for name in sorted(record_db):
+        record = record_db[name]
+        print("%s (make[%d]):" % (name, record["level"][0]))
+        print("    compiled  %s" % ", ".join(sorted(record.get("source", []))))
+        for product in record.get("product", []):
+            print("    built     %s" % product)
+    print("warnings, sorted:")
+    for warning in sorted(warning_set):
+        print("    " + warning)
+    for breach in breach_list:
+        print("BREACH: " + breach)
+    print("compile time ((compile: %.2f s))  law < 5 s" % compile_s)
+    print("breaches     ((breaches: %d))" % len(breach_list))
+    print("<hwut-end>")
+}

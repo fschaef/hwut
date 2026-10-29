@@ -1,0 +1,5 @@
+exchange 1: answered
+exchange 2: answered, late (over 1 s)
+exchange 3: answered
+law: kept
+<hwut-end>

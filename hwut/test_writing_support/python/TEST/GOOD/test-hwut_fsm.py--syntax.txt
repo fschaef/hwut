@@ -1,0 +1,18 @@
+
+--- the protocol, written back ---
+initial: idle
+forbidden: crashed
+final: idle
+busy ---( fault )---> crashed
+busy ---( release )---> idle
+idle ---( request )---> waiting
+waiting ---( cancel )---> idle
+waiting ---( grant )---> busy
+
+--- the author's form: 'state', a chain, ':', blanks around '-->' ---
+initial: A
+A ---( event )---> B
+A ---( event2 )---> C
+C ---( event )---> D
+state E
+<hwut-end>

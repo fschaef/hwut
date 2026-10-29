@@ -1,0 +1,8 @@
+door: 3 of 3 states visited, 4 of 5 transitions taken, 0 breaches
+  taken      closed ---( lock )---> locked
+  taken      closed ---( open )---> open   x2
+  taken      locked ---( unlock )---> closed
+  taken      open ---( close )---> closed   x2
+  not taken  open ---( slam )---> jammed
+  ended in   'closed'
+<hwut-end>

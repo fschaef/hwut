@@ -1,0 +1,6 @@
+exchange 1: answered 2 times
+exchange 2: NOT answered
+BREACH: request 4 after shutdown
+BREACH: response 3 without a request before it
+law: BROKEN
+<hwut-end>

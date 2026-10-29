@@ -1,0 +1,8 @@
+    after x: B, C
+    after z: F
+BREACH t=y: 'y' in 'F' -- no event leaves it
+    after y: F
+
+--- 'state' asked of a set ---
+FsmError: the machine stands in {'B', 'C'}: ask 'current()'
+<hwut-end>

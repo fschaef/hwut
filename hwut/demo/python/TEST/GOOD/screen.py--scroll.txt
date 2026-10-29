@@ -1,0 +1,72 @@
+> viewer.py race.txt
+-- title
+ race.txt
+-- body
+## demo.py race -- three workers
+start
+##! potpourri
+worker B done: 5 jobs
+worker A done: 3 jobs
+worker C done: 2 jobs
+####
+-- status
+j k q                   lines 1-7 of 10
+title bar: reverse
+> down
+-- body
+start
+##! potpourri
+worker B done: 5 jobs
+worker A done: 3 jobs
+worker C done: 2 jobs
+####
+all joined
+-- status
+j k q                   lines 2-8 of 10
+> down
+-- body
+##! potpourri
+worker B done: 5 jobs
+worker A done: 3 jobs
+worker C done: 2 jobs
+####
+all joined
+## the order between the markers is
+-- status
+j k q                   lines 3-9 of 10
+> j
+-- body
+worker B done: 5 jobs
+worker A done: 3 jobs
+worker C done: 2 jobs
+####
+all joined
+## the order between the markers is
+## free; the lines are not.
+-- status
+j k q                  lines 4-10 of 10
+> k
+-- body
+##! potpourri
+worker B done: 5 jobs
+worker A done: 3 jobs
+worker C done: 2 jobs
+####
+all joined
+## the order between the markers is
+-- status
+j k q                   lines 3-9 of 10
+-- title
+
+-- body
+
+
+
+
+
+
+
+-- status
+
+> q -- exit status 0
+<hwut-end>

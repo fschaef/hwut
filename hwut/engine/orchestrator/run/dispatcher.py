@@ -35,14 +35,13 @@ from ...operations.result           import E_TestRunResult
 from ...bookkeeper.api   import Bookkeeper
 
 from ...bookkeeper.api import Store, DirectoryBusy, unstable_f
-from ...procsitter.api       import Procsitter
+from .                              import directory_script
 from ..scheduler.scheduler          import I_Dispatcher
 from ..scheduler.disk_guard         import HOST_DISK_GUARD
 from ...operations.configuration    import caps_of
 from ...bookkeeper.api import ObservationDb, ObservationFault
 from .adapter                       import (naming_of,
                                             test_configuration_of,
-                                            script_config_of,
                                             SCRIPT_CAPS)
 
 
@@ -197,32 +196,15 @@ class TestRunDispatcher(I_Dispatcher):
     async def run_script(self, role, command):
         """
         RETURN: bool, whether the frame command ran to a good end:
-                supervised, in the directory, 'bash -c <command>'.
+                supervised, in the directory, 'bash -c <command>'
+                ('directory_script', E-204).
         """
-        how = await self._script(command)
+        how = await directory_script.run(self.directory_spec,
+                                         self.directory, command)
         #  HOW IT ENDED, for the closing note: the exit status, or the
         #  containment where the supervisor ended it.
         if how is not None: self.frame_exit_db[role] = how
         return how is None
-
-    async def _script(self, command, env=None):
-        """
-        RETURN: None, the script ran to exit 0
-                str, how it ended else -- 'exited <n>', or 'ended: <how>'
-                     where the supervisor ended it
-
-        EVERY SCRIPT OF THE DIRECTORY IS SUPERVISED (B-17): 'bash -c
-        <command>' in the directory, under the directory's
-        'script_caps' ('adapter.script_config_of').
-        """
-        procsitter = Procsitter(script_config_of(self.directory_spec, env),
-                                work_dir=self.directory)
-        record = await procsitter.run(["bash", "-c", command])
-        name   = record.containment.name
-        if name == "OK_COMPLETED" and record.exit_code == 0: return None
-        if name in ("OK_COMPLETED", "FAIL_COMPLETED"):
-            return "exited %s" % record.exit_code
-        return "ended: %s" % name[len("FAIL_"):].lower().replace("_", " ")
 
     async def _helper(self, role, node):
         """
@@ -233,12 +215,14 @@ class TestRunDispatcher(I_Dispatcher):
                 as the frame's is: a FRAME line, a NOTE at the end, by
                 'frame_emit' where the orchestrator set it, among the
                 run's NOTEs else. The run is told by environment:
-                'HWUT_TEST', 'HWUT_CHOICE' ('' for none).
+                'HWUT_TEST', 'HWUT_CHOICE' ('' for none) --
+                'directory_script', E-204.
         """
         command = getattr(self.directory_spec, role, None)
         if not command: return
-        how = await self._script(command, {"HWUT_TEST":   node.file,
-                                           "HWUT_CHOICE": node.choice or ""})
+        how = await directory_script.run(
+                  self.directory_spec, self.directory, command,
+                  directory_script.helper_env(node.file, node.choice))
         if how is None: return
         said = "%s of %s" % (role, node.name())
         emit = getattr(self, "frame_emit", None)

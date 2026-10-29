@@ -1,0 +1,6 @@
+{
+    "note":     "D-2026-117",
+    "supplier": "Obsthof Enz",
+    "lines":    [ { "item": "apple", "qty": 6 },
+                  { "item": "plum",  "qty": 2 } ]
+}

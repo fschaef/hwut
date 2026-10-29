@@ -1,0 +1,13 @@
+BREACH line 5: 'lock' in 'open' -- allowed: close, slam
+BREACH line 7: 'jammed' entered by 'slam' -- a forbidden state
+BREACH line 9: 'unlock' in 'jammed' -- no event leaves it
+door: 2 of 3 states visited, 2 of 5 transitions taken, 4 breaches
+  not taken  closed ---( lock )---> locked
+  taken      closed ---( open )---> open
+  not taken  locked ---( unlock )---> closed
+  not taken  open ---( close )---> closed
+  taken      open ---( slam )---> jammed
+  never in   'locked'
+  ended in   'jammed'
+BREACH: ended in 'jammed' -- final: closed, locked
+<hwut-end>

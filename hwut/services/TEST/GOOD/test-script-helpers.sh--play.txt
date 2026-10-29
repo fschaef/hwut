@@ -1,0 +1,8 @@
+NOTE  on_after_test of test-a.sh y exited 1: echo after $HWUT_TEST $HWUT_CHOICE >> log.txt; test $HWUT_CHOICE != y
+RECORDED: test-a.sh--y.txt (digest: RD2ZGKsLhuA)
+== log.txt
+entry
+before test-a.sh y
+after test-a.sh y
+exit
+<hwut-end>

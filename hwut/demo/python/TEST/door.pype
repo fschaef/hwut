@@ -1,0 +1,25 @@
+#! /usr/bin/env hwut.pype
+# THE DOOR'S LAW, as a state machine the script fires events into.
+#
+# The script's own modes are not needed: it only READS 'door: <event>'
+# lines. What the DOOR may do is the Machine's business ('hwut_fsm').
+# Every event the model does not allow prints one BREACH line; at the end
+# the report says what the events covered of the model.
+
+on: <entry> => {
+    from hwut.test_writing_support.python.hwut_fsm import Machine
+    door = Machine.from_string("""
+        initial:   closed
+        final:     closed, locked
+        forbidden: jammed
+        closed ---( open )---> open ---( close )---> closed
+        :      ---( lock )---> locked ---( unlock )---> closed
+        open   ---( slam )---> jammed
+    """, name="door")
+}
+on: "door:" <event = "*"> => { door.fire(event, where=pype.line_n()) }
+on: <else> => ignore;
+on: <eof> => {
+    door.report()
+    print("<hwut-end>")
+}

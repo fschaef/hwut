@@ -7631,3 +7631,97 @@ COST      Scripts saying '--no-boundary' are refused. 20 GOODs quoting the
           word alone (and the help paragraph of 'test-plan.py help').
           Regression: 'test-book-defects-4.sh' wishlist-rules, nested-root
           (re-recorded).
+
+
+E-203  MAINTAINING FACES NAME THE BUBBLES THEY PASS; A MOVE WRITES ONE
+       BASE AND NO EMPTY FEATURE FILE  (book D-76, D-75, D-74)        (2026-10-28)
+------------------------------------------------------------------------------
+PROBLEM   D-76, MEASURED on 8ee4e50: from above an inner 'hwut-root.conf',
+          'hwut.features.register' said "nothing to register below '.'",
+          'hwut.sanitize.propose' wrote its header only, 'hwut.renovate'
+          "nothing to renovate" -- none named the bubble, though E-200
+          promised a NOTE. 'hwut.sanitize root' said "a boundary stands".
+          D-75: 'hwut.move world/TEST/test-a.sh formation/TEST/' printed
+          "in 'world/TEST':" over 'test-a.sh -> formation/TEST/test-a.sh'
+          -- two bases in one line; its 'git mv' hint failed where typed.
+          D-74: a moved test whose feature stays in the source (still
+          linked there) left an EMPTY 'hwut-features.conf' in the target,
+          and 'hwut.features.register' gave that directory an id for no
+          feature. ROOT: the target's file was written before anything was
+          known to go into it.
+DECISION  D-76: 'tree_explorer.inner_root_note_tuple' -- one NOTE per
+          outermost bubble below, "NOTE  editor/: own root, not walked =>
+          do it inside it" -- said by register, propose, renovate. The word
+          of 'hwut.sanitize root' and 'sub-root' is BUBBLE: "a bubble
+          stands above: ... => a bubble of its own here".
+          D-75: a move ACROSS directories writes every path from where
+          hwut was called, header "TO FOLLOW THE NEW NAME:"; the 'git mv'
+          hint can be typed as it stands. A rename within one directory
+          keeps "in '<dir>':" and its short paths.
+          D-74: the target's feature file is written when a definition goes
+          into it. A test whose features all stay links them by internal id
+          (R-5, as before) and leaves the target as it was; no id is given.
+COST      Re-recorded, each diff read: 'test-book-defects-4.sh sub-root',
+          'test-face-words.sh boundary' (the word), 'test-features-follow.py
+          move', 'move_inside', 'test-rename.sh across' (one base).
+          Regression: 'test-book-defects-5.sh' bubble-note, move-one-base,
+          move-no-empty.
+
+
+E-204  'hwut_fsm': A STATE MACHINE AS THE TEST'S MODEL OF THE SYSTEM
+       (ruled 2026-10-28)                                             (2026-10-28)
+------------------------------------------------------------------------------
+PROBLEM   A test that compares output does not see a system move in a way
+          its protocol forbids, unless the writer keeps the bookkeeping by
+          hand -- sets of breaches, the last state, in pype effects (the
+          demo's 'protocol.pype', Schwarm 51's 'live.pype').
+DECISION  RULED: a small module in test_writing_support/python,
+          'hwut_fsm.Machine'. A model of states and events -- in Python, or
+          as text, 'Machine.from_string':
+              A ---( ev )---> B ---( ev2 )---> C     a chain
+              :  ---( ev )---> D                     ':' the state that
+                                                     began the line above
+              state E      initial: A      forbidden: X      final: A, B
+          'DFA=True' (the default): one state, two transitions for one
+          (state, event) refused with both lines; 'DFA=False': a set of
+          states. 'fire(event, where)' PRINTS a BREACH line for an event not
+          allowed where the machine stands (the machine stays) and for a
+          forbidden state entered (it is entered) -- printed, not raised, so
+          the GOOD file holds it. For the tester: 'path_to' (shortest event
+          sequence), 'state_reachable', 'unreachable', 'dead_ends',
+          'forbidden_reachable', 'check' (the model alone), 'report' (states
+          visited, transitions taken or not, where it ended; a breach for a
+          non-final end), 'to_string', 'trace', 'allowed', 'can'. Every
+          report sorted and without time. NOT pype's modes: they are the
+          reader's state; a Machine is the system's. A pype effect imports
+          it like any module.
+STAYS     Guards, hierarchical and parallel regions, time: not asked. A rule
+          over time ('30 s since') stays a pype law on the producer's clock.
+COST      Regression: 'test_writing_support/python/TEST/test-hwut_fsm.py'
+          (7 choices); demo 'demo/python/TEST/door.py' with 'door.pype'
+          (kept, broken) -- the demo now prints eight choices, README.md's
+          "Try it" says 8 ok; 'test-book-defects-5.sh demo-documents'
+          re-recorded (20 document paths, none nowhere; 8 ok).
+
+
+E-205  'hwut_fsm': THE LAW CHANGES WHILE THE MACHINE RUNS  (ruled 2026-10-29)
+                                                                      (2026-10-29)
+------------------------------------------------------------------------------
+PROBLEM   A system has phases -- maintenance, after a fault -- in which the
+          same model allows less. E-204's Machine held one law for the run.
+DECISION  RULED: masks over the model, which itself stays as written.
+          'disallow(event, state=None, where)' / 'allow(...)': an event a
+          breach in every state or in one; 'forbid(state, where)' /
+          'permit(state)': a state a breach to enter, the model's own
+          forbidden ones included; 'disallowed()' and 'forbidding()' for a
+          block. A refused event says "disallowed since <where>"; a state
+          forbidden since says so. FORBIDDING THE PRESENT is a breach at once
+          ("stands in 'busy' -- forbidden since line 7"). 'allowed', 'can'
+          and the questions of the model alone ('path_to', 'state_reachable',
+          'unreachable', 'dead_ends', 'forbidden_reachable', 'check') answer
+          UNDER THE MASKS by default -- RULED; 'masked=False' asks the model
+          as written. A mask over a word the model never names is refused.
+          'report' names what still stands at the end; 'reset' returns to
+          the model as written. Coverage counts states without the MODEL's
+          forbidden ones, whatever was forbidden or permitted since.
+COST      Regression: 'test-hwut_fsm.py masks'.

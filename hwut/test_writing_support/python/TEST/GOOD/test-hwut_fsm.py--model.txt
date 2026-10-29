@@ -1,0 +1,12 @@
+MODEL: 'limbo' cannot be reached
+MODEL: forbidden 'crashed' is reachable: request grant fault
+check: 2
+
+--- path_to ---
+    busy     ('request', 'grant')
+    crashed  ('request', 'grant', 'fault')
+    limbo    None
+    idle     ()
+    busy from now: ('grant',)
+    state_reachable('idle', start='now'): True
+<hwut-end>

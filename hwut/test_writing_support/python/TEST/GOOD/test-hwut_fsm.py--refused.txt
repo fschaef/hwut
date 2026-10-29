@@ -1,0 +1,22 @@
+
+--- A ---( x )---> B | : ---( x )---> C ---
+FsmError: line 2: 'A' --(x)--> 'C', and line 1: --> 'B' -- a DFA moves one way per event, or 'DFA=False'
+
+--- A ---(  )---> B ---
+FsmError: line 1: an arrow names no event -- '---( event )--->'
+
+--- : ---( x )---> B ---
+FsmError: line 1: ':' stands for the state of the line above, and none stands there
+
+--- A B ---( x )---> C ---
+FsmError: line 1: 'A B' names no state -- a state is a word ('A', 'state A')
+
+--- initial: A, B | A ---( x )---> B ---
+FsmError: line 1: 'initial:' names one state
+
+--- forbidden: Q | A ---( x )---> B ---
+FsmError: forbidden state(s) 'Q': named nowhere else in the model
+
+--- # nothing but a comment ---
+FsmError: the model names no state
+<hwut-end>

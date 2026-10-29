@@ -1,0 +1,10 @@
+one free space, two gates, one car at each; timelines: a digit fires
+    gate A  gate B  what happens                                    inside
+    "11  "  "  11"  A checks+admits, A opens, B refuses, B stays shut  1
+    "1 1 "  " 1 1"  A checks+admits, B refuses, A opens, B stays shut  1
+    "1  1"  " 11 "  A checks+admits, B refuses, B stays shut, A opens  1
+    " 11 "  "1  1"  B checks+admits, A refuses, A stays shut, B opens  1
+    " 1 1"  "1 1 "  B checks+admits, A refuses, B opens, A stays shut  1
+    "  11"  "11  "  B checks+admits, B opens, A refuses, A stays shut  1
+interleavings overbooking the garage ((overbooked: 0)) of 6
+<hwut-end>

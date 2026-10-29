@@ -1,0 +1,4 @@
+badges granted 4, denied 2; passages 4
+BREACH x4: latch thrown while the door stood open
+breaches ((breaches: 4))
+<hwut-end>

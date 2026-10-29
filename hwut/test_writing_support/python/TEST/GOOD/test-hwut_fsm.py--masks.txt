@@ -1,0 +1,34 @@
+
+--- 'grant' disallowed in every state, since line 2 ---
+    allowed now: cancel -- can('grant'): False
+BREACH line 4: 'grant' in 'waiting' -- disallowed since line 2
+    path_to('busy'):               None
+    path_to('busy', masked=False): ('request', 'grant')
+MODEL: 'busy' cannot be reached
+    check(): 1
+MODEL: forbidden 'crashed' is reachable: request grant fault
+    check(masked=False): 1
+
+--- allowed again; 'busy' forbidden while standing in it ---
+BREACH line 7: stands in 'busy' -- forbidden since line 7
+BREACH line 10: 'busy' entered by 'grant' -- forbidden since line 7
+
+--- permitted: 'busy', and the model's own 'crashed' ---
+    fault -> True -- now in crashed
+
+--- a phase: 'release' disallowed in 'busy' for a block ---
+BREACH line 20: 'release' in 'busy' -- disallowed since phase
+fsm: 3 of 3 states visited, 3 of 5 transitions taken, 1 breach
+  not taken  busy ---( fault )---> crashed
+  taken      busy ---( release )---> idle
+  taken      idle ---( request )---> waiting
+  not taken  waiting ---( cancel )---> idle
+  taken      waiting ---( grant )---> busy
+  ended in   'idle'
+  disallowed 'cancel' in every state since line 22
+
+--- refused: a word the model never names ---
+FsmError: 'jump': an event the model never names -- events: cancel, fault, grant, release, request
+FsmError: 'limbo': a state the model never names -- states: busy, crashed, idle, waiting
+FsmError: 'nowhere': a state the model never names -- states: busy, crashed, idle, waiting
+<hwut-end>

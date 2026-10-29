@@ -1,0 +1,3 @@
+badges granted 4, denied 2; passages 4
+breaches ((breaches: 0))
+<hwut-end>

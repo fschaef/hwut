@@ -1,0 +1,7 @@
+centroids (x y), in the order found:
+##! point-cloud limit=0.3 pair dist=Linf
+     5.02  3.97
+     0.96  0.94
+     8.91  1.05
+####
+<hwut-end>

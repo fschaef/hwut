@@ -246,7 +246,8 @@ def main(argv=None, write=None):
                                  plain_f, stderr_f, raw_f, pyped_f,
                                  write,
                                  case=case,
-                                 app=result.app_set.app_db[case.source_file]))
+                                 app=result.app_set.app_db[case.source_file],
+                                 directory_spec=result.app_set.directory_spec))
     except DirectoryBusy as error:
         write("REFUSED: %s" % error)
         return E_ExitCode.REFUSED
@@ -325,6 +326,33 @@ def _play_all(directory, word_list, plain_f, stderr_f, raw_f, pyped_f,
         write("EMPTY: the words select no case here")
         return E_ExitCode.EMPTY
     worst = E_ExitCode.OK
+    #  SEVERAL CASES, ONE FRAME (E-204): 'on_entry' once before the
+    #  first, 'on_exit' once after the last -- as a run frames them.
+    here           = os.path.abspath(directory)
+    directory_spec = result.app_set.directory_spec
+    try:
+        asyncio.run(frame(directory_spec, here, "on_entry", write))
+    except DirectoryBusy as error:
+        write("REFUSED: %s" % error)
+        return E_ExitCode.REFUSED
+    try:
+        worst = _play_each(case_tuple, result, found, directory,
+                           plain_f, stderr_f, raw_f, pyped_f, write)
+    finally:
+        asyncio.run(frame(directory_spec, here, "on_exit", write))
+    if worst is E_ExitCode.REFUSED: return worst
+    if unreadable_f: worst = E_ExitCode.FAULT
+    return worst
+
+
+def _play_each(case_tuple, result, found, directory,
+               plain_f, stderr_f, raw_f, pyped_f, write):
+    """
+    RETURN: E_ExitCode, OK where every case played; FAULT where one was
+            refused by its caps or did not play; REFUSED where the
+            directory was busy.
+    """
+    worst = E_ExitCode.OK
     for case in case_tuple:
         name = case.source_file if case.choice is None \
                else "%s %s" % (case.source_file, case.choice)
@@ -346,12 +374,14 @@ def _play_all(directory, word_list, plain_f, stderr_f, raw_f, pyped_f,
             code = asyncio.run(_play(configuration, case.choice,
                                      found.bookkeeper_db["."],
                                      plain_f, stderr_f, raw_f, pyped_f,
-                                     write, case=case, app=app))
+                                     write, case=case, app=app,
+                                     directory_spec=result.app_set
+                                                          .directory_spec,
+                                     frame_f=False))
         except DirectoryBusy as error:
             write("REFUSED: %s" % error)
             return E_ExitCode.REFUSED
         if code is not E_ExitCode.OK: worst = E_ExitCode.FAULT
-    if unreadable_f: worst = E_ExitCode.FAULT
     return worst
 
 
@@ -512,11 +542,51 @@ def _stream_whole_f(subjects, configuration, choice_name):
     return token_terminated_f(subjects.reader_db[STDOUT].open().read())
 
 
+async def _handler(directory_spec, directory, role, env, note_list,
+                   run_name=None):
+    """
+    RETURN: None. The directory's handler 'role' -- 'on_entry',
+            'on_exit', 'on_before_test', 'on_after_test' -- run as
+            'hwut.run' runs it ('directory_script', E-204), where the
+            directory's 'hwut.conf' states one. No verdict (E-158): an
+            end other than exit 0 is appended to 'note_list' as the
+            NOTE a run closes with -- '<role> of <run_name>' for a
+            handler around a test run, as the run says it.
+    """
+    if directory_spec is None: return
+    command = getattr(directory_spec, role, None)
+    if not command: return
+    from ....engine.orchestrator.run import directory_script
+    how = await directory_script.run(directory_spec, str(directory),
+                                     command, env)
+    if how is not None:
+        said = role if run_name is None else "%s of %s" % (role, run_name)
+        note_list.append("NOTE  %s %s: %s" % (said, how, command))
+
+
+async def frame(directory_spec, directory, role, write):
+    """
+    RETURN: None. The directory's 'on_entry' or 'on_exit', alone, under
+            the directory's lock -- for a play of SEVERAL cases, framed
+            once ('--all'); its NOTE written at once.
+    """
+    if directory_spec is None: return
+    note_list = []
+    with MkdirMutex(str(directory)):
+        await _handler(directory_spec, directory, role, None, note_list)
+    for line in note_list: write(line)
+
+
 async def _play(configuration, choice_name, bookkeeper, plain_f,
                 stderr_f, raw_f, pyped_f, write,
-                case=None, app=None):
+                case=None, app=None, directory_spec=None, frame_f=True):
     """
     RETURN: E_ExitCode, the exit status.
+
+    THE DIRECTORY'S HANDLERS RUN AS IN A RUN (E-204): 'on_entry' first
+    and 'on_exit' last where 'frame_f' (a play of one case),
+    'on_before_test' and 'on_after_test' around the case, all under the
+    directory's lock. 'directory_spec' None: no handler runs.
 
     THE PROVISION DOES EVERYTHING A RUN'S PROVISION DOES -- build,
     launch, contain, collect, canonicalise -- because it IS a run's
@@ -583,21 +653,46 @@ async def _play(configuration, choice_name, bookkeeper, plain_f,
                                                  keep_raw=True,
                                                  on_raw_line=tap)
 
-    with MkdirMutex(str(configuration.test_directory)):
-        subjects = await provision.provide()
-        recorded_db = None
-        cut_short_f = subjects is not None \
-                      and not _stream_whole_f(subjects, configuration,
-                                              choice_name)
-        if subjects is not None and not cut_short_f:
-            recorded_db = subject_provision.record(store, configuration,
-                                                   choice_name, provision,
-                                                   wanted=True,
-                                                   by="hwut.play")
+    from ....engine.orchestrator.run import directory_script
+    note_list = []
+    here      = configuration.test_directory
+    app_name  = case.source_file if case is not None \
+                else configuration.key_name
+    helper_env = directory_script.helper_env(app_name, choice_name)
+    run_name  = app_name if choice_name is None \
+                else "%s %s" % (app_name, choice_name)
+    with MkdirMutex(str(here)):
+        if frame_f:
+            await _handler(directory_spec, here, "on_entry", None,
+                           note_list)
+        try:
+            await _handler(directory_spec, here, "on_before_test",
+                           helper_env, note_list, run_name)
+            try:
+                subjects = await provision.provide()
+                recorded_db = None
+                cut_short_f = subjects is not None \
+                              and not _stream_whole_f(subjects,
+                                                      configuration,
+                                                      choice_name)
+                if subjects is not None and not cut_short_f:
+                    recorded_db = subject_provision.record(
+                                      store, configuration, choice_name,
+                                      provision, wanted=True,
+                                      by="hwut.play")
+            finally:
+                await _handler(directory_spec, here, "on_after_test",
+                               helper_env, note_list, run_name)
+        finally:
+            if frame_f:
+                await _handler(directory_spec, here, "on_exit", None,
+                               note_list)
     #  WHAT WAS RECORDED IS SAID AT THE END, where the reader's eye is
     #  after the reading: the recording 'hwut.accept' will bless.
     def recorded_note():
-        """RETURN: None. The recording's line, or why there is none."""
+        """RETURN: None. The handlers' NOTEs, then the recording's line,
+        or why there is none."""
+        for line in note_list: write(line)
         if recorded_db:
             #  THE TAG NAMES WHAT WAS PLAYED (E-168): 'hwut.accept
             #  --digest=<tag>' blesses this recording and no other.

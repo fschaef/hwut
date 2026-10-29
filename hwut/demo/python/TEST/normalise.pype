@@ -1,0 +1,12 @@
+#! /usr/bin/env hwut.pype
+# normalise.pype -- the first stage of 'build.pypes': a parallel build tags
+# every line with its job, 'job2: cc -c app/main.c ...'. The tag goes; what
+# follows it, and every untagged line, passes on unchanged.
+
+# '<bol>' anchors the tag at the start of the line; '<"job?:">' is a glob
+# over one token, matched and not bound.
+on: <bol> <"job?:"> => {
+    print(pype.line().split(" ", 1)[1])
+}
+on: <else> => flush;
+on: <eof> => ignore;

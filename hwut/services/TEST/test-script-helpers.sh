@@ -4,7 +4,13 @@
 # @hwut {
 #     title    = "the directory's scripts: helpers around each test run, all supervised"
 #     features = ["script-helpers-supervised"]
-#     choices  = ["around", "caps", "execute", "misplaced"]
+#     choices {
+#         around    { }
+#         play      { features = ["script-helpers-supervised", "play-runs-handlers"] }
+#         caps      { }
+#         execute   { }
+#         misplaced { }
+#     }
 # }
 #
 # ---------------------------------------------------------------------------
@@ -20,6 +26,9 @@
 # around     the order the four scripts run in, the run told by
 #            'HWUT_TEST' and 'HWUT_CHOICE'; one 'on_after_test' exiting 1:
 #            said, the verdicts untouched.
+# play       'hwut.play' runs the same four around the one case it plays
+#            (E-204), told alike, and says the NOTE in the run's words.
+#            MEASURED 2026-10-28 before: play ran none of them.
 # caps       'script_caps { timeout_sec = 1 }': an 'on_entry' sleeping 5
 #            is ended by the supervisor, said 'ended: wall clock
 #            exceeded'; the tests run.
@@ -38,7 +47,7 @@ unset NO_COLOR CI COLUMNS
 case "$1" in
     --hwut-info)
         echo "the directory's scripts: helpers around each test run, all supervised;"
-        echo "CHOICES: around, caps, execute, misplaced;"
+        echo "CHOICES: around, play, caps, execute, misplaced;"
         exit 0 ;;
 esac
 
@@ -61,7 +70,7 @@ shown() {
 }
 RUN="$BIN/hwut.run --jobs=1 --deterministic --no-colour"
 case "$1" in
-    around)
+    around|play)
         cat > sub/TEST/hwut.conf <<'E'
 hwut {
     on_entry       = "echo entry >> log.txt"
@@ -70,7 +79,12 @@ hwut {
     on_exit        = "echo exit >> log.txt"
 }
 E
-        $RUN 2>&1 | shown
+        if [ "$1" = around ]; then
+            $RUN 2>&1 | shown
+        else
+            (cd sub/TEST && "$BIN/hwut.play" test-a.sh y --plain 2>&1) \
+                | grep -E "^(NOTE|RECORDED)" | shown
+        fi
         echo "== log.txt"; cat sub/TEST/log.txt ;;
     caps)
         cat > sub/TEST/hwut.conf <<'E'

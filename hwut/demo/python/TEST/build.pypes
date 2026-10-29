@@ -1,0 +1,10 @@
+# build.pypes -- A SYSTEM of two pype scripts, one edge per line.
+#
+#     the build log --> normalise.pype --> build.pype --> the comparison
+#
+# hwut runs it as the header of build.py names it. By hand:
+#     ./build.py parallel | hwut.pype build.pypes
+#     hwut.pype --draw build.pypes
+
+--> normalise.pype
+normalise.pype --> build.pype

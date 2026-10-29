@@ -1,0 +1,9 @@
+* (defvar *cache* (make-hash-table))
+#<HASH-TABLE :TEST EQL :COUNT 0 {10A205823A}>
+* (defvar *worker* (make-thread (lambda () (loop (sleep 1))) :name "worker"))
+#<THREAD "worker" RUNNING {10BBE01C78}>
+* (let ((key (list 1 2))) (setf (gethash key *cache*) *worker*))
+#<THREAD "worker" RUNNING {10BBE01C78}>
+* *cache*
+#<HASH-TABLE :TEST EQL :COUNT 1 {10A205823A}>
+<hwut-end>

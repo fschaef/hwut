@@ -1,0 +1,22 @@
+space: capacity [1, 2, 3]  x  arriving [0, 1, 2, 3, 4]  x  leaving [0, 1, 2, 3]
+cell: cars inside / cars refused at the gate ('!!' differs from the model)
+capacity 1   leave 0    leave 1    leave 2    leave 3
+  arrive 0   0/0        0/0        0/0        0/0
+  arrive 1   1/0        0/0        0/0        0/0
+  arrive 2   1/1        0/1        0/1        0/1
+  arrive 3   1/2        0/2        0/2        0/2
+  arrive 4   1/3        0/3        0/3        0/3
+capacity 2   leave 0    leave 1    leave 2    leave 3
+  arrive 0   0/0        0/0        0/0        0/0
+  arrive 1   1/0        0/0        0/0        0/0
+  arrive 2   2/0        1/0        0/0        0/0
+  arrive 3   2/1        1/1        0/1        0/1
+  arrive 4   2/2        1/2        0/2        0/2
+capacity 3   leave 0    leave 1    leave 2    leave 3
+  arrive 0   0/0        0/0        0/0        0/0
+  arrive 1   1/0        0/0        0/0        0/0
+  arrive 2   2/0        1/0        0/0        0/0
+  arrive 3   3/0        2/0        1/0        0/0
+  arrive 4   3/1        2/1        1/1        0/1
+cases 60, differing from the model ((mismatches: 0))
+<hwut-end>

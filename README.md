@@ -24,25 +24,23 @@ accepted.
 
 ## Try it
 
-Four commands, about a minute. Python 3.10 or newer.
+Three commands, about a minute. Python 3.10 or newer.
 
 ```
 git clone https://github.com/fschaef/hwut && cd hwut
-pip install bidict rapidfuzz regex typeguard pyrsistent psutil pint
-sudo apt install libvterm0          # the terminal screen.py runs a program in
+pip install bidict rapidfuzz regex typeguard
 cd hwut/demo/python/TEST && ../../../bin/hwut --plain
 ```
 
 ```
-RESULTS: 28 ok, 0 fail
+RESULTS: 8 ok, 0 fail
 ```
 
-The demonstration is one test directory; `README.txt` there maps every
-file to what it shows. Where a run is seeded by the clock or the
-scheduler, the output differs from run to run, and every choice passes
-anyway. The header at the top of each file is the whole configuration of
-that test; `hwut.conf` is the directory's own word; each file's comment
-says what its choices show.
+`demo.py`, `protocol.sh` and `door.py` print eight choices between them. The
+runs of the first two are seeded by the clock or the scheduler, so their
+output differs from run to run, and every choice passes anyway. `door.py`
+watches a door with a state machine (`door.pype`, `hwut_fsm`). The header at the top of each file is the
+whole configuration; its comment says what the choice shows.
 
 Optional: `pip install prompt_toolkit` enables the keyed merge, `hwut.accept`
 on a terminal.

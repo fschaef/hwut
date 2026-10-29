@@ -1,0 +1,17 @@
+twelve jobs, four workers:
+##! potpourri subset duplicates
+job done by worker B
+job done by worker D
+job done by worker B
+job done by worker A
+job done by worker C
+job done by worker A
+job done by worker B
+job done by worker A
+job done by worker D
+job done by worker C
+job done by worker B
+job done by worker A
+####
+jobs done: 12
+<hwut-end>

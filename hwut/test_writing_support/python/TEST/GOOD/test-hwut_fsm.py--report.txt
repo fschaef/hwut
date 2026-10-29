@@ -1,0 +1,10 @@
+protocol: 3 of 3 states visited, 3 of 5 transitions taken, 1 breach
+  not taken  busy ---( fault )---> crashed
+  taken      busy ---( release )---> idle
+  taken      idle ---( request )---> waiting   x2
+  not taken  waiting ---( cancel )---> idle
+  taken      waiting ---( grant )---> busy   x2
+  ended in   'busy'
+BREACH: ended in 'busy' -- final: idle
+report returns 1
+<hwut-end>

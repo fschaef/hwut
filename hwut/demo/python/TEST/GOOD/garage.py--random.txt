@@ -1,0 +1,12 @@
+seed 4711, garage of 5, 1000 cars drawn: '+' arrives, '-' leaves
+first 60: ++--+---+----+----++-+---++---+--+++-+++-+-+-+-+-++-+--+--+-
+arrivals 548, refused 142; departures 452, from an empty garage 51
+cars inside after each event:
+    0   105  ##########
+    1   111  ###########
+    2   144  ##############
+    3   183  ##################
+    4   205  ####################
+    5   252  #########################
+steps differing from the model ((mismatches: 0))
+<hwut-end>

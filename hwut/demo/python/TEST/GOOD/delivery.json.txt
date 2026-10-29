@@ -1,0 +1,4 @@
+delivery note D-2026-117 from Obsthof Enz:
+    apple  +6
+    plum   +2
+<hwut-end>

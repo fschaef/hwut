@@ -1,0 +1,15 @@
+    request  -> True  now waiting  allowed: cancel, grant
+BREACH line 2: 'release' in 'waiting' -- allowed: cancel, grant
+    release  -> False now waiting  allowed: cancel, grant
+    grant    -> True  now busy     allowed: fault, release
+    release  -> True  now idle     allowed: request
+BREACH line 5: 'jump' in 'idle' -- an event the model never names
+    jump     -> False now idle     allowed: request
+    request  -> True  now waiting  allowed: cancel, grant
+
+--- questions where it stands ---
+can('grant')   True
+can('release') False
+in_state('waiting') True
+trace: 1:request>waiting 3:grant>busy 4:release>idle 6:request>waiting
+<hwut-end>

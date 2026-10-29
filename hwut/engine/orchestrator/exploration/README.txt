@@ -405,11 +405,17 @@ ______________________________________________________________________________
     }
 
 'on_entry' and 'on_exit' name scripts run on entering and leaving the
-directory -- the author's helpers, no verdict: the tests run whatever
-they did, and one that exits non-zero is said at the end of the run,
+directory -- by 'hwut.run' and 'hwut.play' alike (services E-204) --
+the author's helpers, no verdict: the tests run whatever they did, and
+one that exits non-zero is said at the end of the run,
 'NOTE  <directory>  on_entry exited 1: <command>' (services E-158).
 'on_before_test' and 'on_after_test' do the same around EACH test run,
-told which by 'HWUT_TEST' and 'HWUT_CHOICE'. Every script of a directory
+told which by 'HWUT_TEST' and 'HWUT_CHOICE' -- variables of the
+environment, so they expand in the command line itself:
+
+    on_before_test = "./check.sh before $HWUT_TEST $HWUT_CHOICE"
+
+Each runs as 'bash -c <command>' in the directory. Every script of a directory
 -- these four and the targets of 'hwut.execute' -- runs under the
 procsitter with 'script_caps { ... }', the words of 'caps { }', a minute
 of wall clock where it states none; it flows down the tree (services

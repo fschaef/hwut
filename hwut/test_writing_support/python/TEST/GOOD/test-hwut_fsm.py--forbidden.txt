@@ -1,0 +1,6 @@
+    request  -> True
+    grant    -> True
+BREACH line 3: 'crashed' entered by 'fault' -- a forbidden state
+    fault    -> False
+now in crashed -- breaches: 1
+<hwut-end>
