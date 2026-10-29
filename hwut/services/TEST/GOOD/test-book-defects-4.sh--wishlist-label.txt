@@ -1,0 +1,24 @@
+== label: slow
+./a/TEST/test-t.sh y
+./a/b/TEST/test-t.sh y
+./a/b/c/TEST/test-t.sh y
+== a/b/ + label: slow
+./a/b/TEST/test-t.sh y
+./a/b/c/TEST/test-t.sh y
+== test-t.sh + label: NOT slow
+./a/TEST/test-t.sh x
+./a/b/TEST/test-t.sh x
+./a/b/c/TEST/test-t.sh x
+== label: twice
+REFUSED: 'l.txt', line 2: 'label:' stands twice; one expression holds the whole question -- 'label: slow OR x'
+== !label:
+REFUSED: 'l.txt', line 1: '!label:' -- the expression says 'NOT': 'label: NOT <expr>'
+== label: (empty)
+REFUSED: 'l.txt', line 1: 'label:' names no label
+== label: slow AND
+REFUSED: 'l.txt', line 1: 'label: slow AND' cannot be read -- the expression ends where a label must stand
+== label: beside --label
+REFUSED: '--label' stands twice -- or beside a wishlist's 'label:'; one expression holds the whole question -- write '--label "slow OR slow"'
+== label: fast (no such label)
+REFUSED: no label 'fast' stands in 'hwut-root.labels'
+<hwut-end>

@@ -12,7 +12,7 @@
 #                 "genomics", "link-bits", "swarm-units",
 #                 "pype-header", "law-constant", "cov-remedy",
 #                 "pype-effect-fault", "bubble-note", "move-one-base",
-#                 "move-no-empty"]
+#                 "move-no-empty", "currencies"]
 # }
 #
 # ---------------------------------------------------------------------------
@@ -138,7 +138,7 @@ unset NO_COLOR CI COLUMNS
 case "$1" in
     --hwut-info)
         echo "The book writers' D-63 onwards and the defect list on a52f2a3;"
-        echo "CHOICES: header-once, pipe-quiet, units-written, exponent-law, zero-law, play-neighbour, play-cut-short, play-no-launch, propose-ignore, runner-words, demo-documents, play-menu, accept-first, laws-all, conf-unread, unit-algebra, law-names, genomics, link-bits, swarm-units, pype-header, law-constant, cov-remedy, pype-effect-fault, bubble-note, move-one-base, move-no-empty;"
+        echo "CHOICES: header-once, pipe-quiet, units-written, exponent-law, zero-law, play-neighbour, play-cut-short, play-no-launch, propose-ignore, runner-words, demo-documents, play-menu, accept-first, laws-all, conf-unread, unit-algebra, law-names, genomics, link-bits, swarm-units, pype-header, law-constant, cov-remedy, pype-effect-fault, bubble-note, move-one-base, move-no-empty, currencies;"
         exit 0 ;;
 esac
 
@@ -607,6 +607,29 @@ EOF2
             echo "== the moved test links"; sed -n 2p formation/TEST/test-a.sh | ids
             echo "== hwut.features.register"; "$BIN/hwut.features.register" 2>&1 | shown
         fi ;;
+    currencies)
+        #  E-206 (RQ-7, ruled 2026-10-29): EUR, USD, GBP, CHF, JPY, each a
+        #  dimension of its own, no conversion. MEASURED before: all five
+        #  undefined -- '((p: 9.99 EUR))' bound no quantity.
+        judged() {      # <law> <line printed>: blessed, or the refusal's reason
+            page test-c.sh "tolerance { constraints = [\"$1\"] }" "echo \"$2\""
+            rm -rf GOOD OUT
+            "$BIN/hwut.play" test-c.sh --plain > /dev/null 2>&1
+            printf '%-16s over %-24s : ' "$1" "$2"
+            "$BIN/hwut.accept" test-c.sh > o.txt 2>&1 && echo "blessed" \
+                || grep -m1 '^    constraint ' o.txt \
+                   | sed -E 's/.*, line [0-9]+ -- (.*)$/refused: \1/; t; s/.*/refused: broken/'
+        }
+        judged "p < 10 EUR"      "price ((p: 9.99 EUR))"
+        judged "p < 10 EUR"      "price ((p: 10.50 EUR))"
+        judged "p < 10 USD"      "price ((p: 9.99 EUR))"
+        judged "p < 2 kEUR"      "budget ((p: 1500 EUR))"
+        judged "p < 1000"        "price ((p: 9.99 CHF))"
+        echo "== pype: what a line binds"
+        printf '%s\n' 'on: <p = quantity(EUR)> => { print("EUR", p) }' \
+               'on: <q = quantity(JPY)> => { print("JPY", q) }' \
+               'on: <else> => { print("other:", pype.line()) }' 'on: <eof> => ignore;' > c.pype
+        printf '9.99 EUR\n2 kEUR\n1200 JPY\n5 USD\n' | "$BIN/hwut.pype" c.pype ;;
     *)
         echo "unknown choice '$1'"; exit 1 ;;
 esac

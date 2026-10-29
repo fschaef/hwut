@@ -9,7 +9,7 @@
 #                 "units-list", "sub-root", "tick", "pype-system",
 #                 "system-draw", "quantity-compare", "coverage-arms",
 #                 "bubble-labels", "bubble-features", "bubble-fault",
-#                 "wishlist-rules"]
+#                 "wishlist-rules", "glob-levels", "wishlist-label"]
 # }
 #
 # ---------------------------------------------------------------------------
@@ -77,7 +77,7 @@ unset NO_COLOR CI COLUMNS
 case "$1" in
     --hwut-info)
         echo "The book writers' requirements and defects of 2026-10-24 (RQ-1 onwards, D-58 onwards);"
-        echo "CHOICES: compare-crash, region-refused, quoted-rule, help-coverage, numeral, nested-root, quantity, units-list, sub-root, tick, pype-system, system-draw, quantity-compare, coverage-arms, bubble-labels, bubble-features, bubble-fault, wishlist-rules;"
+        echo "CHOICES: compare-crash, region-refused, quoted-rule, help-coverage, numeral, nested-root, quantity, units-list, sub-root, tick, pype-system, system-draw, quantity-compare, coverage-arms, bubble-labels, bubble-features, bubble-fault, wishlist-rules, glob-levels, wishlist-label;"
         exit 0 ;;
 esac
 
@@ -359,6 +359,49 @@ PYEOF2
         #  kept in 'a/' travels with it.
         printf '%s\n' './' '!./vendor/' > a/local.txt
         listed a/local.txt ;;
+    glob-levels|wishlist-label)
+        #  E-206 (ruled 2026-10-29): a path glob is matched LEVEL BY LEVEL --
+        #  '*' inside one level, '**' any number of levels, as '-F' globs
+        #  and '.gitignore' have it; a wishlist line 'label: <expr>' is the
+        #  list's '--label', once per wish. MEASURED before: 'a/*/x'
+        #  matched 'a/b/c/x' (fnmatch's '*' crossed '/'); 'label: slow'
+        #  was a target naming a file 'label:'.
+        for d in a/TEST a/b/TEST a/b/c/TEST; do
+            mkdir -p "$WORK/$d"
+            page "$WORK/$d/test-t.sh" 'choices = ["x", "y"]' 'echo "$1"'
+        done
+        cd "$WORK"
+        listed() {      # <title> <args...>: what 'hwut.report.list' selects
+            local title=$1; shift
+            echo "== $title"
+            "$BIN/hwut.report.list" "$@" 2>&1 | grep -v "^ \|^usage" | shown
+        }
+        if [ "$1" = glob-levels ]; then
+            listed "--glob 'a/*/TEST/test-t.sh x'"   --glob 'a/*/TEST/test-t.sh x'
+            listed "--glob 'a/**/test-t.sh x'"       --glob 'a/**/test-t.sh x'
+            listed "--glob 'a/**/c/**/test-t.sh x'"  --glob 'a/**/c/**/test-t.sh x'
+            listed "--glob '*/TEST/test-t.sh x'"     --glob '*/TEST/test-t.sh x'
+            listed "--glob 'test-t.sh x' (a bare name, every level)" --glob 'test-t.sh x'
+            listed "--dir 'a/*' (a directory and all below)"  --dir 'a/*' --glob 'test-t.sh x'
+            printf '%s\n' 'a/*/TEST/test-t.sh x' '!a/**/c/' > levels.txt
+            listed "wishlist: 'a/*/TEST/test-t.sh x', '!a/**/c/'" --wishlist levels.txt
+        else
+            "$BIN/hwut.labels.create" slow --glob 'test-t.sh y' > /dev/null 2>&1
+            L() {       # <title> <list text> <args...>
+                local title=$1 text=$2; shift 2
+                printf '%b' "$text" > l.txt
+                listed "$title" --wishlist l.txt "$@"
+            }
+            L "label: slow"                    'label: slow\n'
+            L "a/b/ + label: slow"             'a/b/\nlabel: slow\n'
+            L "test-t.sh + label: NOT slow"    'test-t.sh\nlabel: NOT slow\n'
+            L "label: twice"                   'label: slow\nlabel: x\n'
+            L "!label:"                        '!label: slow\n'
+            L "label: (empty)"                 'label:\n'
+            L "label: slow AND"                'label: slow AND\n'
+            L "label: beside --label"          'label: slow\n' --label slow
+            L "label: fast (no such label)"    'label: fast\n'
+        fi ;;
     *)
         echo "unknown choice '$1'"; exit 1 ;;
 esac

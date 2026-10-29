@@ -1,0 +1,21 @@
+== --glob 'a/*/TEST/test-t.sh x'
+./a/b/TEST/test-t.sh x
+== --glob 'a/**/test-t.sh x'
+./a/TEST/test-t.sh x
+./a/b/TEST/test-t.sh x
+./a/b/c/TEST/test-t.sh x
+== --glob 'a/**/c/**/test-t.sh x'
+./a/b/c/TEST/test-t.sh x
+== --glob '*/TEST/test-t.sh x'
+./a/TEST/test-t.sh x
+== --glob 'test-t.sh x' (a bare name, every level)
+./a/TEST/test-t.sh x
+./a/b/TEST/test-t.sh x
+./a/b/c/TEST/test-t.sh x
+== --dir 'a/*' (a directory and all below)
+./a/TEST/test-t.sh x
+./a/b/TEST/test-t.sh x
+./a/b/c/TEST/test-t.sh x
+== wishlist: 'a/*/TEST/test-t.sh x', '!a/**/c/'
+./a/b/TEST/test-t.sh x
+<hwut-end>

@@ -120,6 +120,8 @@ def _definition_file():
               a link speed writes them -- not kilobarn, megabarn, gilbert.
             - ADDED (RQ-7, E-198): 'ppb' (1e-9, beside pint's 'ppm') and
               'pood' (16.3804964 kg), symbols of one reading each.
+            - CURRENCIES (E-206): EUR, USD, GBP, CHF, JPY, each a dimension
+              of its own -- no conversion between them.
             raises RuntimeError naming the line, where the installed pint
             spells a changed line otherwise.
     """
@@ -181,6 +183,15 @@ gigabit = 1e9 * bit = Gb
 # Russian pood, 40 funt
 ppb = 1e-9
 pood = 16.3804964 * kilogram
+
+# hwut (services E-206): currencies -- each a dimension of its OWN, with no
+# conversion: an exchange rate is a fact of a day, not of a unit. '10 EUR'
+# compares with EUR alone; against USD it is refused, both named.
+euro           = [currency_EUR] = EUR
+us_dollar      = [currency_USD] = USD
+pound_sterling = [currency_GBP] = GBP
+swiss_franc    = [currency_CHF] = CHF
+yen            = [currency_JPY] = JPY
 """
 
 

@@ -1,0 +1,11 @@
+p < 10 EUR       over price ((p: 9.99 EUR))    : blessed
+p < 10 EUR       over price ((p: 10.50 EUR))   : refused: broken
+p < 10 USD       over price ((p: 9.99 EUR))    : refused: the units do not compare: EUR ([currency_EUR]) against USD ([currency_USD])
+p < 2 kEUR       over budget ((p: 1500 EUR))   : blessed
+p < 1000         over price ((p: 9.99 CHF))    : refused: a number without unit against a quantity -- write its unit
+== pype: what a line binds
+EUR 9.99
+EUR 2000.0
+JPY 1200.0
+other: 5 USD
+<hwut-end>

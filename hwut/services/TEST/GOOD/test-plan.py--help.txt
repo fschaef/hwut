@@ -55,11 +55,14 @@ $ hwut.plan --help
                                 <dir-glob>/     wanted ('--dir')
                                 !<dir-glob>/    not entered ('--exclude-dir')
                                 !<hwut-root>    '--no-bubbles'
+                                label: <expr>   '--label', once per wish
                             the last directory line matching decides
         --glob <target>     a target: a file name, or a file name and a
                             choice name with one blank between, either
                             carrying fnmatch's '*', '?' and '[ ]':
                                 --glob "test-*.py quick-[0-2]"
+                            in a path, '*' stays inside one level and '**'
+                            spans any number: "net/**/test-*.py"
                             may stand several times; the globs are OR'ed
                             among themselves
         -l, --label <expr>  the runs the label expression names ('AND',

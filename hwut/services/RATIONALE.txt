@@ -7725,3 +7725,42 @@ DECISION  RULED: masks over the model, which itself stays as written.
           the model as written. Coverage counts states without the MODEL's
           forbidden ones, whatever was forbidden or permitted since.
 COST      Regression: 'test-hwut_fsm.py masks'.
+
+
+E-206  PATH GLOBS LEVEL BY LEVEL; A WISHLIST NAMES A LABEL; CURRENCIES
+       (ruled 2026-10-29)                                             (2026-10-29)
+------------------------------------------------------------------------------
+PROBLEM   Path globs of a wish ('--glob', '--exclude', '--dir',
+          '--exclude-dir', wishlist lines) were fnmatch's: '*' crossed '/',
+          so 'a/*/x' matched 'a/b/c/x' -- while '-F' feature globs read '*'
+          as one level and '**' as any. Two meanings of '*' in one tool. A
+          wishlist could not name a label (the book's gap (a)). Currencies
+          were undefined in the preset base (RQ-7).
+DECISION  RULED, on development's recommendations of 2026-10-29:
+          (1) A path glob is matched LEVEL BY LEVEL ('auxiliary/path_glob'):
+          '*', '?', '[..]' inside one level, '**' a whole level spanning any
+          number, none included -- '-F''s rule and '.gitignore''s. A bare
+          name ('test-*.py') is matched against one name, as before; a
+          directory glob still takes the directory and all below it
+          ('--dir a/*' takes 'a/b/c/TEST'). MEASURED before switching: a
+          census through both matchers found 4 distinct globs that relied on
+          '*' crossing '/', all hwut's own pages ('test-wishlist.sh'
+          roundtrip, select, spent, travels; 'labels test-create.sh union');
+          their globs now say '**' and their GOODs stand unchanged.
+          (2) A wishlist line 'label: <expr>' is the list's '--label', read
+          and checked where the list is read. One expression holds the whole
+          question, as on the command line: a second 'label:', or one beside
+          '--label', is refused with the remedy 'a OR b'; '!label:' is
+          refused ('label: NOT ...'). A list of a label line alone narrows.
+          The book's gap (b) -- a derived label naming a place -- is NOT
+          built, by rule: 'hwut-root.labels' holds literal targets (disc-8);
+          a place is '--dir' or a wishlist's directory line.
+          (3) EUR, USD, GBP, CHF, JPY in the preset base, each a dimension
+          of its own ('[currency_EUR]'), no conversion: an exchange rate is
+          a fact of a day. 'p < 10 USD' over '9.99 EUR' is refused, both
+          named; prefixes as pint gives them ('2 kEUR'). The rest of RQ-7 --
+          cubit, Mach, st, ulp, flop -- RULED no; D-73 RULED: D-2 stands.
+COST      BREAKING: a path glob that relied on '*' crossing '/' selects
+          less; write '**'. Re-recorded: 'test-plan.py help' (two help
+          lines). Regression: 'test-book-defects-4.sh' glob-levels,
+          wishlist-label; 'test-book-defects-5.sh currencies'.

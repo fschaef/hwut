@@ -134,7 +134,9 @@ back a 'Wish' and the arguments that are none of them.
     --until=<point>     the last recorded run lies BEFORE the point,
                         and a case never run is wanted too
     --glob <target>     the target form with fnmatch's '*', '?' and
-                        '[ ]' in either member; may stand several times
+                        '[ ]' in either member; may stand several times.
+                        A path member is matched level by level: '*'
+                        inside one level, '**' any number (E-206)
 
 A <point> is a SPAN back from now -- a number and one of 's', 'm', 'h',
 'd' -- or an ANCHOR reckoned in UTC: 'today', 'yesterday' (that day,

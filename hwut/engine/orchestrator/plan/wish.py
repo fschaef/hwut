@@ -14,9 +14,10 @@ PURPOSE: THE WISH -- what the command line states about which tests are
     --glob <target>     the target form (R-34) with fnmatch's '*', '?'
                         and '[ ]' in either member; may stand several
                         times. The file member MAY CARRY A PATH,
-                        relative to the run's root --
-                        'messaging/*/test-queue.py' -- which selects
-                        ACROSS THE TREE. (A path is illegal where a
+                        relative to the run's root, matched LEVEL BY
+                        LEVEL: '*' inside one level, '**' any number of
+                        levels (E-206) -- 'messaging/**/test-queue.py'
+                        selects ACROSS THE TREE. (A path is illegal where a
                         target names a NEIGHBOUR: 'collision' and
                         'dependency' read the bare form.)
     --exclude <target>  a target NOT wanted, whatever else selects it.
@@ -64,7 +65,8 @@ PURPOSE: THE WISH -- what the command line states about which tests are
                         RULE (E-202): '!<target>' is '--exclude',
                         '<dir-glob>/' is '--dir', '!<dir-glob>/' is
                         '--exclude-dir', '!<hwut-root>' is
-                        '--no-bubbles'; directory lines keep their
+                        '--no-bubbles', 'label: <expr>' is '--label';
+                        directory lines keep their
                         order among the command line's, the last one
                         matching deciding.
 THE SHORT FORM OF HWUT 1.0 lives here too ('desugar_positional',
@@ -228,11 +230,14 @@ HELP = """SELECTION -- the wish; an absent keyword asks nothing
                             <dir-glob>/     wanted ('--dir')
                             !<dir-glob>/    not entered ('--exclude-dir')
                             !<hwut-root>    '--no-bubbles'
+                            label: <expr>   '--label', once per wish
                         the last directory line matching decides
     --glob <target>     a target: a file name, or a file name and a
                         choice name with one blank between, either
                         carrying fnmatch's '*', '?' and '[ ]':
                             --glob "test-*.py quick-[0-2]"
+                        in a path, '*' stays inside one level and '**'
+                        spans any number: "net/**/test-*.py"
                         may stand several times; the globs are OR'ed
                         among themselves
     -l, --label <expr>  the runs the label expression names ('AND',
@@ -512,6 +517,14 @@ def parse_wish(argv, digest_f=False):
                 (dir_list if sign == "+" else exclude_dir_list).append(glob_text)
             dir_rule_list.extend(listed.dir_rule_tuple)
             no_bubbles_f = no_bubbles_f or listed.no_bubbles_f
+            if listed.label_spec is not None:
+                if label_spec is not None:
+                    raise WishError(
+                        "'label:' in the wishlist beside '%s': one "
+                        "expression holds the whole question -- write "
+                        "'%s OR %s' (or AND) in one place"
+                        % (label_spec, label_spec, listed.label_spec))
+                label_spec = listed.label_spec
             #  A LIST OF RULES ALONE wants what its rules leave, as the
             #  same words on the command line would; an EMPTY list wants
             #  nothing (E-202).
@@ -526,6 +539,14 @@ def parse_wish(argv, digest_f=False):
                 (dir_list if sign == "+" else exclude_dir_list).append(glob_text)
             dir_rule_list.extend(listed.dir_rule_tuple)
             no_bubbles_f = no_bubbles_f or listed.no_bubbles_f
+            if listed.label_spec is not None:
+                if label_spec is not None:
+                    raise WishError(
+                        "'label:' in the wishlist beside '%s': one "
+                        "expression holds the whole question -- write "
+                        "'%s OR %s' (or AND) in one place"
+                        % (label_spec, label_spec, listed.label_spec))
+                label_spec = listed.label_spec
             #  A LIST OF RULES ALONE wants what its rules leave, as the
             #  same words on the command line would; an EMPTY list wants
             #  nothing (E-202).
@@ -548,7 +569,8 @@ def parse_wish(argv, digest_f=False):
                 text = argument[len("--label="):]
             if label_spec is not None:
                 raise WishError(
-                    "'--label' stands twice; one expression holds "
+                    "'--label' stands twice -- or beside a wishlist's "
+                    "'label:'; one expression holds "
                     "the whole question -- write "
                     "'--label \"%s OR %s\"'" % (label_spec, text))
             try:
@@ -662,6 +684,9 @@ _GLOB_MARK_TUPLE  = ("*", "?", "[")
 #  keeps the walk out of every inner 'hwut-root.conf'.
 BUBBLE_WORD = "<hwut-root>"
 
+#  A LABEL LINE OF A WISHLIST (E-206): 'label: <expression>'.
+_LABEL_LINE_RE = re.compile(r"^label\s*:(.*)$")
+
 #  '--no-boundary' asked, before RQ-9, what every walk now does.
 NO_BOUNDARY_RETIRED_TEXT = (
     "'--no-boundary' is retired: a walk enters every inner "
@@ -677,6 +702,7 @@ class CWishlist:
     exclude_tuple:  tuple = ()     # '!<target>'       ('--exclude')
     dir_rule_tuple: tuple = ()     # ('+'|'-', <glob>) ('--dir', '--exclude-dir')
     no_bubbles_f:   bool  = False  # '!<hwut-root>'    ('--no-bubbles')
+    label_spec:     str | None = None  # 'label: <expr>' ('--label')
 
 
 def _states_targets_f(listed):
@@ -689,7 +715,7 @@ def _states_targets_f(listed):
     """
     return bool(listed.target_tuple) \
            or not (listed.exclude_tuple or listed.dir_rule_tuple
-                   or listed.no_bubbles_f)
+                   or listed.no_bubbles_f or listed.label_spec is not None)
 
 
 def wishlist_target_tuple(file_name):
@@ -702,10 +728,11 @@ def wishlist_target_tuple(file_name):
             alone must not drop a line silently.
     """
     listed = _wishlist_read(file_name, False)
-    if listed.exclude_tuple or listed.dir_rule_tuple or listed.no_bubbles_f:
+    if listed.exclude_tuple or listed.dir_rule_tuple or listed.no_bubbles_f \
+       or listed.label_spec is not None:
         raise WishError("'%s': this face reads targets alone -- no '!' "
-                        "line, no directory line ('<dir>/'), no '%s'"
-                        % (file_name, BUBBLE_WORD))
+                        "line, no directory line ('<dir>/'), no '%s', no "
+                        "'label:'" % (file_name, BUBBLE_WORD))
     return listed.target_tuple
 
 
@@ -721,6 +748,8 @@ def _wishlist_read(file_name, digest_f):
         <dir-glob>/           a directory wanted       '--dir'
         !<dir-glob>/          a directory not entered  '--exclude-dir'
         !<hwut-root>          no inner bubble entered  '--no-bubbles'
+        label: <expr>         the runs the expression  '--label'
+                              names (E-206)
     A trailing '/' makes a DIRECTORY line: a target names a file and
     never ends in one. Directory lines keep their order among the
     command line's own '--dir'/'--exclude-dir', and the LAST ONE
@@ -767,6 +796,7 @@ def _wishlist_read(file_name, digest_f):
     exclude_list = []
     rule_list    = []
     no_bubbles_f = False
+    label_spec   = None
     previous     = None            # the last target line, '!' or not
     for number, line in enumerate(line_list, start=1):
         text = line.strip()
@@ -774,6 +804,27 @@ def _wishlist_read(file_name, digest_f):
         def refused(why):
             """RETURN: WishError naming file, line and 'why'."""
             return WishError("'%s', line %d: %s" % (file_name, number, why))
+        #  A LABEL LINE (E-206): the '--label' of the list, one expression
+        #  for the whole question, as on the command line.
+        label_match = _LABEL_LINE_RE.match(text)
+        if label_match is not None or _LABEL_LINE_RE.match(text.lstrip("!").strip()):
+            if text.startswith("!"):
+                raise refused("'!label:' -- the expression says 'NOT': "
+                              "'label: NOT <expr>'")
+            expression = label_match.group(1).strip()
+            if not expression:
+                raise refused("'label:' names no label")
+            if label_spec is not None:
+                raise refused("'label:' stands twice; one expression holds "
+                              "the whole question -- 'label: %s OR %s'"
+                              % (label_spec, expression))
+            try:
+                parse_expression(expression)
+            except LabelExprError as error:
+                raise refused("'label: %s' cannot be read -- %s"
+                              % (expression, error)) from None
+            label_spec = expression
+            continue
         negated_f = text.startswith("!")
         if negated_f:
             text = text[1:].strip()
@@ -820,7 +871,8 @@ def _wishlist_read(file_name, digest_f):
         target_list.append(text)
         if tag is not None: digest_list.append((text, tag))
     return CWishlist(tuple(target_list), tuple(digest_list),
-                     tuple(exclude_list), tuple(rule_list), no_bubbles_f)
+                     tuple(exclude_list), tuple(rule_list), no_bubbles_f,
+                     label_spec)
 
 
 def desugar_positional(word_list):

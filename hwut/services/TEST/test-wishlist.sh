@@ -113,7 +113,7 @@ select)
     echo "--- a bare name, matched in every directory"
     face --directory=tree --glob "test-b.sh"
     echo "--- a PATH-BEARING glob, across the tree"
-    face --directory=tree --glob "messaging/*/test-a.sh"
+    face --directory=tree --glob "messaging/**/test-a.sh"
     echo "--- a path AND a choice"
     face --directory=tree --glob "messaging/queue/TEST/test-a.sh one"
     ;;
@@ -121,7 +121,7 @@ select)
 roundtrip)
     #  Print, comment a line out, read it back.
     fixture
-    $FACE --directory=tree --glob "messaging/*/test-a.sh" \
+    $FACE --directory=tree --glob "messaging/**/test-a.sh" \
         > tree/messaging.txt
     sed -i '1i # the messaging quick check -- kept by hand' \
         tree/messaging.txt
@@ -135,7 +135,7 @@ roundtrip)
 travels)
     #  A list inside the subtree it describes: './' is its OWN ground.
     fixture
-    $FACE --directory=tree --glob "messaging/queue/*" \
+    $FACE --directory=tree --glob "messaging/queue/**" \
         | sed 's|^\./messaging/queue/|./|' > tree/messaging/queue/list.txt
     echo "THE FILE, beside the tests it names {"
     sed 's/^/    /' < tree/messaging/queue/list.txt
@@ -155,7 +155,7 @@ spent)
         printf 'line two\n<hwut-end>\n' > "tree/$where/TEST/GOOD/test-a.sh--two.txt"
         printf 'b\n<hwut-end>\n'        > "tree/$where/TEST/GOOD/test-b.sh.txt"
     done
-    $FACE --directory=tree --glob "messaging/*/test-a.sh one" \
+    $FACE --directory=tree --glob "messaging/**/test-a.sh one" \
         > tree/quick.txt
     echo "THE LIST {"; sed 's/^/    /' < tree/quick.txt; echo "}"
     echo "WHAT RAN:"

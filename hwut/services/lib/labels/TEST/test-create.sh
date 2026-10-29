@@ -95,7 +95,7 @@ union)
     face "$CREATE" east --glob "tree/messaging/*/TEST/test-b.sh" > /dev/null 2>&1
     face "$CREATE" west --glob "tree/storage/TEST/test-b.sh"     > /dev/null 2>&1
     echo "--- a union of two labels, narrowed by a glob"
-    face "$CREATE" coast --label "east,west" --glob "tree/messaging/*"
+    face "$CREATE" coast --label "east,west" --glob "tree/messaging/**"
     the_file
     ;;
 

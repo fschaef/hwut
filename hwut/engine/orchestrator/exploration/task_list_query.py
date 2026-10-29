@@ -25,6 +25,7 @@ An empty selection is legal and is the caller's to report (P-9).
 ______________________________________________________________________________
 """
 import fnmatch
+from   ....auxiliary.path_glob import path_glob_f
 import os
 from ...bookkeeper.test_run_info import of_case, E_MemberState
 from ....auxiliary import clock
@@ -53,14 +54,16 @@ def directory_hit_f(where, glob_text):
             (relative, '/'-separated) or an ancestor of it.
 
     ONE RULE WHEREVER A DIRECTORY IS NAMED (disc-10): a glob carrying '/'
-    is matched against the path and every ancestor; a BARE NAME against
-    every path COMPONENT -- so everything below what it names goes too.
+    is matched against the path and every ancestor, LEVEL BY LEVEL ('*'
+    inside one level, '**' any number -- 'auxiliary/path_glob', E-206); a
+    BARE NAME against every path COMPONENT -- so everything below what it
+    names goes too.
     """
     where = where.replace(os.sep, "/").strip("/")
     if glob_text.startswith("./"): glob_text = glob_text[2:]
     if "/" in glob_text:
         part_list = where.split("/")
-        return any(fnmatch.fnmatchcase("/".join(part_list[:end]), glob_text)
+        return any(path_glob_f(glob_text, "/".join(part_list[:end]))
                    for end in range(1, len(part_list) + 1))
     return any(fnmatch.fnmatchcase(part, glob_text)
                for part in where.split("/"))
@@ -580,11 +583,13 @@ class CTestTaskListQuery(CTestTaskList):
         if self.directory is None: return False
         where = "%s/%s" % (self.directory.replace(os.sep, "/").strip("/"),
                            case.source_file)
+        #  A PATH GLOB IS MATCHED LEVEL BY LEVEL (E-206): '*' stays inside
+        #  one level, '**' spans any number.
         if not os.path.isabs(file_glob):
-            return fnmatch.fnmatchcase(where, file_glob)
+            return path_glob_f(file_glob, where)
         if self.root is None: return False
         whole = os.path.normpath(os.path.join(self.root, where))
-        return fnmatch.fnmatchcase(whole.replace(os.sep, "/"), file_glob)
+        return path_glob_f(file_glob, whole.replace(os.sep, "/"))
 
     def _instant(self, when_text):
         """
