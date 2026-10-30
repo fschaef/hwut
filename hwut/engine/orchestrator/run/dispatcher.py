@@ -197,7 +197,7 @@ class TestRunDispatcher(I_Dispatcher):
         """
         RETURN: bool, whether the frame command ran to a good end:
                 supervised, in the directory, 'bash -c <command>'
-                ('directory_script', E-204).
+                ('directory_script', E-207).
         """
         how = await directory_script.run(self.directory_spec,
                                          self.directory, command)
@@ -216,7 +216,7 @@ class TestRunDispatcher(I_Dispatcher):
                 'frame_emit' where the orchestrator set it, among the
                 run's NOTEs else. The run is told by environment:
                 'HWUT_TEST', 'HWUT_CHOICE' ('' for none) --
-                'directory_script', E-204.
+                'directory_script', E-207.
         """
         command = getattr(self.directory_spec, role, None)
         if not command: return

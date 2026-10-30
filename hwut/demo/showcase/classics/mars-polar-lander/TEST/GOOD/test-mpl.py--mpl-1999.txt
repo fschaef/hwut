@@ -1,0 +1,14 @@
+touchdown logic: mpl-1999
+##! verbatim
+  t (s)   alt (m)   sensors  latches  engine   event
+    0.0    1600.0   0 0 0    . . .    on       
+    2.5    1500.0   0 1 0    . . .    on       legs deployed, leg 2 transient
+    2.6    1496.0   0 1 0    . L .    on       
+    2.7    1492.0   0 0 0    . L .    on       
+   39.0      40.0   0 0 0    . L .    off      sensing enabled, ENGINE CUT
+   55.7       0.0   1 1 1    . L .    off      on the ground
+####
+engine stopped during the descent ((stopped: 1))   law == 1   kept
+engine stopped at ((cutoff: 40.0 m))   law <= 0.5 m   BROKEN
+free fall from 40.0 m: 17.4 m/s at the ground
+<hwut-end>

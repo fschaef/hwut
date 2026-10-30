@@ -1,4 +1,4 @@
 # vut-register 5 generation:3 apps:1 marks:0=2
 test;choice;verdict;report;stain;test_id;choice_id
-test-fuzz.py;bounded;true;ok;;0;0
-;trusting;true;ok;;0;1
+test-canonical.py;nfkc-casefold;true;ok;;0;1
+;nodeprep-2013;true;ok;;0;0

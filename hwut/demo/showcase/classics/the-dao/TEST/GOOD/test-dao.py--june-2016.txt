@@ -1,0 +1,51 @@
+dao.py variant 'june-2016'   deposits: alice 100, bob 50, carol 70, mallory 20   held 240
+
+1. THE CALL STACK (deeper = called from inside the payment above)
+##! verbatim
+   withdraw(mallory)   owed 20
+     pay 20 -> mallory.receive()
+     withdraw(mallory)   owed 20
+       pay 20 -> mallory.receive()
+       withdraw(mallory)   owed 20
+         pay 20 -> mallory.receive()
+         withdraw(mallory)   owed 20
+           pay 20 -> mallory.receive()
+           withdraw(mallory)   owed 20
+             pay 20 -> mallory.receive()
+             withdraw(mallory)   owed 20
+               pay 20 -> mallory.receive()
+               withdraw(mallory)   owed 20
+                 pay 20 -> mallory.receive()
+                 withdraw(mallory)   owed 20
+                   pay 20 -> mallory.receive()
+                   withdraw(mallory)   owed 20
+                     pay 20 -> mallory.receive()
+                     withdraw(mallory)   owed 20
+                       pay 20 -> mallory.receive()
+                       withdraw(mallory)   owed 20
+                         pay 20 -> mallory.receive()
+                         withdraw(mallory)   owed 20
+                           pay 20 -> mallory.receive()
+                           withdraw(mallory)   owed 20
+                             cannot pay: the contract holds 0
+   withdraw(alice)   owed 100
+     cannot pay: the contract holds 0
+   withdraw(bob)   owed 50
+     cannot pay: the contract holds 0
+   withdraw(carol)   owed 70
+     cannot pay: the contract holds 0
+####
+
+2. THE LEDGER (ether)
+##! verbatim
+   member     put in   received   still owed
+   alice         100          0          100
+   bob            50          0           50
+   carol          70          0           70
+   mallory        20        240            0
+   contract holds 0
+####
+
+paid beyond what was put in ((drained: 220))   law == 0   BROKEN
+put in and not paid out     ((unpaid: 220))   law == 0   BROKEN
+<hwut-end>

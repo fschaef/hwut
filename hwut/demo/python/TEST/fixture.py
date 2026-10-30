@@ -15,8 +15,9 @@ THE SHOP'S FIXTURE -- no test, a helper the directory's 'hwut.conf' calls.
 
 'hwut.conf' passes '<app>' and '<choice>' as '$HWUT_TEST $HWUT_CHOICE',
 which hwut sets for the run the check stands around; a test without
-choices has none. 'check' concerns the shop's tests alone. The stock ADDS UP where every item's quantity is its opening
-quantity plus every movement of the journal.
+choices has none. 'check' concerns the shop's tests alone. The stock
+ADDS UP where every item's quantity is its opening quantity plus every
+movement of the journal.
 ______________________________________________________________________________
 """
 import os

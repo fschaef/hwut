@@ -1,0 +1,14 @@
+clock read: monotonic   leap second inserted 2016-12-31 23:59:60 UTC
+##! verbatim
+ #  true start   true end     read start   read end      rtt      outcome
+ 1  23:59:58.4   23:59:58.6   1000.4 s     1000.6 s      +200 ms  backoff 44 ms
+ 2  23:59:59.2   23:59:60.1   1001.2 s     1002.1 s      +900 ms  backoff 732 ms
+ 3  23:59:59.8   23:59:60.3   1001.8 s     1002.3 s      +500 ms  backoff 198 ms
+ 4  23:59:60.3   23:59:60.7   1002.3 s     1002.7 s      +400 ms  backoff 103 ms
+ 5  23:59:60.6   00:00:00.2   1002.6 s     1003.2 s      +600 ms  backoff 386 ms
+ 6  00:00:00.4   00:00:00.7   1003.4 s     1003.7 s      +300 ms  backoff 274 ms
+ 7  00:00:01.1   00:00:01.3   1004.1 s     1004.3 s      +200 ms  backoff 1 ms
+####
+round-trip times <= 0 ((negative: 0))   law == 0   kept
+queries that panicked ((panics: 0))   law == 0   kept
+<hwut-end>

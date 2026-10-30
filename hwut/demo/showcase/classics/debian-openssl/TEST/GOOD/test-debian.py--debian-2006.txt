@@ -1,0 +1,31 @@
+release debian-2006, 2000 machines from DeterministicStream(2008)
+
+1. THE FIRST MACHINES
+##! verbatim
+   machine    pid  entropy             key
+         1    425  5f61555a420d51c7    25cc6801be1a9f7f
+         2  13175  53d8a9ef72d2ec04    9cdf1030bddaa7df
+         3  28515  19b53d377531bb97    e7274c74beccdb87
+         4  23037  67ed0b3b21a9330d    a5a91c5f0e60ee96
+         5  16858  4e0f3a514955823c    221fb4bfff200ac9
+         6  15244  23f3b878109c5ffe    ceccc4c5152691f6
+####
+
+2. SHARED KEYS
+##! verbatim
+   distinct keys among 2000 machines: 1938
+   held most often:
+       08bde2a5fdc7c67e  by 2 machines
+       0b0201553aad9f4c  by 2 machines
+       0fdc12b8e5682cad  by 2 machines
+       12f47b24eee0d5e0  by 2 machines
+       15469101f860777f  by 2 machines
+####
+   machines sharing a key ((collisions: 124))   law > 0   the flaw, reproduced
+
+3. THE ATTACKER'S TABLE: the key of every pid 1 .. 32768, no entropy
+##! verbatim
+   keys in the table: 32768 -- the whole space, computed in seconds
+####
+   machines whose key is in it ((in_table: 2000)) of 2000   law > 0   the flaw, reproduced
+<hwut-end>

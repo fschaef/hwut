@@ -1,0 +1,30 @@
+choice flag-retired: RLP orders carry flag word 0x02
+
+1. THE DEPLOYMENT
+##! verbatim
+   server 1  rlp-2012
+   server 2  rlp-2012
+   server 3  rlp-2012
+   server 4  rlp-2012
+   server 5  rlp-2012
+   server 6  rlp-2012
+   server 7  rlp-2012
+   server 8  old-2003
+####
+   releases deployed ((releases: 2))
+
+2. SHARES PER SERVER, three parent orders of 300, 1000, 2500 shares
+##! verbatim
+   server  release    ordered     sent   overfill
+        1  rlp-2012      3800     3800          0  #######
+        2  rlp-2012      3800     3800          0  #######
+        3  rlp-2012      3800     3800          0  #######
+        4  rlp-2012      3800     3800          0  #######
+        5  rlp-2012      3800     3800          0  #######
+        6  rlp-2012      3800     3800          0  #######
+        7  rlp-2012      3800     3800          0  #######
+        8  old-2003      3800     3800          0  #######
+####
+   ('#' = 500 shares sent)
+   shares beyond the orders ((overfill: 0))   law == 0   kept
+<hwut-end>

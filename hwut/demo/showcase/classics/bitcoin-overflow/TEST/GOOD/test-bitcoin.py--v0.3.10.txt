@@ -1,0 +1,42 @@
+release v0.3.10, check.c compiled with -fwrapv
+
+1. THE 2010 TRANSACTION (block 74638), against the model's input of 0.5 BTC
+##! verbatim
+   output 1      92233720368.54277039 BTC
+   output 2      92233720368.54277039 BTC
+   exact sum     184467440737.08554078 BTC
+   int64 sum     -0.00997538 BTC   <- wrapped
+   input         0.50000000 BTC
+   exact rule    INVALID
+   release says  accepted
+####
+
+2. EVERY PAIR OF OUTPUTS, per input (a down, b across)
+input 0.5 BTC
+##! verbatim
+   a / b   0      1 sat  MAX    MAX+1  2^62   2010   2^63-1
+   0       o      o      .      .      .      .      .
+   1 sat   o      o      .      .      .      .      X
+   MAX     .      .      .      .      .      X      X
+   MAX+1   .      .      .      .      .      X      X
+   2^62    .      .      .      .      X      X      X
+   2010    .      .      X      X      X      X      X
+   2^63-1  .      X      X      X      X      X      X
+####
+input MAX_MONEY
+##! verbatim
+   a / b   0      1 sat  MAX    MAX+1  2^62   2010   2^63-1
+   0       o      o      o      .      .      .      .
+   1 sat   o      o      .      .      .      .      X
+   MAX     o      .      .      .      .      X      X
+   MAX+1   .      .      .      .      .      X      X
+   2^62    .      .      .      .      X      X      X
+   2010    .      .      X      X      X      X      X
+   2^63-1  .      X      X      X      X      X      X
+####
+(o accepted rightly  . rejected rightly  X ACCEPTED though invalid  ! REJECTED though valid)
+
+3. THE COUNTS over 98 transactions
+    accepted, though invalid ((accepted_invalid: 38))   law > 0    the bug, reproduced
+    rejected, though valid   ((rejected_valid: 0))   law == 0   kept
+<hwut-end>

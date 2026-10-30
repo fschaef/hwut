@@ -27,7 +27,7 @@
 #            'HWUT_TEST' and 'HWUT_CHOICE'; one 'on_after_test' exiting 1:
 #            said, the verdicts untouched.
 # play       'hwut.play' runs the same four around the one case it plays
-#            (E-204), told alike, and says the NOTE in the run's words.
+#            (E-207), told alike, and says the NOTE in the run's words.
 #            MEASURED 2026-10-28 before: play ran none of them.
 # caps       'script_caps { timeout_sec = 1 }': an 'on_entry' sleeping 5
 #            is ended by the supervisor, said 'ended: wall clock

@@ -1,0 +1,30 @@
+canonical.py variant 'nodeprep-2013'   13 names
+
+1. THE NAMES: name -> key once -> key twice
+##! verbatim
+   bigbird        bigbird        bigbird
+   BigBird        bigbird        bigbird
+   ＢｉｇＢｉｒｄ        bigbird        bigbird
+   ᴮᴵᴳᴮᴵᴿᴰ        BIGBIRD        bigbird   !!
+   admin          admin          admin
+   ᴬᴰᴹᴵᴺ          ADMIN          admin   !!
+   ﬁona           fiona          fiona
+   fiona          fiona          fiona
+   Straße         strasse        strasse
+   strasse        strasse        strasse
+   ǅemal          džemal         džemal
+   džemal         džemal         džemal
+   İlknur         i̇lknur        i̇lknur
+####
+
+2. ONE ACCOUNT, TWO NAMES (different keys once, one key twice)
+##! verbatim
+   bigbird  and  ᴮᴵᴳᴮᴵᴿᴰ   -> bigbird
+   BigBird  and  ᴮᴵᴳᴮᴵᴿᴰ   -> bigbird
+   ＢｉｇＢｉｒｄ  and  ᴮᴵᴳᴮᴵᴿᴰ   -> bigbird
+   admin  and  ᴬᴰᴹᴵᴺ   -> admin
+####
+
+keys that change when taken again ((nonidempotent: 2))   law == 0   BROKEN
+pairs of accounts that meet       ((shared: 4))   law == 0   BROKEN
+<hwut-end>

@@ -326,7 +326,7 @@ def _play_all(directory, word_list, plain_f, stderr_f, raw_f, pyped_f,
         write("EMPTY: the words select no case here")
         return E_ExitCode.EMPTY
     worst = E_ExitCode.OK
-    #  SEVERAL CASES, ONE FRAME (E-204): 'on_entry' once before the
+    #  SEVERAL CASES, ONE FRAME (E-207): 'on_entry' once before the
     #  first, 'on_exit' once after the last -- as a run frames them.
     here           = os.path.abspath(directory)
     directory_spec = result.app_set.directory_spec
@@ -547,7 +547,7 @@ async def _handler(directory_spec, directory, role, env, note_list,
     """
     RETURN: None. The directory's handler 'role' -- 'on_entry',
             'on_exit', 'on_before_test', 'on_after_test' -- run as
-            'hwut.run' runs it ('directory_script', E-204), where the
+            'hwut.run' runs it ('directory_script', E-207), where the
             directory's 'hwut.conf' states one. No verdict (E-158): an
             end other than exit 0 is appended to 'note_list' as the
             NOTE a run closes with -- '<role> of <run_name>' for a
@@ -583,7 +583,7 @@ async def _play(configuration, choice_name, bookkeeper, plain_f,
     """
     RETURN: E_ExitCode, the exit status.
 
-    THE DIRECTORY'S HANDLERS RUN AS IN A RUN (E-204): 'on_entry' first
+    THE DIRECTORY'S HANDLERS RUN AS IN A RUN (E-207): 'on_entry' first
     and 'on_exit' last where 'frame_f' (a play of one case),
     'on_before_test' and 'on_after_test' around the case, all under the
     directory's lock. 'directory_spec' None: no handler runs.

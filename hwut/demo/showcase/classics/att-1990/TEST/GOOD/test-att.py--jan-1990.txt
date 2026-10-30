@@ -1,0 +1,35 @@
+handler.c FIXED=0   12 switches, 4 neighbours each   S01 resets at t = 0
+
+1. THE FIRST STEPS
+##! verbatim
+   t =   0.0 s   S01 resets   (the first fault)
+   t =   4.6 s   S10 resets   (second message from S01 while busy with the first)
+   t =   4.6 s   S12 resets   (second message from S01 while busy with the first)
+   t =   8.7 s   S07 resets   (second message from S10 while busy with the first)
+   t =   9.0 s   S01 resets   (second message from S12 while busy with the first)
+   t =   9.1 s   S11 resets   (second message from S10 while busy with the first)
+   t =   9.1 s   S09 resets   (second message from S12 while busy with the first)
+   t =  13.0 s   S08 resets   (second message from S07 while busy with the first)
+   ... 71 resets more
+####
+
+2. THE STRIP, one column per second ('R' reset begins, '-' down, '.' in service)
+##! verbatim
+       0         10        20        30        40        50        60 s
+   S01 R---.....R---....R----....R---....R----...R----...R----....R
+   S02 .............R----...R----...R----....R----...R----...R----.
+   S03 .................R----...R----....R---....R----...R----....R
+   S04 .............R----...R----....R---....R----...R----....R----
+   S05 .................R----...R----....R---....R----...R----....R
+   S06 .............R----...R----...R----....R----...R----...R----.
+   S07 ........R----....R----...R----....R----...R----....R---....R
+   S08 .............R---....R----...R----....R----...R----....R---.
+   S09 .........R----...R----...R----....R---....R----...R----....R
+   S10 ....R----....R----...R----....R----...R----...R----...R----.
+   S11 .........R----...R----...R----....R----...R----...R----....R
+   S12 ....R----....R----...R----....R---....R----...R----....R---.
+####
+
+switches that reset: 12 of 12
+resets after the first ((cascade: 78))   law == 0   BROKEN
+<hwut-end>

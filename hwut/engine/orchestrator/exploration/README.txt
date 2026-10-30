@@ -405,7 +405,7 @@ ______________________________________________________________________________
     }
 
 'on_entry' and 'on_exit' name scripts run on entering and leaving the
-directory -- by 'hwut.run' and 'hwut.play' alike (services E-204) --
+directory -- by 'hwut.run' and 'hwut.play' alike (services E-207) --
 the author's helpers, no verdict: the tests run whatever they did, and
 one that exits non-zero is said at the end of the run,
 'NOTE  <directory>  on_entry exited 1: <command>' (services E-158).

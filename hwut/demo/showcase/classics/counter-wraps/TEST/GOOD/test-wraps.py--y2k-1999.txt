@@ -1,0 +1,16 @@
+counters: as deployed   (counters.c WIDE=0)
+
+YEAR FIELD
+##! verbatim
+true year   raw field   decoded year
+1997               97   1997
+1998               98   1998
+1999               99   1999
+2000               00   1900   <- BACKWARDS
+2001               01   1901
+2002               02   1902
+####
+rows running backwards: 1
+
+decoded time ran backwards ((backwards: 1))   law == 0   BROKEN
+<hwut-end>

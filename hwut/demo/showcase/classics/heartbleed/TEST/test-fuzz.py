@@ -1,23 +1,38 @@
 #! /usr/bin/env python3
 # @hwut {
-#     title    = "TLV walker under a reproducible mutation fuzzer (DeterministicStream + a guard page)"
+#     title    = "Heartbleed (2014): a length field trusted -- caught by a reproducible mutation fuzzer and a guard page"
 #     features = ["reproducible", "operators-spread"]
 #     choices {
-#         bounded  { features = ["reproducible", "operators-spread", "no-overread"]
-#                    tolerance { constraints = ["overread == 0"] } }
-#         trusting { features = ["reproducible", "operators-spread", "overread-reproduced"]
-#                    tolerance { constraints = ["overread > 0"] } }
+#         bounded         { features = ["reproducible", "operators-spread", "no-overread"]
+#                           tolerance { constraints = ["overread == 0"] } }
+#         heartbleed-2014 { features = ["reproducible", "operators-spread", "overread-reproduced"]
+#                           tolerance { constraints = ["overread > 0"] } }
 #     }
 # }
 """
 ______________________________________________________________________________
 SUBJECT  the outcome (parsed, rejected, OVERREAD) of tlv_walk (../tlv*.c) on
          3000 fuzzed blocks, per mutation operator
+HISTORY  Heartbleed, CVE-2014-0160, disclosed 7 April 2014: OpenSSL 1.0.1
+up to 1.0.1f answered a TLS heartbeat by echoing its payload, and took the
+payload's length from the request's own length field without comparing
+it with the record that carried it. A request of 1 byte claiming 65535
+got back up to 64 KB of whatever lay behind the record in the server's
+memory -- private keys, passwords, session cookies. 1.0.1g discards a
+heartbeat whose claimed length does not fit its record. The bug stood
+in released OpenSSL for two years; it was found by a code review at Google
+and, independently, by Codenomicon's fuzzing.
+
+THIS IS ITS SHAPE, SMALL: a walker over records 'type | length | value'
+that trusts the length byte. The same three things find it: inputs that
+lie about their length (the mutations below), memory that faults on the
+first byte too far (a guard page), and a seed that reproduces the case.
+
 REQUIREMENT  tlv_walk never reads outside the block it is given, whatever
              the bytes; a malformed block is answered with -1.
 
 The unit is C: '../tlv.c' and '../tlv_trusting.c' (release 2.3, which trusts
-the length byte of a record). '../drive.c' copies every case into a heap
+the length byte of a record, as 1.0.1 trusted the heartbeat's). '../drive.c' copies every case into a heap
 block so that it ends right at a PROT_NONE guard page (the Electric-Fence
 trick): the first byte read past the block faults, the fault is caught and
 the case is reported as OVERREAD, and the run goes on with the next case.
@@ -38,10 +53,12 @@ the generator, not luck, and the GOOD can state it exactly. Every count is
 exact: the stream is the same on every machine, so the 3000 inputs are;
 seed + case number reproduce any case without a stored file.
 
-bounded   3000 cases: parsed or rejected, 0 overreads.
-trusting  the length byte is trusted: the overreads are counted per
-          operator, and the first one is printed as its reproducer --
-          seed, case, operator, the block in hex.
+bounded          3000 cases: parsed or rejected, 0 overreads (1.0.1g).
+heartbleed-2014  the length byte is trusted: the overreads are counted per
+                 operator, and the first one is printed as its
+                 reproducer -- seed, case, operator, the block in hex. A
+                 claimed length of FF over a short value is the heartbeat
+                 that asked for 64 KB.
 
 HOW TO READ THE GOOD   The matrix operator x outcome must read 0 in the
 'OVERREAD' column (a 0, never a blank: hwut folds blanks, and an empty
@@ -65,7 +82,7 @@ from hwut.test_writing_support.python.deterministic_random import (Deterministic
 HERE = os.path.dirname(os.path.abspath(__file__))
 UNIT = os.path.join(HERE, "..")
 SEED, CASES = 2026, 3000
-CHOICE_DB = {"bounded": "tlv.c", "trusting": "tlv_trusting.c"}
+CHOICE_DB = {"bounded": "tlv.c", "heartbleed-2014": "tlv_trusting.c"}
 
 
 def flip_bit(b, s):

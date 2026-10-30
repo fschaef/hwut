@@ -1,0 +1,6 @@
+# vut-register 5 generation:5 apps:1 marks:0=4
+test;choice;verdict;report;stain;test_id;choice_id
+test-wraps.py;boeing787-2015;true;ok;;0;0
+;gps-week-2019;true;ok;;0;1
+;widened;true;ok;;0;3
+;y2k-1999;true;ok;;0;2

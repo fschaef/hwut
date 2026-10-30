@@ -1,0 +1,14 @@
+release july-2024: template type of 21 fields, 20 inputs supplied
+
+##! verbatim
+   instance    fields 1 .. 21          validator   interpreter
+   earlier #1  c**c*****************   accepted    match
+   earlier #2  *c****c**************   accepted    no match
+   earlier #3  c**********c*******c*   accepted    match
+   earlier #4  **c***********c******   accepted    match
+   new         c*******************c   accepted    CRASH: read input 21 of 20
+####
+   ('*' wildcard, not read   'c' a criterion, compared with its input)
+   instances that crash the interpreter ((crashes: 1))   law > 0   the failure, reproduced
+   instances the validator refuses ((refused: 0))
+<hwut-end>

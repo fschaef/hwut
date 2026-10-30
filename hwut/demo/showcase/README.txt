@@ -2,8 +2,8 @@
 showcase -- WHAT A TEXT-JUDGING TEST TOOL CAN TEST
 ==============================================================================
 
-82 examples from working life and famous failures, 212 test cases, one hwut tree. Each example
-states ONE requirement and prints what it finds as a picture -- a tree, a
+93 examples from working life and famous failures, 239 test cases, one
+hwut tree. Each example states ONE requirement and prints what it finds as a picture -- a tree, a
 matrix, a waveform, a timeline, a plot -- so that the GOOD file reads as a
 specification sheet: a person or an AI judges it without reading the code.
 
@@ -46,19 +46,71 @@ THE SIX AREAS
     generators/    SPACES: the tested space described by generator
                    instructions -- space_iterator, deterministic_random,
                    deterministic_timeline (races), hwut_runner.
-                                                        14 examples
+                                                        13 examples
     classics/      FAMOUS FAILURES, each modelled small and caught by its
-                   law: Myers' triangle, binary-search overflow, Patriot,
-                   Ariane 5, Pentium FDIV, Zune, Y2038, goto fail,
-                   Therac-25, Peterson/Dekker, dining philosophers,
-                   Cloudflare regex, Mars Climate Orbiter,
-                   Gimli Glider, Apollo 11's stolen memory
-                   cycles (Verilog), Dirty COW (race
-                   model).                              16 examples
+                   law:
+                     numbers   Myers' triangle, binary-search overflow,
+                               Pentium FDIV, Ariane 5, Bitcoin's value
+                               overflow (2010), Vancouver's truncated
+                               index (1982)
+                     time      Patriot, Zune, Y2038, the counter wraps
+                               (Boeing 787, GPS week, Y2K), the leap
+                               second (2017)
+                     units     Mars Climate Orbiter, Gimli Glider
+                     memory    Heartbleed (a fuzzer and a guard page),
+                               CrowdStrike (2024), goto fail
+                     races     Therac-25, Peterson/Dekker, dining
+                               philosophers, Dirty COW, The DAO's
+                               reentrancy (2016)
+                     systems   Apollo 11's stolen memory cycles
+                               (Verilog), AT&T's cascade (1990), Mars
+                               Polar Lander, Knight Capital (2012),
+                               Cloudflare regex, Debian OpenSSL's 32768
+                               keys, Spotify's user names (2013)
+                                                        27 examples
     science/       BIOINFORMATICS AND NUMERICS: gene names in spreadsheets,
                    BED vs VCF coordinates, Needleman-Wunsch, reverse
                    complement and translation, FASTQ Phred, SIR model,
                    float summation, Game of Life.        8 examples
+
+FIND AN EXAMPLE BY ITS SHAPE -- a task is matched by what its test must
+see, not by its domain:
+
+    SHAPE                                   EXAMPLES
+    order free, facts fixed                 parallel-count, job-queue
+    some order matters (cause, once, end)   pipe-conversation, pubsub-retained,
+                                            event-sourcing
+    transitions only along a chart          tcp-handshake, traffic-light
+    every interleaving                      interleavings, bank-race,
+                                            therac-25, peterson-dekker, the-dao
+    every combination of a boundary space   sat-add, myers-triangle,
+                                            date-valid, header-matrix,
+                                            bitcoin-overflow
+    against a model or a brute force        ring-model, needleman-wunsch,
+                                            expr-parser
+    round trip                              cobs-roundtrip, gene-names-excel,
+                                            bed-vs-vcf-coordinates
+    a function applied twice is applied     spotify-unicode
+    once (idempotence)
+    several sources must agree              cli-options, i18n-catalogs,
+                                            error-codes, crowdstrike-2024,
+                                            knight-capital
+    a house rule over artifacts             conventions/*
+    a contract matrix (input x exit x       cli-matrix
+    stream)
+    a noisy number within a band            kalman-baro, ntc-fit
+    a law over time, in units               watchdog, token-bucket, debounce,
+                                            retry-backoff, mars-polar-lander
+    a counter that wraps                    patriot-clock, zune-leap-year,
+                                            y2038, counter-wraps, leap-second
+    a growth law (fitted exponent)          perf-budget, regex-backtracking
+    exact to the last digit                 money-vat, unit-convert,
+                                            float-summation, vancouver-index
+    reads outside its input                 heartbleed, crowdstrike-2024,
+                                            binary-search-overflow
+    the space of what can come out          seed-sweep, debian-openssl
+    the same everywhere                     stream-portability
+    a cascade through a network             att-1990
 
 Each example: <area>/<name>/ holds the thing under test (C, Make, awk,
 bash, perl, node, Python, SQL, YAML, ...), 'good/' and 'broken/' fixtures

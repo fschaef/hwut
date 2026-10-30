@@ -7764,3 +7764,34 @@ COST      BREAKING: a path glob that relied on '*' crossing '/' selects
           less; write '**'. Re-recorded: 'test-plan.py help' (two help
           lines). Regression: 'test-book-defects-4.sh' glob-levels,
           wishlist-label; 'test-book-defects-5.sh currencies'.
+
+
+E-207  'hwut.play' RUNS THE DIRECTORY'S HANDLERS AS 'hwut.run' DOES   (2026-10-28)
+------------------------------------------------------------------------------
+PROBLEM   MEASURED on 8ee4e50: 'hwut.play' ran neither 'on_entry'/'on_exit'
+          nor 'on_before_test'/'on_after_test'. Its promise (E-165) is to
+          show what a run would compare; a test that needs what 'on_entry'
+          prepares answered 'NOT RECORDED' or a wrong subject, and its
+          first GOOD could only be had through 'hwut.run' and 'hwut.accept
+          --force' (the demonstration's 'shop.py').
+DECISION  RULED (Frank-Rene, 2026-10-28): "hwut.play and hwut.run should
+          both execute the handlers as defined." The calling convention
+          stays: 'bash -c <command>' in the directory, the run told by
+          'HWUT_TEST' and 'HWUT_CHOICE' ('' for none), which expand in the
+          command line -- "leave it as is ... no change!" (arguments
+          appended to the command were weighed and dropped: 'sleep 5' or
+          'make clean' would receive them).
+          ONE PLACE CALLS THEM: 'engine/orchestrator/run/directory_script',
+          used by the dispatcher and by play. A play of one case runs
+          on_entry, on_before_test, the case, on_after_test, on_exit, under
+          the directory's lock; '--all' frames the cases once, as a run.
+          An end other than exit 0 is said in the run's words, 'NOTE
+          on_after_test of <run> exited <n>: <command>', before the
+          RECORDED line; no verdict (E-158).
+COST      A play costs what the directory's 'on_entry' costs. A test that
+          depends on others ('dependency') sees under play only what its
+          own handlers leave: its first GOOD comes from 'hwut.run'.
+          Regression: 'test-script-helpers.sh play'. (First written as
+          E-204 in bundle 3; that number went to 'hwut_fsm' on 9e75d00;
+          E-206 in bundle 4, that number went to the path globs on e3a3935.)
+

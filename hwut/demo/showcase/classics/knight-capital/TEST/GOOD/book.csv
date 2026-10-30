@@ -1,0 +1,5 @@
+# vut-register 5 generation:4 apps:1 marks:0=3
+test;choice;verdict;report;stain;test_id;choice_id
+test-knight.py;all-updated;true;ok;;0;1
+;deployed-2012;true;ok;;0;0
+;flag-retired;true;ok;;0;2

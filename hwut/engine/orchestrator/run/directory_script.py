@@ -2,7 +2,7 @@
 ______________________________________________________________________________
 
 PURPOSE: THE DIRECTORY'S HANDLERS, CALLED ONE WAY -- by 'hwut.run' (the
-         dispatcher) and by 'hwut.play' alike (services E-204).
+         dispatcher) and by 'hwut.play' alike (services E-207).
 
     on_entry, on_exit               before the directory's tests / after
     on_before_test, on_after_test   around each test run, told which by

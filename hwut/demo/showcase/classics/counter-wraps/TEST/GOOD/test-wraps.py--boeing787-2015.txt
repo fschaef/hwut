@@ -1,0 +1,19 @@
+counters: as deployed   (counters.c WIDE=0)
+
+BOEING 787 GENERATOR CONTROL UNIT, centiseconds of power
+##! verbatim
+true time of power   raw counter (cs)   decoded uptime
+day   0                               0         0.00 days
+day 100                       864000000       100.00 days
+day 248                      2142720000       248.00 days
+2^31 cs - 1 s                2147483548       248.55 days
+2^31 cs - 1 cs               2147483647       248.55 days
+2^31 cs                     -2147483648      -248.55 days   <- BACKWARDS (fail-safe)
+2^31 cs + 1 s               -2147483548      -248.55 days (fail-safe)
+day 249                     -2143607296      -248.10 days (fail-safe)
+day 300                     -1702967296      -197.10 days (fail-safe)
+####
+rows running backwards: 1
+
+decoded time ran backwards ((backwards: 1))   law == 0   BROKEN
+<hwut-end>

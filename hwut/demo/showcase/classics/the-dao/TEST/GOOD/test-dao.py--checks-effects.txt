@@ -1,0 +1,29 @@
+dao.py variant 'checks-effects'   deposits: alice 100, bob 50, carol 70, mallory 20   held 240
+
+1. THE CALL STACK (deeper = called from inside the payment above)
+##! verbatim
+   withdraw(mallory)   owed 20
+     pay 20 -> mallory.receive()
+     withdraw(mallory)   owed 0
+       nothing paid
+   withdraw(alice)   owed 100
+     pay 100 -> alice.receive()
+   withdraw(bob)   owed 50
+     pay 50 -> bob.receive()
+   withdraw(carol)   owed 70
+     pay 70 -> carol.receive()
+####
+
+2. THE LEDGER (ether)
+##! verbatim
+   member     put in   received   still owed
+   alice         100        100            0
+   bob            50         50            0
+   carol          70         70            0
+   mallory        20         20            0
+   contract holds 0
+####
+
+paid beyond what was put in ((drained: 0))   law == 0   kept
+put in and not paid out     ((unpaid: 0))   law == 0   kept
+<hwut-end>
