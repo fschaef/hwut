@@ -52,7 +52,8 @@ import asyncio
 class ChunkPipe:
     @typechecked
     def __init__(self, configuration: Configuration, line_provider: AsyncIterator):
-        PatternFinder.__init__(self, configuration.pattern_finder)
+        #  ONE PATTERN FINDER PER READING (compare C-23): a second compile
+        #  onto 'self', which reads none of it, was removed.
         self.configuration = configuration
         self.line_provider = line_provider
         self.pf            = PatternFinder(self.configuration.pattern_finder)

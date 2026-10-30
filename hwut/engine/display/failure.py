@@ -290,9 +290,12 @@ failure_db = MappingProxyType({f.failure_id: f for f in (
              "[<choice>]', which enters the standing GOOD file as accepted; "
              "nothing runs, nothing in GOOD/ moves."),
     _failure(_F.NOMINAL_FILE_NOT_FOUND, "GOOD missing",
-             "The GOOD file named for a subject cannot be read.",
+             "The GOOD file named for a subject cannot be read -- or a "
+             "'.link' stands in its place and names nothing it may "
+             "(bookkeeper B-32).",
              "Restore it from git, or record it with 'hwut.play' and "
-             "accept anew with 'hwut.accept'."),
+             "accept anew with 'hwut.accept'. A link: 'hwut.sanitize' says "
+             "why it cannot be followed; 'hwut.good.link' writes it anew."),
     _failure(_F.NOMINAL_WITHOUT_END,
              "GOOD file does not end in <hwut-end>",
              "Every stdout GOOD ends in '<hwut-end>' (R-70); this one does "

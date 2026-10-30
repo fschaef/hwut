@@ -1,0 +1,39 @@
+== directory to directory
+LINKED  b/TEST/GOOD/test-a.sh--x.link -> a/TEST/GOOD/test-a.sh--x.txt
+LINKED  b/TEST/GOOD/test-a.sh--y.link -> a/TEST/GOOD/test-a.sh--y.txt
+   exit 0
+== again
+NOT OVERWRITTEN -- a GOOD stands; '--force' replaces it:
+    b/TEST/GOOD/test-a.sh--x.link
+    b/TEST/GOOD/test-a.sh--y.link
+   exit 1
+== --force, one file
+LINKED  b/TEST/GOOD/test-a.sh--y.link -> a/TEST/GOOD/test-a.sh--y.txt
+   exit 0
+== a link as source
+REFUSED: 'b/TEST/GOOD/test-a.sh--x.link' is a link -- a link names a '.txt': link the text it names, a/TEST/GOOD/test-a.sh--x.txt
+NOTE: nothing was linked
+   exit 2
+== onto its own case
+REFUSED: 'a/TEST/GOOD/test-a.sh--x.link' would link its own case
+NOTE: nothing was linked
+   exit 2
+== no test stands
+REFUSED: 'd/TEST/GOOD/test-a.sh--x.link': no test 'test-a.sh' stands in 'd/TEST'
+NOTE: nothing was linked
+   exit 2
+== into a bubble
+REFUSED: 'e/TEST/GOOD/test-a.sh--x.link' -> 'a/TEST/GOOD/test-a.sh--x.txt': the target stands beyond the link's root 'e/hwut-root.conf'
+NOTE: nothing was linked
+   exit 2
+== hwut.good.link.show a/TEST/GOOD/test-a.sh--x.txt
+b/TEST/GOOD/test-a.sh--x.link -> a/TEST/GOOD/test-a.sh--x.txt
+   exit 0
+== hwut.good.link.show b/TEST/GOOD/test-a.sh--y.link
+b/TEST/GOOD/test-a.sh--y.link -> a/TEST/GOOD/test-a.sh--y.txt
+   exit 0
+== hwut.good.link.show (the whole root)
+b/TEST/GOOD/test-a.sh--x.link -> a/TEST/GOOD/test-a.sh--x.txt
+b/TEST/GOOD/test-a.sh--y.link -> a/TEST/GOOD/test-a.sh--y.txt
+   exit 0
+<hwut-end>

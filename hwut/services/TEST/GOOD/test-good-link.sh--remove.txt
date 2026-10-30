@@ -1,0 +1,13 @@
+== hwut.remove test-a.sh x (in a/TEST)
+REFUSED: 'GOOD/test-a.sh--x.txt' is the GOOD of 1 other case(s), by link: ../../c/TEST/GOOD/test-a.sh--x.link => 'hwut.good.link.show GOOD/test-a.sh--x.txt' names them; 'hwut.good.isolate GOOD/test-a.sh--x.txt' gives each its own copy; 'hwut.good.rebase GOOD/test-a.sh--x.txt <other.txt>' points them elsewhere
+NOTE: nothing was removed
+   exit 2
+== hwut.remove test-a.sh x (in c/TEST)
+      GOOD/test-a.sh--x.link
+    forgotten: GOOD/test-a.sh--x.link
+   exit 0
+== a/TEST/GOOD holds
+book.csv
+test-a.sh--x.txt
+test-a.sh--y.txt
+<hwut-end>

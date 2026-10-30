@@ -77,6 +77,11 @@ candidates.
                 nominal where it was made and stains the book
                 'constraint'; nothing is removed. A finding already
                 written is not proposed again.
+    --links     A '.link' IN A GOOD/ THAT IS INSANE (bookkeeper B-32): it
+                names nothing it may -- its text gone, another link, a
+                file beyond its root -- or the case's own '.txt' stands
+                beside it. Healed by 'unlink': the link goes, the text
+                it named is never touched.
     --relations THE CENTRAL FILE OF FEATURES AGAINST THE TREE
                 ('hwut-root-features.conf', R-96), judged by the one
                 detector that 'hwut.features.register' asks: a directory

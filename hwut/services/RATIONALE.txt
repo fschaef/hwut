@@ -7795,3 +7795,85 @@ COST      A play costs what the directory's 'on_entry' costs. A test that
           E-204 in bundle 3; that number went to 'hwut_fsm' on 9e75d00;
           E-206 in bundle 4, that number went to the path globs on e3a3935.)
 
+
+
+E-208  ONE BASE IN THE BLOCK OF A MOVE; A REMEDY THAT DOES NOT REPEAT
+       (book D-75 rest, D-79)                                         (2026-10-30)
+------------------------------------------------------------------------------
+PROBLEM   MEASURED on e3a3935: (1) after E-203 mended the preview of a move
+          across directories, the block of what was DONE still wrote the
+          source from the test directory and the target from the root --
+          'GOOD/test-a.sh--x.txt -> formation/TEST/GOOD/test-a.sh--x.txt'
+          under 'world/TEST/test-a.sh -> formation/TEST/test-a.sh:'. No
+          regression reached that block. (2) Two label expressions where
+          one may stand were answered '--label "components OR components"'
+          when both were the same expression.
+DECISION  (1) The block writes every path as the preview does ('Rename.said'):
+          the moved files, a FAULT, a coverage record, an 'apps' section's
+          'hwut.conf'. (2) Where both expressions read alike (blanks aside),
+          the remedy is "both say 'x' => drop one"; else the one expression
+          for either, as before. Both refusals ('--label' twice or beside a
+          list's 'label:', a second 'label:' line) share 'wish._label_remedy'.
+COST      Regression: 'test-book-defects-5.sh move-one-base' now also answers
+          'y' and shows the block (it failed on e3a3935 with the mixed bases);
+          'test-book-defects-4.sh wishlist-label' gains 'beside another
+          --label' and 'twice, alike'.
+
+
+E-209  LINKED NOMINALS: THE 'hwut.good' FACES, AND EVERY FACE THAT WRITES,
+       MOVES OR REMOVES A GOOD (ruled 2026-10-30)                     (2026-10-30)
+------------------------------------------------------------------------------
+PROBLEM   bookkeeper B-32 lets a '.link' stand in place of a case's '.txt'.
+          Somebody must write links, say who shares a text, undo a link,
+          and keep a link true when a file under it moves or goes.
+DECISION  RULED (Frank-Rene, 2026-10-30):
+          hwut.good.link        "syntax like cp, ln -s": what stands first,
+                                what is made last -- '<good.txt> <good-file>',
+                                '<good.txt>... <test-directory>', or
+                                '<test-directory> <test-directory>' (every
+                                '.txt' of the one, by its own name). "May
+                                produce a GOOD file and a book entry without
+                                accept." A target case with a '.txt' or a
+                                '.link' already is "not overwritten except
+                                with --force", the files "given as a list"
+                                (exit 1). Refused, nothing written: a link as
+                                source, a link onto its own case, a target
+                                whose test does not stand, a target beyond
+                                the root.
+          hwut.good.link.show   for a '.txt', the links within its root
+                                that name it; for a '.link', what it names;
+                                for a directory, every link below it.
+          hwut.good.isolate     "copying .txt to the linked GOOD files
+                                (removing .link files there)": of a link,
+                                that case; of a text, every case linking it.
+                                The book is untouched -- the GOOD says what
+                                it said.
+          hwut.good.rebase      '<linked.txt> <new-base.txt>': "adapting all
+                                links that point to it"; the old text is
+                                then free.
+          THE WRITERS: 'hwut.accept' refuses a linked case BY NAME -- the
+          text is another case's GOOD -- "option --unlink is good": it
+          gives the case its own '.txt', the recording whole, and the link
+          goes. 'hwut.merge' opens no session over a link and names
+          'hwut.good.isolate'.
+          REMOVE: "linked .txt files cannot be deleted, the command must
+          pinpoint to hwut.good.link.show ... hwut.good.isolate ... or
+          hwut.good.rebase": 'hwut.remove' and 'hwut.remove.apply' refuse,
+          naming the links and the three ways out. A linked case's own
+          removal takes its link and leaves the text.
+          MOVE: "inside that boundary links are feasible and moves must
+          respect that": 'hwut.move'/'hwut.rename' write a moved linked
+          case's link anew from its new place, and every link naming a moved
+          '.txt' follows it (said in the preview and the block). A move that
+          would make a link cross a root is refused before anything moves,
+          with 'hwut.good.isolate <link>' as the way out.
+          SANITIZE: aspect 'links' ('--links'): 'link-broken' -- a link that
+          names nothing it may, the reason as the line's note -- and
+          'link-twice' -- a link beside its case's own '.txt'. Both heal by
+          'unlink', which judges again and refuses a sound link.
+COST      Re-recorded for the words added, each diff read: 'test-sanitize.sh'
+          command, propose, refused ('--links', 'unlink'); 'test-cmdline.py
+          faces' ('--unlink', '--links'); 'test-help-pages.sh shape' and
+          'bin/TEST/test-launchers.sh answer' (four faces). Regression:
+          'test-good-link.sh' read-through, writers, faces, isolate, remove,
+          move, sanitize.

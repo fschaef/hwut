@@ -12,7 +12,7 @@ STDERR {
                                  [-e|--feature-ext <id>]... [-k|--keys <expr>]
                                  [--no-bubbles] [--output=<path>]
                                  [--target <name>]... [--session] [--lock] [--out]
-                                 [--orphans] [--books] [--constraints]
+                                 [--orphans] [--books] [--constraints] [--links]
                                  [--relations] [--transient] [--directory=<path>]
 }
 STATUS: 2
@@ -29,7 +29,7 @@ STDERR {
                                  [-e|--feature-ext <id>]... [-k|--keys <expr>]
                                  [--no-bubbles] [--output=<path>]
                                  [--target <name>]... [--session] [--lock] [--out]
-                                 [--orphans] [--books] [--constraints]
+                                 [--orphans] [--books] [--constraints] [--links]
                                  [--relations] [--transient] [--directory=<path>]
 }
 STATUS: 2
@@ -46,7 +46,7 @@ STDERR {
                                  [-e|--feature-ext <id>]... [-k|--keys <expr>]
                                  [--no-bubbles] [--output=<path>]
                                  [--target <name>]... [--session] [--lock] [--out]
-                                 [--orphans] [--books] [--constraints]
+                                 [--orphans] [--books] [--constraints] [--links]
                                  [--relations] [--transient] [--directory=<path>]
 }
 STATUS: 2
@@ -62,6 +62,6 @@ STATUS: 2
 STDOUT {
     REFUSED: 'hwut.sanitize' does not take: --sideways
     usage: hwut.sanitize <command> <concerned entity> [--directory=<path>]
-           commands: remove, move, forget, book, remark, register, redirect, repoint, fold, run, root, sub-root; a whole proposal: 'hwut.sanitize.propose', 'hwut.sanitize.apply'
+           commands: remove, move, forget, book, remark, unlink, register, redirect, repoint, fold, run, root, sub-root; a whole proposal: 'hwut.sanitize.propose', 'hwut.sanitize.apply'
 }
 <hwut-end>

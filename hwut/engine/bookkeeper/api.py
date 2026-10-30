@@ -84,6 +84,11 @@ from .bookkeeper    import (Bookkeeper, BOOK_FORBIDDEN_IN_NAME,
                             stain_text, unstable_f)
 from .configuration import (CAPS_FIELD_DB, E_TestVerdict,
                             NamingConfig, StoreConfig)
+from .good_link     import (LINK_SUFFIX, LinkFault, NominalLinked,
+                            boundary_fault,
+                            link_path_of, link_target, link_tuple,
+                            links_to, nominal_resolved, root_of,
+                            text_path_of, write_link)
 from .group_table   import (EMPTY_GROUP, GroupDb, GroupFault,
                             GroupTable, parse_group_table)
 from .id_scope      import (BASE, DIGITS, ID_LIMIT, IdScope,
@@ -113,5 +118,8 @@ __all__ = ("BASE", "DIGITS", "ID_LIMIT", "IdScope", "decimal_parts",
            "error_witness_name", "key_parts_of", "nominal_stands_f",
            "observation_of", "STAIN_CONSTRAINT_WORD", "STAIN_STDERR_WORD",
            "stain_text",
+           "LINK_SUFFIX", "LinkFault", "NominalLinked", "boundary_fault", "link_path_of",
+           "link_target", "link_tuple", "links_to", "nominal_resolved",
+           "root_of", "text_path_of", "write_link",
            "unstable_f",
            "parse_group_table", "run_id_of_text", "source_digest_of")

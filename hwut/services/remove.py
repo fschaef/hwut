@@ -61,7 +61,8 @@ from dataclasses import dataclass
 import sys
 
 from ..engine.bookkeeper.api import (Bookkeeper, STORE_DIRECTORY_NAME,
-                                           key_parts_of)
+                                           key_parts_of, link_path_of,
+                                           links_to)
 from ..engine.bookkeeper.api import Store
 from   ._follow                           import labels_forgotten
 from   ._exit                             import E_ExitCode
@@ -133,6 +134,11 @@ def victim_tuple(store, test, choice, whole_test_f):
                 if os.path.exists(path): found.add(path)
             nominal = str(store.nominal_path(test, one, subject))
             if os.path.exists(nominal): found.add(nominal)
+            #  A '.link' IN THE NOMINAL'S PLACE goes with its case
+            #  (bookkeeper B-32); the text it names stays: it is another
+            #  case's.
+            link = link_path_of(nominal)
+            if link is not None: found.add(str(link))
         coverage = store.bookkeeper.coverage_path(test, one)
         if os.path.exists(coverage): found.add(str(coverage))
     #  THE SHARED NOMINAL OF A 'same' TEST (bookkeeper B-30) goes with
@@ -141,7 +147,37 @@ def victim_tuple(store, test, choice, whole_test_f):
     if choice is None:
         shared = str(store.nominal_path(test, None, "stdout"))
         if os.path.exists(shared): found.add(shared)
+        link = link_path_of(shared)
+        if link is not None: found.add(str(link))
     return tuple(sorted(found))
+
+
+def linked_refusal_list(store, test, choice, whole_test_f):
+    """
+    RETURN: list[str], one line per GOOD the target would take that OTHER
+            cases are held against by a '.link' (bookkeeper B-32) -- the
+            text named, who links it, and the three ways out. Empty where
+            nothing the target holds is linked from outside it.
+
+    A LINKED TEXT IS NOT REMOVED: the cases linking it would lose their
+    GOOD without a word. A link that goes with the target itself does not
+    count.
+    """
+    from .lib.good._good import remedy_text, shown
+    victim_set = set(os.path.abspath(path) for path in
+                     victim_tuple(store, test, choice, whole_test_f))
+    line_list = []
+    for path in sorted(victim_set):
+        if not path.endswith(".txt"): continue
+        other_list = [link for link in links_to(path)
+                      if os.path.abspath(str(link)) not in victim_set]
+        if not other_list: continue
+        line_list.append("REFUSED: '%s' is the GOOD of %d other case(s), by "
+                         "link: %s => %s"
+                         % (shown(path), len(other_list),
+                            ", ".join(shown(link) for link in other_list),
+                            remedy_text(path)))
+    return line_list
 
 
 def _shown(store, path):
@@ -225,6 +261,10 @@ def forget(store, test, choice, whole_test_f, write):
             str(store.directory), test, None if whole_test_f else choice)
     except OSError:
         unproven_tuple = ()
+    refusal_list = linked_refusal_list(store, test, choice, whole_test_f)
+    if refusal_list:
+        for line in refusal_list: write(line)
+        return False
     record, note_tuple = forgotten(store, test, choice, whole_test_f)
     for shown in record.gone_tuple:
         write("    forgotten: %s" % shown)
@@ -332,6 +372,13 @@ def main(argv=None, write=None, read_line=None):
     if total_n == 0:
         write("  (no recorded artefact stands; the book and the "
               "register are still asked)")
+    refusal_list = [line for test, choice in target_list
+                    for line in linked_refusal_list(store, test, choice,
+                                                    not choice_form_f)]
+    if refusal_list:
+        for line in refusal_list: write(line)
+        write("NOTE: nothing was removed")
+        return E_ExitCode.REFUSED
 
     if not yes_f:
         write("")

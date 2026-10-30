@@ -1,0 +1,17 @@
+== hwut.sanitize.propose --links
+unlink c/TEST/GOOD/test-a.sh--y.link  # 'c/TEST/GOOD/test-a.sh--y.link' -> '../../nowhere/GOOD/test-a.sh--y.txt': no such file
+unlink c/TEST/GOOD/test-a.sh--x.link
+== hwut.sanitize.apply heal.txt
+ unlink c/TEST/GOOD/test-a.sh--y.link ................................. [DONE]
+ unlink c/TEST/GOOD/test-a.sh--x.link ................................. [DONE]
+   exit 0
+== c/TEST/GOOD holds
+book.csv
+test-a.sh--x.txt
+== a sound link is not sanitize's
+ unlink b/TEST/GOOD/test-a.sh--y.link .............................. [REFUSED]
+ unlink b/TEST/GOOD/test-a.sh--y.link  the link is sound and the case's only GOOD => 'hwut.good.isolate' gives the case its own file
+   exit 1
+book.csv
+test-a.sh--y.link
+<hwut-end>

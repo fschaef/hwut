@@ -91,9 +91,18 @@ class RecordNominal(Nominal):
         RETURN: a text reader over the record file.
 
         Raises NominalNotAvailable if the file is absent or unreadable.
+
+        A '.link' STANDING IN ITS PLACE is followed (bookkeeper B-32): the
+        case is held against the '.txt' it names. A link that cannot be
+        followed is a nominal not available, said with the rule it broke.
         """
+        from ..bookkeeper.api import LinkFault, nominal_resolved
         try:
-            return open(self.path, "r", encoding="utf-8", newline="")
+            path = nominal_resolved(self.path)
+        except LinkFault as fault:
+            raise NominalNotAvailable(self.name, str(fault)) from None
+        try:
+            return open(path, "r", encoding="utf-8", newline="")
         except OSError as error:
             raise NominalNotAvailable(self.name, error.strerror) from None
 

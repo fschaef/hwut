@@ -155,17 +155,28 @@ class Store:
             json.dump(freshness, fh, sort_keys=True)
         return path
 
-    def accept(self, test, choice, subject, text):
+    def accept(self, test, choice, subject, text, unlink_f=False):
         """
         RETURN: Path, where the nominal was written.
 
-        PROMOTION: this is the only way a nominal comes to exist. The
-        nominal key space has ONE writer: acceptance.
+        PROMOTION: this is the only way a nominal's TEXT comes to exist.
+        The nominal key space has ONE writer of text: acceptance; a
+        '.link' is written by 'hwut.good.link' alone (B-32).
+
+        A '.link' STANDING IN THE KEY'S PLACE IS NEVER WRITTEN THROUGH:
+        the text it names is another case's GOOD. Raises NominalLinked,
+        unless 'unlink_f' -- the case then gets its own '.txt' and the
+        link goes.
         """
+        from .good_link import NominalLinked, link_path_of
         path = self.nominal_path(test, choice, subject)
+        link = link_path_of(path)
+        if link is not None and not unlink_f:
+            raise NominalLinked(link)
         path.parent.mkdir(parents=True, exist_ok=True)
         with open(path, "w", encoding="utf-8", newline="") as fh:
             fh.write(text)
+        if link is not None: link.unlink()
         return path
 
     def raw_path(self, test, choice, subject):

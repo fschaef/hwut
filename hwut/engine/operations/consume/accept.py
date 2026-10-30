@@ -141,6 +141,14 @@ class Accept:
             notify(self.observer, "finished", result)
             return result
 
+        #  A LINKED NOMINAL (bookkeeper B-32) refuses BEFORE the first
+        #  write, so no subject of the case is accepted while another is
+        #  refused: 'Store.accept' raises NominalLinked for it.
+        from ...bookkeeper.api import NominalLinked, link_path_of
+        for name in sorted(text_db):
+            path = self.store.nominal_path(config.name, config.choice, name)
+            link = None if path.exists() else link_path_of(path)
+            if link is not None: raise NominalLinked(link)
         for name, text in sorted(text_db.items()):
             self.store.accept(config.name, config.choice, name, text)
             notify(self.observer, "verdict", name, True)

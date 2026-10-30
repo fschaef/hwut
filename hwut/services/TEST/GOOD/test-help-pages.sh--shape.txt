@@ -29,6 +29,10 @@ hwut.features.register       -          ok
 hwut.features.rename         -          ok
 hwut.features.retire         -          ok
 hwut.features.tree           -          ok
+hwut.good.isolate            -          ok
+hwut.good.link               -          ok
+hwut.good.link.show          -          ok
+hwut.good.rebase             -          ok
 hwut.help                    -          ok
 hwut.labels.add              -          ok
 hwut.labels.create           EXAMPLE    ok

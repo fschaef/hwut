@@ -1,0 +1,17 @@
+== hwut.good.isolate b/TEST/GOOD/test-a.sh--x.link
+ISOLATED  b/TEST/GOOD/test-a.sh--x.txt  (a copy of a/TEST/GOOD/test-a.sh--x.txt; the link is gone)
+   exit 0
+== hwut.good.isolate a/TEST/GOOD/test-a.sh--y.txt
+ISOLATED  b/TEST/GOOD/test-a.sh--y.txt  (a copy of a/TEST/GOOD/test-a.sh--y.txt; the link is gone)
+ISOLATED  c/TEST/GOOD/test-a.sh--y.txt  (a copy of a/TEST/GOOD/test-a.sh--y.txt; the link is gone)
+   exit 0
+== hwut.good.rebase a/TEST/GOOD/test-a.sh--x.txt b/TEST/GOOD/test-a.sh--x.txt
+REBASED  c/TEST/GOOD/test-a.sh--x.link -> b/TEST/GOOD/test-a.sh--x.txt  (was a/TEST/GOOD/test-a.sh--x.txt)
+   exit 0
+== what links now
+c/TEST/GOOD/test-a.sh--x.link -> b/TEST/GOOD/test-a.sh--x.txt
+   exit 0
+== b and c pass
+RESULTS: 2 ok, 0 fail, <t> [sec], <t> [sec] total
+RESULTS: 2 ok, 0 fail, <t> [sec], <t> [sec] total
+<hwut-end>

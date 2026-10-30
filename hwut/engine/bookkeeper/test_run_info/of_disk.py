@@ -83,11 +83,20 @@ def of_case(directory, test, choice=None, bookkeeper=None):
     from ..bookkeeper import nominal_path_list
 
     path_list = nominal_path_list(directory, test, choice)
-    mark_f    = any(carries_unaccepted_f(path) for path in path_list)
+    mark_f    = any(carries_unaccepted_f(_followed(path)) for path in path_list)
     row_db = None
     if bookkeeper is not None:
         row_db = bookkeeper.result(test, choice)
     return of_row(test, choice, row_db, bool(path_list), mark_f)
+
+
+def _followed(path):
+    """RETURN: str, 'path' -- or, for a '.link' (bookkeeper B-32), the
+               '.txt' it names; the link itself where it names nothing."""
+    from ..good_link import LinkFault, link_target
+    if not str(path).endswith(".link"): return path
+    try:               return str(link_target(path))
+    except LinkFault:  return path
 
 
 __all__ = ["of_case", "carries_unaccepted_f", "carries_unaccepted_text_f",

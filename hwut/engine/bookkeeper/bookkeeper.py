@@ -162,8 +162,12 @@ def error_witness_name(test, choice):
     return "%s.err" % stem
 #  THE WAY BACK: a reader that finds a file must name the SUBJECT it
 #  belongs to, not the suffix it wears. One table, both directions.
+#  A LINK STANDS IN PLACE OF THE STDOUT NOMINAL (B-32): 'x--c.link' is
+#  read back as the key of 'x--c.txt', so every walker of GOOD/ sees the
+#  case, not a subject called 'link'.
 SUBJECT_BY_SUFFIX_DB = {suffix: subject
                         for subject, suffix in NOMINAL_SUFFIX_DB.items()}
+SUBJECT_BY_SUFFIX_DB["link"] = "stdout"
 
 _OPERATION_BY_GOAL  = {"VERDICT": "Run",
                        "DISPLAY": "Display",
@@ -404,6 +408,10 @@ def _remarked(path, placed_list):
     BAD one (compare C-21): it keeps the case from passing and says why. A remark already standing anywhere
     in the file is not written again: a run meeting the same finding twice
     writes it once.
+
+    A '.link' IN THE NOMINAL'S PLACE IS NOT WRITTEN THROUGH (B-32): 'path'
+    is the case's own '.txt', which does not stand, so nothing is written
+    -- the text the link names is another case's GOOD.
     """
     if not path.exists(): return False
     line_list = path.read_text(encoding="utf-8").split("\n")

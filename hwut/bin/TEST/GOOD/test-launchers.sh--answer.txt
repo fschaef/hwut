@@ -42,6 +42,10 @@ hwut.labels.list   exit 0: hwut.labels.list -- every label that stands, with the
 hwut.labels.query  exit 0: hwut.labels.query -- the runs a label expression names (disc-8).
 hwut.about         exit 0: hwut.about -- what this is, which version, and where it stands on this
 hwut.affected      exit 0: hwut.affected -- a change goes in, the test runs that executed it come
+hwut.good.link     exit 0: hwut.good.link -- a case held against ANOTHER case's GOOD (bookkeeper
+hwut.good.link.show exit 0: hwut.good.link.show -- who shares a GOOD (bookkeeper B-32, services
+hwut.good.isolate  exit 0: hwut.good.isolate -- a linked case gets its own '.txt' again (bookkeeper
+hwut.good.rebase   exit 0: hwut.good.rebase -- every link naming one '.txt' names another (bookkeeper
 hwut              exit 0: hwut.run -- the tree run, rendered live
 hwut.pype          exit 2: usage: hwut.pype [--trace] SCRIPT < input
 <hwut-end>

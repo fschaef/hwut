@@ -1,0 +1,20 @@
+== hwut.move c/TEST/test-a.sh d/TEST/
+      c/TEST/GOOD/test-a.sh--x.link -> d/TEST/GOOD/test-a.sh--x.link
+    c/TEST/GOOD/test-a.sh--x.link -> d/TEST/GOOD/test-a.sh--x.link
+    link: d/TEST/GOOD/test-a.sh--x.link names a/TEST/GOOD/test-a.sh--x.txt
+   exit 0
+== the link reads
+../../../a/TEST/GOOD/test-a.sh--x.txt
+== hwut.move a/TEST/test-a.sh b2/TEST/
+      link d/TEST/GOOD/test-a.sh--x.link follows: names b2/TEST/GOOD/test-a.sh--x.txt
+    link: d/TEST/GOOD/test-a.sh--x.link names b2/TEST/GOOD/test-a.sh--x.txt
+   exit 0
+== the link reads
+../../../b2/TEST/GOOD/test-a.sh--x.txt
+== hwut.run in d/TEST (y has no GOOD)
+RESULTS: 1 ok, 1 fail, <t> [sec], <t> [sec] total
+== into a bubble
+REFUSED: 'd/TEST/GOOD/test-a.sh--x.link' -> 'e/TEST/GOOD/test-a.sh--x.txt': the target stands beyond the link's root 'hwut-root.conf' => 'hwut.good.isolate d/TEST/GOOD/test-a.sh--x.link' first
+NOTE: nothing was renamed
+   exit 2
+<hwut-end>

@@ -38,7 +38,9 @@ from ....engine.operations.interaction.port import (E_Intent, merge_session,
 
 import asyncio
 import io
-from ....engine.bookkeeper.api import carries_unaccepted_text_f
+import os
+from pathlib import Path
+from ....engine.bookkeeper.api import carries_unaccepted_text_f, link_path_of
 import sys
 
 
@@ -147,6 +149,17 @@ def run_sessions(key_list, store_of, adapter, err, setup=None,
     for key in key_list:
         store   = store_of(key.where)
         options = setup if setup is not None else key.setup
+        #  A LINKED NOMINAL IS ANOTHER CASE'S TEXT (B-32): no session is
+        #  opened over it, since its commit would write through.
+        own  = Path(key.nominal_path)
+        link = None if own.exists() else link_path_of(own)
+        if link is not None:
+            refused_list.append((key, "its GOOD is the link '%s' => "
+                                 "'hwut.good.isolate %s' gives it its own "
+                                 "file first; 'hwut.good.link.show %s' "
+                                 "names who shares it"
+                                 % ((os.path.relpath(str(link)),) * 3)))
+            continue
         #  THE STANDING REACHES THE SCREEN (B-14). Optional on the
         #  contract, so this call is the same on every tier.
         adapter.note_standing(getattr(key, "aspirant_f", False))

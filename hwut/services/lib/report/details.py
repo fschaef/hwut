@@ -228,6 +228,15 @@ def find_records(directory, application, choice):
     for subject in ("stdout",):
         take("good %s" % subject,
              bookkeeper.nominal_path(test, choice, subject))
+    #  A '.link' IN THE NOMINAL'S PLACE (bookkeeper B-32): the link is the
+    #  case's own file, and the text it names is shown beside it.
+    from ....engine.bookkeeper.api import LinkFault, link_path_of, link_target
+    link = link_path_of(bookkeeper.nominal_path(test, choice, "stdout"))
+    if link is not None:
+        take("good link", link)
+        try:               take("good stdout",
+                                Path(os.path.relpath(str(link_target(link)))))
+        except LinkFault:  pass
 
     #  THE ERROR WITNESS. 'OUT/' witnesses the LAST RUN, and where that
     #  run wrote to stderr it left '<key>.err' there -- cleared before
@@ -350,7 +359,7 @@ def _subject_db(record_db, prefix):
             for key, path in record_db.items()
             if key.startswith(prefix)
             and " raw " not in key and " timing " not in key
-            and key != "err"}
+            and key != "err" and key != "good link"}
 
 
 def _both_text(good_db, out_db):

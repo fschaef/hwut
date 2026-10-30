@@ -805,3 +805,50 @@ COST      The association reads to the end of a failing stream. The page
           that showed the shielding ('test-constraints.py lawyer') shows
           line 3 red now. Regression: 'services/TEST/test-book-defects-5.sh
           laws-all'.
+
+
+C-23  NO STORED READING: A GOOD IS TEXT, NEVER A '.hwut' OF ITS PARSE
+      (asked 2026-10-30; NOT BUILT, by measurement)                   (2026-10-30)
+------------------------------------------------------------------------------
+PROBLEM   Asked: could GOOD/ hold '*.hwut' files -- an interpreted form of
+          a '.txt' nominal -- so that a comparison skips reading the GOOD
+          side? DECIDE ONCE, so it is not asked again.
+MEASURED  on 10ee8e9, every '.txt' nominal of the tree (1452 files, 1.6 MB)
+          judged against itself with 'is_equivalent' -- BOTH sides read,
+          classified, framed, split into Lines: 3.85 s in all; the GOOD
+          side is about half, ~2 s. A census of the same tree takes 540 s.
+          THE GOOD SIDE IS UNDER 0.5 % OF A RUN; process launch, building
+          and the test applications are the rest. The largest nominal
+          (53 kB) reads in 34 ms both sides; a reading runs at roughly
+          3 MB/s per side, so a stored form starts to matter only for GOOD
+          files of many megabytes.
+DECISION  NOT BUILT. Against it, beyond the measurement:
+          (1) THE READING IS A FUNCTION OF (text, configuration), never
+          stored ('reading/reading.py'): tolerances, the pattern finder,
+          regions, laws and units are the directory's and the test's, and
+          change without the GOOD changing. A stored reading would be
+          keyed by the text's digest, the configuration's digest and
+          hwut's version, rebuilt when any moved -- a cache with three
+          ways to go stale, guarding 0.5 %.
+          (2) A READING IS A PULL STREAM that stops at the first
+          non-equivalent pair (the Judge's early abort, C-22). A stored
+          form is loaded whole before the first comparison; for a failing
+          case that is MORE work, not less.
+          (3) GOOD/ IS THE AUTHOR'S (O-8) and versioned with the book
+          (B-24): a derived artefact there doubles every diff, every
+          review and every 'hwut.sanitize' rule, and hwut 1.0 reads the
+          '.txt' alone.
+          THE CHEAP GAINS, measured too: the three extra scans of the GOOD
+          per comparison ('ends_in_terminal' twice, 'bad_region_of',
+          'consume/equivalence_check.py') cost 0.31 s over the whole tree;
+          the pattern finder's master regex compiled per reading, 0.44 s
+          for 5808 readings -- HALF of it a stray second compile in
+          'ChunkPipe.__init__' ('PatternFinder.__init__(self, ...)' on an
+          object that is no PatternFinder and reads none of what it set).
+          That line is removed -- measured after, the same 1400 nominals
+          judged against themselves: 4.4 s before, 3.9 to 4.2 s after. The
+          scans stay, since folding them into one read would buy 0.06 % for
+          a second path through the check.
+REVISIT   where a tree's GOOD files grow to megabytes and a census shows
+          the reading, not the launch, on top. Measure first; the
+          numbers above are the baseline.

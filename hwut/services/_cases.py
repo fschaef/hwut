@@ -227,10 +227,18 @@ def differing_keys(selected, write, refresh_f=False, stained_list=None):
                 except (KeyError, AttributeError):
                     setup = None
             if setup is None: setup = Configuration()
-            aspirant_f = not good_path.exists()
-            if good_path.exists():
+            #  A '.link' IN THE NOMINAL'S PLACE is read through (B-32): the
+            #  case is judged against the text it names.
+            from ..engine.bookkeeper.api import LinkFault, nominal_resolved
+            try:
+                read_path = nominal_resolved(good_path)
+            except LinkFault as fault:
+                write("FAULT: %s" % fault)
+                continue
+            aspirant_f = not read_path.exists()
+            if read_path.exists():
                 try:
-                    nominal_text = io.open(str(good_path), encoding="utf-8").read()
+                    nominal_text = io.open(str(read_path), encoding="utf-8").read()
                 except (OSError, UnicodeDecodeError):
                     continue
             else:

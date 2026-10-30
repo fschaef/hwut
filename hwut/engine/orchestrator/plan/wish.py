@@ -571,8 +571,9 @@ def parse_wish(argv, digest_f=False):
                 raise WishError(
                     "'--label' stands twice -- or beside a wishlist's "
                     "'label:'; one expression holds "
-                    "the whole question -- write "
-                    "'--label \"%s OR %s\"'" % (label_spec, text))
+                    "the whole question -- %s"
+                    % _label_remedy(label_spec, text,
+                                    "write '--label \"%s OR %s\"'"))
             try:
                 parse_expression(text)
             except LabelExprError as error:
@@ -683,6 +684,19 @@ _GLOB_MARK_TUPLE  = ("*", "?", "[")
 #  THE ONE RESERVED WORD OF A WISHLIST (RQ-9, E-202): '!<hwut-root>'
 #  keeps the walk out of every inner 'hwut-root.conf'.
 BUBBLE_WORD = "<hwut-root>"
+
+
+def _label_remedy(first, second, either_form):
+    """
+    RETURN: str, the remedy for two label expressions where one may
+            stand: 'drop one' where both read alike (book D-79, measured:
+            '--label "components OR components"'); else 'either_form'
+            filled with both, the one expression asking for either.
+    """
+    if " ".join(first.split()) == " ".join(second.split()):
+        return "both say '%s' => drop one" % " ".join(first.split())
+    return either_form % (first, second)
+
 
 #  A LABEL LINE OF A WISHLIST (E-206): 'label: <expression>'.
 _LABEL_LINE_RE = re.compile(r"^label\s*:(.*)$")
@@ -816,8 +830,9 @@ def _wishlist_read(file_name, digest_f):
                 raise refused("'label:' names no label")
             if label_spec is not None:
                 raise refused("'label:' stands twice; one expression holds "
-                              "the whole question -- 'label: %s OR %s'"
-                              % (label_spec, expression))
+                              "the whole question -- %s"
+                              % _label_remedy(label_spec, expression,
+                                              "'label: %s OR %s'"))
             try:
                 parse_expression(expression)
             except LabelExprError as error:

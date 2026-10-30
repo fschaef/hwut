@@ -1,0 +1,18 @@
+== hwut.accept --force test-a.sh x (in c/TEST)
+REFUSED link: 'test-a.sh x .stdout' -- its GOOD is 'GOOD/test-a.sh--x.link' -> '../../a/TEST/GOOD/test-a.sh--x.txt', another case's text => '--unlink' gives it its own file; 'hwut.good.link.show GOOD/test-a.sh--x.link' names who shares it
+   exit 1
+== hwut.merge test-a.sh x (in c/TEST)
+    refused        test-a.sh x -- its GOOD is the link 'GOOD/test-a.sh--x.link' => 'hwut.good.isolate GOOD/test-a.sh--x.link' gives it its own file first; 'hwut.good.link.show GOOD/test-a.sh--x.link' names who shares it
+   exit 1
+== hwut.accept --unlink test-a.sh x (in c/TEST)
+    blessed        test-a.sh x .stdout
+   exit 0
+== c/TEST/GOOD holds
+book.csv
+test-a.sh--x.txt
+test-a.sh--y.link
+== its own text
+changed x
+== a's text, untouched
+hello x
+<hwut-end>

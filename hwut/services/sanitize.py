@@ -123,7 +123,7 @@ TRANSIENT_ROOT_TUPLE   = OWN_GROUND_NAME_TUPLE    # services E-24
 #  What a bare proposal asks about. Not the targets: running somebody's
 #  script is never implied.
 ASPECT_TUPLE = ("session", "lock", "out", "orphans", "books", "constraints",
-                "relations")
+                "links", "relations")
 #  Asked for by name only; a bare proposal never takes the candidates.
 EXPLICIT_ASPECT_TUPLE = ("transient",)
 
@@ -191,6 +191,16 @@ ISSUE_KIND_TUPLE = (
         "'remark' writes each finding into the nominal after the line that",
         "caused it -- a variable never bound at the head -- and stains the",
         "book 'constraint'. Nothing is removed; mend the nominal.")),
+    CIssueKind("link-broken", "unlink", (
+        "LINK NAMES NOTHING: a '.link' stands in place of a case's GOOD and",
+        "cannot be followed -- its text is gone, it names another link,",
+        "or it reaches beyond its root (bookkeeper B-32).",
+        "'unlink' removes the link; the case then has no GOOD, and is",
+        "accepted anew or linked anew ('hwut.good.link').")),
+    CIssueKind("link-twice", "unlink", (
+        "TWO NOMINALS FOR ONE CASE: a '.txt' and a '.link' stand for it;",
+        "the '.txt' is what is read (bookkeeper B-32).",
+        "'unlink' removes the link; the case keeps its own '.txt'.")),
     CIssueKind("registry-new", "register", (
         "NOT REGISTERED: a directory whose TEST directory defines features",
         "has no id in 'hwut-root-features.conf', or a feature it defines",
@@ -751,6 +761,10 @@ def constraint_issue_list(directory, result):
                 continue
             if setup is None or not setup.constraint_db: continue
             path = bookkeeper.nominal_path(name, choice, "stdout")
+            #  A '.link' in its place is read through (bookkeeper B-32).
+            from ..engine.bookkeeper.api import LinkFault, nominal_resolved
+            try:               path = nominal_resolved(path)
+            except LinkFault:  continue
             if not path.exists(): continue
             try:
                 text = path.read_text(encoding="utf-8")
@@ -768,6 +782,32 @@ def constraint_issue_list(directory, result):
                                      (name,) if choice is None
                                      else (name, choice),
                                      payload=tuple(placed_list)))
+    return issue_list
+
+
+def link_issue_list(directory):
+    """
+    RETURN: list[CIssue], every '.link' in the directory's GOOD/ that is
+            insane (bookkeeper B-32): 'link-twice' where the case's own
+            '.txt' stands beside it, 'link-broken' where it cannot be
+            followed -- the reason as the line's note.
+    """
+    from ..engine.bookkeeper.api import LinkFault, link_target, text_path_of
+    good = os.path.join(directory, "GOOD")
+    if not os.path.isdir(good): return []
+    issue_list = []
+    for name in sorted(os.listdir(good)):
+        if not name.endswith(".link"): continue
+        link = os.path.join(good, name)
+        word = "GOOD/%s" % name
+        if text_path_of(link).exists():
+            issue_list.append(CIssue("link-twice", directory, (word,)))
+            continue
+        try:
+            link_target(link)
+        except LinkFault as fault:
+            issue_list.append(CIssue("link-broken", directory, (word,),
+                                     note=str(fault)))
     return issue_list
 
 
@@ -807,6 +847,8 @@ def directory_issue_list(root, directory, result, aspect_set, wanted_f):
         note_list.extend(r.replace(directory, where, 1) for r in refused)
     if "constraints" in aspect_set and not result.fault_list:
         issue_list.extend(constraint_issue_list(directory, result))
+    if "links" in aspect_set:
+        issue_list.extend(link_issue_list(directory))
 
     if "orphans" in aspect_set:
         if result.fault_list:

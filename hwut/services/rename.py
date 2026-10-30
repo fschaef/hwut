@@ -92,6 +92,8 @@ from .lib.face import write_refusal
 from ..engine.bookkeeper.api import Bookkeeper, Store
 from ..engine.bookkeeper.api import TestIdFault
 from ..engine.bookkeeper.api import BOOK_FORBIDDEN_IN_NAME
+from ..engine.bookkeeper.api import (LinkFault, boundary_fault, link_path_of,
+                                     link_target, links_to, write_link)
 from ..engine.coverage.api import (pack_record, unpack_record,
                                          seated, RecordFault)
 from ..engine.orchestrator.exploration.reader import (read_header,
@@ -134,6 +136,15 @@ HELP = __doc__.split("\n", 2)[2].rsplit("_" * 10, 1)[0].rstrip() \
        + "\n\n" + USAGE
 
 
+def _link_pair_add(found: list, a: str, b: str) -> None:
+    """RETURN: None. Where a '.link' stands in place of the nominal 'a'
+    (bookkeeper B-32), the pair (its link, the link of 'b') joins 'found'
+    -- a linked case carries its link, never the text it names."""
+    link = link_path_of(a)
+    if link is not None:
+        found.append((str(link), str(Path(b).with_suffix(".link"))))
+
+
 def _shown(store: Store, path: Union[str, Path]) -> str:
     """RETURN: str, the path as it reads from the SOURCE test directory
     -- 'GOOD/x.stdout' and 'TMP/store/x.stdout' are DIFFERENT files and
@@ -161,7 +172,7 @@ class Rename:
         write              callable for logging progress and faults
     """
     __slots__ = ("test", "choice", "fresh_test", "fresh_choice",
-                 "source", "target", "whole_test_f", "write")
+                 "source", "target", "whole_test_f", "write", "_link_plan")
 
     def __init__(self, test: str, choice: Optional[str], fresh_test: str,
                  fresh_choice: Optional[str], source: Store, target: Store,
@@ -174,6 +185,7 @@ class Rename:
         self.target = target
         self.whole_test_f = whole_test_f
         self.write = write
+        self._link_plan = None
 
     @property
     def across_f(self) -> bool:
@@ -183,13 +195,16 @@ class Rename:
 
     def said(self, path: Union[str, Path]) -> str:
         """
-        RETURN: str, 'path' as the preview writes it: from the SOURCE
+        RETURN: str, 'path' as the preview AND the action block write it
+                (book D-75, both halves): from the SOURCE
                 test directory where the rename stays in it ('GOOD/x');
                 from where hwut was called where it crosses directories
                 ('world/TEST/GOOD/x') -- ONE base per preview, so a line
                 such as the 'git mv' hint can be typed as it stands.
                 MEASURED before (book D-75): 'test-f.sh ->
-                formation/TEST/test-f.sh' under "in 'world/TEST'".
+                formation/TEST/test-f.sh' under "in 'world/TEST'"; and,
+                after the preview was mended, 'GOOD/x -> formation/TEST/
+                GOOD/x' in the block of what was done.
         """
         if not self.across_f: return _shown(self.source, path)
         return os.path.relpath(str(path))
@@ -239,6 +254,8 @@ class Rename:
                     b = str(getattr(target, verb)(self.fresh_test,
                                                   new_choice, subject))
                     if Path(a).exists(): found.append((a, b))
+                    elif verb == "nominal_path":
+                        _link_pair_add(found, a, b)
             a = str(source.bookkeeper.coverage_path(self.test, old_choice))
             if Path(a).exists():
                 found.append((a, str(target.bookkeeper.coverage_path(
@@ -251,7 +268,65 @@ class Rename:
             a = str(source.nominal_path(self.test, None, "stdout"))
             b = str(target.nominal_path(self.fresh_test, None, "stdout"))
             if Path(a).exists(): found.append((a, b))
+            else:                _link_pair_add(found, a, b)
         return tuple(sorted(set(found)))
+
+    def link_plan(self):
+        """
+        RETURN: (tuple, tuple, list[str]) -- what LINKED NOMINALS
+                (bookkeeper B-32) the rename carries, read BEFORE anything
+                moves:
+                [0] (new link, text it is to name) for every '.link' of
+                    the key itself -- written anew from its new place
+                [1] (link, new text) for every OTHER case's '.link' that
+                    names a '.txt' of the key -- it follows the text
+                [2] why the rename must not move: a link that would come
+                    to name across a root ('hwut-root.conf' bounds it)
+
+        A link whose text moves along -- one choice of the test linking
+        another -- names the text's new place.
+        """
+        if self._link_plan is not None: return self._link_plan
+        moved_db = {os.path.abspath(a): os.path.abspath(b)
+                    for a, b in self.move_tuple()}
+        own_list, incoming_list, refusal_list = [], [], []
+        for a, b in moved_db.items():
+            if a.endswith(".link"):
+                try:               text = os.path.abspath(str(link_target(a)))
+                except LinkFault:  continue          # carried as it stands
+                text = moved_db.get(text, text)
+                own_list.append((Path(b), Path(text)))
+            elif a.endswith(".txt"):
+                for link in links_to(a):
+                    if os.path.abspath(str(link)) in moved_db: continue
+                    incoming_list.append((link, Path(b)))
+        #  THE REMEDY NAMES THE LINK WHERE IT STANDS NOW: an own link has
+        #  not moved yet, so its source path is the one to isolate.
+        standing_db = {b: a for a, b in moved_db.items()}
+        for link, text in own_list + incoming_list:
+            fault = boundary_fault(Path(link).parent, Path(text).parent)
+            if fault is None: continue
+            now = standing_db.get(os.path.abspath(str(link)), str(link))
+            refusal_list.append("'%s' -> '%s': %s => 'hwut.good.isolate %s' "
+                                "first" % (self.said(now), self.said(text),
+                                           fault, self.said(now)))
+        self._link_plan = (tuple(own_list), tuple(incoming_list), refusal_list)
+        return self._link_plan
+
+    def _links_followed(self) -> bool:
+        """RETURN: bool, True where every link of the plan names its text
+                   from where it stands now; False where one could not be
+                   written -- said by name."""
+        own_tuple, incoming_tuple, _ = self.link_plan()
+        good_f = True
+        for link, text in own_tuple + incoming_tuple:
+            try:
+                write_link(link, text)
+                self.write(f"    link: {self.said(link)} names {self.said(text)}")
+            except (OSError, LinkFault) as error:
+                self.write(f"    FAULT: link {self.said(link)} -- {error}")
+                good_f = False
+        return good_f
 
     def _choice_pair_list(self) -> list[tuple[str, str]]:
         """RETURN: list[(choice, fresh choice)], every choice the rename
@@ -278,7 +353,9 @@ class Rename:
         #  THE CHOICES ARE READ BEFORE THE BOOK GIVES THE ENTRY UP: after
         #  that step the source book knows none of them.
         choice_list = [c for _, c in self._choice_pair_list()]
+        self.link_plan()                      # read before anything moves
         good_f = self._files_followed()
+        if not self._links_followed(): good_f = False
         if not self._book_followed(): return False
         run_db = self._register_followed(choice_list)
         if run_db is None: good_f = False
@@ -338,9 +415,9 @@ class Rename:
             try:
                 Path(target_path).parent.mkdir(parents=True, exist_ok=True)
                 Path(source_path).rename(target_path)
-                write(f"    {_shown(self.source, source_path)} -> {_shown(self.source, target_path)}")
+                write(f"    {self.said(source_path)} -> {self.said(target_path)}")
             except OSError as error:
-                write(f"    FAULT: {_shown(self.source, source_path)} -- {error}")
+                write(f"    FAULT: {self.said(source_path)} -- {error}")
                 good_f = False
         return good_f
 
@@ -434,7 +511,7 @@ class Rename:
                 path.write_bytes(data)
                 write(f"    coverage record: re-seated under {run_id}")
             except (OSError, RecordFault) as error:
-                write(f"    FAULT: coverage record {_shown(self.source, path)} -- {error}")
+                write(f"    FAULT: coverage record {self.said(path)} -- {error}")
                 good_f = False
         return good_f
 
@@ -500,11 +577,11 @@ class Rename:
             if entry is None: continue
             if self.whole_test_f:
                 carry_msg = " / carry it" if self.across_f else ""
-                note_list.append(f"NOTE  hwut.conf apps section '{name}' in {_shown(self.source, conf)} -- "
+                note_list.append(f"NOTE  hwut.conf apps section '{name}' in {self.said(conf)} -- "
                                  f"{verb}{carry_msg}")
             elif self.choice in entry.choice_db \
                  and self.fresh_choice not in entry.choice_db:
-                note_list.append(f"NOTE  hwut.conf apps section '{name}' in {_shown(self.source, conf)} "
+                note_list.append(f"NOTE  hwut.conf apps section '{name}' in {self.said(conf)} "
                                  f"declares '{self.choice}' -- edit it")
         return note_list, None
 
@@ -640,6 +717,13 @@ def main(argv=None, write=None, read_line=None):
     if refusal is not None:
         write(f"REFUSED: {refusal}")
         return E_ExitCode.REFUSED
+    #  A LINK NEVER CROSSES A ROOT (bookkeeper B-32): a move that would
+    #  make one is refused before anything moves.
+    _, _, link_refusal_list = rename.link_plan()
+    if link_refusal_list:
+        for line in link_refusal_list: write(f"REFUSED: {line}")
+        write("NOTE: nothing was renamed")
+        return E_ExitCode.REFUSED
 
     #  A COLLISION IS REFUSED BEFORE ANYTHING MOVES: half a rename
     #  onto a live name is worse than none.
@@ -667,6 +751,9 @@ def main(argv=None, write=None, read_line=None):
     write(f"  {rename.text()} -- {len(pair_tuple)} file(s), the book entry, the register {register_desc}")
     for source_path, target_path in pair_tuple:
         write(f"      {rename.said(source_path)} -> {rename.said(target_path)}")
+    _, incoming_tuple, _ = rename.link_plan()
+    for link, text in incoming_tuple:
+        write(f"      link {rename.said(link)} follows: names {rename.said(text)}")
     if not pair_tuple:
         write("  (no recorded artefact stands; the book and the "
               "register are still asked)")

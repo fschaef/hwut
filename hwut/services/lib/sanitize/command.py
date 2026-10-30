@@ -86,6 +86,7 @@ ARITY_DB = {
     "move":   (2, 2, "<dir>/<test> <new-dir>"),
     "book":   (1, 2, "<dir>/<test> [<choice>]"),
     "remark": (1, 2, "<dir>/<test> [<choice>]"),
+    "unlink": (1, 1, "<dir>/GOOD/<case>.link"),
     "run":    (2, 2, "<dir> <target>"),
     "register": (1, 1, "<dir>"),
     "redirect": (2, 2, "<id> <path below the root>"),
@@ -482,6 +483,32 @@ class CContext:
                                                        choice))
         Bookkeeper(directory).note_accept(test, choice,
                                           aspirant_f=aspirant_f)
+        self._touch_set.add(directory)
+        return CDone(E_Done.DONE)
+
+    def _do_unlink(self, word_tuple):
+        """RETURN: CDone -- the '.link' gone (bookkeeper B-32); the text it
+                   named is never touched."""
+        path = self.path_of(word_tuple[0])
+        if not path.endswith(".link") \
+           or os.path.basename(os.path.dirname(path)) != "GOOD":
+            return CDone(E_Done.REFUSED, "'unlink' takes %s -- nothing else"
+                                         % ARITY_DB["unlink"][2])
+        if not os.path.isfile(path):
+            return CDone(E_Done.NOTHING, "nothing stands there")
+        #  JUDGED AGAIN BEFORE IT ACTS: a sound link alone in its case is
+        #  the case's GOOD, and is not sanitize's to take.
+        directory  = os.path.dirname(os.path.dirname(path))
+        insane_set = set(issue.word_tuple[0] for issue
+                         in sanitize.link_issue_list(directory))
+        if "GOOD/%s" % os.path.basename(path) not in insane_set:
+            return CDone(E_Done.REFUSED, "the link is sound and the case's "
+                                         "only GOOD => 'hwut.good.isolate' "
+                                         "gives the case its own file")
+        try:
+            os.unlink(path)
+        except OSError as error:
+            return CDone(E_Done.FAULT, str(error))
         self._touch_set.add(directory)
         return CDone(E_Done.DONE)
 

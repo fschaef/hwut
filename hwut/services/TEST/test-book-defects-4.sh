@@ -399,7 +399,12 @@ PYEOF2
             L "!label:"                        '!label: slow\n'
             L "label: (empty)"                 'label:\n'
             L "label: slow AND"                'label: slow AND\n'
+            #  Book D-79: the same expression twice is told 'drop one';
+            #  two different ones, the one expression for either.
+            #  MEASURED before: '--label "slow OR slow"'.
             L "label: beside --label"          'label: slow\n' --label slow
+            L "label: beside another --label"  'label: slow\n' --label x
+            L "label: twice, alike"            'label: slow\nlabel:  slow\n'
             L "label: fast (no such label)"    'label: fast\n'
         fi ;;
     *)

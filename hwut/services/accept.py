@@ -89,6 +89,7 @@ PARSER.add_argument("--dont-ask", action="store_true", help=argparse.SUPPRESS)
 PARSER.add_argument("--digest", action="append", default=[], metavar="tag")
 PARSER.add_argument("-f", "--force", action="store_true")
 PARSER.add_argument("--whole", "--as-is", dest="force", action="store_true")
+PARSER.add_argument("--unlink", action="store_true")
 PARSER.add_argument("--force-run", action="store_true",
                     help=argparse.SUPPRESS)
 PARSER.add_argument("--directory", default=None)
@@ -131,6 +132,11 @@ PROMOTION
                         the recording whole without them (E-188). ONE ACT: what it replaces is an earlier
                         accept, never the author's evidence -- a GOOD
                         file cannot exist without this face (E-109).
+    --unlink            a case whose GOOD is a '.link' (bookkeeper B-32)
+                        gets its own '.txt', the recording whole, and the
+                        link goes; without it such a case is refused,
+                        since the text the link names is another case's
+                        GOOD ('hwut.good.link.show' names who shares it)
     A BARE 'hwut.accept' WALKS THE TREE, as 'hwut.run' does -- the
     failures a run reports do not sit in one directory.
     '--directory=<path>' names one directory and reads that alone.
@@ -259,8 +265,27 @@ class CKey:
 
     @property
     def nominal_stands_f(self):
-        """RETURN: bool, True where a nominal already stands."""
-        return self.nominal_path.exists()
+        """RETURN: bool, True where a nominal already stands -- its own
+                   '.txt', or a '.link' in its place (B-32)."""
+        return self.nominal_path.exists() or self.link_path is not None
+
+    @property
+    def link_path(self):
+        """RETURN: Path, the '.link' standing in the nominal's place;
+                   None, where the case has its own file or none."""
+        from ..engine.bookkeeper.api import link_path_of
+        if self.nominal_path.exists(): return None
+        return link_path_of(self.nominal_path)
+
+    @property
+    def link_target_text(self):
+        """RETURN: str, the target of 'link_path' from where hwut was
+                   called; '(<why>)' where it cannot be followed."""
+        from ..engine.bookkeeper.api import LinkFault, link_target
+        try:
+            return os.path.relpath(str(link_target(self.link_path)))
+        except LinkFault as fault:
+            return "(%s)" % fault
 
 
 def key_list_of(store, case_sequence):
@@ -940,7 +965,7 @@ def propose(store, case_sequence, directory, line_n, write,
             good_path = store.bookkeeper.nominal_path(case.source_file,
                                                       choice, subject)
             out  = _lines_of(out_path)          # stands at all?
-            good = _lines_of(good_path)
+            good = _lines_of(_read_path(good_path))
             if out is None:  continue          # nothing ran: nothing to judge
             if good is None: continue          # no pole: a first blessing
             #  AND THE REASON MUST BE A DIVERGENCE. A candidate left by
@@ -1006,6 +1031,16 @@ def propose(store, case_sequence, directory, line_n, write,
                 "'hwut.report.details'")
         return E_ExitCode.FAULT
     return E_ExitCode.OK if said_n else E_ExitCode.EMPTY
+
+
+def _read_path(nominal_path):
+    """RETURN: Path, what a reader opens for the nominal 'nominal_path':
+               the '.txt' a '.link' in its place names (bookkeeper B-32),
+               else 'nominal_path' itself -- also where a link names
+               nothing, so the reader finds nothing."""
+    from ..engine.bookkeeper.api import LinkFault, nominal_resolved
+    try:               return nominal_resolved(nominal_path)
+    except LinkFault:  return nominal_path
 
 
 def _lines_of(path):
@@ -1137,6 +1172,7 @@ def main(argv=None, write=None, read_line=None, propose_n=None,
     directory_said_f = arguments.directory is not None
     directory    = arguments.directory or "."
     force_f      = arguments.force
+    unlink_f     = arguments.unlink
     word_list    = arguments.word
     if arguments.dont_ask:
         #  E-167: there is no question left to skip. Refused BY NAME so
@@ -1294,7 +1330,7 @@ def main(argv=None, write=None, read_line=None, propose_n=None,
                           force_f,
                           propose_n, write, read_line, put=put,
                           brief_list=brief_list,
-                          digest_db=digest_db)
+                          digest_db=digest_db, unlink_f=unlink_f)
         if code is not E_ExitCode.EMPTY: empty_f = False
         if code not in (E_ExitCode.OK, E_ExitCode.EMPTY): worst = code
     if brief_list is not None:
@@ -1333,7 +1369,7 @@ def main(argv=None, write=None, read_line=None, propose_n=None,
 def accept_one(directory, result, bookkeeper, case_sequence,
                force_f, propose_n,
                write, read_line, put=None, brief_list=None,
-               digest_db=None):
+               digest_db=None, unlink_f=False):
     """
     RETURN: E_ExitCode for ONE test directory -- OK where every key it
             holds was blessed or nothing was owed, EMPTY where it held
@@ -1524,7 +1560,20 @@ def accept_one(directory, result, bookkeeper, case_sequence,
         if id(key) in conflict_set:
             skipped_list.append(key)
             continue
-        verdict = classify(key, force_f)
+        #  A LINKED NOMINAL IS ANOTHER CASE'S TEXT (B-32): never written
+        #  through. '--unlink' gives the case its own file, the recording
+        #  whole, as a first acceptance does.
+        link = key.link_path
+        if link is not None and not unlink_f:
+            write("REFUSED link: '%s' -- its GOOD is '%s' -> '%s', another "
+                  "case's text => '--unlink' gives it its own file; "
+                  "'hwut.good.link.show %s' names who shares it"
+                  % (key.name, os.path.relpath(str(link)),
+                     key.link_target_text, os.path.relpath(str(link))))
+            skipped_list.append(key)
+            refused_f = True
+            continue
+        verdict = "bless" if link is not None else classify(key, force_f)
         if verdict == "merge":
             #  A nominal stands: this is a CHANGE, and a change is
             #  'hwut.merge's alone (E-167) -- named, left alone, and
@@ -1559,7 +1608,8 @@ def accept_one(directory, result, bookkeeper, case_sequence,
             refused_f = True
             continue
         written = text
-        store.accept(key.test, key.choice, key.subject, written)
+        store.accept(key.test, key.choice, key.subject, written,
+                     unlink_f=link is not None)
         #  THE REGISTER: an id is born at first accept -- issued by
         #  'note_accept' in the acceptance's own act (B-9).
         #  THE BOOK: the acceptance's instant (E-36), so the three

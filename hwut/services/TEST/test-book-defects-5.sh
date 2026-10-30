@@ -598,6 +598,12 @@ EOF2
         if [ "$1" = move-one-base ]; then
             echo "== hwut.move world/TEST/test-a.sh formation/TEST/  (answered 'n')"
             echo n | "$BIN/hwut.move" world/TEST/test-a.sh formation/TEST/ 2>&1 | shown
+            #  The block of what was done, in the preview's one base (D-75,
+            #  rest). MEASURED before: 'GOOD/test-a.sh--x.txt ->
+            #  formation/TEST/GOOD/test-a.sh--x.txt'.
+            echo "== the same, answered 'y': what was done"
+            echo y | "$BIN/hwut.move" world/TEST/test-a.sh formation/TEST/ 2>&1 \
+                | sed -n '/^Proceed/,$p' | sed 1d | ids | shown
         else
             mv world/TEST/test-a.sh formation/TEST/
             echo "== hwut.move --dont-ask"

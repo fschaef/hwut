@@ -1,0 +1,15 @@
+== hwut.good.link a/TEST/GOOD/test-a.sh--x.txt c/TEST
+LINKED  c/TEST/GOOD/test-a.sh--x.link -> a/TEST/GOOD/test-a.sh--x.txt
+   exit 0
+== c/TEST/GOOD holds
+book.csv
+test-a.sh--x.link
+== the link reads
+../../../a/TEST/GOOD/test-a.sh--x.txt
+== hwut.run in c/TEST (y has no GOOD)
+RESULTS: 1 ok, 1 fail, <t> [sec], <t> [sec] total
+== hwut.report.details test-a.sh x (in c/TEST): the link and its text
+status report: run and accepted -- both records stand (stdout)
+  GOOD/test-a.sh--x.link  (good link)
+  ../../a/TEST/GOOD/test-a.sh--x.txt  (good stdout)
+<hwut-end>

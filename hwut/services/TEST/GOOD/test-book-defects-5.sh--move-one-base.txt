@@ -8,4 +8,12 @@ NOTE  application 'test-a.sh' stands under the OLD name -- git mv world/TEST/tes
 
 Proceed? [y/N] 
 NOTE: nothing was renamed
+== the same, answered 'y': what was done
+world/TEST/test-a.sh -> formation/TEST/test-a.sh:
+    world/TEST/GOOD/test-a.sh--x.txt -> formation/TEST/GOOD/test-a.sh--x.txt
+    world/TEST/OUT/test-a.sh--x.txt -> formation/TEST/OUT/test-a.sh--x.txt
+    world/TEST/TMP/store/test-a.sh--x.stdout.when -> formation/TEST/TMP/store/test-a.sh--x.stdout.when
+    book entry: adopted by 'formation/TEST'
+    register: retired here; issued 0.0 there
+    feature 'same-seed' stays in the source, still linked there: the moved test links it as '<id>:same-seed'
 <hwut-end>

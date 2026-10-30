@@ -26,7 +26,7 @@
 >>> a word too few
     REFUSED: 'repoint' takes <external id> <internal id>
     usage: hwut.sanitize <command> <concerned entity> [--directory=<path>]
-           commands: remove, move, forget, book, remark, register, redirect, repoint, fold, run, root, sub-root; a whole proposal: 'hwut.sanitize.propose', 'hwut.sanitize.apply'
+           commands: remove, move, forget, book, remark, unlink, register, redirect, repoint, fold, run, root, sub-root; a whole proposal: 'hwut.sanitize.propose', 'hwut.sanitize.apply'
     exit 2
 >>> no central file: register
     REFUSED: register gw/can -- no 'hwut-root-features.conf' stands => hwut.features.init

@@ -823,3 +823,40 @@ GRAVEYARD 'allocate()' raising a fault of the module's own: every
 PINNED    'engine/bookkeeper/TEST/test-id_scope.py allocate, give_back,
           ceiling, mark_line, spellings'; the ceiling choices of
           'test-test_id_db.py' and 'test-group_table.py'.
+
+
+B-32  A LINKED NOMINAL: 'GOOD/<key>.link' IN PLACE OF 'GOOD/<key>.txt'
+      (ruled 2026-10-30)                                              (2026-10-30)
+
+PROBLEM   Cases that must print the same -- one behaviour, several
+          directories; a variant tree -- each needed their own copy of the
+          same nominal, and a change was accepted N times or drifted. 'same'
+          (B-30) shares one file among the choices of ONE test only.
+DECISION  RULED (Frank-Rene, 2026-10-30):
+          (1) A '.link' stands IN PLACE OF the stdout nominal, never beside
+          it: 'x--c.link' for 'x--c.txt'. One line, the path of a '.txt'
+          relative to the GOOD/ it stands in. 'key_parts_of' reads it back
+          as the stdout key, so every walker of GOOD/ sees the case.
+          (2) A link names a '.txt' ONLY -- "otherwise we might run into
+          all kinds of trouble (circularity etc)": no chains, no circles.
+          (3) "hwut-root.conf provides a boundary. Links beyond that
+          boundary are forbidden": the root that bounds a link bounds its
+          target; a bubble (E-200) is closed to links both ways.
+          (4) NOT A SYMLINK: "platform dependent, and not all OS provide
+          that"; and 'Store.accept' writes through a symlink silently.
+          THE OWN NAME STAYS THE OWN NAME ('good_link.py'): 'nominal_path'
+          answers the case's '.txt' -- what writers, movers and removers act
+          on; only READERS resolve ('nominal_resolved', 'RecordNominal.open',
+          'of_disk'), so nothing that writes can reach a target by accident.
+          'Store.accept' -- the one writer of text -- raises NominalLinked
+          unless told 'unlink_f', and then writes the case's own '.txt' and
+          drops the link. '_remarked' acts on the own '.txt', which does not
+          stand, and so leaves a linked text alone.
+          The book: a linked case is entered as accepted by the face that
+          links it ('hwut.good.link', services E-209); the register issues
+          its id there, as at a first accept.
+COST      A reader that opened 'nominal_path' directly reads nothing for a
+          linked case; each such reader was found (accept's divergence,
+          'details', sanitize's constraints, 'of_disk', '_cases') and reads
+          through 'nominal_resolved' now. Faces: services E-209. Regression:
+          'services/TEST/test-good-link.sh' (seven choices).
