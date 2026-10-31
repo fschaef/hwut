@@ -101,6 +101,31 @@ def caps_of(configuration, choice_name):
     return choice.caps
 
 
+#  THE FILE A BUILD SYSTEM READS where it is called with no other word --
+#  in its own search order (make: 'GNUmakefile', 'makefile', 'Makefile').
+_BUILD_FILE_DB = {"make":  ("GNUmakefile", "makefile", "Makefile"),
+                  "ninja": ("build.ninja",),
+                  "scons": ("SConstruct", "Sconstruct", "sconstruct")}
+
+
+def _build_system_word(build):
+    """RETURN: str, the build system's token ('make', 'ninja', ...) of the
+               build configuration 'build'; '' where there is none."""
+    system = getattr(build, "build_system", None)
+    return "" if system is None else str(getattr(system, "value", system))
+
+
+def _placed_by_arguments_f(build):
+    """RETURN: bool, True where the build's own arguments name its build
+               file or directory ('-f', '-C', '--file', '--directory') --
+               the author placed it, and hwut does not."""
+    for argument in getattr(build, "argument_list", ()) or ():
+        if str(argument).startswith(("-f", "-C", "--file", "--directory",
+                                     "--makefile")):
+            return True
+    return False
+
+
 @dataclass(frozen=True)
 class TestConfiguration:
     """THE TEST APPLICATION, and every run of it."""
@@ -177,8 +202,29 @@ class TestConfiguration:
         directory: two builds, one ground, running at once, each
         deleting the other's objects. Keyed WHOLE they cannot collide,
         because a directory cannot hold two files of one name.
+
+        THE BUILD RUNS WHERE ITS BUILD FILE STANDS (book D-80, services
+        E-210). A build file the author placed in 'BUILD/<file>' keeps the
+        build there. Where none stands there but the TEST DIRECTORY holds
+        the build system's own file -- 'GNUmakefile', 'makefile' or
+        'Makefile' for make, 'build.ninja', 'SConstruct' -- the build runs
+        in the test directory, as the author runs it by hand, and its
+        targets are found and launched there. MEASURED before: 'make'
+        called in an empty 'BUILD/test-thrust.c/' said "No rule to make
+        target", and no compiled test with the author's Makefile could
+        run. A build whose arguments name its own file or directory
+        ('-f', '-C') is the author's to place, and stays in 'BUILD/'.
         """
-        return Path(self.test_directory) / "BUILD" / self.key_name
+        own = Path(self.test_directory) / "BUILD" / self.key_name
+        name_tuple = _BUILD_FILE_DB.get(_build_system_word(self.build), ())
+        if not name_tuple or _placed_by_arguments_f(self.build):
+            return own
+        if any((own / name).is_file() for name in name_tuple):
+            return own
+        if any((Path(self.test_directory) / name).is_file()
+               for name in name_tuple):
+            return Path(self.test_directory)
+        return own
 
     @property
     def output_directory(self):

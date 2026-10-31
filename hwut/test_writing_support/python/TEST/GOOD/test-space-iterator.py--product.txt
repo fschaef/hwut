@@ -1,0 +1,16 @@
+
+--- [0, 2, 4] x [otto, heinz] x [1, 2] -- 3 * 2 * 2 points ---
+  (0, otto, 1)
+  (0, otto, 2)
+  (0, heinz, 1)
+  (0, heinz, 2)
+  (2, otto, 1)
+  (2, otto, 2)
+  (2, heinz, 1)
+  (2, heinz, 2)
+  (4, otto, 1)
+  (4, otto, 2)
+  (4, heinz, 1)
+  (4, heinz, 2)
+  12 point(s)
+<hwut-end>

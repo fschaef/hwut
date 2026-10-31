@@ -1,8 +1,29 @@
-# vut-register 5 generation:8 apps:2 marks:0=5,1=1
+# vut-register 5 generation:35 apps:9 marks:0=9,1=3,2=2,3=2,4=0,5=2,6=4,7=2,8=2
 test;choice;verdict;report;stain;test_id;choice_id
+build.py;parallel;true;ok;;2;0
+;serial;true;ok;;2;1
+chamber.py;cool;true;ok;;3;0
+;heat;true;ok;;3;1
+delivery.json;;true;ok;;4
 demo.py;analogies;true;ok;;0;0
+;clusters;true;ok;;0;5
 ;constraints;true;ok;;0;1
+;lisp;true;ok;;0;6
 ;plain;true;ok;;0;2
+;pool;true;ok;;0;7
+;progress;true;ok;;0;8
 ;race;true;ok;;0;4
 ;tolerance;true;ok;;0;3
-protocol.sh;clean;true;ok;;1;0
+door.py;broken;true;ok;;5;0
+;kept;true;ok;;5;1
+garage.py;race-atomic;true;ok;;6;0
+;race-naive;true;ok;;6;1
+;random;true;ok;;6;2
+;space;true;ok;;6;3
+protocol.sh;broken;true;ok;;1;1
+;clean;true;ok;;1;0
+;slow;true;ok;;1;2
+screen.py;open;true;ok;;7;0
+;scroll;true;ok;;7;1
+shop.py;report;true;ok;;8;1
+;sell;true;ok;;8;0

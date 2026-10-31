@@ -1,0 +1,44 @@
+==============================================================================
+test_writing_support/perl -- RATIONALE
+==============================================================================
+
+PL-1  THE PYTHON TEST SUPPORT PORTED TO PERL, HELD BY THE PYTHON GOOD FILES
+      (asked 2026-10-30)                                              (2026-10-30)
+------------------------------------------------------------------------------
+PROBLEM   Asked (Frank-Rene, 2026-10-30): "first applications of links, port
+          all python test support modules to perl test support modules,
+          write the same TEST applications and use the same GOOD files (by
+          means of links)." A port is only as good as its proof that it
+          behaves alike; a second set of GOOD files would prove only that
+          each port agrees with itself.
+DECISION  One Perl module per Python module ('README.txt', section 1); one
+          Perl test per Python test, choice for choice; every Perl case's
+          GOOD a '.link' to the Python case's '.txt' (bookkeeper B-32) --
+          47 cases. Measured on 10ee8e9 + bundle 24: all 47 byte-identical
+          on the first run that matched the text, the libm path of 'gauss'
+          included, and 'fuzz' -- 3000 mutated HOCON headers from one seed --
+          giving the same counts.
+          WHAT PYTHON PRINTS OF ITS OWN VALUES is printed by 'Hwut::PyText':
+          'float_repr' is the shortest text that reads back, fixed between
+          1e-4 and 1e16 -- checked against Python's 'repr' on 200000 random
+          doubles over sixty decades, no difference.
+          NO COROUTINES IN PERL'S CORE: a task is a step closure, stepped
+          round-robin in the order given ('Hwut::Task::gather'). That IS
+          asyncio's order for 'gather' and 'sleep(0)': 'yielding' and
+          'cancel' print the Python test's lines.
+          A C LIBRARY WANTS A BINDING Perl's core lacks: 'Hwut::Vterm' stands
+          on FFI::Platypus -- records by value ('VTermPos', 'VTermRect'),
+          closures for the screen's callbacks, 'openpty' from libc. MEASURED
+          before writing it: a closure taking 'VTermRect' by value is called
+          by libvterm with the right rows.
+          'space_iterator' had no Python test, so there was no GOOD to link:
+          one was written in Python ('test-space-iterator.py', product and
+          edges), and the Perl test links its GOOD files.
+          NOT PORTED: 'script_runner' (hwut's own fixture), 'hwut_pype' (a
+          face, not a library).
+COST      A change to a Python module's printed words fails the Perl test
+          until the Perl module follows -- which is the point. FFI::Platypus
+          is a dependency of 'Hwut::Vterm' alone. 'hwut.good.link <dir>
+          <dir>' links by the same name, so the 47 links, whose test names
+          differ by '.py'/'.pl', were written one by one.
+==============================================================================

@@ -1,0 +1,11 @@
+== the Makefile in the test directory
+     1 | thrust short
+     2 | <hwut-end>
+RECORDED: test-thrust.c--short.txt (digest: <tag>)
+== built where it stands: test-thrust.exe here
+== the Makefile placed in BUILD/test-thrust.c/
+     1 | thrust short
+     2 | <hwut-end>
+RECORDED: test-thrust.c--short.txt (digest: <tag>)
+== built where it stands: test-thrust.exe
+<hwut-end>

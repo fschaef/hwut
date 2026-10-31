@@ -12,7 +12,7 @@
 #                 "genomics", "link-bits", "swarm-units",
 #                 "pype-header", "law-constant", "cov-remedy",
 #                 "pype-effect-fault", "bubble-note", "move-one-base",
-#                 "move-no-empty", "currencies"]
+#                 "move-no-empty", "currencies", "build-makefile"]
 # }
 #
 # ---------------------------------------------------------------------------
@@ -138,7 +138,7 @@ unset NO_COLOR CI COLUMNS
 case "$1" in
     --hwut-info)
         echo "The book writers' D-63 onwards and the defect list on a52f2a3;"
-        echo "CHOICES: header-once, pipe-quiet, units-written, exponent-law, zero-law, play-neighbour, play-cut-short, play-no-launch, propose-ignore, runner-words, demo-documents, play-menu, accept-first, laws-all, conf-unread, unit-algebra, law-names, genomics, link-bits, swarm-units, pype-header, law-constant, cov-remedy, pype-effect-fault, bubble-note, move-one-base, move-no-empty, currencies;"
+        echo "CHOICES: header-once, pipe-quiet, units-written, exponent-law, zero-law, play-neighbour, play-cut-short, play-no-launch, propose-ignore, runner-words, demo-documents, play-menu, accept-first, laws-all, conf-unread, unit-algebra, law-names, genomics, link-bits, swarm-units, pype-header, law-constant, cov-remedy, pype-effect-fault, bubble-note, move-one-base, move-no-empty, currencies, build-makefile;"
         exit 0 ;;
 esac
 
@@ -613,6 +613,31 @@ EOF2
             echo "== the moved test links"; sed -n 2p formation/TEST/test-a.sh | ids
             echo "== hwut.features.register"; "$BIN/hwut.features.register" 2>&1 | shown
         fi ;;
+    build-makefile)
+        #  Book D-80: a 'make' build runs where its Makefile stands. In the
+        #  test directory: there, as the author runs it by hand, and the
+        #  executable is launched from there. Placed by the author in
+        #  'BUILD/<file>/': there, as before (E-210).
+        #  MEASURED before: "make: *** No rule to make target
+        #  'test-thrust.exe'" -- make called in an empty 'BUILD/test-thrust.c/'.
+        cat > test-thrust.c <<'END'
+/* @hwut { choices = ["short"]
+           build { framework = "make", executable = "%.exe" } } */
+#include <stdio.h>
+int main(int argc, char** argv) { printf("thrust %s\n<hwut-end>\n", argv[1]); return 0; }
+END
+        printf 'test-thrust.exe: test-thrust.c\n\tcc -o test-thrust.exe test-thrust.c\n' > Makefile
+        printf 'hwut {\n    ignore = ["Makefile", "test-thrust.exe"]\n}\n' > hwut.conf
+        echo "== the Makefile in the test directory"
+        "$BIN/hwut.play" test-thrust.c short --plain 2>&1 | grep -E "^ *[0-9]+ \||RECORDED|FAULT" | shown
+        echo "== built where it stands: test-thrust.exe $(test -x test-thrust.exe && echo here || echo absent)"
+        rm -f test-thrust.exe Makefile; rm -rf BUILD OUT TMP
+        mkdir -p BUILD/test-thrust.c
+        printf 'test-thrust.exe: ../../test-thrust.c\n\tcc -o test-thrust.exe ../../test-thrust.c\n' \
+               > BUILD/test-thrust.c/Makefile
+        echo "== the Makefile placed in BUILD/test-thrust.c/"
+        "$BIN/hwut.play" test-thrust.c short --plain 2>&1 | grep -E "^ *[0-9]+ \||RECORDED|FAULT" | shown
+        echo "== built where it stands: $(ls BUILD/test-thrust.c | grep exe)" ;;
     currencies)
         #  E-206 (RQ-7, ruled 2026-10-29): EUR, USD, GBP, CHF, JPY, each a
         #  dimension of its own, no conversion. MEASURED before: all five

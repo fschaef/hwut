@@ -1,4 +1,4 @@
-# vut-register 5 generation:467 apps:54 marks:0=7,1=8,2=13,3=5,4=8,5=7,6=12,7=5,8=9,9=2,10=2,11=5,12=6,13=6,14=8,15=5,16=6,17=10,18=3,19=5,20=7,21=13,22=4,23=15,24=8,25=11,26=5,27=12,28=10,29=3,30=8,31=4,32=1,33=4,34=3,35=4,36=8,37=18,38=13,39=3,40=2,41=12,42=9,44=3,45=12,46=3,47=5,48=5,49=4,50=7,51=19,52=14,53=19
+# vut-register 5 generation:477 apps:54 marks:0=7,1=8,2=13,3=5,4=8,5=7,6=12,7=5,8=9,9=2,10=2,11=5,12=6,13=6,14=8,15=5,16=6,17=10,18=3,19=5,20=7,21=13,22=4,23=15,24=8,25=11,26=5,27=12,28=10,29=3,30=8,31=4,32=1,33=4,34=3,35=4,36=8,37=18,38=13,39=3,40=2,41=12,42=9,44=3,45=12,46=3,47=5,48=5,49=4,50=7,51=19,52=14,53=29
 test;choice;verdict;report;stain;test_id;choice_id
 test-about.sh;page;true;ok;;39;0
 ;refused;true;ok;;39;1
@@ -70,21 +70,31 @@ test-book-defects-4.sh;compare-crash;true;ok;;52;0
 ;tick;true;ok;;52;12
 ;units-list;true;ok;;52;13
 test-book-defects-5.sh;accept-first;true;ok;;53;0
+;bubble-note;true;ok;;53;20
+;build-makefile;true;ok;;53;19
 ;conf-unread;true;ok;;53;13
-;demo-documents;true;ok;;53;1
+;cov-remedy;true;ok;;53;21
+;currencies;true;ok;;53;22
+;demo-documents;false;not-equivalent-with-nominal;;53;1
 ;exponent-law;true;ok;;53;2
 ;genomics;true;ok;;53;14
 ;header-once;true;ok;;53;3
+;law-constant;true;ok;;53;23
 ;law-names;true;ok;;53;15
 ;laws-all;true;ok;;53;16
 ;link-bits;true;ok;;53;17
+;move-no-empty;true;ok;;53;24
+;move-one-base;true;ok;;53;25
 ;pipe-quiet;true;ok;;53;4
 ;play-cut-short;true;ok;;53;5
 ;play-menu;true;ok;;53;6
 ;play-neighbour;true;ok;;53;7
 ;play-no-launch;true;ok;;53;8
 ;propose-ignore;true;ok;;53;9
+;pype-effect-fault;true;ok;;53;26
+;pype-header;true;ok;;53;27
 ;runner-words;true;ok;;53;10
+;swarm-units;true;ok;;53;28
 ;unit-algebra;true;ok;;53;18
 ;units-written;true;ok;;53;11
 ;zero-law;true;ok;;53;12

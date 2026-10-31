@@ -1,0 +1,14 @@
+
+--- an EMPTY basis -- one point, the empty one ---
+  ()
+  1 point(s)
+
+--- a basis with an EMPTY dimension -- nothing ---
+  0 point(s)
+
+--- ONE dimension -- its values one by one ---
+  (a)
+  (b)
+  (c)
+  3 point(s)
+<hwut-end>

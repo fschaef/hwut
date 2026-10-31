@@ -7877,3 +7877,37 @@ COST      Re-recorded for the words added, each diff read: 'test-sanitize.sh'
           'bin/TEST/test-launchers.sh answer' (four faces). Regression:
           'test-good-link.sh' read-through, writers, faces, isolate, remove,
           move, sanitize.
+
+
+E-210  THE BUILD RUNS WHERE ITS BUILD FILE STANDS (book D-80)        (2026-10-31)
+------------------------------------------------------------------------------
+PROBLEM   The book writers' D-80: a C test with the author's Makefile beside
+          it -- 'build { framework = "make", executable = "%.exe" }' -- could
+          not run. MEASURED on b2b2eeb: 'make' was called in an empty
+          'BUILD/test-thrust.c/' and said "No rule to make target"; the test
+          failed before its first choice. The build directory per test
+          (keyed by the source file WHOLE) exists so that tests build at once
+          without a lock -- but a Makefile is written for the directory it
+          stands in, and the author runs it there by hand.
+DECISION  'TestConfiguration.build_directory', in this order:
+            1. a build file the author placed in 'BUILD/<file>/' -- the
+               build stays there (the old ground, kept for who uses it);
+            2. else the TEST DIRECTORY holds the build system's own file
+               -- 'GNUmakefile', 'makefile', 'Makefile' (make);
+               'build.ninja' (ninja); 'SConstruct' (scons) -- the build
+               runs there, and its targets are found and launched there;
+            3. else 'BUILD/<file>/', as before.
+          A build whose arguments name its own file or directory ('-f',
+          '--file', '--makefile', '-C', '--directory') is the author's to
+          place: it stays in 'BUILD/'. A framework without a build file of
+          its own (a compiler called directly) is untouched.
+COST      Builds of several tests of one directory may now run at once in
+          ONE directory, under one Makefile: the Makefile must not share
+          intermediate files between targets (the C test support's own
+          'c/TEST/Makefile' builds every executable whole from its
+          sources for that reason). What the build makes stands in the test
+          directory: 'ignore = ["*.exe"]' in 'hwut.conf' keeps it out of
+          the candidates. Regression: 'test-book-defects-5.sh build-makefile'
+          -- a Makefile in the test directory (built here) and one placed
+          in 'BUILD/test-thrust.c/' (built there). First user:
+          'test_writing_support/c/TEST' (six tests, 47 cases).

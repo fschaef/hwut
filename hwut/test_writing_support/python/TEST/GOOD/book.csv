@@ -1,4 +1,4 @@
-# vut-register 5 generation:41 apps:4 marks:0=7,1=9,2=12,3=9
+# vut-register 5 generation:53 apps:6 marks:0=7,1=9,2=12,3=9,4=8,5=2
 test;choice;verdict;report;stain;test_id;choice_id
 test-deterministic-random.py;gauss;true;ok;;0;0
 ;primitives;true;ok;;0;1
@@ -16,6 +16,14 @@ test-deterministic-timeline.py;abstract;true;ok;;1;0
 ;stop;true;ok;;1;6
 ;termination;true;ok;;1;7
 ;yielding;true;ok;;1;8
+test-hwut_fsm.py;dfa;true;ok;;4;0
+;forbidden;true;ok;;4;1
+;masks;true;ok;;4;2
+;model;true;ok;;4;3
+;nfa;true;ok;;4;4
+;refused;true;ok;;4;5
+;report;true;ok;;4;6
+;syntax;true;ok;;4;7
 test-hwut_hocon.py;comments;true;ok;;2;0
 ;faults;true;ok;;2;1
 ;fuzz;true;ok;;2;9
@@ -37,3 +45,5 @@ test-hwut_vterm.py;attributes;true;ok;;3;0
 ;screen;true;ok;;3;3
 ;text;true;ok;;3;4
 ;unnoticed;true;ok;;3;8
+test-space-iterator.py;edges;true;ok;;5;0
+;product;true;ok;;5;1

@@ -1,0 +1,63 @@
+==============================================================================
+test_writing_support/c -- RATIONALE
+==============================================================================
+
+C-1   THE PYTHON TEST SUPPORT PORTED TO C, HELD BY THE PYTHON GOOD FILES
+      (asked 2026-10-30)                                              (2026-10-31)
+------------------------------------------------------------------------------
+PROBLEM   Asked (Frank-Rene, 2026-10-30): "Considering D-80, it might be a
+          good idea to develop a C port next; make sure you map oo features
+          to functions with class prefix and 'self' pointer as first
+          argument." D-80 (the book writers': a C test with its Makefile
+          could not run) was fixed first (services E-210); the C port is its
+          first user. As for Perl (perl PL-1), a port is only as good as its
+          proof that it behaves alike.
+DECISION  One C module ('.h' and '.c') per Python module ('README.txt',
+          section 1); one C test per Python test, choice for choice; every
+          C case's GOOD a '.link' to the Python case's '.txt' -- 47 cases,
+          the same that hold the Perl port.
+          THE NAMING, as asked: a class is a struct named as the class
+          ('FsmMachine', 'DeterministicStream', 'VtermScreen'); a method is
+          '<Class>_<method>(<Class>* self, ...)'; a constructor that
+          allocates is '<Class>_new' with '<Class>_free', one that fills
+          the caller's struct is '<Class>_init'. Derivation is the base as
+          the first member ('VtermTerminal.base'); an overridable method is a
+          vtable ('Trigger_Vtable'). A module-level function of Python's is
+          prefixed by the module ('Hocon_parse', 'Vterm_detection_text').
+          WHAT PYTHON RAISES is returned: NULL or -1, and Python's text in
+          'self->error' or the constructor's 'error' buffer -- printed, it is
+          the GOOD's line.
+          WHAT PYTHON PRINTS OF ITS OWN VALUES is printed by 'hwut_pytext':
+          'pytext_float_repr' is the shortest text that reads back, fixed for
+          a decimal point in (-4, 16] -- checked against Python's 'repr' on
+          200000 random doubles, no difference; str and bytes literals pick
+          Python's quote and escapes.
+          NO COROUTINES: a task is a step function, stepped round-robin in the
+          order given ('Task_gather') -- asyncio's order, as for Perl.
+          NO REGULAR EXPRESSIONS in libc's portable core worth relying on:
+          the FSM's arrow and name, HOCON's token, decimal and roman forms
+          are written out as small scanners, the roman one with the regex's
+          backtracking.
+          LIBVTERM WITHOUT ITS HEADER: the machine this was written on has
+          the library (0.3.3) but no 'vterm.h' -- the common case for a
+          runtime package. The module declares 'VTermPos', 'VTermRect' and
+          'VTermScreenCallbacks' (with spare null slots) itself, finds the
+          functions by 'dlsym', and MEASURES the cell's layout as the Python
+          binding does -- the reason the Python binding needs no header
+          either.
+          MEASURED, on b2b2eeb + bundle 25: all 47 cases byte-identical to
+          the Python GOODs; 'fuzz' -- 3000 mutated HOCON headers from one
+          seed -- gives the same counts (619 clean, 2381 with faults, 0
+          hang); every choice clean under AddressSanitizer and
+          UndefinedBehaviorSanitizer (one memcpy from NULL found and fixed).
+          'hwut.run' in 'TEST/': 47/47, the six executables built in 'TEST/'
+          by its Makefile (E-210).
+COST      A change to a Python module's printed words fails the C test until
+          the C module follows -- which is the point. Fixed-size buffers
+          bound what a C test prints in one line (2 KiB for an FSM line, 4
+          KiB for a screen row); a model or a header far beyond the tests'
+          is cut, not refused. The fuzz bounds a parse by 'setitimer' and
+          'siglongjmp'; a hung parse leaks its tree, as the bound is a
+          failure anyway. 'test-hwut_vterm.c' runs its applications with
+          'python3', since they are the Python test's own.
+==============================================================================
