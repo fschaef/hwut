@@ -11,9 +11,9 @@ the directory that defines it, then its title.
 
     <base>      an aggregate's tree path ('gateway/forwarding'): only what
                 stands below it
-    --list      one line per leaf, '<tree path>/<external id>' -- the
-                label 'f/<line>' names it as it stands; an unplaced leaf
-                is its external id alone
+    --list      one line per leaf, '<tree path>/<external id>' -- its
+                place; the label of the feature is 'f/<external id>', the
+                last word; an unplaced leaf is its external id alone
     -b          the aggregates only, one tree path per line (branches)
     -e          the tree, each leaf with its external id
 

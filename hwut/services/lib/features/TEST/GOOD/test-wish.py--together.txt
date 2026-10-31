@@ -1,9 +1,9 @@
->>> -l f/gateway/buses OR f/router.forward
+>>> -l f/buses OR f/router.forward
     ./gw/can/TEST/test-frame.sh
     ./gw/router/TEST/test-route.sh burst
     ./gw/router/TEST/test-route.sh single
     exit 0
->>> -l f/gateway AND NOT f/gateway/buses
+>>> -l f/gateway AND NOT f/buses
     ./gw/router/TEST/test-route.sh burst
     ./gw/router/TEST/test-route.sh single
     exit 0
@@ -13,14 +13,14 @@
 >>> -l focus
     ./gw/router/TEST/test-route.sh single
     exit 0
->>> -l slow OR f/gateway/buses
+>>> -l slow OR f/buses
     ./gw/can/TEST/test-frame.sh
     ./gw/router/TEST/test-route.sh burst
     exit 0
->>> -l f/gateway/buses --fail
-    REFUSED: '--label f/gateway/buses' beside '--fail': a label expression or wishlist arguments, never both -- sets are combined in labels => 'hwut.labels.create <name> --fail ...', then '--label "f/gateway/buses AND <name>"'
+>>> -l f/buses --fail
+    REFUSED: '--label f/buses' beside '--fail': a label expression or wishlist arguments, never both -- sets are combined in labels => 'hwut.labels.create <name> --fail ...', then '--label "f/buses AND <name>"'
     exit 2
->>> hwut.labels.create buses_today -l f/gateway/buses
+>>> hwut.labels.create buses_today -l f/buses
     buses_today: created, 1 member -- a snapshot of what the wish selected
         + ./gw/can/TEST/test-frame.sh
     exit 0

@@ -17,11 +17,14 @@ silences.
 No globs on label names, no counts, no arithmetic. A grammar that
 grows is a language nobody documents.
 
-'f/<feature>' IS THE LABEL THAT TIES TO A FEATURE (intend/three-worlds,
-ruled 2026-10-31): the runs linked to that feature of
-'hwut-root-features.conf', an aggregate bringing its subtree. <feature>
-is a tree path ('gateway/parser'), a bare external id ('parser', at any
-depth), or an internal id ('X7k2:parser') -- as '-F' read them, no glob.
+'f/<id>' IS THE LABEL THAT TIES TO A FEATURE (intend/three-worlds,
+ruled 2026-10-31): the runs linked to the feature of
+'hwut-root-features.conf' whose id is <id> -- an external id, or an
+aggregate key, which brings its subtree. Ids are UNIQUE, external ids and
+aggregate keys in ONE namespace (feature_registry: what stands twice is a
+fault), so the id alone names the feature and the tree gives its place:
+no path, no internal id ('X:<name>' is the registry's, not the
+author's -- ruled 2026-10-31), no glob.
 It is LIVE: the links decide at the time of use, nothing is stored. It
 names no other label, so it is a leaf of the label graph and no circle
 runs through it. The prefix is reserved: no customer label holds a '/'.
@@ -51,15 +54,16 @@ STANDARD_LABEL = "meta"
 #  'and' in lower case is a legal label without ambiguity.
 LABEL_NAME_REGEX = re.compile(r"[A-Za-z0-9_][A-Za-z0-9_.\-]*\Z")
 
-#  THE FEATURE LABEL: 'f/' and a tree path, a bare external id or an
-#  internal id -- no glob mark, no blank, no bracket, no comma.
+#  THE FEATURE LABEL: 'f/' and ONE id -- an external id or an aggregate
+#  key; no '/' (a path), no ':' (an internal id), no glob, no blank, no
+#  bracket, no comma.
 FEATURE_PREFIX       = "f/"
-FEATURE_LABEL_REGEX  = re.compile(r"f/[^\s(),*?\[\]{}]+\Z")
+FEATURE_LABEL_REGEX  = re.compile(r"f/[^\s(),*?\[\]{}/:]+\Z")
 
 
 def feature_label_f(name):
     """
-    RETURN: bool, True where 'name' is a feature label 'f/<feature>' --
+    RETURN: bool, True where 'name' is a feature label 'f/<id>' --
             the runs of a feature, answered from the feature relation,
             never assigned in 'hwut-root.labels'.
     """
@@ -357,8 +361,9 @@ def _parse_term(token_list, index):
     if feature_label_f(token):
         if FEATURE_LABEL_REGEX.match(token) is None:
             raise LabelExprError("'%s': a feature label names ONE feature "
-                                 "-- 'f/<tree path>', 'f/<external id>' or "
-                                 "'f/<internal id>', no glob" % token)
+                                 "by its id -- 'f/<id>': an external id or "
+                                 "an aggregate key; no path, no internal "
+                                 "id, no glob" % token)
         return ("label", token), index + 1
     if LABEL_NAME_REGEX.match(token) is None:
         raise LabelExprError("a label is letters, digits, '_', '-', "

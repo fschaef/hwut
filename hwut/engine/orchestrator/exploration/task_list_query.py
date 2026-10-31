@@ -153,7 +153,7 @@ class CTestTaskListQuery(CTestTaskList):
         self.label_settled_f = False
         self.language_db     = {}       # source_file -> language | None
         self.feature_case_set = None    # (absolute file, choice) wanted
-        #  THE FEATURE LABELS (intend/three-worlds): 'f/<feature>' -> the
+        #  THE FEATURE LABELS (intend/three-worlds): 'f/<id>' -> the
         #  runs linked to it, for every one the wish or a derived label
         #  of the view names. Settled with the label question.
         self.feature_label_db = {}
@@ -406,7 +406,7 @@ class CTestTaskListQuery(CTestTaskList):
     def _settle_feature_label(self):
         """
         RETURN: None. Fills 'feature_label_db' with the runs of every
-                feature label ('f/<feature>') the wish names -- strictly:
+                feature label ('f/<id>') the wish names -- strictly:
                 a feature no central file holds is refused by name -- or
                 a derived label of the view names, leniently: there an
                 unknown feature holds no run.

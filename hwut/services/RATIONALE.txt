@@ -8038,3 +8038,24 @@ COST      'test-hwut_hocon.py numbers' gains 'd = - -1.5e3' -- its two
           by the same GOOD (link). The fuzz counts are unchanged (619 clean,
           2381 with faults): the one fuzz input carrying the case had other
           faults already.
+
+
+E-214  'f/<id>': A FEATURE BY ITS ID ALONE (amends E-211)            (2026-10-31)
+------------------------------------------------------------------------------
+PROBLEM   E-211 read '<feature>' in 'f/<feature>' as '-F' read it: a tree
+          path, a bare word at any depth, or an internal id 'X:name'. Three
+          spellings for one feature, two of them a place.
+DECISION  RULED (Frank-Rene, 2026-10-31): "feature ids should be unique,
+          the external ids should be in the same space without
+          interference. X:<name> should go." 'f/<id>' takes ONE id -- an
+          external id, or an aggregate key, which brings its subtree. The
+          central file already holds them unique in one namespace
+          (feature_registry: what stands twice is a fault, the first
+          stands), so the id is the feature and the parent/child relation
+          gives its place. Refused by name in the grammar: a '/' (a path),
+          a ':' (an internal id -- the registry's word, not the author's), a
+          glob. A miss names 'hwut.features.tree -e', which prints the ids.
+COST      Re-recorded: 'plan/TEST/test-wish.py refused' (the words);
+          'features/TEST/test-wish.py' path, ext, keys, together -- the
+          paths become ids ('f/gateway/buses' is 'f/buses'), the
+          selections unchanged; a path and an internal id now refused.

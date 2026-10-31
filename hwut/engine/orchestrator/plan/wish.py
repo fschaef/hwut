@@ -79,7 +79,7 @@ short form can never mean what the long form cannot say.
     -l, --label <expr>  the runs the label expression names, out of
                         'hwut-root.labels' (disc-8): 'AND', 'OR',
                         'NOT', brackets, 'all' the universe, ',' sugar
-                        for 'OR'; 'f/<feature>' the runs of a feature
+                        for 'OR'; 'f/<id>' the runs of a feature
                         (plan/label). A UNION among the labels it names
                         -- a label names a SET, and naming two asks for
                         both. IT STANDS ALONE (intend/three-worlds,
@@ -107,7 +107,7 @@ short form can never mean what the long form cannot say.
     THE FEATURE WISH IS THE FEATURE WORLD'S (intend/three-worlds): only
     'hwut.report.features' reads '-F', '-e', '-k' ('feature_f'); a face
     selecting RUNS refuses them by name -- a feature reaches the run
-    world as the label 'f/<feature>'.
+    world as the label 'f/<id>'.
     -F, --feature <id-glob>
                         the runs linked to the FEATURES the glob names
                         (R-96): a glob over the TREE PATHS of
@@ -259,8 +259,8 @@ HELP = """SELECTION -- the wish; an absent keyword asks nothing
                         among themselves
     -l, --label <expr>  the runs the label expression names ('AND',
                         'OR', 'NOT', brackets; ',' is 'OR'; 'all' the
-                        universe; 'f/<feature>' the runs of a feature,
-                        an aggregate its subtree). It STANDS ALONE: beside
+                        universe; 'f/<id>' the runs of a feature by its
+                        id, an aggregate its subtree). It STANDS ALONE: beside
                         a target, a glob, a directory, a wishlist or a
                         history word it is refused -- combine sets in
                         labels. Absent, 'meta' is silent -- which a
@@ -436,7 +436,7 @@ def parse_wish(argv, digest_f=False, feature_f=False):
 
     'feature_f' is the feature world's face ('hwut.report.features'): it
     alone reads '-F', '-e', '-k'; any other face is refused them by name
-    and pointed at 'f/<feature>' (intend/three-worlds).
+    and pointed at 'f/<id>' (intend/three-worlds).
 
     '-l' STANDS ALONE: beside any other word of the wish it is refused
     by name ('label_mix_text'); bare targets join later, and
@@ -731,16 +731,16 @@ def _feature_retired_text(argument):
     """
     RETURN: str, the refusal of a feature option on a face that selects
             runs: a feature reaches the run world as the label
-            'f/<feature>' (intend/three-worlds).
+            'f/<id>' (intend/three-worlds).
     """
     word = argument.split("=", 1)[0]
     if word in ("--keys", "-k"):
         return ("'%s' is the feature world's: keys select features, not "
                 "runs => 'hwut.report.features -k <expr>'; the runs of a "
-                "feature are the label '--label f/<feature>'" % word)
+                "feature are the label '--label f/<id>'" % word)
     return ("'%s' is retired on this face: a feature is the label "
-            "'f/<feature>' -- tree path, external id or internal id => "
-            "'--label f/<feature>'" % word)
+            "'f/<id>' -- its external id or aggregate key => "
+            "'--label f/<id>'" % word)
 
 
 def _label_remedy(first, second, either_form):

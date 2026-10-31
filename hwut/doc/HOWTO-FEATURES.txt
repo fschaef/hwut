@@ -41,7 +41,7 @@ The example is a CAN-MOST gateway; every excerpt is the output of that tree.
 4   Keys
 5   Keeping the central file in order
 6   Ids that stay, and retiring
-7   Choosing runs by feature: the label 'f/<feature>'
+7   Choosing runs by feature: the label 'f/<id>'
 8   The table
 9   The code a feature's runs reached
 10  The feature document
@@ -179,7 +179,7 @@ depends on it.
         decode  (can)  A CAN frame is decoded into its signals.
 
 '-e' adds the external ids, '-b' prints the aggregates only, '--list' one
-tree path per leaf -- lines 'f/<feature>' takes as they stand (section 7):
+tree path per leaf, its place; the last word is the id 'f/<id>' names (section 7):
 
     $ hwut.features.tree --list
     gateway/forwarding/router.forward
@@ -392,39 +392,37 @@ version control's: keep 'hwut-root-features.conf' under it, and never
 delete it -- 'register' will not make a new one where features stand.
 
 
-7  CHOOSING RUNS BY FEATURE: THE LABEL 'f/<feature>'
+7  CHOOSING RUNS BY FEATURE: THE LABEL 'f/<id>'
 ______________________________________________________________________________
 
 A feature reaches the runs as a LABEL (intend/three-worlds, ruled
-2026-10-31): 'f/<feature>' names the runs linked to that feature, in every
+2026-10-31): 'f/<id>' names the runs linked to that feature, in every
 face that takes '-l':
 
-    $ hwut.report.list -l f/gateway/forwarding
+    $ hwut.report.list -l f/forwarding
     ./router/TEST/test-route.sh burst
     ./router/TEST/test-route.sh single
     $ hwut.report.list -l f/router.keep-order
     ./router/TEST/test-route.sh burst
     $ hwut.run -l "f/gateway AND NOT slow"
 
-<feature> is ONE feature, no glob:
-
-    a tree path      'gateway/forwarding': the aggregate keys from the top,
-                     '/' between, the external id last; an aggregate brings
-                     its subtree
-    a word           an aggregate or an external id anywhere ('router.drop',
-                     'buses'); a line of 'hwut.features.tree --list' fits as
-                     it stands
-    X:name           an internal id
+<id> is the feature's ID, alone: an external id ('router.keep-order') or an
+aggregate key ('forwarding', which brings its subtree). Ids are UNIQUE --
+external ids and aggregate keys share one namespace, and the central file
+refuses what stands twice (section 2) -- so the id names the feature, and
+the tree gives its place. No path, no internal id ('X:name' is the
+registry's word, not the author's), no glob: each is refused by name.
+'hwut.features.tree -e' prints the ids.
 
 'f/' is LIVE: the links decide at the time of use. It combines as every
 label does -- AND, OR, NOT, brackets -- and may stand in a derived label of
 'hwut-root.labels':
 
     [derived]
-    focus = f/gateway/forwarding AND NOT slow
+    focus = f/forwarding AND NOT slow
 
 A frozen copy is a label of its own: 'hwut.labels.create forwarding_today
--l f/gateway/forwarding' stores the runs as they are linked now.
+-l f/forwarding' stores the runs as they are linked now.
 
 '-l' STANDS ALONE: beside a target, '--dir', '--fail' or any other word of a
 wish it is refused, and so the runs of a feature that failed are a label
@@ -434,7 +432,7 @@ retired one, a glob -- a misspelt word that silently selected nothing
 would let an author believe the set is empty:
 
     $ hwut.report.list -l f/router.gone
-    REFUSED: 'f/router.gone' names no feature: no tree path, external id or internal id of 'hwut-root-features.conf' is 'router.gone' => hwut.features.tree --list
+    REFUSED: 'f/router.gone' names no feature: no external id or aggregate key of 'hwut-root-features.conf' is 'router.gone' => hwut.features.tree -e
 
 An aggregate with no leaf yet is legal: the selection is empty. Without a
 central file every feature label is refused => hwut.features.init.
@@ -600,7 +598,7 @@ ______________________________________________________________________________
     hwut.sanitize.apply <file>
     hwut.sanitize register <dir> | redirect <id> <path>
                 | repoint <external> <internal> | fold <id> <first id>
-    <any face with a wish> -l f/<feature>   the runs of a feature (a label)
+    <any face with a wish> -l f/<id>   the runs of a feature (a label)
     hwut.report.features   [-F|--feature <id-glob>]...
                            [-e|--feature-ext <id>]... [-k|--keys <expr>]
 

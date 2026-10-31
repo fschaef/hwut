@@ -14,12 +14,12 @@
     REFUSED: 'f/can.old' names a RETIRED feature: no longer claimed, no run proves it any more
     exit 2
 >>> -e can.decode
-    REFUSED: '-e' is retired on this face: a feature is the label 'f/<feature>' -- tree path, external id or internal id => '--label f/<feature>'
+    REFUSED: '-e' is retired on this face: a feature is the label 'f/<id>' -- its external id or aggregate key => '--label f/<id>'
     exit 2
 >>> --feature-ext=router.keep-order
-    REFUSED: '--feature-ext' is retired on this face: a feature is the label 'f/<feature>' -- tree path, external id or internal id => '--label f/<feature>'
+    REFUSED: '--feature-ext' is retired on this face: a feature is the label 'f/<id>' -- its external id or aggregate key => '--label f/<id>'
     exit 2
 >>> -F gateway
-    REFUSED: '-F' is retired on this face: a feature is the label 'f/<feature>' -- tree path, external id or internal id => '--label f/<feature>'
+    REFUSED: '-F' is retired on this face: a feature is the label 'f/<id>' -- its external id or aggregate key => '--label f/<id>'
     exit 2
 <hwut-end>

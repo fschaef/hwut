@@ -60,19 +60,19 @@ REFUSED: '--label slow' beside '--since=2h': a label expression or wishlist argu
 REFUSED: '--label slow' beside '--glob': a label expression or wishlist arguments, never both -- sets are combined in labels => 'hwut.labels.create <name> --glob ...', then '--label "slow AND <name>"'
 
 --- -F scroll ---
-REFUSED: '-F' is retired on this face: a feature is the label 'f/<feature>' -- tree path, external id or internal id => '--label f/<feature>'
+REFUSED: '-F' is retired on this face: a feature is the label 'f/<id>' -- its external id or aggregate key => '--label f/<id>'
 
 --- -e REQ-1 ---
-REFUSED: '-e' is retired on this face: a feature is the label 'f/<feature>' -- tree path, external id or internal id => '--label f/<feature>'
+REFUSED: '-e' is retired on this face: a feature is the label 'f/<id>' -- its external id or aggregate key => '--label f/<id>'
 
 --- --keys=gui ---
-REFUSED: '--keys' is the feature world's: keys select features, not runs => 'hwut.report.features -k <expr>'; the runs of a feature are the label '--label f/<feature>'
+REFUSED: '--keys' is the feature world's: keys select features, not runs => 'hwut.report.features -k <expr>'; the runs of a feature are the label '--label f/<id>'
 
 --- -l f/net* ---
-REFUSED: '--label f/net*' cannot be read -- 'f/net*': a feature label names ONE feature -- 'f/<tree path>', 'f/<external id>' or 'f/<internal id>', no glob
+REFUSED: '--label f/net*' cannot be read -- 'f/net*': a feature label names ONE feature by its id -- 'f/<id>': an external id or an aggregate key; no path, no internal id, no glob
 
 --- -l f/ ---
-REFUSED: '--label f/' cannot be read -- 'f/': a feature label names ONE feature -- 'f/<tree path>', 'f/<external id>' or 'f/<internal id>', no glob
+REFUSED: '--label f/' cannot be read -- 'f/': a feature label names ONE feature by its id -- 'f/<id>': an external id or an aggregate key; no path, no internal id, no glob
 
 --- -l slow test-route.sh   (a bare target) ---
 REFUSED: '--label slow' beside 'test-route.sh': a label expression or wishlist arguments, never both -- sets are combined in labels => 'hwut.labels.create <name> test-route.sh ...', then '--label "slow AND <name>"'

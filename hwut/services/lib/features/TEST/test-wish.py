@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
 #
 # @hwut {
-#     title      = "The feature label f/<feature> where the central file stands: tree paths, external ids, internal ids; -F, -e, -k refused on a run face"
+#     title      = "The feature label f/<id> where the central file stands: aggregate keys and external ids; -F, -e, -k refused on a run face"
 #     choices {
 #         path     { features = ["wish-reads-registry"] }
 #         ext      { features = ["wish-reads-registry"] }
@@ -23,11 +23,10 @@ PURPOSE: THE FEATURE LABEL 'f/<feature>' where 'hwut-root-features.conf'
 
 CHOICES: path, ext, keys, together;
 
-path      'f/' over tree paths: an aggregate brings its subtree, a leaf by
-          its path, a bare word anywhere, the lines of 'hwut.features.tree
-          --list' as they stand; an internal id; a glob refused (a label
-          names ONE feature); a retired internal id and a feature named
-          nowhere refused by name; an empty aggregate (empty).
+path      'f/<id>': an aggregate key brings its subtree, an external id
+          its leaf -- ids are unique in one namespace, so the id alone is
+          the feature; an empty aggregate (empty); refused by name: a path,
+          an internal id, a glob, an id named nowhere.
 
 ext       'f/<external id>', the bare word; '-e' and '--feature-ext' refused
           on a run face, naming 'f/'.
@@ -91,22 +90,17 @@ def _case(body):
 
 
 def test_path():
-    """RETURN: None. Prints what 'f/<tree path>' selects and refuses."""
+    """RETURN: None. Prints what 'f/<id>' selects -- an aggregate key brings
+    its subtree, an external id its leaf -- and what it refuses."""
     def body(root):
-        banner("tree paths")
-        for path in ("gateway/forwarding", "gateway",
-                     "gateway/forwarding/router.keep-order",
-                     "buses", "gateway/later", "router.drop"):
-            _ask(root, "-l", "f/" + path)
-        banner("the lines of hwut.features.tree --list")
-        text, _ = FIXTURE._launch(root, "hwut.features.tree", "--list")
-        for line in text.split():
-            _ask(root, "-l", "f/" + line)
-        banner("internal ids")
+        banner("aggregate keys and external ids")
+        for feature in ("gateway", "forwarding", "router.keep-order",
+                        "buses", "later", "router.drop"):
+            _ask(root, "-l", "f/" + feature)
+        banner("refused: a path, an internal id, a glob, an id named nowhere")
+        _ask(root, "-l", "f/gateway/forwarding")
         _ask(root, "-l", "f/Aaaaaaa1:decode")
-        _ask(root, "-l", "f/Aaaaaaa1:old")
-        banner("refused: a glob, a feature named nowhere")
-        _ask(root, "-l", "f/gateway/*/can.decode")
+        _ask(root, "-l", "f/router.*")
         _ask(root, "-l", "f/nothing")
     _case(body)
 
@@ -141,19 +135,19 @@ def test_keys():
 def test_together():
     """RETURN: None. Feature labels combined in the label world."""
     def body(root):
-        _ask(root, "-l", "f/gateway/buses OR f/router.forward")
-        _ask(root, "-l", "f/gateway AND NOT f/gateway/buses")
+        _ask(root, "-l", "f/buses OR f/router.forward")
+        _ask(root, "-l", "f/gateway AND NOT f/buses")
         _ask(root, "-l", "NOT f/gateway")
         with open(os.path.join(root, "hwut-root.labels"), "w") as fh:
             fh.write("./gw/router/TEST/test-route.sh burst : slow\n"
                      "\n[derived]\n"
-                     "focus = f/gateway/forwarding AND NOT slow\n")
+                     "focus = f/forwarding AND NOT slow\n")
         _ask(root, "-l", "focus")
-        _ask(root, "-l", "slow OR f/gateway/buses")
-        _ask(root, "-l", "f/gateway/buses", "--fail")
+        _ask(root, "-l", "slow OR f/buses")
+        _ask(root, "-l", "f/buses", "--fail")
         text, code = FIXTURE._launch(root, "hwut.labels.create", "buses_today",
-                                     "-l", "f/gateway/buses")
-        print(">>> hwut.labels.create buses_today -l f/gateway/buses")
+                                     "-l", "f/buses")
+        print(">>> hwut.labels.create buses_today -l f/buses")
         for line in text.rstrip("\n").split("\n"):
             if line.strip(): print("    " + line)
         print("    exit %d" % code)
@@ -168,9 +162,9 @@ def test_together():
 if __name__ == "__main__":
     HwutRunner(
         argv       = sys.argv,
-        title      = "The feature label f/<feature> where the central file "
-                     "stands: tree paths, external ids, internal ids; -F, "
-                     "-e, -k refused on a run face",
+        title      = "The feature label f/<id> where the central file "
+                     "stands: aggregate keys and external ids; -F, -e, -k "
+                     "refused on a run face",
         choice_map = {
             "path":     test_path,
             "ext":      test_ext,

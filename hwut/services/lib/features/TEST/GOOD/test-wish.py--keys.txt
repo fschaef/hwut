@@ -1,5 +1,5 @@
 >>> -k latency
-    REFUSED: '-k' is the feature world's: keys select features, not runs => 'hwut.report.features -k <expr>'; the runs of a feature are the label '--label f/<feature>'
+    REFUSED: '-k' is the feature world's: keys select features, not runs => 'hwut.report.features -k <expr>'; the runs of a feature are the label '--label f/<id>'
     exit 2
 >>> hwut.report.features -k latency
     AGGREGATE gateway -- CAN-MOST gateway 1 implemented, 0 open; 1 ok, 0 fail, 0 untested

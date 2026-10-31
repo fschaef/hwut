@@ -299,8 +299,10 @@ def feature_label_case_set(root, name, strict_f=True):
     """
     RETURN: frozenset of (absolute test file, choice), the runs of the
             tree below 'root' linked to the feature the label 'name'
-            ('f/<feature>', plan/label) names -- an aggregate's subtree
-            included, read as '-F <feature>' read it -- if success;
+            ('f/<id>', plan/label) names -- the leaf of that external id,
+            or every leaf below the aggregate of that key; ids are unique
+            in one namespace (feature_registry), so the id is the feature
+            -- if success;
             raises SelectionError, else: no readable central file, a
             retired feature, or ('strict_f') a feature no bubble's
             central file holds. Not strict, an unknown feature holds no
@@ -312,6 +314,9 @@ def feature_label_case_set(root, name, strict_f=True):
     mark = (root, name, strict_f)
     if mark in _feature_label_db: return _feature_label_db[mark]
     feature = name[2:]
+    #  ONE ID, matched as a whole component of a leaf's place: its
+    #  external id, or the key of an aggregate above it. Unique ids make
+    #  that ONE feature (the grammar admits no '/', ':' or glob).
     wish    = Wish(feature_tuple=(feature,))
     from .feature_view  import view_of, ViewRefused
     from .tree_explorer import RootConfMissing, inner_root_tuple
@@ -336,7 +341,7 @@ def feature_label_case_set(root, name, strict_f=True):
             or path_glob_hit_f(feature, tuple(
                 each.tree_path.split("/")) + (each.aggregate.key,))
             for each in _aggregate_list(view))
-        if not leaf_list and ":" not in feature:
+        if not leaf_list:
             from .feature_registry import name_set
             live = {each.leaf.external for each in view.leaf_list()}
             if feature in name_set(view.registry) - live - {
@@ -353,9 +358,9 @@ def feature_label_case_set(root, name, strict_f=True):
             for run in each.feature_state.run_tuple)
     if strict_f and not known_f:
         raise error or SelectionError(
-            "'%s' names no feature: no tree path, external id or internal "
-            "id of 'hwut-root-features.conf' is '%s' => hwut.features.tree "
-            "--list" % (name, feature))
+            "'%s' names no feature: no external id or aggregate key of "
+            "'hwut-root-features.conf' is '%s' => hwut.features.tree -e"
+            % (name, feature))
     _feature_label_db[mark] = case_set
     return case_set
 

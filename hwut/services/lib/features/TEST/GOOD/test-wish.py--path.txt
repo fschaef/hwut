@@ -1,46 +1,46 @@
---- tree paths --------------------------------------------------
->>> -l f/gateway/forwarding
-    ./gw/router/TEST/test-route.sh burst
-    ./gw/router/TEST/test-route.sh single
-    exit 0
+--- aggregate keys and external ids -----------------------------
 >>> -l f/gateway
     ./gw/can/TEST/test-frame.sh
     ./gw/router/TEST/test-route.sh burst
     ./gw/router/TEST/test-route.sh single
     exit 0
->>> -l f/gateway/forwarding/router.keep-order
+>>> -l f/forwarding
+    ./gw/router/TEST/test-route.sh burst
+    ./gw/router/TEST/test-route.sh single
+    exit 0
+>>> -l f/router.keep-order
     ./gw/router/TEST/test-route.sh burst
     exit 0
 >>> -l f/buses
     ./gw/can/TEST/test-frame.sh
     exit 0
->>> -l f/gateway/later
+>>> -l f/later
     exit 3
 >>> -l f/router.drop
     exit 3
---- the lines of hwut.features.tree --list ----------------------
->>> -l f/gateway/forwarding/router.forward
-    ./gw/router/TEST/test-route.sh burst
-    ./gw/router/TEST/test-route.sh single
-    exit 0
->>> -l f/gateway/forwarding/router.keep-order
-    ./gw/router/TEST/test-route.sh burst
-    exit 0
->>> -l f/gateway/buses/can.decode
-    ./gw/can/TEST/test-frame.sh
-    exit 0
->>> -l f/router.drop
-    exit 3
---- internal ids ------------------------------------------------
->>> -l f/Aaaaaaa1:decode
-    ./gw/can/TEST/test-frame.sh
-    exit 0
->>> -l f/Aaaaaaa1:old
-    REFUSED: 'f/Aaaaaaa1:old' names a RETIRED feature: no longer claimed
+--- refused: a path, an internal id, a glob, an id named nowhere 
+>>> -l f/gateway/forwarding
+    REFUSED: '--label f/gateway/forwarding' cannot be read -- 'f/gateway/forwarding': a feature label names ONE feature by its id -- 'f/<id>': an external id or an aggregate key; no path, no internal id, no glob
+    usage: hwut.report.list [--fail] [--pass] [--since=<point>] [--until=<point>]
+                            [--glob <target>]... [--exclude <target>]...
+                            [--dir <glob>]... [--exclude-dir <glob>]...
+                            [--wishlist <file>]... [-l|--label <expr>]
+                            [--language=<name>]... [--faster-than=<sec>]
+                            [--no-bubbles] [<file-glob> [choice-glob]...]
+                            [--directory=<path>]
     exit 2
---- refused: a glob, a feature named nowhere --------------------
->>> -l f/gateway/*/can.decode
-    REFUSED: '--label f/gateway/*/can.decode' cannot be read -- 'f/gateway/*/can.decode': a feature label names ONE feature -- 'f/<tree path>', 'f/<external id>' or 'f/<internal id>', no glob
+>>> -l f/Aaaaaaa1:decode
+    REFUSED: '--label f/Aaaaaaa1:decode' cannot be read -- 'f/Aaaaaaa1:decode': a feature label names ONE feature by its id -- 'f/<id>': an external id or an aggregate key; no path, no internal id, no glob
+    usage: hwut.report.list [--fail] [--pass] [--since=<point>] [--until=<point>]
+                            [--glob <target>]... [--exclude <target>]...
+                            [--dir <glob>]... [--exclude-dir <glob>]...
+                            [--wishlist <file>]... [-l|--label <expr>]
+                            [--language=<name>]... [--faster-than=<sec>]
+                            [--no-bubbles] [<file-glob> [choice-glob]...]
+                            [--directory=<path>]
+    exit 2
+>>> -l f/router.*
+    REFUSED: '--label f/router.*' cannot be read -- 'f/router.*': a feature label names ONE feature by its id -- 'f/<id>': an external id or an aggregate key; no path, no internal id, no glob
     usage: hwut.report.list [--fail] [--pass] [--since=<point>] [--until=<point>]
                             [--glob <target>]... [--exclude <target>]...
                             [--dir <glob>]... [--exclude-dir <glob>]...
@@ -50,6 +50,6 @@
                             [--directory=<path>]
     exit 2
 >>> -l f/nothing
-    REFUSED: 'f/nothing' names no feature: no tree path, external id or internal id of 'hwut-root-features.conf' is 'nothing' => hwut.features.tree --list
+    REFUSED: 'f/nothing' names no feature: no external id or aggregate key of 'hwut-root-features.conf' is 'nothing' => hwut.features.tree -e
     exit 2
 <hwut-end>

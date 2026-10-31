@@ -65,8 +65,8 @@ $ hwut.plan --help
                             among themselves
         -l, --label <expr>  the runs the label expression names ('AND',
                             'OR', 'NOT', brackets; ',' is 'OR'; 'all' the
-                            universe; 'f/<feature>' the runs of a feature,
-                            an aggregate its subtree). It STANDS ALONE: beside
+                            universe; 'f/<id>' the runs of a feature by its
+                            id, an aggregate its subtree). It STANDS ALONE: beside
                             a target, a glob, a directory, a wishlist or a
                             history word it is refused -- combine sets in
                             labels. Absent, 'meta' is silent -- which a
