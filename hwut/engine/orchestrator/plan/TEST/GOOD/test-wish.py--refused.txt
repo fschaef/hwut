@@ -29,21 +29,54 @@ REFUSED: '--fail' beside '--pass' can want nothing
 --- --since=1h --until=2h ---
 REFUSED: '--since=1h --until=2h': the window is empty -- 'until' must lie further back than 'since'
 
---- -F ---
+--- -F   (the feature world's face) ---
 REFUSED: '-F' stands without an id glob
 
---- --feature= ---
+--- --feature=   (the feature world's face) ---
 REFUSED: '--feature' names no id
 
---- -k ---
+--- -k   (the feature world's face) ---
 REFUSED: '-k' stands without an expression
 
---- --keys= ---
+--- --keys=   (the feature world's face) ---
 REFUSED: '--keys ' cannot be read -- the expression is empty
 
---- -k gui AND ---
+--- -k gui AND   (the feature world's face) ---
 REFUSED: '--keys gui AND' cannot be read -- the expression ends where a label must stand
 
---- -k gui --keys net ---
+--- -k gui --keys net   (the feature world's face) ---
 REFUSED: '--keys' stands twice; one expression holds the whole question -- write '--keys "gui OR net"'
+
+--- -l slow --fail ---
+REFUSED: '--label slow' beside '--fail': a label expression or wishlist arguments, never both -- sets are combined in labels => 'hwut.labels.create <name> --fail ...', then '--label "slow AND <name>"'
+
+--- --dir net -l slow ---
+REFUSED: '--label slow' beside '--dir': a label expression or wishlist arguments, never both -- sets are combined in labels => 'hwut.labels.create <name> --dir ...', then '--label "slow AND <name>"'
+
+--- --since=2h --label=slow ---
+REFUSED: '--label slow' beside '--since=2h': a label expression or wishlist arguments, never both -- sets are combined in labels => 'hwut.labels.create <name> --since=2h ...', then '--label "slow AND <name>"'
+
+--- -l slow --glob x ---
+REFUSED: '--label slow' beside '--glob': a label expression or wishlist arguments, never both -- sets are combined in labels => 'hwut.labels.create <name> --glob ...', then '--label "slow AND <name>"'
+
+--- -F scroll ---
+REFUSED: '-F' is retired on this face: a feature is the label 'f/<feature>' -- tree path, external id or internal id => '--label f/<feature>'
+
+--- -e REQ-1 ---
+REFUSED: '-e' is retired on this face: a feature is the label 'f/<feature>' -- tree path, external id or internal id => '--label f/<feature>'
+
+--- --keys=gui ---
+REFUSED: '--keys' is the feature world's: keys select features, not runs => 'hwut.report.features -k <expr>'; the runs of a feature are the label '--label f/<feature>'
+
+--- -l f/net* ---
+REFUSED: '--label f/net*' cannot be read -- 'f/net*': a feature label names ONE feature -- 'f/<tree path>', 'f/<external id>' or 'f/<internal id>', no glob
+
+--- -l f/ ---
+REFUSED: '--label f/' cannot be read -- 'f/': a feature label names ONE feature -- 'f/<tree path>', 'f/<external id>' or 'f/<internal id>', no glob
+
+--- -l slow test-route.sh   (a bare target) ---
+REFUSED: '--label slow' beside 'test-route.sh': a label expression or wishlist arguments, never both -- sets are combined in labels => 'hwut.labels.create <name> test-route.sh ...', then '--label "slow AND <name>"'
+
+--- --wishlist l.txt   ('label: slow' on line 2) ---
+REFUSED: 'l.txt', line 2: 'label:' is no wishlist line -- a list names no set => '--label <expr>' alone, or name the list's runs: 'hwut.labels.create <name> --wishlist l.txt'
 <hwut-end>

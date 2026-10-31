@@ -384,7 +384,9 @@ sub _parse_bare {
         my $text  = $cursor->{text};
         my $start = _blank_end($text, $cursor->{i_col} + 1);
         my $after = _token_at($text, $start);
-        if ($after ne "" && !_is_not_token(_number($after))) {
+        #  The two must make ONE number: '- -1.5e3' does not (python hwut_hocon).
+        if ($after ne "" && !_is_not_token(_number($after))
+                         && !_is_not_token(_number($raw . $after))) {
             $cursor->{i_col} = $start + length $after;
             return Hwut::Hocon::Scalar->new(_number($raw . $after), $position);
         }

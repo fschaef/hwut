@@ -52,6 +52,7 @@ _view_db = {}
 def forget_views():
     """RETURN: None. Drops every view computed so far."""
     _view_db.clear()
+    _feature_label_db.clear()
 
 
 def brace_alternative_tuple(pattern):
@@ -288,6 +289,74 @@ def case_set_of(root, wish):
     if error_list and len(error_list) == len(top_tuple):
         raise error_list[0]
     _view_db[mark] = case_set
+    return case_set
+
+
+_feature_label_db = {}
+
+
+def feature_label_case_set(root, name, strict_f=True):
+    """
+    RETURN: frozenset of (absolute test file, choice), the runs of the
+            tree below 'root' linked to the feature the label 'name'
+            ('f/<feature>', plan/label) names -- an aggregate's subtree
+            included, read as '-F <feature>' read it -- if success;
+            raises SelectionError, else: no readable central file, a
+            retired feature, or ('strict_f') a feature no bubble's
+            central file holds. Not strict, an unknown feature holds no
+            run: a derived label of 'hwut-root.labels' naming it must not
+            refuse every selection that never asks for it.
+    """
+    from ..plan.wish import Wish
+    root = os.path.abspath(root)
+    mark = (root, name, strict_f)
+    if mark in _feature_label_db: return _feature_label_db[mark]
+    feature = name[2:]
+    wish    = Wish(feature_tuple=(feature,))
+    from .feature_view  import view_of, ViewRefused
+    from .tree_explorer import RootConfMissing, inner_root_tuple
+    case_set, known_f, error = frozenset(), False, None
+    for top in (root,) + inner_root_tuple(root):
+        try:
+            view = view_of(top)
+        except (ViewRefused, RootConfMissing) as refusal:
+            error = error or SelectionError(
+                "'%s' asks for a feature: %s" % (name, refusal))
+            continue
+        try:
+            leaf_list = selected_leaf_list(view, wish)
+        except SelectionError as refusal:
+            error = error or SelectionError(
+                str(refusal).replace("'--feature %s'" % feature,
+                                     "'%s'" % name))
+            continue
+        known_f   = known_f or bool(leaf_list) or any(
+            path_glob_hit_f(feature, tuple(
+                (each.tree_path or each.aggregate.key).split("/")))
+            or path_glob_hit_f(feature, tuple(
+                each.tree_path.split("/")) + (each.aggregate.key,))
+            for each in _aggregate_list(view))
+        if not leaf_list and ":" not in feature:
+            from .feature_registry import name_set
+            live = {each.leaf.external for each in view.leaf_list()}
+            if feature in name_set(view.registry) - live - {
+                    each.aggregate.key for each in _aggregate_list(view)}:
+                error = error or SelectionError(
+                    "'%s' names a RETIRED feature: no longer claimed, no "
+                    "run proves it any more" % name)
+        case_set |= frozenset(
+            (os.path.normpath(os.path.join(view.asked,
+                                           run.path or each.test_path,
+                                           run.test)), run.choice)
+            for each in leaf_list
+            if each.feature_state is not None
+            for run in each.feature_state.run_tuple)
+    if strict_f and not known_f:
+        raise error or SelectionError(
+            "'%s' names no feature: no tree path, external id or internal "
+            "id of 'hwut-root-features.conf' is '%s' => hwut.features.tree "
+            "--list" % (name, feature))
+    _feature_label_db[mark] = case_set
     return case_set
 
 

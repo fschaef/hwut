@@ -49,6 +49,16 @@
     rest : --directory=x, some-file.py
     asks nothing: False
 
+--- -l f/display AND NOT slow ---
+    wish : --label "f/display AND NOT slow"
+    rest : -
+    asks nothing: False
+
+--- -l mine --no-bubbles ---
+    wish : --no-bubbles --label "mine"
+    rest : -
+    asks nothing: False
+
 --- -F display.** ---
     wish : --feature "display.**"
     rest : -
@@ -64,13 +74,8 @@
     rest : -
     asks nothing: False
 
---- --keys=gui, net --fail ---
-    wish : --fail --keys "gui, net"
-    rest : -
-    asks nothing: False
-
---- -F scroll -k gui -l mine ---
-    wish : --label "mine" --feature "scroll" --keys "gui"
+--- -F scroll -k gui ---
+    wish : --feature "scroll" --keys "gui"
     rest : -
     asks nothing: False
 <hwut-end>

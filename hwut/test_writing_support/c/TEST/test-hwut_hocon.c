@@ -145,7 +145,7 @@ run_numbers(void)
     run("roman",
         "a = 0rIV\n" "b = 0rMCMLXXXIV\n" "c = -0rX\n");
     run("a sign standing apart from its digits",
-        "a = - 0.12\n" "b = + 7\n" "c = - 0xFF\n");
+        "a = - 0.12\n" "b = + 7\n" "c = - 0xFF\n" "d = - -1.5e3\n");
     run("what spells no number is a string, and carries quotes",
         "a = 1.2.3\n" "b = 0x\n" "c = 0b012\n" "d = 1__0\n" "e = 0rIIII\n" "f = 0rVX\n");
     run("no arithmetic: this language computes nothing",

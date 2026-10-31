@@ -316,8 +316,9 @@ PYEOF2
             sed -i 's/choices = \["x", "y"\]/features = ["flow"] choices = ["x", "y"]/' "$W/TEST/test-w.sh"
             ( cd world && "$BIN/hwut.features.register" > /dev/null 2>&1 \
                 && "$BIN/hwut.run" --plain > /dev/null 2>&1 )
-            ran inside -F flow
-            ran above  -F flow ;;
+            #  A FEATURE IS THE LABEL 'f/<feature>' (intend/three-worlds).
+            ran inside --label f/flow
+            ran above  --label f/flow ;;
         bubble-fault)
             printf 'hwut {\n    no_such_key = 1\n}\n' > "$W/hwut-root.conf"
             ran above
@@ -362,10 +363,11 @@ PYEOF2
     glob-levels|wishlist-label)
         #  E-206 (ruled 2026-10-29): a path glob is matched LEVEL BY LEVEL --
         #  '*' inside one level, '**' any number of levels, as '-F' globs
-        #  and '.gitignore' have it; a wishlist line 'label: <expr>' is the
-        #  list's '--label', once per wish. MEASURED before: 'a/*/x'
-        #  matched 'a/b/c/x' (fnmatch's '*' crossed '/'); 'label: slow'
-        #  was a target naming a file 'label:'.
+        #  and '.gitignore' have it. MEASURED before: 'a/*/x' matched
+        #  'a/b/c/x' (fnmatch's '*' crossed '/').
+        #  THE 'label:' LINE OF E-206 IS RETIRED (intend/three-worlds, ruled
+        #  2026-10-31): a list names no set; every form of it is refused by
+        #  name, and '--label' stands alone, beside no wishlist.
         for d in a/TEST a/b/TEST a/b/c/TEST; do
             mkdir -p "$WORK/$d"
             page "$WORK/$d/test-t.sh" 'choices = ["x", "y"]' 'echo "$1"'
@@ -394,18 +396,21 @@ PYEOF2
             }
             L "label: slow"                    'label: slow\n'
             L "a/b/ + label: slow"             'a/b/\nlabel: slow\n'
-            L "test-t.sh + label: NOT slow"    'test-t.sh\nlabel: NOT slow\n'
-            L "label: twice"                   'label: slow\nlabel: x\n'
             L "!label:"                        '!label: slow\n'
-            L "label: (empty)"                 'label:\n'
-            L "label: slow AND"                'label: slow AND\n'
+            echo "== --label slow (alone)"
+            "$BIN/hwut.report.list" --label slow 2>&1 | shown
+            echo "== --label slow beside --wishlist"
+            printf 'a/b/\n' > l.txt
+            "$BIN/hwut.report.list" --wishlist l.txt --label slow 2>&1 \
+                | grep -v "^ \|^usage" | shown
             #  Book D-79: the same expression twice is told 'drop one';
             #  two different ones, the one expression for either.
-            #  MEASURED before: '--label "slow OR slow"'.
-            L "label: beside --label"          'label: slow\n' --label slow
-            L "label: beside another --label"  'label: slow\n' --label x
-            L "label: twice, alike"            'label: slow\nlabel:  slow\n'
-            L "label: fast (no such label)"    'label: fast\n'
+            echo "== --label twice, alike"
+            "$BIN/hwut.report.list" --label slow --label slow 2>&1 \
+                | grep -v "^ \|^usage" | shown
+            echo "== --label twice, different"
+            "$BIN/hwut.report.list" --label slow --label x 2>&1 \
+                | grep -v "^ \|^usage" | shown
         fi ;;
     *)
         echo "unknown choice '$1'"; exit 1 ;;

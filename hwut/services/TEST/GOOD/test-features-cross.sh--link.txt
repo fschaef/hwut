@@ -1,4 +1,4 @@
-== hwut.report.list -e physics.bounce
+== hwut.report.list -l f/physics.bounce
 ./TEST/test-shot.sh left
 ./physics/TEST/test-push.sh a
 ./physics/TEST/test-roll.sh off-wall

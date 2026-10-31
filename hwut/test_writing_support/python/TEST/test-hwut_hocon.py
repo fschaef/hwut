@@ -37,7 +37,8 @@ numbers    every radix, and '_' anywhere between digits as a visual
            helper carried into no value: decimal with sign and
            exponent, hexadecimal, binary, octal, and roman. A sign may
            stand apart from its digits. What spells no number in any
-           radix is a string, and a string carries quotes.
+           radix is a string, and a string carries quotes; a sign
+           apart from a SIGNED number makes none ('- -1.5e3').
 
 quoting    A STRING VALUE IS WRITTEN IN DOUBLE QUOTES. An unquoted
            word that is no bare token is refused, and the message
@@ -175,7 +176,8 @@ def test_numbers():
     run("a sign standing apart from its digits",
         'a = - 0.12\n'
         'b = + 7\n'
-        'c = - 0xFF\n')
+        'c = - 0xFF\n'
+        'd = - -1.5e3\n')
     run("what spells no number is a string, and carries quotes",
         'a = 1.2.3\n'
         'b = 0x\n'

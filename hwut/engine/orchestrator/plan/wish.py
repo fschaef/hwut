@@ -65,7 +65,8 @@ PURPOSE: THE WISH -- what the command line states about which tests are
                         RULE (E-202): '!<target>' is '--exclude',
                         '<dir-glob>/' is '--dir', '!<dir-glob>/' is
                         '--exclude-dir', '!<hwut-root>' is
-                        '--no-bubbles', 'label: <expr>' is '--label';
+                        '--no-bubbles'. A LIST NAMES NO SET: a
+                        'label:' line is refused (intend/three-worlds);
                         directory lines keep their
                         order among the command line's, the last one
                         matching deciding.
@@ -78,10 +79,19 @@ short form can never mean what the long form cannot say.
     -l, --label <expr>  the runs the label expression names, out of
                         'hwut-root.labels' (disc-8): 'AND', 'OR',
                         'NOT', brackets, 'all' the universe, ',' sugar
-                        for 'OR'. A UNION among the labels it names
-                        where every other keyword narrows -- a label
-                        names a SET, and naming two asks for both;
-                        against the rest of the wish it still narrows.
+                        for 'OR'; 'f/<feature>' the runs of a feature
+                        (plan/label). A UNION among the labels it names
+                        -- a label names a SET, and naming two asks for
+                        both. IT STANDS ALONE (intend/three-worlds,
+                        ruled 2026-10-31): beside any other word of the
+                        wish -- a target, a glob, a directory, a
+                        wishlist, a history word, a language -- it is
+                        refused by name. A face runs on a label
+                        expression OR on wishlist arguments; sets are
+                        combined in labels, the one domain of set
+                        operations ('hwut.labels.create', '[derived]').
+                        '--no-bubbles' is a word about the walk and may
+                        stand beside it.
                         ABSENT, the standard label 'meta' is SILENT:
                         a wish that asks no label does not want what
                         'meta' labels. Naming a label lifts the
@@ -94,6 +104,10 @@ short form can never mean what the long form cannot say.
                         has NOT observed is NOT selected -- silence is
                         not selected, and a fresh checkout selects
                         nothing here, which is the correct answer.
+    THE FEATURE WISH IS THE FEATURE WORLD'S (intend/three-worlds): only
+    'hwut.report.features' reads '-F', '-e', '-k' ('feature_f'); a face
+    selecting RUNS refuses them by name -- a feature reaches the run
+    world as the label 'f/<feature>'.
     -F, --feature <id-glob>
                         the runs linked to the FEATURES the glob names
                         (R-96): a glob over the TREE PATHS of
@@ -191,9 +205,12 @@ USAGE_TOKEN_TUPLE = ("[--fail]", "[--pass]", "[--since=<point>]",
                      "[--exclude-dir <glob>]...",
                      "[--wishlist <file>]...", "[-l|--label <expr>]",
                      "[--language=<name>]...", "[--faster-than=<sec>]",
-                     "[-F|--feature <id-glob>]...",
-                     "[-e|--feature-ext <id>]...", "[-k|--keys <expr>]",
                      "[--no-bubbles]")
+
+#  THE FEATURE WISH'S WORDS: 'hwut.report.features' alone reads them.
+FEATURE_USAGE_TOKEN_TUPLE = ("[-F|--feature <id-glob>]...",
+                             "[-e|--feature-ext <id>]...",
+                             "[-k|--keys <expr>]")
 
 HELP = """SELECTION -- the wish; an absent keyword asks nothing
     --fail              the last recorded run's verdict was negative
@@ -230,8 +247,8 @@ HELP = """SELECTION -- the wish; an absent keyword asks nothing
                             <dir-glob>/     wanted ('--dir')
                             !<dir-glob>/    not entered ('--exclude-dir')
                             !<hwut-root>    '--no-bubbles'
-                            label: <expr>   '--label', once per wish
-                        the last directory line matching decides
+                        the last directory line matching decides; a
+                        list names no set -- no 'label:' line
     --glob <target>     a target: a file name, or a file name and a
                         choice name with one blank between, either
                         carrying fnmatch's '*', '?' and '[ ]':
@@ -242,30 +259,19 @@ HELP = """SELECTION -- the wish; an absent keyword asks nothing
                         among themselves
     -l, --label <expr>  the runs the label expression names ('AND',
                         'OR', 'NOT', brackets; ',' is 'OR'; 'all' the
-                        universe); a union among its labels, narrowing
-                        against the rest; absent, 'meta' is silent --
-                        which a LITERAL target overrides, and a glob
-                        does not (it warns instead)
+                        universe; 'f/<feature>' the runs of a feature,
+                        an aggregate its subtree). It STANDS ALONE: beside
+                        a target, a glob, a directory, a wishlist or a
+                        history word it is refused -- combine sets in
+                        labels. Absent, 'meta' is silent -- which a
+                        LITERAL target overrides, and a glob does not
+                        (it warns instead)
     --language=<name>   the runs of test applications of that language;
                         several are a union, narrowing against the rest
-    -F, --feature <id-glob>
-                        the runs linked to the features the glob names:
-                        tree paths of the central file 'a/b/<external
-                        id>' ('*' one level, '**' any depth, '{a,b}'), a
-                        bare word anywhere, an aggregate its subtree; or
-                        an internal id 'X:name'. Several are a union,
-                        narrowing against the rest
-    -e, --feature-ext <id>
-                        the runs linked to the feature of that external
-                        id ('*' any characters); with '-F' a union
     --no-bubbles        do not enter an inner 'hwut-root.conf' (RQ-9):
                         by default the walk enters every bubble below,
                         each under its own configuration. Selects
                         nothing by itself
-    -k, --keys <expr>   the runs linked to features whose effective keys
-                        satisfy the expression ('AND', 'OR', 'NOT',
-                        brackets; ',' is 'OR'); a key flows down from the
-                        aggregates above a leaf, never up
     --faster-than=<seconds>
                         the runs this machine last saw finish faster
                         than that; one this machine never saw is not
@@ -422,11 +428,19 @@ class Wish:
         return " ".join(part_list)
 
 
-def parse_wish(argv, digest_f=False):
+def parse_wish(argv, digest_f=False, feature_f=False):
     """
     RETURN: [0] Wish, what the selection keywords of 'argv' state.
             [1] list[str], the arguments that are none of them, in
                 order -- the caller's own.
+
+    'feature_f' is the feature world's face ('hwut.report.features'): it
+    alone reads '-F', '-e', '-k'; any other face is refused them by name
+    and pointed at 'f/<feature>' (intend/three-worlds).
+
+    '-l' STANDS ALONE: beside any other word of the wish it is refused
+    by name ('label_mix_text'); bare targets join later, and
+    'with_targets' refuses them the same way.
 
     Raises WishError, naming the argument, for: a point that cannot be
     read; '--glob', '--wishlist', '--since' or '--until' standing
@@ -458,11 +472,16 @@ def parse_wish(argv, digest_f=False):
     feature_ext_list = []
     keys_spec        = None
     rest_list        = []
+    #  THE FIRST WORD OF THE WISHLIST FAMILY, as typed: '-l' beside it
+    #  is refused, naming it (R-b).
+    family_word      = None
 
     index = 0
     while index < len(argv):
         argument = argv[index]
         index   += 1
+        if family_word is None and _family_word_f(argument):
+            family_word = argument
         if   argument == "--fail":  fail_f = True
         elif argument == "--unaccepted": unaccepted_f = True
         elif argument == "--no-bubbles": no_bubbles_f = True
@@ -517,14 +536,6 @@ def parse_wish(argv, digest_f=False):
                 (dir_list if sign == "+" else exclude_dir_list).append(glob_text)
             dir_rule_list.extend(listed.dir_rule_tuple)
             no_bubbles_f = no_bubbles_f or listed.no_bubbles_f
-            if listed.label_spec is not None:
-                if label_spec is not None:
-                    raise WishError(
-                        "'label:' in the wishlist beside '%s': one "
-                        "expression holds the whole question -- write "
-                        "'%s OR %s' (or AND) in one place"
-                        % (label_spec, label_spec, listed.label_spec))
-                label_spec = listed.label_spec
             #  A LIST OF RULES ALONE wants what its rules leave, as the
             #  same words on the command line would; an EMPTY list wants
             #  nothing (E-202).
@@ -539,14 +550,6 @@ def parse_wish(argv, digest_f=False):
                 (dir_list if sign == "+" else exclude_dir_list).append(glob_text)
             dir_rule_list.extend(listed.dir_rule_tuple)
             no_bubbles_f = no_bubbles_f or listed.no_bubbles_f
-            if listed.label_spec is not None:
-                if label_spec is not None:
-                    raise WishError(
-                        "'label:' in the wishlist beside '%s': one "
-                        "expression holds the whole question -- write "
-                        "'%s OR %s' (or AND) in one place"
-                        % (label_spec, label_spec, listed.label_spec))
-                label_spec = listed.label_spec
             #  A LIST OF RULES ALONE wants what its rules leave, as the
             #  same words on the command line would; an EMPTY list wants
             #  nothing (E-202).
@@ -569,8 +572,7 @@ def parse_wish(argv, digest_f=False):
                 text = argument[len("--label="):]
             if label_spec is not None:
                 raise WishError(
-                    "'--label' stands twice -- or beside a wishlist's "
-                    "'label:'; one expression holds "
+                    "'--label' stands twice; one expression holds "
                     "the whole question -- %s"
                     % _label_remedy(label_spec, text,
                                     "write '--label \"%s OR %s\"'"))
@@ -580,6 +582,11 @@ def parse_wish(argv, digest_f=False):
                 raise WishError("'--label %s' cannot be read -- %s"
                                 % (text, error)) from None
             label_spec = text
+        elif not feature_f and (argument in FEATURE_WORD_TUPLE
+                                or argument.startswith(("--feature=",
+                                                        "--feature-ext=",
+                                                        "--keys="))):
+            raise WishError(_feature_retired_text(argument))
         elif argument in ("--feature", "-F") \
                 or argument.startswith("--feature="):
             if argument in ("--feature", "-F"):
@@ -655,6 +662,8 @@ def parse_wish(argv, digest_f=False):
         else:
             rest_list.append(argument)
 
+    if label_spec is not None and family_word is not None:
+        raise WishError(label_mix_text(label_spec, family_word))
     if fail_f and pass_f:
         raise WishError("'--fail' beside '--pass' can want nothing")
     if since_spec is not None and until_spec is not None \
@@ -684,6 +693,54 @@ _GLOB_MARK_TUPLE  = ("*", "?", "[")
 #  THE ONE RESERVED WORD OF A WISHLIST (RQ-9, E-202): '!<hwut-root>'
 #  keeps the walk out of every inner 'hwut-root.conf'.
 BUBBLE_WORD = "<hwut-root>"
+
+
+#  THE WISHLIST FAMILY (intend/three-worlds): every word of the wish that
+#  states WHICH runs by an attribute -- place, history, language. '-l'
+#  is refused beside each. '--no-bubbles' speaks of the walk alone.
+_FAMILY_WORD_TUPLE  = ("--fail", "--pass", "--unaccepted", "--glob",
+                       "--exclude", "--exclude-dir", "--dir", "--wishlist",
+                       "--since", "--until", "--language", "--faster-than")
+FEATURE_WORD_TUPLE  = ("--feature", "-F", "--feature-ext", "-e",
+                       "--keys", "-k")
+
+
+def _family_word_f(argument):
+    """
+    RETURN: bool, True where 'argument' is a word of the wishlist family
+            ('--fail', '--dir x', '--since=2h', ...) -- one '-l' may not
+            stand beside.
+    """
+    return argument in _FAMILY_WORD_TUPLE \
+           or argument.split("=", 1)[0] in _FAMILY_WORD_TUPLE
+
+
+def label_mix_text(label_spec, word):
+    """
+    RETURN: str, the refusal of '-l <label_spec>' beside the wishlist
+            argument 'word' (R-b): what was asked, why not, and the way
+            -- the set named by 'hwut.labels.create', then combined.
+    """
+    return ("'--label %s' beside '%s': a label expression or wishlist "
+            "arguments, never both -- sets are combined in labels => "
+            "'hwut.labels.create <name> %s ...', then '--label \"%s AND "
+            "<name>\"'" % (label_spec, word, word, label_spec))
+
+
+def _feature_retired_text(argument):
+    """
+    RETURN: str, the refusal of a feature option on a face that selects
+            runs: a feature reaches the run world as the label
+            'f/<feature>' (intend/three-worlds).
+    """
+    word = argument.split("=", 1)[0]
+    if word in ("--keys", "-k"):
+        return ("'%s' is the feature world's: keys select features, not "
+                "runs => 'hwut.report.features -k <expr>'; the runs of a "
+                "feature are the label '--label f/<feature>'" % word)
+    return ("'%s' is retired on this face: a feature is the label "
+            "'f/<feature>' -- tree path, external id or internal id => "
+            "'--label f/<feature>'" % word)
 
 
 def _label_remedy(first, second, either_form):
@@ -716,7 +773,6 @@ class CWishlist:
     exclude_tuple:  tuple = ()     # '!<target>'       ('--exclude')
     dir_rule_tuple: tuple = ()     # ('+'|'-', <glob>) ('--dir', '--exclude-dir')
     no_bubbles_f:   bool  = False  # '!<hwut-root>'    ('--no-bubbles')
-    label_spec:     str | None = None  # 'label: <expr>' ('--label')
 
 
 def _states_targets_f(listed):
@@ -729,7 +785,7 @@ def _states_targets_f(listed):
     """
     return bool(listed.target_tuple) \
            or not (listed.exclude_tuple or listed.dir_rule_tuple
-                   or listed.no_bubbles_f or listed.label_spec is not None)
+                   or listed.no_bubbles_f)
 
 
 def wishlist_target_tuple(file_name):
@@ -742,11 +798,10 @@ def wishlist_target_tuple(file_name):
             alone must not drop a line silently.
     """
     listed = _wishlist_read(file_name, False)
-    if listed.exclude_tuple or listed.dir_rule_tuple or listed.no_bubbles_f \
-       or listed.label_spec is not None:
+    if listed.exclude_tuple or listed.dir_rule_tuple or listed.no_bubbles_f:
         raise WishError("'%s': this face reads targets alone -- no '!' "
-                        "line, no directory line ('<dir>/'), no '%s', no "
-                        "'label:'" % (file_name, BUBBLE_WORD))
+                        "line, no directory line ('<dir>/'), no '%s'"
+                        % (file_name, BUBBLE_WORD))
     return listed.target_tuple
 
 
@@ -762,8 +817,9 @@ def _wishlist_read(file_name, digest_f):
         <dir-glob>/           a directory wanted       '--dir'
         !<dir-glob>/          a directory not entered  '--exclude-dir'
         !<hwut-root>          no inner bubble entered  '--no-bubbles'
-        label: <expr>         the runs the expression  '--label'
-                              names (E-206)
+    A LIST NAMES NO SET (intend/three-worlds, ruled 2026-10-31): a
+    'label:' line -- E-206's, retired -- is refused by name; a set by
+    name is a label, combined in labels.
     A trailing '/' makes a DIRECTORY line: a target names a file and
     never ends in one. Directory lines keep their order among the
     command line's own '--dir'/'--exclude-dir', and the LAST ONE
@@ -810,7 +866,6 @@ def _wishlist_read(file_name, digest_f):
     exclude_list = []
     rule_list    = []
     no_bubbles_f = False
-    label_spec   = None
     previous     = None            # the last target line, '!' or not
     for number, line in enumerate(line_list, start=1):
         text = line.strip()
@@ -818,28 +873,13 @@ def _wishlist_read(file_name, digest_f):
         def refused(why):
             """RETURN: WishError naming file, line and 'why'."""
             return WishError("'%s', line %d: %s" % (file_name, number, why))
-        #  A LABEL LINE (E-206): the '--label' of the list, one expression
-        #  for the whole question, as on the command line.
-        label_match = _LABEL_LINE_RE.match(text)
-        if label_match is not None or _LABEL_LINE_RE.match(text.lstrip("!").strip()):
-            if text.startswith("!"):
-                raise refused("'!label:' -- the expression says 'NOT': "
-                              "'label: NOT <expr>'")
-            expression = label_match.group(1).strip()
-            if not expression:
-                raise refused("'label:' names no label")
-            if label_spec is not None:
-                raise refused("'label:' stands twice; one expression holds "
-                              "the whole question -- %s"
-                              % _label_remedy(label_spec, expression,
-                                              "'label: %s OR %s'"))
-            try:
-                parse_expression(expression)
-            except LabelExprError as error:
-                raise refused("'label: %s' cannot be read -- %s"
-                              % (expression, error)) from None
-            label_spec = expression
-            continue
+        #  A LABEL LINE (E-206, retired by intend/three-worlds): a list
+        #  names no set. Refused BY NAME, never read as a target.
+        if _LABEL_LINE_RE.match(text.lstrip("!").strip()):
+            raise refused("'label:' is no wishlist line -- a list names no "
+                          "set => '--label <expr>' alone, or name the "
+                          "list's runs: 'hwut.labels.create <name> "
+                          "--wishlist %s'" % file_name)
         negated_f = text.startswith("!")
         if negated_f:
             text = text[1:].strip()
@@ -886,8 +926,7 @@ def _wishlist_read(file_name, digest_f):
         target_list.append(text)
         if tag is not None: digest_list.append((text, tag))
     return CWishlist(tuple(target_list), tuple(digest_list),
-                     tuple(exclude_list), tuple(rule_list), no_bubbles_f,
-                     label_spec)
+                     tuple(exclude_list), tuple(rule_list), no_bubbles_f)
 
 
 def desugar_positional(word_list):
@@ -925,10 +964,13 @@ def desugar_positional(word_list):
 def with_targets(wish, word_list):
     """
     RETURN: Wish, 'wish' with the short form's targets added to its
-            globs -- 'wish' itself where no word stands.
+            globs -- 'wish' itself where no word stands -- if success;
+            raises WishError, else: a target beside '-l' (R-b).
     """
     glob_tuple = desugar_positional(word_list)
     if not glob_tuple: return wish
+    if wish.label_spec is not None:
+        raise WishError(label_mix_text(wish.label_spec, word_list[0]))
     return replace(wish, glob_tuple=wish.glob_tuple + glob_tuple)
 
 

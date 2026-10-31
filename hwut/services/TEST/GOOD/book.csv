@@ -1,4 +1,4 @@
-# vut-register 5 generation:477 apps:54 marks:0=7,1=8,2=13,3=5,4=8,5=7,6=12,7=5,8=9,9=2,10=2,11=5,12=6,13=6,14=8,15=5,16=6,17=10,18=3,19=5,20=7,21=13,22=4,23=15,24=8,25=11,26=5,27=12,28=10,29=3,30=8,31=4,32=1,33=4,34=3,35=4,36=8,37=18,38=13,39=3,40=2,41=12,42=9,44=3,45=12,46=3,47=5,48=5,49=4,50=7,51=19,52=14,53=29
+# vut-register 5 generation:493 apps:55 marks:0=7,1=8,2=13,3=5,4=8,5=7,6=12,7=5,8=9,9=2,10=2,11=5,12=6,13=6,14=8,15=5,16=6,17=10,18=3,19=5,20=7,21=13,22=4,23=15,24=8,25=11,26=5,27=12,28=10,29=3,30=8,31=4,32=1,33=4,34=3,35=4,36=8,37=18,38=13,39=3,40=2,41=12,42=9,44=3,45=12,46=3,47=5,48=5,49=5,50=7,51=19,52=20,53=30,54=7
 test;choice;verdict;report;stain;test_id;choice_id
 test-about.sh;page;true;ok;;39;0
 ;refused;true;ok;;39;1
@@ -55,8 +55,12 @@ test-book-defects-3.sh;accept-asks-nothing;true;ok;;51;7
 ;record-bless;true;ok;;51;0
 ;refusal-exit;true;ok;;51;1
 ;stability-names;true;ok;;51;2
-test-book-defects-4.sh;compare-crash;true;ok;;52;0
+test-book-defects-4.sh;bubble-fault;true;ok;;52;14
+;bubble-features;true;ok;;52;15
+;bubble-labels;true;ok;;52;16
+;compare-crash;true;ok;;52;0
 ;coverage-arms;true;ok;;52;1
+;glob-levels;true;ok;;52;17
 ;help-coverage;true;ok;;52;2
 ;nested-root;true;ok;;52;3
 ;numeral;true;ok;;52;4
@@ -69,8 +73,11 @@ test-book-defects-4.sh;compare-crash;true;ok;;52;0
 ;system-draw;true;ok;;52;11
 ;tick;true;ok;;52;12
 ;units-list;true;ok;;52;13
+;wishlist-label;true;ok;;52;18
+;wishlist-rules;true;ok;;52;19
 test-book-defects-5.sh;accept-first;true;ok;;53;0
 ;bubble-note;true;ok;;53;20
+;build-caps;true;ok;;53;29
 ;build-makefile;true;ok;;53;19
 ;conf-unread;true;ok;;53;13
 ;cov-remedy;true;ok;;53;21
@@ -231,6 +238,13 @@ test-gate.py;backup_shaped;true;ok;;11;0
 ;not_accepted;true;ok;;11;2
 ;plan_agrees;true;ok;;11;3
 ;registered;true;ok;;11;4
+test-good-link.sh;faces;true;ok;;54;0
+;isolate;true;ok;;54;1
+;move;true;ok;;54;2
+;read-through;true;ok;;54;3
+;remove;true;ok;;54;4
+;sanitize;true;ok;;54;5
+;writers;true;ok;;54;6
 test-header-words.sh;budget_spent;true;ok;;37;15
 ;build;true;ok;;37;4
 ;carrier;true;ok;;37;5
@@ -385,6 +399,7 @@ test-script-helpers.sh;around;true;ok;;49;2
 ;caps;true;ok;;49;1
 ;execute;true;ok;;49;0
 ;misplaced;true;ok;;49;3
+;play;true;ok;;49;4
 test-stability.sh;bytes;true;ok;;24;0
 ;cadence;true;ok;;24;1
 ;length;true;ok;;24;2

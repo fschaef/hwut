@@ -1,0 +1,83 @@
+==============================================================================
+test_writing_support/rust -- RATIONALE
+==============================================================================
+
+RS-1  THE PYTHON TEST SUPPORT PORTED TO RUST, HELD BY THE PYTHON GOOD FILES
+                                                                      (2026-10-31)
+------------------------------------------------------------------------------
+PROBLEM   A Rust test author is to be given what a Python test author is
+          given -- the runner, the deterministic stream and timeline, the
+          space iterator, the FSM, the HOCON parser, the libvterm screen --
+          and, as for Perl (perl PL-1) and C (c C-1), a port is only as good
+          as its proof that it behaves alike.
+DECISION  One Rust module per Python module, all in ONE library crate
+          'hwut' ('src/lib.rs'; 'README.txt', section 1); one Rust test per
+          Python test, choice for choice; every Rust case's GOOD a '.link'
+          to the Python case's '.txt' -- 47 cases, the same that hold the
+          Perl and the C port.
+          THE NAMING: a class is a struct with 'impl', named as the class
+          ('Machine', 'DeterministicStream', 'Screen', 'TriggerDispatcher');
+          a module-level function keeps its name ('hwut_hocon::parse',
+          'hwut_vterm::detection_text'; 'space_iterator::r#do', 'do' being
+          a keyword). An overridable base class is a trait with the base's
+          data in a struct ('Trigger', 'TriggerBase'); 'Terminal(Screen)' is
+          a struct that derefs to its Screen.
+          WHAT PYTHON RAISES is returned as 'Result': 'FsmError' (Python's
+          text), 'VtermError' ('kind()' Python's exception name),
+          'TimelineError' (NotImplementedError, CancelledError) -- printed,
+          it is the GOOD's line.
+          WHAT PYTHON PRINTS OF ITS OWN VALUES is printed by 'hwut_pytext'
+          (the trait 'PyRepr'): str, bytes, bool, None, list, tuple, float.
+          NO CRATE, NO CARGO: the C functions the crate calls are declared
+          by hand ('src/posix.rs', with '#[link(name = "dl")]' and
+          '"util"'); 'TEST/Makefile' calls rustc twice per target -- the
+          crate into 'build-<stem>/libhwut.rlib', then the test against it
+          -- so no two targets share a file and hwut may build them at once
+          (services E-210). Built offline, in the TEST directory.
+          NO COROUTINES: a task is stepped to its next yield ('Task'); the
+          dispatcher is one, a closure 'FnMut() -> Step' is one; 'gather'
+          steps them round-robin in the order given -- asyncio's order, as
+          for Perl and C. A trigger is 'Rc<RefCell<..>>', shared by the test
+          and the dispatcher; 'stop()' from inside a firing goes through a
+          'DispatcherStop' handle.
+          NO REGULAR EXPRESSIONS in std: the FSM's arrow and name, HOCON's
+          token and decimal are written out as small scanners; the strict
+          roman form is the set of the 4000 texts its regex matches.
+          A HOCON column counts characters, as Python's. The fuzz consumes
+          the deterministic stream draw for draw as Python does; a parse is
+          bounded by a thread of its own (Python: SIGALRM), a panic is
+          counted as Python counts an exception.
+          LIBVTERM WITHOUT ITS HEADER, as the C port: 'VTermPos',
+          'VTermRect', 'VTermScreenCallbacks' (with spare null slots)
+          declared here, the functions found by 'dlsym', the cell's layout
+          MEASURED. libvterm's callbacks reach a boxed 'Observers' at a fixed
+          address, apart from the Terminal they are called under. The child
+          on the pseudo-terminal gets SIGPIPE back to its default: Rust
+          ignores it, and an ignored signal survives 'exec'.
+          IDENTITY, Python's 'id()': a SelectionMarker remembers the address
+          a candidate REFERS to, so candidates are references ('&[&T]') --
+          the same objects in a fresh container are the same candidates.
+          MEASURED, on this worktree (rustc 1.97.0, libvterm 0.3.3): all 47
+          cases byte-identical to the Python GOODs ('cmp' per choice);
+          'fuzz' -- 3000 mutated HOCON headers from seed 4711 -- gives the
+          same counts (619 clean, 2381 with faults, 0 hang, 0 exception);
+          'hwut.run --plain' in 'TEST/': 47 ok, 0 fail, twice (the first
+          run building the six executables, the second on them).
+          'float_repr' against Python's 'repr' on 200015 doubles (random
+          bits, sixty decades, integers to 1e17, rounded decimals, the
+          edges): no difference. FIRST WRITTEN on the digits of '{:e}' --
+          Rust's own shortest form -- it differed on 72: an exact tie of the
+          last digit (160141142283143.125) Rust breaks upward, Python to
+          even. The digits are now the first correctly rounded '{:.Ne}'
+          that reads back -- the C port's method.
+COST      A change to a Python module's printed words fails the Rust test
+          until the Rust module follows -- which is the point. Each test
+          compiles the crate anew (some 10 s of CPU per target with '-O'); a
+          shared rlib would need a lock between parallel builds. 'posix.rs'
+          carries Linux/glibc constants (TIOCSWINSZ, O_CREAT, ...): another
+          system wants its own. A HOCON integer is i128 where Python's is
+          unbounded -- beyond it, it wraps. A hung fuzz parse leaves its
+          thread running, as the bound is a failure anyway.
+          'test-hwut_vterm.rs' runs its applications with 'python3', since
+          they are the Python test's own.
+==============================================================================

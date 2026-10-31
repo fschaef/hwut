@@ -1,20 +1,33 @@
->>> -F gateway/buses -e router.forward
+>>> -l f/gateway/buses OR f/router.forward
     ./gw/can/TEST/test-frame.sh
     ./gw/router/TEST/test-route.sh burst
     ./gw/router/TEST/test-route.sh single
     exit 0
->>> -F gateway -k latency
+>>> -l f/gateway AND NOT f/gateway/buses
     ./gw/router/TEST/test-route.sh burst
     ./gw/router/TEST/test-route.sh single
     exit 0
->>> -e can.decode -k routing
-    exit 3
->>> -F gateway/forwarding --fail
-    exit 3
->>> -F gateway/buses --fail
+>>> -l NOT f/gateway
+    ./gw/router/TEST/test-restart.sh
+    exit 0
+>>> -l focus
+    ./gw/router/TEST/test-route.sh single
+    exit 0
+>>> -l slow OR f/gateway/buses
+    ./gw/can/TEST/test-frame.sh
+    ./gw/router/TEST/test-route.sh burst
+    exit 0
+>>> -l f/gateway/buses --fail
+    REFUSED: '--label f/gateway/buses' beside '--fail': a label expression or wishlist arguments, never both -- sets are combined in labels => 'hwut.labels.create <name> --fail ...', then '--label "f/gateway/buses AND <name>"'
+    exit 2
+>>> hwut.labels.create buses_today -l f/gateway/buses
+    buses_today: created, 1 member -- a snapshot of what the wish selected
+        + ./gw/can/TEST/test-frame.sh
+    exit 0
+>>> -l buses_today
     ./gw/can/TEST/test-frame.sh
     exit 0
->>> -e can.decode
-    REFUSED: '--feature-ext' asks for features: no 'hwut-root-features.conf' stands at '<root>' => hwut.features.init
+>>> -l f/can.decode
+    REFUSED: 'f/can.decode' asks for a feature: no 'hwut-root-features.conf' stands at '<root>' => hwut.features.init
     exit 2
 <hwut-end>

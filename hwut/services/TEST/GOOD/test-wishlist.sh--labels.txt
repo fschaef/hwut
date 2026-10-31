@@ -34,7 +34,7 @@ STDOUT {
 --- a GLOB does not; wholly swallowed, it warns
 STATUS: 3
 STDOUT {
-    WARNING: the glob 'test-a.s? one' met only runs the standard label silences -- name a label ('--label meta') to reach them
+    WARNING: the glob 'test-a.s? one' met only runs the standard label silences -- a literal target reaches one, '--label meta' all of them
 }
 --- a label that does not stand, refused by name
 STATUS: 2

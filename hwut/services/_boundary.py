@@ -150,6 +150,11 @@ hwut {
         lua           { extensions      = [".lua"]
                         interpreter     = "luau"
                         coverage        = ["luacov"] }
+        #  'go run' COMPILES AT EVERY CALL, under the RUN'S caps: on a cold
+        #  cache Go writes its runtime archive, above the default 10 MB per
+        #  file, and the application ends before it answers ('no-session').
+        #  State 'caps { file_size_mb = 256 }', or build by make with the cap
+        #  in 'build { caps }' (services E-212).
         go            { extensions      = [".go"]
                         interpreter     = "go run"
                         coverage        = ["go", "gcov"] }

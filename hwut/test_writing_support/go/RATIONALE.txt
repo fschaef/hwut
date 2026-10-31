@@ -1,0 +1,87 @@
+==============================================================================
+test_writing_support/go -- RATIONALE
+==============================================================================
+
+GO-1  THE PYTHON TEST SUPPORT PORTED TO GO, HELD BY THE PYTHON GOOD FILES
+      (asked 2026-10-31)                                              (2026-10-31)
+------------------------------------------------------------------------------
+PROBLEM   The test support exists in Python, with ports to Perl (perl PL-1)
+          and C (c C-1), each proven by the Python GOOD files it is held
+          against. A Go test author is owed the same modules -- and the same
+          proof: a port is only as good as its evidence that it behaves
+          alike.
+DECISION  One Go package per Python module ('README.txt', section 1) in one
+          module ('go.mod', 'hwut/test_writing_support/go', no requirement);
+          one Go test per Python test, choice for choice; every Go case's
+          GOOD a '.link' to the Python case's '.txt' -- 47 cases, the same
+          that hold the Perl and the C port.
+          THE NAMING IS GO'S: a package per module ('hwutfsm', 'hwuthocon'),
+          exported CamelCase methods ('FromString', 'NextInt', 'PathTo'),
+          constructors 'New...'; a derived class embeds its base
+          ('Terminal' its *Screen, a trigger *TriggerBase). WHAT PYTHON
+          RAISES is returned as an 'error' whose text is Python's; keyword
+          arguments are options or stated values (README, section 2).
+          THE COROUTINES ARE GOROUTINES RUN ONE AT A TIME: a small event
+          loop hands control from task to task in asyncio's order (a FIFO of
+          ready tasks; 'Sleep0', 'Await', 'Gather', 'Cancel'), so a test
+          writes the same straight-line code the Python test awaits -- the
+          step functions of the C and Perl ports are not needed -- and the
+          interleaving is Python's, not a scheduler's.
+          THE TEST IS BUILT BY MAKE, NOT RUN BY 'go run'. MEASURED: 'go run
+          test-x.go' from 'TEST/' finds the support packages (the 'go.mod'
+          in '..'), but it compiles at every call, under the run's caps: on
+          a cold cache Go's runtime archive exceeds the default 10 MB per
+          file and every session ends before it answers -- 'no-session'.
+          (First read as a 25 s compile outlasting the session; it is the
+          file cap: with 'caps { file_size_mb = 256 }' 'go run' passes, cold
+          or warm.) 'TEST/Makefile' builds 'test-x.exe' by
+          'go build' in the test directory (services E-210); Go's build
+          cache is what the targets share, and it is safe for builds at the
+          same time.
+          THE BUILD'S CAP: Go's runtime archive is larger than the default
+          10 MB per file ('file too large' on a cold cache). Each header
+          states 'build { ... caps { file_size_mb = 256 } }': the build
+          scope's caps cap the build alone (services E-212 -- before it,
+          they were not read, and the cap had to stand for the application).
+          INTERACTIVE MODE WITHOUT 'fork': each choice runs in a CHILD -- the
+          own executable started again on that choice, its stdout and
+          stderr the sinks, '<hwut-end>' unless HWUT_NO_TERMINAL -- so an
+          'os.Exit' or a panic ends the choice, not the session, as in the
+          C port.
+          LIBVTERM THROUGH CGO AND 'dlopen', NO HEADER: Go cannot call a C
+          library without cgo; the C side declares 'VTermPos', 'VTermRect'
+          and 'VTermScreenCallbacks' (with spare null slots) as the Python
+          binding does, finds the functions by 'dlsym', and hands the
+          callbacks to exported Go functions through a 'cgo.Handle'. The
+          cell's layout is MEASURED as in Python. The pseudo-terminal is
+          '/dev/ptmx' by system calls; the child leads its own session with
+          the terminal as its controlling one (SysProcAttr Setsid, Setctty).
+          WHAT PYTHON PRINTS OF ITS OWN VALUES is printed by 'pytext':
+          'FloatRepr' takes Go's shortest digits ('strconv', the same digits
+          as Python's) and lays them out as Python does, fixed for a decimal
+          point in (-4, 16] -- checked against Python's 'repr' on 200000
+          doubles (random bits, sixty decades, short decimals): no
+          difference. 'StrRepr' escapes what Python's 'isprintable' refuses;
+          checked on 200000 characters below U+3000: 60 differ, all U+2FFE
+          and U+2FFF, which Python 3.13's Unicode (15.1) assigns and Go
+          1.24's (15.0) does not.
+          MEASURED, on this tree (go1.24.7, libvterm 0.3.3, Python 3.13):
+          46 of the 47 cases byte-identical to the Python GOODs ('cmp'); the
+          47th, 'gauss', within its GOOD's tolerance region -- 6 of its 20
+          full-precision draws differ in the last digit (Go's 'math.Log' and
+          'math.Cos' are not libm), every integer draw exact. 'fuzz' -- 3000
+          mutated HOCON headers from seed 4711 -- gives the same counts (619
+          clean, 2381 with faults, 0 hang, 0 exception). 'hwut.run --plain'
+          in 'TEST/': 47 ok, 0 fail, twice (8.5 s, 5.8 s); on an empty build
+          cache 47 ok in 36 s, the six tests built at once. The interactive
+          protocol answered as Python's ('info', 'run' by name and index,
+          'fail ... unknown-choice', 'fail - bad-command', 'bye').
+COST      A change to a Python module's printed words fails the Go test until
+          the Go package follows -- which is the point. 'gauss' is held by
+          tolerance, not by bytes, as S3 foresaw for any other libm. cgo,
+          and with it a C compiler, is wanted by 'hwutvterm' alone; the
+          other packages are pure Go. A Go test needs its two header lines
+          ('build', 'caps') and a Makefile beside it. A fuzz parse past its
+          bound is abandoned on its goroutine, not stopped -- the bound is a
+          failure anyway.
+==============================================================================

@@ -1,21 +1,16 @@
->>> -k product
-    ./gw/can/TEST/test-frame.sh
-    ./gw/router/TEST/test-route.sh burst
-    ./gw/router/TEST/test-route.sh single
-    exit 0
->>> -k routing
-    ./gw/router/TEST/test-route.sh burst
-    ./gw/router/TEST/test-route.sh single
-    exit 0
 >>> -k latency
-    ./gw/router/TEST/test-route.sh burst
-    ./gw/router/TEST/test-route.sh single
-    exit 0
->>> -k product AND NOT latency
-    ./gw/can/TEST/test-frame.sh
-    ./gw/router/TEST/test-route.sh burst
-    exit 0
->>> -k nobody
-    REFUSED: no feature carries the key 'nobody'; keys that stand: latency, product, routing
+    REFUSED: '-k' is the feature world's: keys select features, not runs => 'hwut.report.features -k <expr>'; the runs of a feature are the label '--label f/<feature>'
     exit 2
+>>> hwut.report.features -k latency
+    AGGREGATE gateway -- CAN-MOST gateway 1 implemented, 0 open; 1 ok, 0 fail, 0 untested
+        state      IMPLEMENTED ok
+        keys       product
+        AGGREGATE gateway/forwarding -- Frames reach their destination. 1 implemented, 0 open; 1 ok, 0 fail, 0 untested
+            state      IMPLEMENTED ok
+            [IMPLEMENTED ok]   router.forward -- A frame is forwarded.
+                internal    Bbbbbbb2:forward  (gw/router)
+                keys        latency, product, routing
+                [PASS] gw/router/TEST/test-route.sh [single]
+                [PASS] gw/router/TEST/test-route.sh [burst]
+    exit 0
 <hwut-end>

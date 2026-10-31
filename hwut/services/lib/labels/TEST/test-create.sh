@@ -19,8 +19,10 @@
 #             run what the pattern caught, the file holds literal
 #             targets, sorted, elided; creating the same label again
 #             is refused, naming 'add'.
-# union       '--label' inside the wish: a union among its labels,
-#             narrowing against the rest of the wish.
+# union       '--label' as the wish: the expression RESOLVED, its runs
+#             stored as literal targets -- no reference stays behind
+#             (intend/three-worlds); a union, a difference; '--label'
+#             beside a glob refused: it stands alone.
 # empty       a glob that met nothing WARNS by name; an empty
 #             selection makes NO label -- an empty set is not a set
 #             anybody wanted.
@@ -94,8 +96,12 @@ union)
     fixture
     face "$CREATE" east --glob "tree/messaging/*/TEST/test-b.sh" > /dev/null 2>&1
     face "$CREATE" west --glob "tree/storage/TEST/test-b.sh"     > /dev/null 2>&1
-    echo "--- a union of two labels, narrowed by a glob"
-    face "$CREATE" coast --label "east,west" --glob "tree/messaging/**"
+    echo "--- a union of two labels, resolved"
+    face "$CREATE" coast --label "east,west"
+    echo "--- a difference, resolved"
+    face "$CREATE" inland --label "coast AND NOT east"
+    echo "--- '--label' beside a glob: refused"
+    face "$CREATE" mixed --label "east,west" --glob "tree/messaging/**"
     the_file
     ;;
 

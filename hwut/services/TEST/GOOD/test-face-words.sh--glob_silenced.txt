@@ -1,15 +1,15 @@
-hwut.run               exit 3  WARNING: the glob 'test-m*' met only runs the standard label silences -- nam
-hwut.accept            exit 3  WARNING: the glob 'test-m*' met only runs the standard label silences -- nam
-hwut.plan              exit 3  WARNING: the glob 'test-m*' met only runs the standard label silences -- nam
-hwut.report            exit 3  WARNING: the glob 'test-m*' met only runs the standard label silences -- nam
-hwut.report.list       exit 3  WARNING: the glob 'test-m*' met only runs the standard label silences -- nam
-hwut.run.stability     exit 3  WARNING: the glob 'test-m*' met only runs the standard label silences -- nam
+hwut.run               exit 3  WARNING: the glob 'test-m*' met only runs the standard label silences -- a l
+hwut.accept            exit 3  WARNING: the glob 'test-m*' met only runs the standard label silences -- a l
+hwut.plan              exit 3  WARNING: the glob 'test-m*' met only runs the standard label silences -- a l
+hwut.report            exit 3  WARNING: the glob 'test-m*' met only runs the standard label silences -- a l
+hwut.report.list       exit 3  WARNING: the glob 'test-m*' met only runs the standard label silences -- a l
+hwut.run.stability     exit 3  WARNING: the glob 'test-m*' met only runs the standard label silences -- a l
 == a literal target overrides the silence
 ./test-m.sh
 == the page that holds a case says it after its tail
         test-a.sh one ................................[OK]
            1    [OK]     TEST
-WARNING: the glob 'test-m*' met only runs the standard label silences -- nam
+WARNING: the glob 'test-m*' met only runs the standard label silences -- a l
 RESULTS: 1 ok, 0 fail
 == a machine format on stdout carries no warning line
 TAP version 13

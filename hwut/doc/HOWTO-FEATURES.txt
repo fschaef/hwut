@@ -41,7 +41,7 @@ The example is a CAN-MOST gateway; every excerpt is the output of that tree.
 4   Keys
 5   Keeping the central file in order
 6   Ids that stay, and retiring
-7   Choosing runs by feature and key
+7   Choosing runs by feature: the label 'f/<feature>'
 8   The table
 9   The code a feature's runs reached
 10  The feature document
@@ -179,7 +179,7 @@ depends on it.
         decode  (can)  A CAN frame is decoded into its signals.
 
 '-e' adds the external ids, '-b' prints the aggregates only, '--list' one
-tree path per leaf -- lines '-F' takes as they stand (section 7):
+tree path per leaf -- lines 'f/<feature>' takes as they stand (section 7):
 
     $ hwut.features.tree --list
     gateway/forwarding/router.forward
@@ -392,53 +392,57 @@ version control's: keep 'hwut-root-features.conf' under it, and never
 delete it -- 'register' will not make a new one where features stand.
 
 
-7  CHOOSING RUNS BY FEATURE AND KEY
+7  CHOOSING RUNS BY FEATURE: THE LABEL 'f/<feature>'
 ______________________________________________________________________________
 
-Every face that takes a wish (hwut.run, hwut.report.list, hwut.accept ...)
-takes three more words:
+A feature reaches the runs as a LABEL (intend/three-worlds, ruled
+2026-10-31): 'f/<feature>' names the runs linked to that feature, in every
+face that takes '-l':
 
-    -F, --feature <id-glob>     the runs linked to the leaves a tree path
-                                names
-    -e, --feature-ext <id>      the runs linked to the leaf of an external id
-    -k, --keys <expr>           the runs linked to leaves with these keys
-
-    $ hwut.report.list -F gateway/forwarding
+    $ hwut.report.list -l f/gateway/forwarding
     ./router/TEST/test-route.sh burst
     ./router/TEST/test-route.sh single
-    $ hwut.report.list -e router.keep-order
+    $ hwut.report.list -l f/router.keep-order
     ./router/TEST/test-route.sh burst
-    $ hwut.report.list -k latency
-    ./router/TEST/test-route.sh burst
-    ./router/TEST/test-route.sh single
+    $ hwut.run -l "f/gateway AND NOT slow"
 
-'-F' globs over TREE PATHS -- the aggregate keys from the top, '/' between,
-the external id last; an unplaced leaf is its external id alone:
+<feature> is ONE feature, no glob:
 
-    *        any part of one level
-    **       any number of levels, none included
-    {a,b}    alternatives
-    a word   '**/word': an aggregate or a leaf anywhere
-    X:name   an internal id ('Qm9xB_2a:*' every leaf of a directory)
+    a tree path      'gateway/forwarding': the aggregate keys from the top,
+                     '/' between, the external id last; an aggregate brings
+                     its subtree
+    a word           an aggregate or an external id anywhere ('router.drop',
+                     'buses'); a line of 'hwut.features.tree --list' fits as
+                     it stands
+    X:name           an internal id
 
-An aggregate brings its subtree. '-e' takes an external id whole, '*' any
-characters. Several '-F' and '-e' are ONE union; '-k' narrows it; all
-narrow the rest of the wish like '--dir' does: '-F gateway/forwarding
---fail' is the failing runs of forwarding.
+'f/' is LIVE: the links decide at the time of use. It combines as every
+label does -- AND, OR, NOT, brackets -- and may stand in a derived label of
+'hwut-root.labels':
 
-'-k' takes the expression of '-l' -- AND, OR, NOT, brackets, ',' for OR --
-over a leaf's EFFECTIVE keys (section 4).
+    [derived]
+    focus = f/gateway/forwarding AND NOT slow
 
-A run linked to no feature is wanted by none of them. Refused by name: an
-external id that names no leaf, a retired id, and a key no leaf carries --
-a misspelt word that silently selected nothing would let an author believe
-the set is empty:
+A frozen copy is a label of its own: 'hwut.labels.create forwarding_today
+-l f/gateway/forwarding' stores the runs as they are linked now.
 
-    $ hwut.report.list -e router.gone
-    REFUSED: '--feature-ext router.gone' names no feature: no line of 'hwut-root-features.conf' has that external id => hwut.features.tree -e
+'-l' STANDS ALONE: beside a target, '--dir', '--fail' or any other word of a
+wish it is refused, and so the runs of a feature that failed are a label
+and an expression ('hwut.labels.create failing --fail', then
+'-l "f/gateway AND failing"'). Refused by name: a feature named nowhere, a
+retired one, a glob -- a misspelt word that silently selected nothing
+would let an author believe the set is empty:
 
-A '-F' glob that matches nothing is legal: the selection is empty. Without
-a central file every feature word is refused => hwut.features.init.
+    $ hwut.report.list -l f/router.gone
+    REFUSED: 'f/router.gone' names no feature: no tree path, external id or internal id of 'hwut-root-features.conf' is 'router.gone' => hwut.features.tree --list
+
+An aggregate with no leaf yet is legal: the selection is empty. Without a
+central file every feature label is refused => hwut.features.init.
+
+'-F', '-e' and '-k' are the FEATURE WORLD'S words: 'hwut.report.features'
+alone reads them (section 3), and a face that selects runs refuses them by
+name. Keys select FEATURES, a property of a promise; a name for a set of
+runs is a label.
 
 
 8  THE TABLE
@@ -596,7 +600,8 @@ ______________________________________________________________________________
     hwut.sanitize.apply <file>
     hwut.sanitize register <dir> | redirect <id> <path>
                 | repoint <external> <internal> | fold <id> <first id>
-    <any face with a wish> [-F|--feature <id-glob>]...
+    <any face with a wish> -l f/<feature>   the runs of a feature (a label)
+    hwut.report.features   [-F|--feature <id-glob>]...
                            [-e|--feature-ext <id>]... [-k|--keys <expr>]
 
     hwut-root-features.conf   features { directory_map { "<id>" = "<path>" }

@@ -1,0 +1,10 @@
+{
+  "name": "hwut-test-writing-support-node",
+  "version": "1.0.0",
+  "private": true,
+  "description": "HWUT 2.0 test writing support for node.js -- the port of ../python",
+  "license": "MIT",
+  "dependencies": {
+    "koffi": "2.9.0"
+  }
+}

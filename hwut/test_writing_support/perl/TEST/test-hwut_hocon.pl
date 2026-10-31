@@ -117,7 +117,7 @@ sub test_numbers {
     run("roman",
         "a = 0rIV\nb = 0rMCMLXXXIV\nc = -0rX\n");
     run("a sign standing apart from its digits",
-        "a = - 0.12\nb = + 7\nc = - 0xFF\n");
+        "a = - 0.12\nb = + 7\nc = - 0xFF\nd = - -1.5e3\n");
     run("what spells no number is a string, and carries quotes",
         "a = 1.2.3\nb = 0x\nc = 0b012\nd = 1__0\ne = 0rIIII\nf = 0rVX\n");
     run("no arithmetic: this language computes nothing",

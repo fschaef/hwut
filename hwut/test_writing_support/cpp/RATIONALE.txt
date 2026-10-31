@@ -1,0 +1,77 @@
+==============================================================================
+test_writing_support/cpp -- RATIONALE
+==============================================================================
+
+CPP-1 THE PYTHON TEST SUPPORT PORTED TO C++, AS THIN FACES OVER THE C PORT,
+      HELD BY THE PYTHON GOOD FILES                                (2026-10-31)
+------------------------------------------------------------------------------
+PROBLEM   After Perl (PL-1) and C (C-1), a C++ test author wants the same
+          modules. The C port already implements all of them in C, verified
+          byte for byte against the Python GOODs; C++ calls C directly.
+          Writing the modules again in C++ would be a third implementation
+          to keep in step with Python -- and a port is only as good as its
+          proof that it behaves alike.
+DECISION  One C++ module ('.hpp', '.cpp') per Python module (README.txt,
+          section 1), each a THIN FACE over the C module of '../c': it
+          converts (std::string, std::vector, std::optional), owns (RAII,
+          the C struct a member or a unique_ptr with the C '_free'), and
+          throws; it parses, draws and schedules nothing itself. One C++
+          test per Python test, choice for choice; every case's GOOD a
+          '.link' to the Python case's '.txt' -- the 47 cases that hold the
+          C and Perl ports.
+          IDIOMATIC C++: classes in namespace 'hwut' with Python's names
+          ('hwut::DeterministicStream', 'hwut::fsm::Machine',
+          'hwut::vterm::Terminal'); what Python raises is thrown, the what()
+          Python's text, the class Python's name ('hwut::FsmError',
+          'hwut::NotImplementedError', 'hwut::CancelledError',
+          'hwut::vterm::LibraryMissing', 'KeyError', 'TimeoutError',
+          'RuntimeError'; an IndexError is a std::out_of_range); a trigger
+          is a class overriding 'fire'; 'with' is an object's lifetime
+          ('Machine::Phase', 'vterm::Screen'); a choice, a task's step and a
+          terminal's callbacks are std::function -- lambdas with captures.
+          THE C CORE OUT OF THE WAY: the C headers are included inside
+          'namespace hwut::c { extern "C" { ... } }' -- C linkage, so the C
+          objects link, but no C struct ('Trigger', 'DeterministicStream')
+          shares the global namespace with a C++ class of the same name.
+          WHERE THE C API IS AWKWARD THE FACE HIDES IT: buffers become
+          std::string (sized from the input, or grown until the text fits);
+          callbacks with a context pointer become std::function, the
+          context the function's address (kept in a std::list, so it stays
+          put); the C runner's 'void (*)(void)' choices are served by 256
+          template trampolines, the I-th calling the I-th std::function.
+          AN EXCEPTION NEVER CROSSES A C FRAME: the shim that the C core
+          calls catches it, keeps it, ends the C run with an error, and the
+          C++ call that drove it throws it again on return.
+          IDENTITY ('id()') for 'select_unchosen': a pointer candidate by
+          what it points to, any other by its address -- C++ values have no
+          identity of their own, and comparing by value would be another
+          rule than Python's.
+          A HUNG PARSE in the HOCON fuzz is not left by 'siglongjmp' (C-1
+          does): jumping over C++ frames skips destructors, which is
+          undefined. The timer ends the choice and says the text -- the
+          GOOD wants 0 hangs anyway.
+          THE BUILD: 'TEST/Makefile' compiles each target WHOLE -- its C
+          sources with $(CC) as C, into '<target>.o.d', a directory of its
+          own removed after the link; its C++ sources with $(CXX) in the
+          link command. No file is shared between targets, so hwut may build
+          several at once (services E-210).
+          MEASURED, on b2b2eeb + bundle 25 + the C port: all 47 cases
+          byte-identical to the Python GOODs ('cmp'), built with g++ 13.3
+          and with clang++ 18.1; 'fuzz' -- 3000 mutated HOCON headers from
+          seed 4711 -- gives the same counts (619 clean, 2381 with faults,
+          0 hang, 0 exception); every choice clean under AddressSanitizer
+          and UndefinedBehaviorSanitizer (g++); --interactive answers 'info',
+          'run' by name and by index, 'fail ... unknown-choice' and 'bye' as
+          the Python runner. 'hwut.run --plain' in 'TEST/', twice: 47 ok,
+          0 fail each time, the six executables built in 'TEST/' by its
+          Makefile.
+COST      Every C++ test links the C modules it wraps, so a C fault is a C++
+          fault -- which is the point: one implementation, two faces. A
+          change to a Python module's printed words fails the C and the C++
+          tests until the C module follows. The C core's limits stand (the
+          sizes of 'hwut_fsm.h', 'hwut_vterm.h': VTERM_CALLBACK_MAX
+          callbacks, VTERM_REGION_MAX regions, 256 choices). A Trigger, a
+          TriggerDispatcher and a Task are neither copied nor moved: the C
+          core holds their addresses. 'test-hwut_vterm.cpp' runs its
+          applications with 'python3', since they are the Python test's own.
+==============================================================================

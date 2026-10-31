@@ -1,0 +1,78 @@
+==============================================================================
+test_writing_support/node -- RATIONALE
+==============================================================================
+
+JS-1  THE PYTHON TEST SUPPORT PORTED TO JAVASCRIPT FOR NODE.JS, HELD BY THE
+      PYTHON GOOD FILES                                               (2026-10-31)
+------------------------------------------------------------------------------
+PROBLEM   A third port after Perl (perl PL-1) and C (c C-1): a node.js test
+          author is to be given what a Python one is, with the same printed
+          words -- and, as for the others, a port is only as good as its
+          proof that it behaves alike.
+DECISION  One CommonJS module per Python module ('README.txt', section 1),
+          no build: 'node' runs a test as it stands (hwut-root.conf's
+          'javascript' interpreter), the test finding the modules by
+          'path.join(__dirname, ...)'. One node test per Python test, choice
+          for choice; every case's GOOD a '.link' to the Python case's '.txt'
+          -- 47 cases, the same that hold the Perl and the C port.
+          THE NAMES are Python's: classes as classes, methods and their
+          snake_case names kept ('next_int', 'path_to', 'region_text'), so a
+          reader of the Python README reads the node module; module-level
+          helpers of the port itself are camelCase ('floatRepr').
+          ONE NUMBER TYPE: what Python prints of an int or a float is said
+          by the caller ('pytext'); HOCON's ScalarNode carries Python's type
+          ('py_type') and its '%r' ('repr()'). The float's DIGITS are JS's
+          own shortest round-trip ones -- the same as Python's -- and only
+          the layout is rewritten.
+          ASYNCIO ON NODE'S LOOP: 'sleep0' is one turn ('setImmediate', a
+          FIFO as asyncio's ready queue), a task starts at the next turn, a
+          cancelled one is thrown CancelledError at its next 'sleep0' (its
+          task found by AsyncLocalStorage). Microtask hops ('await' of a
+          coroutine that does not yield) never let another task in, as in
+          asyncio -- so the drawn interleavings come out line for line.
+          NO DUP2 IN NODE: --interactive runs each choice in a child, 'node
+          <app> <choice>', its fd 1 and 2 the sinks -- the 'parallel' scheme
+          of Python for every choice, as the C port does (fork). The status
+          is the child's; 'process.exit' is SystemExit.
+          LIBVTERM THROUGH 'koffi' -- the one dependency (asked: "node has no
+          built-in FFI; use the npm package koffi"), installed by npm into
+          this directory, never part of the tree. The cell's layout is
+          MEASURED as in Python; no header.
+          THE PSEUDO-TERMINAL WITHOUT A HELPER PROCESS. Asked: fork is
+          unsafe in node -- spawn via a helper (a python3 pty relay, or
+          'script -q'), choose the simplest route that is byte-identical.
+          Simplest is none: koffi reaches libc too, and 'posix_spawnp' is not
+          a fork of node. The child gets a new session (POSIX_SPAWN_SETSID)
+          and OPENS the pty's slave as fd 0 -- a session leader opening a
+          terminal acquires it as its controlling one, which is what
+          Python's 'setsid' + TIOCSCTTY do -- then dup's it to 1 and 2; every
+          signal is set back to its default (node ignores SIGPIPE; Python's
+          subprocess restores it too). 'poll', 'read', 'write', 'waitpid' go
+          through libc, so 'run', 'pump', 'wait' block as Python's do, and
+          libuv never sees the child to reap it. A relay would have put a
+          second terminal between the two, a second process to report the
+          exit status through, and python3 under the module itself.
+          MEASURED, on b2b2eeb (worktree with the C and Perl ports beside):
+          all 47 cases byte-identical to the Python GOODs (raw output, 'cmp',
+          normal mode), 'gauss' included -- node's libm gives Python's bits on
+          this machine, the tolerance region unused; 'hwut.run --plain' in
+          'TEST/': 47 ok, 0 fail, twice (interactive sessions, about 10 s);
+          'fuzz' -- 3000 mutated HOCON headers from seed 4711 -- 619 clean,
+          2381 with faults, 0 hang, 0 exception; 'floatRepr' against Python's
+          'repr' on 200000 doubles (random bits, scaled, integral, rounded):
+          no difference; 'strRepr' against 'repr' on every code point
+          Python's Unicode (15.1) assigns: no difference (node's tables are
+          17.0: a character assigned since may be escaped differently).
+          What SEEING_APP reports from inside the pseudo-terminal is the
+          GOOD's: three streams terminals, a controlling terminal, 44 x 10,
+          TERM=xterm-256color, COLUMNS=None though the test set 300, the
+          cursor question answered, exit status 3.
+COST      'npm install' before 'test-hwut_vterm.js' can probe (73 MB of
+          koffi's prebuilt binaries for every platform, out of the tree).
+          The libc numbers (O_CLOEXEC, TIOCSWINSZ, POSIX_SPAWN_SETSID) are
+          Linux/glibc's -- the platform the C port names too; 'cwd' wants
+          glibc's 'posix_spawn_file_actions_addchdir_np' (2.29). A choice in
+          --interactive mode costs a node start (about 0.1 s). A change to a
+          Python module's printed words fails the node test until the node
+          module follows -- which is the point.
+==============================================================================

@@ -725,7 +725,7 @@ def main(argv=None, write=None):
     #  part of a wish selects runs, which this page does not list.
     if "--help" not in argv:
         try:
-            wish, argv = parse_wish(argv)
+            wish, argv = parse_wish(argv, feature_f=True)
         except WishError as error:
             write_refusal(write, "REFUSED: %s" % error, USAGE)
             return E_ExitCode.REFUSED

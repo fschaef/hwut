@@ -131,6 +131,12 @@ def test_configuration_of(app, directory, variant_tuple=(), variant_db=None,
         choice_db      = choice_db,
         interpreter    = interpreter,
         build          = build,
+        #  'build { caps { ... } }' CAPS THE BUILD (configuration_tree.Build:
+        #  "the caps at choice level cap the RUN"), folded onto the
+        #  application's.
+        build_caps     = (_caps_of(root.build, caps)
+                          if build is not None and root.build is not None
+                             and root.build.caps is not None else None),
         interactive    = any(p.interactive for p in
                              app.choice_db.values()),
         execute        = (None if root.execute is None

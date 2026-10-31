@@ -4,9 +4,7 @@ STATUS: 2
                      [--glob <target>]... [--exclude <target>]...
                      [--dir <glob>]... [--exclude-dir <glob>]...
                      [--wishlist <file>]... [-l|--label <expr>]
-                     [--language=<name>]... [--faster-than=<sec>]
-                     [-F|--feature <id-glob>]... [-e|--feature-ext <id>]...
-                     [-k|--keys <expr>] [--no-bubbles]
+                     [--language=<name>]... [--faster-than=<sec>] [--no-bubbles]
                      [<file-glob> [choice-glob]...] [--directory=<path>]
 STATUS: 2
     REFUSED: the directory 'nowhere' does not exist
@@ -14,8 +12,6 @@ STATUS: 2
                      [--glob <target>]... [--exclude <target>]...
                      [--dir <glob>]... [--exclude-dir <glob>]...
                      [--wishlist <file>]... [-l|--label <expr>]
-                     [--language=<name>]... [--faster-than=<sec>]
-                     [-F|--feature <id-glob>]... [-e|--feature-ext <id>]...
-                     [-k|--keys <expr>] [--no-bubbles]
+                     [--language=<name>]... [--faster-than=<sec>] [--no-bubbles]
                      [<file-glob> [choice-glob]...] [--directory=<path>]
 <hwut-end>

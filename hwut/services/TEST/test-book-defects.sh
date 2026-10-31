@@ -173,8 +173,8 @@ refused-remedy)
     page a/TEST/test-r.py 'one { }' <<'EOF2'
 print("x")
 EOF2
-    echo "--- the same, asked of 'hwut.run -F'"
-    said hwut.run -F shot | sed "s|$WORK|<tree>|"
+    echo "--- the same, asked of 'hwut.run -l f/shot'"
+    said hwut.run -l f/shot | sed "s|$WORK|<tree>|"
     echo "--- a misspelt option: the usage names the spelling"
     said hwut.report.features --matrx
     ;;

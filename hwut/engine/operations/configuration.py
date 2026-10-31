@@ -136,6 +136,9 @@ class TestConfiguration:
     choice_db:      Mapping[Optional[str], TestChoiceConfiguration]
     interpreter:    Optional[Sequence[str]] = None   # INTERPRETED only
     build:          object                  = None   # COMPILED only
+    build_caps:     Optional[ProcsitterConfig] = None  # 'build { caps }'
+                                            # folded onto 'caps'; None:
+                                            # the build runs under 'caps'
     store:          object                  = None   # None: do not record
     execute:        Optional[Sequence[str]] = None   # THE CALL, STATED
                                             # VERBATIM (R-68): where an

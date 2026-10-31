@@ -7911,3 +7911,130 @@ COST      Builds of several tests of one directory may now run at once in
           -- a Makefile in the test directory (built here) and one placed
           in 'BUILD/test-thrust.c/' (built there). First user:
           'test_writing_support/c/TEST' (six tests, 47 cases).
+
+
+E-211  THREE WORLDS: LABELS ARE THE ONE DOMAIN OF SET OPERATIONS; A FEATURE
+       IS THE LABEL 'f/<feature>' (intend/three-worlds, ruled 2026-10-31)
+                                                                      (2026-10-31)
+------------------------------------------------------------------------------
+PROBLEM   The book writers found the three ways of naming runs -- wishlists,
+          labels, features -- hard to tell apart where they mixed: a
+          wishlist could carry 'label: <expr>' (E-206), a command line
+          could carry targets beside '-l' beside '-F'. Sets of runs were
+          combined in three places, so neither circularity nor
+          contradiction could be checked in one.
+DECISION  RULED (Frank-Rene, 2026-10-31):
+          "sets of test runs are handled solely based on label
+          definitions. A clear one-and-only domain of set operations. It
+          is the basis to handle set operations consistently (detect
+          circularities and contradictions)." A WISHLIST DESCRIBES and
+          names no set: no label feeds a wishlist.
+          THE 'label:' LINE LEAVES THE WISHLIST: refused by name, line
+          and file ('a list names no set => ...').
+          '-l' STANDS ALONE: beside a target (bare or '--glob'), '--dir',
+          '--exclude', '--exclude-dir', '--wishlist', '--fail', '--pass',
+          '--unaccepted', '--since', '--until', '--language' or
+          '--faster-than' it is refused by name, the remedy the label:
+          'hwut.labels.create <name> <word> ...', then '-l "<expr> AND
+          <name>"'. '--no-bubbles' (a word about the walk) may stand
+          beside it. Checked where the words are parsed ('parse_wish',
+          'with_targets' for the bare words), not face by face.
+          "features become accessible only through labels and
+          f/<feature-id> is the label that ties to a feature": 'f/<x>'
+          in any label expression, '-l' or '[derived]', is the runs
+          linked to <x> -- a tree path, a bare external id, or an
+          internal id, as '-F' read them; an aggregate brings its
+          subtree; NO GLOB (a label names one feature). LIVE: the links
+          decide at the time of use. A leaf of the label graph -- it names
+          no label, so no circle runs through it. Refused by name: a
+          feature no central file holds, a retired one; an aggregate
+          without leaves is legal and empty. In a derived label an unknown
+          feature holds no run (a file must not refuse every selection
+          that never asks for it). 'f/' is reserved: a customer label
+          holds no '/'.
+          "hwut.labels.create may use '-l' -- it would, however, resolve
+          that label instead of referencing it": the snapshot stores
+          literal targets, so a frozen feature set is 'hwut.labels.create
+          x -l f/<feature>', and "every member" stays '-l all' (o-3).
+          "drop all feature command line options": '-F', '-e', '-k' are
+          refused on every face that selects runs, naming 'f/'; the
+          feature world's own face, 'hwut.report.features', keeps them
+          ('parse_wish(feature_f=True)') -- keys select FEATURES, a
+          property of a promise; a name for a set of runs is a label.
+          The glob warning's remedy follows: 'a literal target reaches
+          one, '--label meta' all of them'.
+COST      Breaking: every '-F'/'-e'/'-k' on a run face, every 'label:'
+          line, every '-l' beside a wishlist argument. A one-off
+          combination ('the failing runs of a feature') is a label and an
+          expression. 'hwut.labels.list' counts a derived label's members
+          from the file's entries alone; one naming 'f/' counts without
+          the feature's runs, and lists no 'f/' name as missing.
+          Re-recorded, each diff read: 'plan/TEST/test-wish.py' parsing,
+          refused (the refusals added); 'features/TEST/test-wish.py'
+          path, ext, keys, together (rewritten over 'f/', a derived label,
+          a frozen copy); 'labels/TEST' create union (resolved union and
+          difference, the mix refused) and the four usage pages;
+          'test-book-defects-4.sh' wishlist-label (rewritten: refusals,
+          '--label' alone, D-79 kept on the command line),
+          bubble-features ('--label f/flow'); 'test-book-defects.sh
+          refused-remedy'; 'test-features-cross.sh' link, move, repoint
+          ('-l f/...'); the usage lines, help pages and the glob warning
+          everywhere ('test-cmdline.py faces', 'test-plan.py help',
+          'test-face-words.sh', 'test-wishlist.sh', 'test-accept.sh
+          labels', 'display/TEST/test-run.sh' ...). The selections are
+          unchanged where the question could still be asked.
+          Docs: HOWTO-FEATURES section 7; the wish's help.
+
+
+E-212  'build { caps { ... } }' CAPS THE BUILD; 'go run' AND THE FILE CAP
+                                                                      (2026-10-31)
+------------------------------------------------------------------------------
+PROBLEM   The header's build scope takes 'caps' (configuration_tree.Build:
+          "'caps' here caps the BUILD process; the caps at choice level cap
+          the RUN"), and 'build_action.build' never read them: it ran every
+          build under the application's caps. MEASURED: a Go build on a
+          cold cache writes its runtime archive, above the default 10 MB
+          per file, and failed 'file too large' whatever the build scope
+          said; the Go port had to raise the cap of every RUN instead.
+          The 'go run' entry of 'hwut-root.conf' was reported as a compile
+          outlasting the session; MEASURED again it is the same file cap:
+          'go run' compiles at every call under the RUN's caps, ends with
+          EFBIG before it answers, and every case says 'no-session'. With
+          'caps { file_size_mb = 256 }' 'go run' passes, cold cache or warm.
+DECISION  'TestConfiguration.build_caps': the build scope's caps folded onto
+          the application's ('adapter.test_configuration_of'), None where
+          the scope states none; 'build()' runs under them, else under the
+          application's caps (O-20 unchanged). The Go port states its cap
+          in the build scope ('build { ... caps { file_size_mb = 256 } }');
+          its runs keep the default.
+          The 'go run' entry stays; 'hwut-root.conf' and the template a new
+          root receives ('services/_boundary.py') say beside it why a cold
+          cache fails and what to state. hwut cannot name the cap there: Go
+          is not killed, it gets EFBIG and exits.
+COST      A build that raised its cap at application level still works;
+          moving it into 'build { caps }' gives the runs back their own.
+          Regression: 'test-book-defects-5.sh build-caps' -- a Makefile
+          writing 12 MB fails under the default caps and builds under
+          'build { caps { file_size_mb = 20 } }' (the test itself states
+          'caps { file_size_mb = 64 }': the nested build inherits its
+          limit). The Go port, from a cold cache: 47/47.
+
+
+E-213  HOCON: A SIGN APART MUST MAKE ONE NUMBER WITH WHAT FOLLOWS     (2026-10-31)
+------------------------------------------------------------------------------
+PROBLEM   'n = - -1.5e3' parsed CLEAN in 'hwut_hocon.py': the sign standing
+          apart was joined with '-1.5e3' although '--1.5e3' spells no
+          number, and the parser's private '_NOT_A_TOKEN' was bound as the
+          value. Found by the Java port, which compared all 3000 fuzz trees
+          with Python's; every port had copied it to keep the counts.
+DECISION  The sign and the token after it are joined only where the two
+          make ONE number; else the sign is read as what it is -- a bare
+          '-', refused ('a string is written in double quotes: "-"'), and
+          '-1.5e3' then stands where a key would ('expected '=', ':' or
+          '{' after key '-1.5e3''). In Python and in all seven ports; the
+          Rust port's 'Value::NotAToken' is gone.
+COST      'test-hwut_hocon.py numbers' gains 'd = - -1.5e3' -- its two
+          faults recorded; the seven ports' tests gain the same line, held
+          by the same GOOD (link). The fuzz counts are unchanged (619 clean,
+          2381 with faults): the one fuzz input carrying the case had other
+          faults already.

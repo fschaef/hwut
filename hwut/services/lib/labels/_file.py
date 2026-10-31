@@ -329,7 +329,8 @@ def derivation_tuple(boundary, entry_db):
             nothing assigns or derives (D-56).
     """
     from ....engine.orchestrator.plan.label import (label_name_tuple,
-                                                     derived_label_set)
+                                                     derived_label_set,
+                                                     feature_label_f)
     kept     = _kept(file_path(boundary))
     derived  = tuple((d[1], d[3]) for d in kept.derivation_list)
     known    = defined_label_set(entry_db) | {d[0] for d in derived}
@@ -340,8 +341,10 @@ def derivation_tuple(boundary, entry_db):
             own = label_set if choice is None \
                   else label_set | entry_db.get((file, None), frozenset())
             if label in derived_label_set(derived, own): member_n += 1
+        #  A FEATURE LABEL ('f/...') is the feature relation's, never
+        #  assigned here: not missing, and not counted among the members.
         missing = tuple(name for name in label_name_tuple(tree)
-                        if name not in known)
+                        if name not in known and not feature_label_f(name))
         result.append((label, text, member_n, missing))
     return tuple(result)
 

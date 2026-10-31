@@ -32,7 +32,7 @@ from ....auxiliary import clock
 from datetime import datetime, timezone
 
 from ..plan.wish    import cutoff_instant
-from ..plan.label   import (STANDARD_LABEL, evaluate_f,
+from ..plan.label   import (STANDARD_LABEL, evaluate_f, feature_label_f,
                             label_name_tuple, literal_target_f,
                             parse_expression)
 from .configuration_tree import CTestCaseSequence
@@ -153,6 +153,10 @@ class CTestTaskListQuery(CTestTaskList):
         self.label_settled_f = False
         self.language_db     = {}       # source_file -> language | None
         self.feature_case_set = None    # (absolute file, choice) wanted
+        #  THE FEATURE LABELS (intend/three-worlds): 'f/<feature>' -> the
+        #  runs linked to it, for every one the wish or a derived label
+        #  of the view names. Settled with the label question.
+        self.feature_label_db = {}
 
     def get_test_cases(self, app_set):
         """
@@ -384,6 +388,7 @@ class CTestTaskListQuery(CTestTaskList):
         """
         if self.label_settled_f: return
         self.label_settled_f = True
+        if self.label_view is not None: self._settle_feature_label()
         if not self.wish.asks_label_f(): return
         if self.label_view is None:
             raise SelectionError(
@@ -391,11 +396,45 @@ class CTestTaskListQuery(CTestTaskList):
                 "view reaches this selection" % self.wish.label_spec)
         self.label_tree = parse_expression(self.wish.label_spec)
         unknown = [name for name in label_name_tuple(self.label_tree)
-                   if name not in self.label_view.defined]
+                   if name not in self.label_view.defined
+                   and not feature_label_f(name)]
         if unknown:
             raise SelectionError(
                 "no label '%s' stands in 'hwut-root.labels'"
                 % "', '".join(unknown))
+
+    def _settle_feature_label(self):
+        """
+        RETURN: None. Fills 'feature_label_db' with the runs of every
+                feature label ('f/<feature>') the wish names -- strictly:
+                a feature no central file holds is refused by name -- or
+                a derived label of the view names, leniently: there an
+                unknown feature holds no run.
+
+        Raises SelectionError as 'feature_wish.feature_label_case_set'
+        does.
+        """
+        from .feature_wish import feature_label_case_set
+        wanted = set()
+        if self.wish.label_spec is not None:
+            wanted = {name for name in label_name_tuple(
+                          parse_expression(self.wish.label_spec))
+                      if feature_label_f(name)}
+        for name in sorted(wanted):
+            if name not in self.feature_label_db:
+                self.feature_label_db[name] = \
+                    feature_label_case_set(self.root, name)
+        view_list = [self.label_view]
+        while view_list:
+            view = view_list.pop()
+            view_list.extend(view.inner_tuple)
+            for _, tree in view.derived:
+                for name in label_name_tuple(tree):
+                    if feature_label_f(name) \
+                       and name not in self.feature_label_db:
+                        self.feature_label_db[name] = \
+                            feature_label_case_set(self.root, name,
+                                                   strict_f=False)
 
     def _label_hidden_f(self, case):
         """
@@ -414,7 +453,10 @@ class CTestTaskListQuery(CTestTaskList):
         if self.label_view is None: return False
         where = os.path.normpath(os.path.join(
                     self.root, self.directory, case.source_file))
-        label_set = self.label_view.label_set_of(where, case.choice)
+        extra = frozenset(name for name, case_set
+                          in self.feature_label_db.items()
+                          if (where, case.choice) in case_set)
+        label_set = self.label_view.label_set_of(where, case.choice, extra)
         if self.label_tree is not None:
             return not evaluate_f(self.label_tree, label_set)
         if STANDARD_LABEL not in label_set:      return False

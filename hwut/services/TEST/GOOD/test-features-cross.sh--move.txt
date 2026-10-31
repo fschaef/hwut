@@ -7,7 +7,7 @@ world/TEST/test-terrain.sh:#     choices { seed-4 { features = ["terrain", "<wor
 features { childs { terrain { title = "terrain" }  materials { title = "materials" } } }
 |                                     ok                                     |
 nothing to register below '.'
-== hwut.report.list -e physics.bounce
+== hwut.report.list -l f/physics.bounce
 ./TEST/test-shot.sh left
 ./physics/TEST/test-push.sh a
 ./world/TEST/test-roll.sh off-wall

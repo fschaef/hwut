@@ -1,7 +1,7 @@
-== inside: hwut.run -F flow
+== inside: hwut.run --label f/flow
    TEST . . . . . . . . . . . . . . . . . . . . . . . . . .      [OK]      2/2
 RESULTS: 2 ok, 0 fail, <t> [sec], <t> [sec] total
-== above: hwut.run -F flow
+== above: hwut.run --label f/flow
    +--- TEST . . . . . . . . . . . . . . . . . . . . . . .       [OK]      0/0
    '--- world/TEST . . . . . . . . . . . . . . . . . . . .       [OK]      2/2
 RESULTS: 2 ok, 0 fail, 2 skip, <t> [sec], <t> [sec] total

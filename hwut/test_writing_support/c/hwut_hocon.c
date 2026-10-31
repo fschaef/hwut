@@ -604,7 +604,13 @@ _parse_bare(HoconCursor* cursor, HoconPosition position, int in_list_f)
         long long i_value; double f_value;
         if( after_n ) {
             char* after = strndup(text + from, after_n);
-            if( _number(after, &i_value, &f_value) != HOCON_NOT_A_TOKEN ) {
+            /* The two must make ONE number: '- -1.5e3' does not (python hwut_hocon). */
+            char* both = malloc(after_n + 2);
+            int   one_f;
+            both[0] = raw[0]; memcpy(both + 1, after, after_n + 1);
+            one_f = _number(both, &i_value, &f_value) != HOCON_NOT_A_TOKEN;
+            free(both);
+            if( one_f && _number(after, &i_value, &f_value) != HOCON_NOT_A_TOKEN ) {
                 char*          joined = malloc(after_n + 2);
                 HoconValueKind kind;
                 joined[0] = raw[0]; memcpy(joined + 1, after, after_n + 1);

@@ -54,6 +54,8 @@
   key 'c' at 3:1 ->
     -255 (int) at 3:5
 }
+FAULT f.hocon:4:5: SYNTAX: a string is written in double quotes: "-"
+FAULT f.hocon:4:13: SYNTAX: expected '=', ':' or '{' after key '-1.5e3'
 
 --- what spells no number is a string, and carries quotes ---
 { at 1:1

@@ -8,12 +8,11 @@ STDERR {
                                  [--exclude <target>]... [--dir <glob>]...
                                  [--exclude-dir <glob>]... [--wishlist <file>]...
                                  [-l|--label <expr>] [--language=<name>]...
-                                 [--faster-than=<sec>] [-F|--feature <id-glob>]...
-                                 [-e|--feature-ext <id>]... [-k|--keys <expr>]
-                                 [--no-bubbles] [--output=<path>]
-                                 [--target <name>]... [--session] [--lock] [--out]
-                                 [--orphans] [--books] [--constraints] [--links]
-                                 [--relations] [--transient] [--directory=<path>]
+                                 [--faster-than=<sec>] [--no-bubbles]
+                                 [--output=<path>] [--target <name>]...
+                                 [--session] [--lock] [--out] [--orphans]
+                                 [--books] [--constraints] [--links] [--relations]
+                                 [--transient] [--directory=<path>]
 }
 STATUS: 2
 STDOUT {
@@ -25,12 +24,11 @@ STDERR {
                                  [--exclude <target>]... [--dir <glob>]...
                                  [--exclude-dir <glob>]... [--wishlist <file>]...
                                  [-l|--label <expr>] [--language=<name>]...
-                                 [--faster-than=<sec>] [-F|--feature <id-glob>]...
-                                 [-e|--feature-ext <id>]... [-k|--keys <expr>]
-                                 [--no-bubbles] [--output=<path>]
-                                 [--target <name>]... [--session] [--lock] [--out]
-                                 [--orphans] [--books] [--constraints] [--links]
-                                 [--relations] [--transient] [--directory=<path>]
+                                 [--faster-than=<sec>] [--no-bubbles]
+                                 [--output=<path>] [--target <name>]...
+                                 [--session] [--lock] [--out] [--orphans]
+                                 [--books] [--constraints] [--links] [--relations]
+                                 [--transient] [--directory=<path>]
 }
 STATUS: 2
 STDOUT {
@@ -42,12 +40,11 @@ STDERR {
                                  [--exclude <target>]... [--dir <glob>]...
                                  [--exclude-dir <glob>]... [--wishlist <file>]...
                                  [-l|--label <expr>] [--language=<name>]...
-                                 [--faster-than=<sec>] [-F|--feature <id-glob>]...
-                                 [-e|--feature-ext <id>]... [-k|--keys <expr>]
-                                 [--no-bubbles] [--output=<path>]
-                                 [--target <name>]... [--session] [--lock] [--out]
-                                 [--orphans] [--books] [--constraints] [--links]
-                                 [--relations] [--transient] [--directory=<path>]
+                                 [--faster-than=<sec>] [--no-bubbles]
+                                 [--output=<path>] [--target <name>]...
+                                 [--session] [--lock] [--out] [--orphans]
+                                 [--books] [--constraints] [--links] [--relations]
+                                 [--transient] [--directory=<path>]
 }
 STATUS: 2
 STDOUT {

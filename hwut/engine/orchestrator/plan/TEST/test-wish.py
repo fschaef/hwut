@@ -22,16 +22,21 @@ CHOICES: parsing, anchors, refused, globs, base;
 
 DESCRIPTION:
 
-parsing  every keyword read ('-F' and '-k' among them), alone and together, and how the wish
+parsing  every keyword read, alone and together, and how the wish
          writes itself back; arguments that are none of them are handed
-         back untouched.
+         back untouched. '-F', '-e' and '-k' are read where the feature
+         world's face asks for them ('feature_f'); a feature label
+         'f/<feature>' is read as a label.
 
 anchors  the instant every anchor names, reckoned in UTC off a stated
          clock: a Thursday in May.
 
 refused  a point that cannot be read, a keyword standing without its
          value, '--fail' beside '--pass', an empty window: refused at
-         the door, by name.
+         the door, by name. And the three worlds (intend/three-worlds):
+         '-l' beside any wishlist argument -- a word, a bare target --,
+         a feature option on a face that selects runs, a feature label
+         with a glob, a wishlist's 'label:' line.
 
 globs    globs over both members of the target form; several globs hold
          one question and are OR'ed; an empty match is legal.
@@ -54,7 +59,8 @@ from hwut.engine.orchestrator.exploration.explorer import explore
 from hwut.engine.orchestrator.exploration.task_list_query import \
                                                          CTestTaskListQuery
 from hwut.engine.orchestrator.plan.wish import (Wish, WishError,
-                                               cutoff_instant, parse_wish)
+                                               cutoff_instant, parse_wish,
+                                               with_targets)
 
 
 NOW = datetime(2026, 5, 14, 15, 30, 0, tzinfo=timezone.utc)   # a Thursday
@@ -154,13 +160,16 @@ def test_parsing():
                  ["--fail", "--since=7d", "--glob", "test-a.py *",
                   "--glob", "quick-[0-9].py"],
                  ["--fail", "--directory=x", "some-file.py"],
+                 ["-l", "f/display AND NOT slow"],
+                 ["-l", "mine", "--no-bubbles"],
                  ["-F", "display.**"],
                  ["--feature=scroll", "-F", "{a,b}.x", "-F", "scroll"],
                  ["-k", "gui AND NOT slow"],
-                 ["--keys=gui, net", "--fail"],
-                 ["-F", "scroll", "-k", "gui", "-l", "mine"]):
-        wish, rest = parse_wish(argv)
-        banner(" ".join(argv) or "(nothing)")
+                 ["-F", "scroll", "-k", "gui"]):
+        feature_f  = argv[:1] in (["-F"], ["--feature=scroll"], ["-k"])
+        wish, rest = parse_wish(argv, feature_f=feature_f)
+        banner(" ".join(argv) or "(nothing)"
+               + ("   (the feature world's face)" if feature_f else ""))
         print("    wish : %s" % wish)
         print("    rest : %s" % (", ".join(rest) or "-"))
         print("    asks nothing: %s" % wish.states_nothing_f())
@@ -182,15 +191,48 @@ def test_refused():
     for argv in (["--since=2"], ["--since=xh"], ["--since="],
                  ["--since"], ["--until"], ["--glob"], ["--since=-1h"],
                  ["--until=noon"], ["--fail", "--pass"],
-                 ["--since=1h", "--until=2h"],
-                 ["-F"], ["--feature="], ["-k"], ["--keys="],
-                 ["-k", "gui AND"], ["-k", "gui", "--keys", "net"]):
+                 ["--since=1h", "--until=2h"]):
         banner(" ".join(argv))
         try:
             parse_wish(argv)
             print("NOT REFUSED -- a law is broken")
         except WishError as error:
             print("REFUSED: %s" % error)
+    for argv in (["-F"], ["--feature="], ["-k"], ["--keys="],
+                 ["-k", "gui AND"], ["-k", "gui", "--keys", "net"]):
+        banner(" ".join(argv) + "   (the feature world's face)")
+        try:
+            parse_wish(argv, feature_f=True)
+            print("NOT REFUSED -- a law is broken")
+        except WishError as error:
+            print("REFUSED: %s" % error)
+    #  THE THREE WORLDS (intend/three-worlds, ruled 2026-10-31).
+    for argv in (["-l", "slow", "--fail"], ["--dir", "net", "-l", "slow"],
+                 ["--since=2h", "--label=slow"], ["-l", "slow", "--glob", "x"],
+                 ["-F", "scroll"], ["-e", "REQ-1"], ["--keys=gui"],
+                 ["-l", "f/net*"], ["-l", "f/"]):
+        banner(" ".join(argv))
+        try:
+            parse_wish(argv)
+            print("NOT REFUSED -- a law is broken")
+        except WishError as error:
+            print("REFUSED: %s" % error)
+    banner("-l slow test-route.sh   (a bare target)")
+    try:
+        with_targets(parse_wish(["-l", "slow"])[0], ["test-route.sh"])
+        print("NOT REFUSED -- a law is broken")
+    except WishError as error:
+        print("REFUSED: %s" % error)
+    banner("--wishlist l.txt   ('label: slow' on line 2)")
+    import tempfile
+    with tempfile.TemporaryDirectory() as work:
+        path = os.path.join(work, "l.txt")
+        with open(path, "w") as fh: fh.write("test-a.sh\nlabel: slow\n")
+        try:
+            parse_wish(["--wishlist", path])
+            print("NOT REFUSED -- a law is broken")
+        except WishError as error:
+            print("REFUSED: %s" % str(error).replace(path, "l.txt"))
 
 
 def test_globs():

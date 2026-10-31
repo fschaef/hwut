@@ -16,7 +16,7 @@ STDOUT {
        '--- gamma/TEST . . . . . . . . . . . . . . . . . . . .       [OK]      1/1
     ==============================================================================
     
-    RESULTS: 3 ok, 0 fail, 3 meta, 0.13 [sec], 0.14 [sec] total
+    RESULTS: 3 ok, 0 fail, 3 meta, 0.23 [sec], 0.24 [sec] total
     |                                     ok                                     |
 }
 --- '--label meta' lifts the silence (only test-two runs)
@@ -37,7 +37,7 @@ STDOUT {
        '--- gamma/TEST . . . . . . . . . . . . . . . . . . . .       [OK]      1/1
     ==============================================================================
     
-    RESULTS: 3 ok, 0 fail, 3 skip, 0.13 [sec], 0.14 [sec] total
+    RESULTS: 3 ok, 0 fail, 3 skip, 0.14 [sec], 0.15 [sec] total
     |                  ok                  |                skip                 |
 }
 --- '--label all' is the universe
@@ -61,7 +61,7 @@ STDOUT {
        '--- gamma/TEST . . . . . . . . . . . . . . . . . . . .       [OK]      2/2
     ==============================================================================
     
-    RESULTS: 6 ok, 0 fail, 0.29 [sec], 0.30 [sec] total
+    RESULTS: 6 ok, 0 fail, 0.20 [sec], 0.20 [sec] total
     |                                     ok                                     |
 }
 --- a label that does not stand, refused by name
@@ -81,13 +81,13 @@ STDOUT {
        tree/alpha/TEST . . . . . . . . . . . . . . . . . . . .       [OK]      1/1
     ==============================================================================
     
-    RESULTS: 1 ok, 0 fail, 1 skip, 0.04 [sec], 0.05 [sec] total
+    RESULTS: 1 ok, 0 fail, 1 skip, 0.05 [sec], 0.05 [sec] total
     |                  ok                  |                skip                 |
 }
 --- a GLOB does not; wholly swallowed, it warns
 STATUS: 3
 STDOUT {
-    WARNING: the glob 'test-tw*.sh' met only runs the standard label silences -- name a label ('--label meta') to reach them
+    WARNING: the glob 'test-tw*.sh' met only runs the standard label silences -- a literal target reaches one, '--label meta' all of them
     DIR  tree/alpha/TEST                                                          
     NOTE  the selection is empty: no test case answers the wish
     

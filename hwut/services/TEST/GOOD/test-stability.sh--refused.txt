@@ -6,11 +6,10 @@ STDOUT {
                               [--exclude <target>]... [--dir <glob>]...
                               [--exclude-dir <glob>]... [--wishlist <file>]...
                               [-l|--label <expr>] [--language=<name>]...
-                              [--faster-than=<sec>] [-F|--feature <id-glob>]...
-                              [-e|--feature-ext <id>]... [-k|--keys <expr>]
-                              [--no-bubbles] [<file-glob> [choice-glob]...]
-                              [--repeat=<n>] [--cadence] [--byte-pedantic]
-                              [--strategy=<name>] [--verbose] [--directory=<path>]
+                              [--faster-than=<sec>] [--no-bubbles]
+                              [<file-glob> [choice-glob]...] [--repeat=<n>]
+                              [--cadence] [--byte-pedantic] [--strategy=<name>]
+                              [--verbose] [--directory=<path>]
 }
 STATUS: 2
 STDOUT {
@@ -20,11 +19,10 @@ STDOUT {
                               [--exclude <target>]... [--dir <glob>]...
                               [--exclude-dir <glob>]... [--wishlist <file>]...
                               [-l|--label <expr>] [--language=<name>]...
-                              [--faster-than=<sec>] [-F|--feature <id-glob>]...
-                              [-e|--feature-ext <id>]... [-k|--keys <expr>]
-                              [--no-bubbles] [<file-glob> [choice-glob]...]
-                              [--repeat=<n>] [--cadence] [--byte-pedantic]
-                              [--strategy=<name>] [--verbose] [--directory=<path>]
+                              [--faster-than=<sec>] [--no-bubbles]
+                              [<file-glob> [choice-glob]...] [--repeat=<n>]
+                              [--cadence] [--byte-pedantic] [--strategy=<name>]
+                              [--verbose] [--directory=<path>]
 }
 STATUS: 2
 STDOUT {
@@ -34,25 +32,23 @@ STDOUT {
                               [--exclude <target>]... [--dir <glob>]...
                               [--exclude-dir <glob>]... [--wishlist <file>]...
                               [-l|--label <expr>] [--language=<name>]...
-                              [--faster-than=<sec>] [-F|--feature <id-glob>]...
-                              [-e|--feature-ext <id>]... [-k|--keys <expr>]
-                              [--no-bubbles] [<file-glob> [choice-glob]...]
-                              [--repeat=<n>] [--cadence] [--byte-pedantic]
-                              [--strategy=<name>] [--verbose] [--directory=<path>]
+                              [--faster-than=<sec>] [--no-bubbles]
+                              [<file-glob> [choice-glob]...] [--repeat=<n>]
+                              [--cadence] [--byte-pedantic] [--strategy=<name>]
+                              [--verbose] [--directory=<path>]
 }
 STATUS: 2
 STDOUT {
-    REFUSED: 'hwut.run.stability' does not take: --epsilon=soon -- did you mean '-e'?
+    REFUSED: 'hwut.run.stability' does not take: --epsilon=soon
     usage: hwut.run.stability [--fail] [--pass] [--since=<point>]
                               [--until=<point>] [--glob <target>]...
                               [--exclude <target>]... [--dir <glob>]...
                               [--exclude-dir <glob>]... [--wishlist <file>]...
                               [-l|--label <expr>] [--language=<name>]...
-                              [--faster-than=<sec>] [-F|--feature <id-glob>]...
-                              [-e|--feature-ext <id>]... [-k|--keys <expr>]
-                              [--no-bubbles] [<file-glob> [choice-glob]...]
-                              [--repeat=<n>] [--cadence] [--byte-pedantic]
-                              [--strategy=<name>] [--verbose] [--directory=<path>]
+                              [--faster-than=<sec>] [--no-bubbles]
+                              [<file-glob> [choice-glob]...] [--repeat=<n>]
+                              [--cadence] [--byte-pedantic] [--strategy=<name>]
+                              [--verbose] [--directory=<path>]
 }
 STATUS: 2
 STDOUT {
@@ -62,11 +58,10 @@ STDOUT {
                               [--exclude <target>]... [--dir <glob>]...
                               [--exclude-dir <glob>]... [--wishlist <file>]...
                               [-l|--label <expr>] [--language=<name>]...
-                              [--faster-than=<sec>] [-F|--feature <id-glob>]...
-                              [-e|--feature-ext <id>]... [-k|--keys <expr>]
-                              [--no-bubbles] [<file-glob> [choice-glob]...]
-                              [--repeat=<n>] [--cadence] [--byte-pedantic]
-                              [--strategy=<name>] [--verbose] [--directory=<path>]
+                              [--faster-than=<sec>] [--no-bubbles]
+                              [<file-glob> [choice-glob]...] [--repeat=<n>]
+                              [--cadence] [--byte-pedantic] [--strategy=<name>]
+                              [--verbose] [--directory=<path>]
 }
 STATUS: 2
 STDOUT {
@@ -76,11 +71,10 @@ STDOUT {
                               [--exclude <target>]... [--dir <glob>]...
                               [--exclude-dir <glob>]... [--wishlist <file>]...
                               [-l|--label <expr>] [--language=<name>]...
-                              [--faster-than=<sec>] [-F|--feature <id-glob>]...
-                              [-e|--feature-ext <id>]... [-k|--keys <expr>]
-                              [--no-bubbles] [<file-glob> [choice-glob]...]
-                              [--repeat=<n>] [--cadence] [--byte-pedantic]
-                              [--strategy=<name>] [--verbose] [--directory=<path>]
+                              [--faster-than=<sec>] [--no-bubbles]
+                              [<file-glob> [choice-glob]...] [--repeat=<n>]
+                              [--cadence] [--byte-pedantic] [--strategy=<name>]
+                              [--verbose] [--directory=<path>]
 }
 STATUS: 2
 STDOUT {
@@ -90,10 +84,9 @@ STDOUT {
                               [--exclude <target>]... [--dir <glob>]...
                               [--exclude-dir <glob>]... [--wishlist <file>]...
                               [-l|--label <expr>] [--language=<name>]...
-                              [--faster-than=<sec>] [-F|--feature <id-glob>]...
-                              [-e|--feature-ext <id>]... [-k|--keys <expr>]
-                              [--no-bubbles] [<file-glob> [choice-glob]...]
-                              [--repeat=<n>] [--cadence] [--byte-pedantic]
-                              [--strategy=<name>] [--verbose] [--directory=<path>]
+                              [--faster-than=<sec>] [--no-bubbles]
+                              [<file-glob> [choice-glob]...] [--repeat=<n>]
+                              [--cadence] [--byte-pedantic] [--strategy=<name>]
+                              [--verbose] [--directory=<path>]
 }
 <hwut-end>

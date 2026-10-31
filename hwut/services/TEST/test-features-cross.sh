@@ -15,7 +15,7 @@
 # 'physics' defines bounce, stop, materials, move; 'world' defines terrain;
 # the top TEST directory defines nothing and links 'physics' by id.
 #
-# link        A-1, A-2: '-e physics.bounce' lists the top's run beside
+# link        A-1, A-2: '-l f/physics.bounce' lists the top's run beside
 #             physics' own; the report lists it under the leaf; the matrix
 #             names the foreign leaf by its external id.
 # external    A-3: 'physics.bounce' is an external id, no link: OUTSIDE,
@@ -92,8 +92,8 @@ face hwut.run > /dev/null 2>&1
 
 case "$1" in
     link)
-        echo "== hwut.report.list -e physics.bounce"
-        face hwut.report.list -e physics.bounce 2>&1 | shown
+        echo "== hwut.report.list -l f/physics.bounce"
+        face hwut.report.list -l f/physics.bounce 2>&1 | shown
         echo "== hwut.report.features"
         face hwut.report.features 2>&1 | shown
         echo "== hwut.report.features --matrix"
@@ -111,8 +111,8 @@ case "$1" in
         face hwut.sanitize.propose --relations -o heal.txt > /dev/null 2>&1
         face hwut.sanitize.apply heal.txt 2>&1 | grep -v "^=\|^-\|^EXECUTION" | shown
         grep "features" TEST/test-shot.sh | shown
-        echo "== hwut.report.list -e physics.stop"
-        face hwut.report.list -e physics.stop 2>&1 | shown ;;
+        echo "== hwut.report.list -l f/physics.stop"
+        face hwut.report.list -l f/physics.stop 2>&1 | shown ;;
     move)
         mv physics/TEST/test-roll.sh world/TEST/test-roll.sh
         face hwut.move physics/TEST/test-roll.sh world/TEST --dont-ask 2>&1 \
@@ -121,7 +121,7 @@ case "$1" in
         cat world/TEST/hwut-features.conf
         face hwut.run 2>&1 | tail -1
         face hwut.features.register 2>&1 | grep -v "aggregate\|HINTS"
-        echo "== hwut.report.list -e physics.bounce"
-        face hwut.report.list -e physics.bounce 2>&1 | shown ;;
+        echo "== hwut.report.list -l f/physics.bounce"
+        face hwut.report.list -l f/physics.bounce 2>&1 | shown ;;
 esac
 echo "<hwut-end>"

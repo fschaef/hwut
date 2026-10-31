@@ -4,6 +4,7 @@
 # @hwut {
 #     title    = "The book writers' D-63 onwards and the defect list on a52f2a3 (R1, ND-, Q2, S8)"
 #     features = ["book-defects-round-2"]
+#     caps     { file_size_mb = 64 }    # 'build-caps' nests a build that writes 12 MB
 #     choices  = ["header-once", "pipe-quiet", "units-written", "exponent-law",
 #                 "zero-law", "play-neighbour", "play-cut-short",
 #                 "play-no-launch", "propose-ignore", "runner-words",
@@ -12,7 +13,8 @@
 #                 "genomics", "link-bits", "swarm-units",
 #                 "pype-header", "law-constant", "cov-remedy",
 #                 "pype-effect-fault", "bubble-note", "move-one-base",
-#                 "move-no-empty", "currencies", "build-makefile"]
+#                 "move-no-empty", "currencies", "build-makefile",
+#                 "build-caps"]
 # }
 #
 # ---------------------------------------------------------------------------
@@ -138,7 +140,7 @@ unset NO_COLOR CI COLUMNS
 case "$1" in
     --hwut-info)
         echo "The book writers' D-63 onwards and the defect list on a52f2a3;"
-        echo "CHOICES: header-once, pipe-quiet, units-written, exponent-law, zero-law, play-neighbour, play-cut-short, play-no-launch, propose-ignore, runner-words, demo-documents, play-menu, accept-first, laws-all, conf-unread, unit-algebra, law-names, genomics, link-bits, swarm-units, pype-header, law-constant, cov-remedy, pype-effect-fault, bubble-note, move-one-base, move-no-empty, currencies, build-makefile;"
+        echo "CHOICES: header-once, pipe-quiet, units-written, exponent-law, zero-law, play-neighbour, play-cut-short, play-no-launch, propose-ignore, runner-words, demo-documents, play-menu, accept-first, laws-all, conf-unread, unit-algebra, law-names, genomics, link-bits, swarm-units, pype-header, law-constant, cov-remedy, pype-effect-fault, bubble-note, move-one-base, move-no-empty, currencies, build-makefile, build-caps;"
         exit 0 ;;
 esac
 
@@ -638,6 +640,24 @@ END
         echo "== the Makefile placed in BUILD/test-thrust.c/"
         "$BIN/hwut.play" test-thrust.c short --plain 2>&1 | grep -E "^ *[0-9]+ \||RECORDED|FAULT" | shown
         echo "== built where it stands: $(ls BUILD/test-thrust.c | grep exe)" ;;
+    build-caps)
+        #  E-212: 'build { caps { ... } }' caps the BUILD alone, folded onto
+        #  the application's caps; the runs keep theirs. MEASURED before: the
+        #  build scope's caps were parsed and never read -- a build writing
+        #  a file above the default 10 MB cap (Go's runtime archive on a cold
+        #  cache) failed 'file too large' whatever the build scope said.
+        printf 'test-big.exe: test-big.c\n\thead -c 12000000 /dev/zero > big.bin\n\tcc -o test-big.exe test-big.c\n' > Makefile
+        printf 'hwut {\n    ignore = ["Makefile", "test-big.exe", "big.bin"]\n}\n' > hwut.conf
+        big() {         # <build scope>: the header, then what 'hwut.play' says
+            printf '/* @hwut { choices = ["short"]\n           build { framework = "make", executable = "%%.exe" %s } } */\n' "$1" > test-big.c
+            printf '#include <stdio.h>\nint main(int argc, char** argv) { printf("big %%s\\n<hwut-end>\\n", argv[1]); return 0; }\n' >> test-big.c
+            rm -rf BUILD OUT TMP test-big.exe big.bin
+            "$BIN/hwut.play" test-big.c short --plain 2>&1 | grep -E "^ *[0-9]+ \||RECORDED|FAULT" | shown
+        }
+        echo "== a build writing 12 MB, the default caps (10 MB per file)"
+        big ""
+        echo "== the same, 'build { caps { file_size_mb = 20 } }'"
+        big "caps { file_size_mb = 20 }" ;;
     currencies)
         #  E-206 (RQ-7, ruled 2026-10-29): EUR, USD, GBP, CHF, JPY, each a
         #  dimension of its own, no conversion. MEASURED before: all five

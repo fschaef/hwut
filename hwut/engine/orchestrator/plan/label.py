@@ -5,7 +5,7 @@ PURPOSE: THE LABEL EXPRESSION -- what '--label' and 'hwut.labels.query'
          state about the sets a run belongs to (disc-8).
 
     expr := term (('AND' | 'OR') term)*
-    term := 'NOT' term | '(' expr ')' | 'all' | <label>
+    term := 'NOT' term | '(' expr ')' | 'all' | <label> | 'f/' <feature>
 
 'AND' binds tighter than 'OR'. A ',' is sugar for 'OR', so the short
 form '--label mine,yours' and the spoken form '--label "mine OR
@@ -16,6 +16,17 @@ silences.
 
 No globs on label names, no counts, no arithmetic. A grammar that
 grows is a language nobody documents.
+
+'f/<feature>' IS THE LABEL THAT TIES TO A FEATURE (intend/three-worlds,
+ruled 2026-10-31): the runs linked to that feature of
+'hwut-root-features.conf', an aggregate bringing its subtree. <feature>
+is a tree path ('gateway/parser'), a bare external id ('parser', at any
+depth), or an internal id ('X7k2:parser') -- as '-F' read them, no glob.
+It is LIVE: the links decide at the time of use, nothing is stored. It
+names no other label, so it is a leaf of the label graph and no circle
+runs through it. The prefix is reserved: no customer label holds a '/'.
+THE ENGINE ANSWERS IT, not this module: the query hands the runs of the
+features asked into 'CLabelView.label_set_of' as 'extra'.
 
 THIS MODULE PARSES AND EVALUATES; it does not read the labels file.
 The file is 'hwut-root.labels' and its reader and writer are the label
@@ -40,6 +51,20 @@ STANDARD_LABEL = "meta"
 #  'and' in lower case is a legal label without ambiguity.
 LABEL_NAME_REGEX = re.compile(r"[A-Za-z0-9_][A-Za-z0-9_.\-]*\Z")
 
+#  THE FEATURE LABEL: 'f/' and a tree path, a bare external id or an
+#  internal id -- no glob mark, no blank, no bracket, no comma.
+FEATURE_PREFIX       = "f/"
+FEATURE_LABEL_REGEX  = re.compile(r"f/[^\s(),*?\[\]{}]+\Z")
+
+
+def feature_label_f(name):
+    """
+    RETURN: bool, True where 'name' is a feature label 'f/<feature>' --
+            the runs of a feature, answered from the feature relation,
+            never assigned in 'hwut-root.labels'.
+    """
+    return name.startswith(FEATURE_PREFIX)
+
 
 class LabelExprError(Exception):
     """An expression the grammar cannot mean: an unclosed bracket, a
@@ -60,6 +85,9 @@ def reserved_reason(name):
     if name == STANDARD_LABEL:
         return "'%s' is the standard label; it always stands and " \
                "'hwut.labels.add' grows it" % STANDARD_LABEL
+    if feature_label_f(name):
+        return "'%s' names a feature: 'f/' labels are the feature " \
+               "relation's, live, never assigned" % name
     if LABEL_NAME_REGEX.match(name) is None:
         return "a label is letters, digits, '_', '-', '.' -- '%s' " \
                "is not" % name
@@ -167,28 +195,29 @@ class CLabelView:
                or any(label == STANDARD_LABEL for label, _ in self.derived) \
                or any(view.silences_f() for view in self.inner_tuple)
 
-    def label_set_of(self, absolute_path, choice):
+    def label_set_of(self, absolute_path, choice, extra=frozenset()):
         """
         RETURN: frozenset[str], the labels the file assigns to the run
-                -- the application's own united with the choice's,
-                empty where it assigns none or where the path lies
-                outside the boundary.
+                -- the application's own united with the choice's and
+                with 'extra', the feature labels ('f/...') the run holds,
+                every derived label they answer added; 'extra' alone
+                where the path lies outside the boundary.
         """
         bubble = self.view_of_path(os.path.abspath(absolute_path))
         if bubble is not self:
-            return bubble.label_set_of(absolute_path, choice)
+            return bubble.label_set_of(absolute_path, choice, extra)
         relative = os.path.relpath(absolute_path, self.boundary)
         relative = relative.replace(os.sep, "/")
-        if relative.startswith("../"): return frozenset()
+        if relative.startswith("../"): return frozenset(extra)
         #  NOTHING CROSSES A BOUNDARY (RQ-1): a run inside an inner
         #  'hwut-root.conf' is not labelled by this file -- its own
         #  bubble's view answers above (RQ-9); one no view holds, none.
         here = os.path.dirname(os.path.abspath(absolute_path))
         while len(here) > len(self.boundary):
             if os.path.isfile(os.path.join(here, "hwut-root.conf")):
-                return frozenset()
+                return frozenset(extra)
             here = os.path.dirname(here)
-        found = self.entry_db.get((relative, None), frozenset())
+        found = self.entry_db.get((relative, None), frozenset()) | extra
         if choice is not None:
             found = found | self.entry_db.get((relative, choice),
                                               frozenset())
@@ -244,9 +273,11 @@ def swallowed_warning_tuple(met_set, visible_set):
     is a fact about the tree this morning, and a wish is allowed to
     select nothing (P-9).
     """
+    #  '--label' STANDS ALONE (intend/three-worlds): the way to them is a
+    #  literal target, one by one, or the label itself, all of them.
     return tuple("WARNING: the glob '%s' met only runs the standard "
-                 "label silences -- name a label ('--label %s') to "
-                 "reach them" % (text, STANDARD_LABEL)
+                 "label silences -- a literal target reaches one, "
+                 "'--label %s' all of them" % (text, STANDARD_LABEL)
                  for text in sorted(met_set - visible_set))
 
 
@@ -323,6 +354,12 @@ def _parse_term(token_list, index):
                              % token)
     if token == UNIVERSE_NAME:
         return ("all",), index + 1
+    if feature_label_f(token):
+        if FEATURE_LABEL_REGEX.match(token) is None:
+            raise LabelExprError("'%s': a feature label names ONE feature "
+                                 "-- 'f/<tree path>', 'f/<external id>' or "
+                                 "'f/<internal id>', no glob" % token)
+        return ("label", token), index + 1
     if LABEL_NAME_REGEX.match(token) is None:
         raise LabelExprError("a label is letters, digits, '_', '-', "
                              "'.' -- '%s' is not" % token)

@@ -180,6 +180,13 @@ async def build(configuration, caps=None, stop_event=None, observer=None):
     build's own struct and its '.build_directory' is where the tool runs.
     'caps' overrides the test's own caps for the build alone.
 
+    THE BUILD'S CAPS ARE THE HEADER'S 'build { caps { ... } }' where it
+    states them ('configuration.build_caps', folded onto the
+    application's), the application's caps else. MEASURED before: the
+    build scope's caps were parsed and never read -- a Go build on a cold
+    cache writes an archive above the default 10 MB file cap and failed
+    'file too large', so an author had to raise the cap of every RUN.
+
     The build directory is CREATED if absent: a first build of a test has
     nowhere to run yet.
     """
@@ -193,9 +200,11 @@ async def build(configuration, caps=None, stop_event=None, observer=None):
     directory.mkdir(parents=True, exist_ok=True)
 
     #  THE APPLICATION'S CAPS (O-20): a build is the application's,
-    #  built once for every choice; no choice governs it.
-    procsitter = Procsitter(caps if caps is not None else configuration.caps,
-                            work_dir=str(directory))
+    #  built once for every choice; no choice governs it -- its own
+    #  'build { caps }' does, where the header states one.
+    if caps is None:
+        caps = getattr(configuration, "build_caps", None) or configuration.caps
+    procsitter = Procsitter(caps, work_dir=str(directory))
     record     = await procsitter.run(make_argv(build_configuration),
                                       stop_event=stop_event)
 

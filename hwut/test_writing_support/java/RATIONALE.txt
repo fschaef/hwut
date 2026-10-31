@@ -1,0 +1,108 @@
+==============================================================================
+test_writing_support/java -- RATIONALE
+==============================================================================
+
+J-1   THE PYTHON TEST SUPPORT PORTED TO JAVA, HELD BY THE PYTHON GOOD FILES
+                                                                      (2026-10-31)
+------------------------------------------------------------------------------
+PROBLEM   A Java test author is to be given what a Python test author is given
+          ('../python'), with the same behaviour and the same printed words --
+          and, as for C (c C-1) and Perl (perl PL-1), a port is only as good
+          as its proof that it behaves alike. Java has no coroutines, no fork,
+          no pseudo-terminal, no 'with', no keyword arguments, sets no
+          environment of its own, and calls a C library only through the
+          Foreign Function & Memory API -- a preview in JDK 21, the JDK of
+          this machine.
+DECISION  One class per Python class in package 'hwut' ('README.txt',
+          section 1), the module-level functions static ('Hocon.parse',
+          'Vterm.detectionText'); one Java test per Python test, choice for
+          choice; every case's GOOD a '.link' to the Python case's '.txt' --
+          the 47 cases that hold the C and Perl ports.
+          THE NAMES: the Python class names (the FSM's 'Machine' is
+          'FsmMachine', as in C), methods in camelCase, keywords as overloads,
+          'with' as AutoCloseable. WHAT PYTHON RAISES is thrown, a Java
+          exception where one fits, Python's text its message.
+          HOW A TEST STARTS -- MEASURED: hwut-root.conf names 'java' the
+          interpreter; 'java test-x.java' (JDK 21's single-file launcher)
+          compiles the one file and answers "package hwut does not exist".
+          So a test states 'build { framework = "make", executable = "%.exe"
+          }': 'TEST/Makefile' compiles 'test-x.java' with '-sourcepath ..' --
+          only the support classes it uses -- into 'test-x.classes/', one
+          directory per target (E-210: several builds at once share nothing),
+          and writes the launcher 'test-x.exe' ('java -cp test-x.classes
+          TestX'). The test class is not public, so 'test-x.java' may hold it.
+          JAVA_TOOL_OPTIONS -- MEASURED: hwut fails a choice on ANY stderr
+          ('unexpected stderr'), and a JVM that finds the variable says
+          'Picked up JAVA_TOOL_OPTIONS: ...' on stderr. The launcher moves the
+          options onto the command line and unsets the variable; the runner
+          does the same for the JVM of each choice. The options still apply.
+          INTERACTIVE MODE WITHOUT FORK: each choice runs in a JVM of its own,
+          the session's command line with '--hwut-child <choice>', stdout and
+          stderr redirected into the sinks -- a choice's 'System.exit', crash
+          or static state ends with it, as a forked C choice's does; between
+          choices System.out and System.err point at a stray sink.
+          'parallel(true)' starts them at once. The protocol is Python's, word
+          for word.
+          NO COROUTINES: 'Async' -- a task is a thread that runs only while it
+          holds a baton; the loop hands it to the ready tasks first come,
+          first served, asyncio's order, so exactly one task runs at a time.
+          'gather', 'createTask', 'cancel' (CancelledError at the next yield;
+          a task awaiting another cancels that one, asyncio's way) are what
+          the timeline test uses of asyncio.
+          FLOATS: JDK 19 on, 'Double.toString' gives the shortest digits that
+          read back -- but keeps TWO where one reads back and two come closer
+          ('4.9E-324' against Python's '5e-324'). 'PyText.floatRepr' takes
+          Java's digits, tries the one-digit neighbours where Java gave two,
+          and lays them out as Python does (fixed for a decimal point in
+          (-4, 16], exponential else).
+          THE STREAM is MINSTD in 'long' (the product needs 47 bits).
+          LIBVTERM through java.lang.foreign, no header and no jar: the
+          functions declared by FunctionDescriptor, 'VTermPos' and 'VTermRect'
+          as StructLayouts passed by value -- into the library and into the
+          callbacks, which are upcall stubs in the terminal's arena; the
+          callbacks structure ends in eight null slots, as in Python. The
+          CELL'S LAYOUT IS MEASURED, as the Python binding measures it. A
+          callback that throws is caught before C and its error thrown when
+          the library call returns.
+          THE PSEUDO-TERMINAL through the same API, from libc: posix_openpt,
+          grantpt, unlockpt, ptsname_r; TIOCSWINSZ on the slave; the
+          application by posix_spawnp with POSIX_SPAWN_SETSID, its file
+          actions opening the slave as fd 0 (the first terminal a session
+          leader opens is its controlling one) and dup2'ing it to 1 and 2, its
+          signal mask emptied; poll, read, write, waitpid, kill. Weighed
+          against it: 'script' or python3's 'pty' as a helper process -- a
+          process between the terminal and the application, whose own
+          handling of the size and the bytes would be measured too. The test's
+          applications are run by 'python3 -c', the Python test's own.
+COST      A change to a Python module's printed words fails the Java test
+          until the Java class follows -- which is the point. Every class is
+          built with '--enable-preview' for JDK 21: JDK 22 renamed two of the
+          methods used ('allocateUtf8String', 'getUtf8String') and takes the
+          flag only for its own release, so a later JDK wants two names and
+          the flags changed. The libc constants and POSIX_SPAWN_SETSID are
+          Linux's and glibc's (2.26 on). Interactive mode starts a JVM per
+          choice: MEASURED 1.6 s for the seven choices of
+          'test-deterministic-random' against 1.0 s for seven calls -- no
+          acceleration, unlike Python's in-process mode; the price of a choice
+          that cannot leak into the next. The fuzz bounds each parse by a
+          0.5 s 'Future.get' on a thread of its own; a hung parse would leave
+          its thread behind, as the bound is a failure anyway. Java cannot set
+          its own environment: 'Vterm.resetLibrary(file)' stands in for
+          Python's 'os.environ[HWUT_LIBVTERM] = ...; _library = None'.
+MEASURED  (JDK 21.0.12, glibc 2.39, libvterm 0.3.3, Python 3.13.17)
+          All 47 cases byte-identical to the Python GOODs ('cmp', stderr
+          empty), including 'gauss' (Math.log/cos/sqrt agreed to the bit with
+          libm on its 20 full-precision draws) and the nine vterm cases; the pty cases
+          'unnoticed', 'keys', 'regions' five times over, identical each time.
+          'fuzz': 619 clean, 2381 with faults, 0 hang, 0 exception, from seed
+          4711 -- and beyond the counts, every one of the 3000 trees and fault
+          lists compared with Python's: identical. (One differed at first,
+          where Python's parser stored its private sentinel '_NOT_A_TOKEN'
+          as a value: 'n = - -1.5e3', a sign apart before a SIGNED number.
+          Fixed in every port on 2026-10-31: the two must make ONE number,
+          else the sign is read as what it is; 'numbers' shows it.)
+          'PyText.floatRepr' against Python's 'repr' on 300013 doubles (random
+          bit patterns, subnormals, d*10^e, rounded decimals): no difference.
+          'hwut.run --plain' in 'TEST/': 47 ok, 0 fail, twice (the first with
+          the six builds, 38 s; the second 21 s).
+==============================================================================

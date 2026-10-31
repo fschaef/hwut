@@ -1,45 +1,25 @@
->>> -e can.decode
+>>> -l f/can.decode
     ./gw/can/TEST/test-frame.sh
     exit 0
->>> -e router.*
+>>> -l f/router.forward
     ./gw/router/TEST/test-route.sh burst
     ./gw/router/TEST/test-route.sh single
     exit 0
->>> --feature-ext router.forward
-    ./gw/router/TEST/test-route.sh burst
-    ./gw/router/TEST/test-route.sh single
-    exit 0
->>> --feature-ext=router.keep-order
+>>> -l f/router.keep-order
     ./gw/router/TEST/test-route.sh burst
     exit 0
->>> -e router.drop
+>>> -l f/router.drop
     exit 3
->>> -e nope
-    REFUSED: '--feature-ext nope' names no feature: no line of 'hwut-root-features.conf' has that external id => hwut.features.tree -e
+>>> -l f/can.old
+    REFUSED: 'f/can.old' names a RETIRED feature: no longer claimed, no run proves it any more
     exit 2
->>> -e can.old
-    REFUSED: '--feature-ext can.old' names a RETIRED feature: no longer claimed, no run proves it any more
+>>> -e can.decode
+    REFUSED: '-e' is retired on this face: a feature is the label 'f/<feature>' -- tree path, external id or internal id => '--label f/<feature>'
     exit 2
->>> -e
-    REFUSED: '-e' stands without an external id
-    usage: hwut.report.list [--fail] [--pass] [--since=<point>] [--until=<point>]
-                            [--glob <target>]... [--exclude <target>]...
-                            [--dir <glob>]... [--exclude-dir <glob>]...
-                            [--wishlist <file>]... [-l|--label <expr>]
-                            [--language=<name>]... [--faster-than=<sec>]
-                            [-F|--feature <id-glob>]... [-e|--feature-ext <id>]...
-                            [-k|--keys <expr>] [--no-bubbles]
-                            [<file-glob> [choice-glob]...] [--directory=<path>]
+>>> --feature-ext=router.keep-order
+    REFUSED: '--feature-ext' is retired on this face: a feature is the label 'f/<feature>' -- tree path, external id or internal id => '--label f/<feature>'
     exit 2
->>> --feature-ext=
-    REFUSED: '--feature-ext' names no id
-    usage: hwut.report.list [--fail] [--pass] [--since=<point>] [--until=<point>]
-                            [--glob <target>]... [--exclude <target>]...
-                            [--dir <glob>]... [--exclude-dir <glob>]...
-                            [--wishlist <file>]... [-l|--label <expr>]
-                            [--language=<name>]... [--faster-than=<sec>]
-                            [-F|--feature <id-glob>]... [-e|--feature-ext <id>]...
-                            [-k|--keys <expr>] [--no-bubbles]
-                            [<file-glob> [choice-glob]...] [--directory=<path>]
+>>> -F gateway
+    REFUSED: '-F' is retired on this face: a feature is the label 'f/<feature>' -- tree path, external id or internal id => '--label f/<feature>'
     exit 2
 <hwut-end>

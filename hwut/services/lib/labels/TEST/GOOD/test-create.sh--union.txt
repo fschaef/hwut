@@ -1,9 +1,28 @@
---- a union of two labels, narrowed by a glob
+--- a union of two labels, resolved
 STATUS: 0
 STDOUT {
-    coast: created, 2 members -- a snapshot of what the wish selected
+    coast: created, 3 members -- a snapshot of what the wish selected
         + ./tree/messaging/net/TEST/test-b.sh
         + ./tree/messaging/queue/TEST/test-b.sh
+        + ./tree/storage/TEST/test-b.sh
+}
+--- a difference, resolved
+STATUS: 0
+STDOUT {
+    inland: created, 1 member -- a snapshot of what the wish selected
+        + ./tree/storage/TEST/test-b.sh
+}
+--- '--label' beside a glob: refused
+STATUS: 2
+STDOUT {
+    REFUSED: '--label east,west' beside '--glob': a label expression or wishlist arguments, never both -- sets are combined in labels => 'hwut.labels.create <name> --glob ...', then '--label "east,west AND <name>"'
+    usage: hwut.labels.create <label> [--fail] [--pass] [--since=<point>]
+                              [--until=<point>] [--glob <target>]...
+                              [--exclude <target>]... [--dir <glob>]...
+                              [--exclude-dir <glob>]... [--wishlist <file>]...
+                              [-l|--label <expr>] [--language=<name>]...
+                              [--faster-than=<sec>] [--no-bubbles]
+                              [--directory=<path>]
 }
 THE FILE {
     # TEST RUN LABEL DEFINITIONS:
@@ -30,6 +49,6 @@ THE FILE {
     #______________________________________________________________________________
     ./tree/messaging/net/TEST/test-b.sh   : coast east
     ./tree/messaging/queue/TEST/test-b.sh : coast east
-    ./tree/storage/TEST/test-b.sh         : west
+    ./tree/storage/TEST/test-b.sh         : coast inland west
 }
 <hwut-end>

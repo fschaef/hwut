@@ -1,0 +1,8 @@
+== a build writing 12 MB, the default caps (10 MB per file)
+FAULT: the build failed (build-failed) -- missing: test-big.exe
+NOT RECORDED: the run did not complete, and a partial subject is never stored as if whole
+== the same, 'build { caps { file_size_mb = 20 } }'
+     1 | big short
+     2 | <hwut-end>
+RECORDED: test-big.c--short.txt (digest: <tag>)
+<hwut-end>

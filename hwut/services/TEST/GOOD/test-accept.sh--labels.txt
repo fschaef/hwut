@@ -32,7 +32,7 @@ GOOD holds:
 == a GLOB wholly swallowed warns instead ==
 STATUS: 3
 STDOUT {
-    WARNING: the glob 'test-two.s? a' met only runs the standard label silences -- name a label ('--label meta') to reach them
+    WARNING: the glob 'test-two.s? a' met only runs the standard label silences -- a literal target reaches one, '--label meta' all of them
     NOTE: nothing to accept -- the selection holds no recorded candidate
 }
 GOOD holds:

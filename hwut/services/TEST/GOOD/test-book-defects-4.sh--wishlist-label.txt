@@ -1,28 +1,17 @@
 == label: slow
+REFUSED: 'l.txt', line 1: 'label:' is no wishlist line -- a list names no set => '--label <expr>' alone, or name the list's runs: 'hwut.labels.create <name> --wishlist l.txt'
+== a/b/ + label: slow
+REFUSED: 'l.txt', line 2: 'label:' is no wishlist line -- a list names no set => '--label <expr>' alone, or name the list's runs: 'hwut.labels.create <name> --wishlist l.txt'
+== !label:
+REFUSED: 'l.txt', line 1: 'label:' is no wishlist line -- a list names no set => '--label <expr>' alone, or name the list's runs: 'hwut.labels.create <name> --wishlist l.txt'
+== --label slow (alone)
 ./a/TEST/test-t.sh y
 ./a/b/TEST/test-t.sh y
 ./a/b/c/TEST/test-t.sh y
-== a/b/ + label: slow
-./a/b/TEST/test-t.sh y
-./a/b/c/TEST/test-t.sh y
-== test-t.sh + label: NOT slow
-./a/TEST/test-t.sh x
-./a/b/TEST/test-t.sh x
-./a/b/c/TEST/test-t.sh x
-== label: twice
-REFUSED: 'l.txt', line 2: 'label:' stands twice; one expression holds the whole question -- 'label: slow OR x'
-== !label:
-REFUSED: 'l.txt', line 1: '!label:' -- the expression says 'NOT': 'label: NOT <expr>'
-== label: (empty)
-REFUSED: 'l.txt', line 1: 'label:' names no label
-== label: slow AND
-REFUSED: 'l.txt', line 1: 'label: slow AND' cannot be read -- the expression ends where a label must stand
-== label: beside --label
-REFUSED: '--label' stands twice -- or beside a wishlist's 'label:'; one expression holds the whole question -- both say 'slow' => drop one
-== label: beside another --label
-REFUSED: '--label' stands twice -- or beside a wishlist's 'label:'; one expression holds the whole question -- write '--label "slow OR x"'
-== label: twice, alike
-REFUSED: 'l.txt', line 2: 'label:' stands twice; one expression holds the whole question -- both say 'slow' => drop one
-== label: fast (no such label)
-REFUSED: no label 'fast' stands in 'hwut-root.labels'
+== --label slow beside --wishlist
+REFUSED: '--label slow' beside '--wishlist': a label expression or wishlist arguments, never both -- sets are combined in labels => 'hwut.labels.create <name> --wishlist ...', then '--label "slow AND <name>"'
+== --label twice, alike
+REFUSED: '--label' stands twice; one expression holds the whole question -- both say 'slow' => drop one
+== --label twice, different
+REFUSED: '--label' stands twice; one expression holds the whole question -- write '--label "slow OR x"'
 <hwut-end>

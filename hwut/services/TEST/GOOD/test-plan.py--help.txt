@@ -9,9 +9,7 @@ $ hwut.plan --help
                   [--glob <target>]... [--exclude <target>]...
                   [--dir <glob>]... [--exclude-dir <glob>]...
                   [--wishlist <file>]... [-l|--label <expr>]
-                  [--language=<name>]... [--faster-than=<sec>]
-                  [-F|--feature <id-glob>]... [-e|--feature-ext <id>]...
-                  [-k|--keys <expr>] [--no-bubbles]
+                  [--language=<name>]... [--faster-than=<sec>] [--no-bubbles]
                   [<file-glob> [choice-glob]...] [--directory=<path>]
 
     DESCRIPTION
@@ -55,8 +53,8 @@ $ hwut.plan --help
                                 <dir-glob>/     wanted ('--dir')
                                 !<dir-glob>/    not entered ('--exclude-dir')
                                 !<hwut-root>    '--no-bubbles'
-                                label: <expr>   '--label', once per wish
-                            the last directory line matching decides
+                            the last directory line matching decides; a
+                            list names no set -- no 'label:' line
         --glob <target>     a target: a file name, or a file name and a
                             choice name with one blank between, either
                             carrying fnmatch's '*', '?' and '[ ]':
@@ -67,30 +65,19 @@ $ hwut.plan --help
                             among themselves
         -l, --label <expr>  the runs the label expression names ('AND',
                             'OR', 'NOT', brackets; ',' is 'OR'; 'all' the
-                            universe); a union among its labels, narrowing
-                            against the rest; absent, 'meta' is silent --
-                            which a LITERAL target overrides, and a glob
-                            does not (it warns instead)
+                            universe; 'f/<feature>' the runs of a feature,
+                            an aggregate its subtree). It STANDS ALONE: beside
+                            a target, a glob, a directory, a wishlist or a
+                            history word it is refused -- combine sets in
+                            labels. Absent, 'meta' is silent -- which a
+                            LITERAL target overrides, and a glob does not
+                            (it warns instead)
         --language=<name>   the runs of test applications of that language;
                             several are a union, narrowing against the rest
-        -F, --feature <id-glob>
-                            the runs linked to the features the glob names:
-                            tree paths of the central file 'a/b/<external
-                            id>' ('*' one level, '**' any depth, '{a,b}'), a
-                            bare word anywhere, an aggregate its subtree; or
-                            an internal id 'X:name'. Several are a union,
-                            narrowing against the rest
-        -e, --feature-ext <id>
-                            the runs linked to the feature of that external
-                            id ('*' any characters); with '-F' a union
         --no-bubbles        do not enter an inner 'hwut-root.conf' (RQ-9):
                             by default the walk enters every bubble below,
                             each under its own configuration. Selects
                             nothing by itself
-        -k, --keys <expr>   the runs linked to features whose effective keys
-                            satisfy the expression ('AND', 'OR', 'NOT',
-                            brackets; ',' is 'OR'); a key flows down from the
-                            aggregates above a leaf, never up
         --faster-than=<seconds>
                             the runs this machine last saw finish faster
                             than that; one this machine never saw is not

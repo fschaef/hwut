@@ -515,13 +515,19 @@ def _parse_bare(cursor, position, file, fault_list, in_list_f):
     #  A SIGN STANDING APART from its digits: '- 0.12'. A bare token ends
     #  at a blank, so the sign arrives alone; where nothing but blanks
     #  lies between it and a number, the two are one number.
+    #  The two must make ONE number: '- -0.12' does not ('--0.12' spells
+    #  none) and is read as what it is, a sign that stands for nothing.
+    #  MEASURED before: 'n = - -1.5e3' parsed clean, the parser's private
+    #  '_NOT_A_TOKEN' bound as the value.
     if raw in _SIGN_SET:
         text  = cursor.text
         after = _TOKEN_RE.match(text, _blank_end(text,
                                                  cursor.i_col + 1)).group()
         if after and _number(after) is not _NOT_A_TOKEN:
-            cursor.i_col = _blank_end(text, cursor.i_col + 1) + len(after)
-            return ScalarNode(_number(raw + after), position)
+            joined = _number(raw + after)
+            if joined is not _NOT_A_TOKEN:
+                cursor.i_col = _blank_end(text, cursor.i_col + 1) + len(after)
+                return ScalarNode(joined, position)
 
     if raw.startswith("${"):
         fault_list.append(ParseFault(
