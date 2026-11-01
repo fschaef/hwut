@@ -70,7 +70,7 @@
 #                 menu is play's. MEASURED before: "choice '-' not
 #                 available. available: -."; a menu read from stdin
 #                 that exited 0 or 255 on a bad answer.
-# demo-documents  ND1: the feature file 'hwut.demo.python' writes points
+# demo-documents  ND1: the feature file 'hwut.support python' writes points
 #                 at documents that stand -- every relative path made
 #                 absolute from where it was written -- and the copy
 #                 runs green. MEASURED before: 18 paths pointed nowhere.
@@ -333,7 +333,7 @@ PY
         echo "== GOOD"; sed "s/^<hwut-end>$/<end>/" GOOD/test-f.sh--c.txt
         "$BIN/hwut.run" --plain 2>&1 | grep -E "^END|^RESULTS" | shown ;;
     demo-documents)
-        "$BIN/hwut.demo.python" "$WORK/demo" > /dev/null 2>&1; echo "exit $?"
+        "$BIN/hwut.support" python "$WORK/demo" > /dev/null 2>&1; echo "exit $?"
         python3 - "$WORK/demo/TEST/hwut-features.conf" <<'EOF2'
 import os, re, sys
 path_list = re.findall(r'documents *= *\[([^]]*)\]', open(sys.argv[1]).read())

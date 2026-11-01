@@ -3,7 +3,7 @@ THE DEMONSTRATION OVER PYTHON -- one test directory, everything a test
 directory can say, each thing shown once
 ==============================================================================
 
-    hwut --plain                    every test here: 28 ok
+    hwut --plain                    every test here: 27 ok
     hwut.report.features            every feature below, and the run that
                                     proves it ('hwut-features.conf')
     hwut.play <file> <choice>       one choice, run and shown
@@ -70,7 +70,7 @@ NOT HERE, ON PURPOSE
 ------------------------------------------------------------------------------
 'language-setup', 'variant_group', 'procsitter', 'free_disk_min_mb'
                   the root's alone ('hwut-root.conf', which
-                  'hwut.demo.python' writes beside this directory)
+                  'hwut.support python' writes beside this directory)
 'build'           a compiled test application's word: the demonstrations
                   over compiled languages
 '##! unaccepted', '##! constraint-violation'

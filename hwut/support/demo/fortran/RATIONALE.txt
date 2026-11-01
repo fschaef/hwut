@@ -1,0 +1,128 @@
+==============================================================================
+support/demo/fortran -- RATIONALE
+==============================================================================
+
+DEMO-FORTRAN-1  THE PYTHON DEMONSTRATION IN FORTRAN, CHOICE FOR CHOICE, HELD
+                BY THE PYTHON GOOD FILES  (2026-11-01)
+------------------------------------------------------------------------------
+PROBLEM   'support/demo/python/TEST' shows everything a test directory can
+          say, once. A Fortran author wants the same tree in Fortran 2018,
+          on the Fortran port of the support ('test_writing/fortran'), and
+          the proof that it says the same things: the same cases, the same
+          words.
+DECISION  One '.f90' per Python application, the same stems, the same
+          choices, the same headers but for 'build { framework = "make",
+          executable = "%.exe" }'; helpers become Fortran programs too
+          ('fixture.f90', 'viewer.f90', the producer of 'protocol.sh' as
+          'producer.f90'), and 'shop_db.f90' binds SQLite for 'shop' and
+          'fixture'. The data files are the Python demonstration's, copied;
+          'garage-space.hocon' and 'build.pypes' name 'garage.f90',
+          'build.f90' and 'build.exe' where they named the Python files.
+          'door.pype' is copied unchanged: a pype is hwut.pype's language
+          whatever the application's, and its machine is the Python
+          'hwut_fsm' it imports. 'protocol.sh' stays a bash script (a script
+          is its own language); only its producer changed. Every GOOD whose
+          text is the same is a '.link' to the Python GOOD (bookkeeper B-32).
+          WHERE FORTRAN FOUGHT, and how it was met:
+          THREADS -- Fortran 2018 has none: 'do concurrent' promises no
+            concurrency and coarrays are images, not threads sharing a
+            stdout. OpenMP ('-fopenmp'), the threads Fortran programs use:
+            'parallel do' with one iteration per worker, 'critical' for the
+            lock of Python's 'with lock:', 'parallel sections' for the two
+            jobs of 'build parallel'.
+          SLEEP, A TERMINAL, A DIRECTORY -- no word in Fortran; libc's
+            'usleep' (the port's 'hwut_posix'), 'mkdir', 'read', 'tcgetattr',
+            'cfmakeraw', 'tcsetattr' by 'bind(c)' -- the 'struct termios'
+            held as 256 bytes, never read. The terminal's SIZE is libc's
+            only through 'ioctl', which is variadic, and 'bind(c)' does not
+            promise to call a variadic function (the port binds none): the
+            viewer asks 'stty size' ('execute_command_line'; stty reads the
+            pseudo-terminal it inherits as stdin).
+          SQLITE -- 'libsqlite3' through ISO_C_BINDING, no header: open,
+            busy timeout (Python's 'timeout=10'), prepare/bind/step/column/
+            finalize, 'SQLITE_TRANSIENT' as the integer -1 by value. Python's
+            trace callback is 'sqlite3_expanded_sql', logged at each first
+            step: the same 'sql: ...' lines on stderr. An exception the
+            clerk thread catches is the step's fault code.
+          JSON -- Fortran reads none; 'shop.f90' scans the delivery note's
+            tokens (strings without escapes, integers), as far as a note
+            goes.
+          A NAME BLIND TO CASE -- the type 'Garage' and a program 'garage'
+            are one global name: the program is 'garage_app'.
+          GFORTRAN 13 -- a structure constructor with a text of its own
+            inside an array constructor writes beyond its block (the port's
+            RATIONALE F-1): 'garage' counts the HOCON file's lines first and
+            fills 'SourceLine's component by component.
+          PRINTING -- Python's '%.2f' is 'F47.d' without blanks (F0.d drops
+            the 0 before the point, and F with 0 digits writes '300.');
+            '%X' is 'Z'; random draws by 'random_number', seeded by the
+            clock through Fortran 2018's 'random_init(repeatable=.false.)'.
+COST      OpenMP is gfortran's and libgomp's, not the standard's. 'stty'
+          must stand on the PATH for the viewer. The JSON scan reads a
+          delivery note, not JSON. The frame scripts are compiled programs:
+          'on_entry' builds them first (about 9 s here, the cap 120 s where
+          Python's script runs in 20).
+
+DEMO-FORTRAN-2  WHERE THE PORT STANDS: ONE MAKEFILE LINE, A VARIABLE FIRST
+------------------------------------------------------------------------------
+PROBLEM   The face writes the demonstration out beside a copy of the port and
+          rewrites the one line that names it. Fortran has no standard
+          mechanism that finds a module's SOURCE (gfortran's '-I' finds
+          '.mod' files, which a test does not ship): a test compiles the
+          support with itself.
+DECISION  'Makefile', line 'HWUT_SUPPORT_FORTRAN ?= <the clone's port>#
+          HWUT-SUPPORT-PATH': the variable where the environment sets it,
+          the fallback else -- make's '?=' gives the environment
+          precedence. Every program is built by one pattern rule from
+          '<stem>_SOURCES' ('.SECONDEXPANSION'), and '%.cov.exe' by the same
+          with '--coverage'; each target's '.mod' files and C objects live
+          in '<target>.d', removed after the link (services E-210: several
+          tests build at once, nothing shared). 'hwut_vterm' binds the C
+          port's 'hwut_vterm.c': '../c' beside the Fortran port where it
+          stands there, else the one of the hwut that runs ('import hwut')
+          -- a support written out with the Fortran port alone still links.
+          ('hwut' is a namespace package: its place is '__path__', it has
+          no '__file__' -- MEASURED, the first face simulation's screen
+          failed to build on '__file__'.)
+COST      A Makefile of one's own must name the support's sources in the
+          order of compilation (README.txt, MAKE IT IMPORTABLE). Where
+          neither '../c' nor an importable hwut carries 'hwut_vterm.c',
+          'screen.exe' does not build.
+
+DEMO-FORTRAN-3  FOUR GOOD FILES OF THEIR OWN
+------------------------------------------------------------------------------
+    screen.f90--open.txt, screen.f90--scroll.txt
+              the first line is the command the test runs, '> viewer.exe
+              race.txt' where Python's runs 'viewer.py'. The screen itself
+              is the Python GOOD's, byte for byte.
+    shop.f90--report.txt
+              the frame log names the runs by hwut's own name of the test,
+              'shop.f90 sell', 'shop.f90 report'.
+    shop.f90--report.stock.csv
+              byte-identical to Python's ('cmp'), but a '.link' stands for
+              the stdout subject alone (bookkeeper B-32: 'only stdout
+              links'); 'hwut.good.link' refuses it.
+          Accepted through hwut: 'hwut.play' and 'hwut.accept --force' for
+          the screen; the report from a 'hwut.run' (a play runs no
+          'dependency', and the report wants the delivery and the sale
+          before it), then 'hwut.accept --force'.
+          THE BOOK: 'hwut.good.link' of 'build.py.txt' (a 'same = true'
+          GOOD, choice-less by name) entered 'build.f90' as a choice-less
+          case, and the run then said 'in book, no such choice' -- and
+          'hwut.sanitize.propose --orphans' would not forget it alone. The
+          stray row was taken out of 'GOOD/book.csv' by hand.
+
+MEASURED  (2026-11-01; gfortran 13.3.0, GNU make 4.3, SQLite 3.45.1, libvterm
+          0.3.3, Python 3.13, this worktree)
+------------------------------------------------------------------------------
+    'hwut.run --plain' in TEST, from 'make clean': 27 ok, 0 fail; again:
+    27 ok, 0 fail -- the case count of '../../python/TEST' (27).
+    By hand against the Python GOODs ('diff'): door, garage (all four),
+    protocol (all three), build summary, shop sell and the delivery note
+    equal; demo, chamber differ only where the run is seeded.
+    The face, simulated (README.txt, MAKE IT IMPORTABLE): the port copied
+    to '/tmp/x/fortran', TEST to '/tmp/x/TEST' with every '.link' resolved,
+    the root conf as 'hwut.demo.python' writes it -- the marked line's
+    fallback replaced by '../fortran': 27 ok; by '/hwut-support-not-here'
+    with only 'export HWUT_SUPPORT_FORTRAN=/tmp/x/fortran': 27 ok.
+==============================================================================

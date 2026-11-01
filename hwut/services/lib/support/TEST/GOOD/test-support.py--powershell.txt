@@ -1,0 +1,17 @@
+-- hwut.support powershell <dir>   (exit 0)
+   WRITTEN: <dir> -- the test writing support in PowerShell, and its demonstration
+       <dir>/powershell
+       <dir>/c   (the PowerShell support stands on it)
+       <dir>/TEST
+   NEXT:    cd <dir>/TEST && hwut --plain
+   MAKE IT IMPORTABLE -- for a test of your own:
+       export HWUT_SUPPORT_POWERSHELL=<dir>/powershell
+   A TEST THEN WRITES:
+       using module <dir>/powershell/hwut_runner.psm1
+   NOTE:    or dot-source the demonstration's 'hwut_support.ps1' <modules>, which finds the support by the variable
+   <dir>: TEST c hwut-root.conf powershell
+-- as written, the MAKE IT IMPORTABLE lines applied
+   RESULTS: 27 ok, 0 fail
+-- the marked line pointing nowhere; unset: HWUT_SUPPORT_POWERSHELL; then only the MAKE IT IMPORTABLE lines
+   RESULTS: 27 ok, 0 fail
+<hwut-end>

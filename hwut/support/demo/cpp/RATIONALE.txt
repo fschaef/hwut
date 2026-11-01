@@ -1,0 +1,97 @@
+==============================================================================
+support/demo/cpp -- RATIONALE
+==============================================================================
+
+DEMO-CPP-1 THE PYTHON DEMONSTRATION IN C++: ONE APPLICATION PER PYTHON
+           APPLICATION, BUILT BY ONE MAKEFILE, WHOLE PER TARGET   (2026-11-01)
+------------------------------------------------------------------------------
+PROBLEM   'support/demo/python/TEST' shows everything a test directory can
+          say. A C++ author wants the same, in C++, with the C++ port of
+          the test writing support -- and a compiled application must be
+          BUILT before it runs, by hwut, while several tests build at once.
+DECISION  One '.cpp' per Python application, the same stem, the same
+          choices, printing the same text: demo, chamber, door, build,
+          garage, screen (+ viewer), shop (+ fixture), protocol (protocol.sh
+          and its producer, one program: DEMO-CPP-3). Every header carries
+          'build { framework = "make", executable = "%.exe" }'; the
+          'Makefile' in TEST is run there (services E-210) and builds each
+          target WHOLE, its C objects in '<target>.o.d' -- no shared file.
+          WHAT NO HEADER BUILDS IS BUILT ONCE, BY ITS ONE USER:
+            'fixture.exe'   by 'on_entry' ('make -s fixture.exe'), which runs
+                            before any test; nothing else builds it;
+            'viewer.exe'    an order-only prerequisite of 'screen.exe';
+            'delivery.exe'  'shop.cpp' again, a target of its own, built by
+                            the 'apps' entry of 'delivery.json' -- 'shop.exe'
+                            and 'delivery.exe' may be built at once and
+                            share nothing.
+          The data files are the Python demonstration's, unchanged but for
+          comments that named a Python file ('build.pypes',
+          'garage-space.hocon'). 'hwut-features.conf' keeps every key and
+          title; 'doc' names the C++ file.
+          RANDOMNESS: Python's 'random' is 'std::mt19937_64', seeded by the
+          clock; every choice that draws passes by its tolerance, as in
+          Python. 'garage random' draws from 'hwut::DeterministicStream' --
+          the same stream as Python's, so its GOOD is the Python GOOD, exact.
+          WHAT C++ LACKS, MET IN PLACE: no JSON reader in the standard
+          library -- 'shop.cpp' reads the delivery note's one shape by
+          'std::regex'; SQLite is its C API ('-lsqlite3'), the statement log
+          on stderr by 'sqlite3_trace_v2'; a program finds its directory by
+          '/proc/self/exe' (Python's '__file__'); Python's 'with Terminal'
+          is the Terminal's lifetime.
+MEASURED  2026-11-01, wd-cpp on 693ee42, g++ 13.3: 'hwut.run --plain' in
+          TEST twice after 'make clean': 27 ok, 0 fail each time (48 s with
+          the builds, 12 s without) -- the case count of 'python/TEST'
+          (27 measured there; its README says 28).
+
+DEMO-CPP-2 WHERE THE SUPPORT STANDS: ONE MAKEFILE LINE, HWUT_SUPPORT_CPP
+           FIRST                                                  (2026-11-01)
+------------------------------------------------------------------------------
+PROBLEM   A face writes this demonstration beside a copy of the port and
+          replaces the fallback literal on one marked line; the demo must
+          run with only the user's "make it importable" line applied.
+DECISION  C++ HAS NO STANDARD SEARCH PATH FOR SOURCES a test compiles
+          (CPLUS_INCLUDE_PATH finds headers only; the support is '.cpp' and
+          the C '.c' it wraps, compiled with the test). So the variable
+          'HWUT_SUPPORT_CPP', on the one line marked 'HWUT-SUPPORT-PATH' in
+          the 'Makefile', with make's '?=': the environment's value wins,
+          the fallback literal applies only where it is unset. The comment
+          marker is glued to the value ('...cpp# HWUT-SUPPORT-PATH'), and
+          the value is '$(strip)'ed, so no trailing blank enters the path.
+          The C modules are found as '$(HWUT_SUPPORT_CPP)/../c': the C++
+          port's own headers include '../c/<module>.h', so the C port must
+          stand beside the C++ port wherever it is written.
+MEASURED  2026-11-01, the face simulated in '/tmp/x-cpp' (the port and the C
+          port copied to 'cpp/' and 'c/', TEST with every '.link' resolved,
+          'hwut-root.conf' by 'hwut.services._boundary.written'):
+          literal -> '/hwut-support-not-here', 'export
+          HWUT_SUPPORT_CPP=/tmp/x-cpp/cpp' applied alone: 27 ok, 0 fail;
+          literal -> '../cpp', no variable set: 27 ok, 0 fail.
+
+DEMO-CPP-3 THE PYPES STAY PYTHON; THE PRODUCER IS C++              (2026-11-01)
+------------------------------------------------------------------------------
+PROBLEM   'door.pype' fires the log into Python's 'hwut_fsm'; 'protocol.sh'
+          is a bash script whose producer is Python.
+DECISION  A pype is a face of hwut whose actions are Python: 'door.pype' is
+          copied unchanged and its model is Python's 'hwut_fsm' -- C++ can
+          not be the language of a pype's action. The C++ 'hwut::fsm' says
+          the same words and is held against the same GOODs by the port's
+          own tests. 'protocol.sh' and its producer become ONE C++ program,
+          'protocol.cpp': five std::threads write into 'hwut.pype
+          protocol.pype', started by the program through 'popen' (the face
+          on PATH, else the clone's module, as 'protocol.sh' decides), the
+          pype's stdout the program's. Its GOODs link to 'protocol.sh''s.
+
+DEMO-CPP-4 FOUR GOOD FILES OF ITS OWN                              (2026-11-01)
+------------------------------------------------------------------------------
+          screen.cpp--open.txt, --scroll.txt   line 1 names the program run,
+                     '> viewer.exe race.txt' (Python: 'viewer.py'); the
+                     screens are Python's.
+          shop.cpp--report.txt   the frame log names the test as hwut does,
+                     'shop.cpp sell' (Python: 'shop.py sell'), its column
+                     padding one blank shorter.
+          shop.cpp--report.stock.csv   the same bytes as Python's; it is no
+                     '.txt', and a '.link' names only a '.txt' nominal
+                     ('hwut.good.link' refuses it; bookkeeper good_link).
+          Each accepted through hwut ('hwut.play', 'hwut.accept'; the report
+          after a 'hwut.run', since 'hwut.play' runs no dependency).
+==============================================================================

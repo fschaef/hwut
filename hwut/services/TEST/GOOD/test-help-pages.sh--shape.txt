@@ -60,4 +60,5 @@ hwut.run.stability           EXAMPLE    ok
 hwut.sanitize                EXAMPLE    ok
 hwut.sanitize.apply          EXAMPLE    ok
 hwut.sanitize.propose        EXAMPLE    ok
+hwut.support                 -          ok
 <hwut-end>

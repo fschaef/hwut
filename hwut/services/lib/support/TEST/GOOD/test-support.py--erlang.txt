@@ -1,0 +1,18 @@
+-- hwut.support erlang <dir>   (exit 0)
+   WRITTEN: <dir> -- the test writing support in Erlang, and its demonstration
+       <dir>/erlang
+       <dir>/c   (the Erlang support stands on it)
+       <dir>/TEST
+   NEXT:    cd <dir>/TEST && hwut --plain
+   MAKE IT IMPORTABLE -- for a test of your own:
+       make -C <dir>/erlang
+       export ERL_LIBS=<dir>
+   A TEST THEN WRITES:
+       -include_lib("erlang/hwut_hocon.hrl").
+   NOTE:    a test calls the modules by name (hwut_runner:run/2, ...); the include is needed only to read the HOCON tree
+   <dir>: TEST c erlang hwut-root.conf
+-- as written, the MAKE IT IMPORTABLE lines applied
+   RESULTS: 27 ok, 0 fail
+-- the marked line pointing nowhere; unset: ERL_LIBS; then only the MAKE IT IMPORTABLE lines
+   RESULTS: 27 ok, 0 fail
+<hwut-end>

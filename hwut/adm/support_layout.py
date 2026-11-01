@@ -16,8 +16,9 @@ is none, 1 else. A fault is:
       'reference = true', or a reference whose home is not 'hwut';
     - a '.link' of a port reaching beyond the port itself and the
       reference port -- after a split nothing else stands beside it;
-    - a file of hwut outside 'support/test_writing' naming a 'home =
-      support' port by its path -- after a split that path is gone.
+    - a file of hwut outside 'support/' naming a 'home = support' port by
+      its path -- after a split that path is gone. ('support/demo' is the
+      ports' company and goes with them.)
 
 NOT COUNTED in the last check: the records, which keep the paths of their
 day (the numbered RATIONALE of 'engine' and 'services', 'adm/WORK',
@@ -128,7 +129,7 @@ def _naming_fault_list(hwut_dir, departing_list):
     regex = re.compile(r"support/test_writing/(%s)\b"
                        % "|".join(map(re.escape, departing_list)))
     fault_list = []
-    support_dir = os.path.join(hwut_dir, SUPPORT)
+    support_dir = os.path.join(hwut_dir, "support")   # the ports and demos
     for dirpath, dirnames, filenames in os.walk(hwut_dir):
         if dirpath == support_dir or dirpath.startswith(support_dir + os.sep):
             dirnames[:] = []

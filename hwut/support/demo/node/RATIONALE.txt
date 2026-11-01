@@ -1,0 +1,92 @@
+==============================================================================
+support/demo/node -- RATIONALE
+==============================================================================
+
+DEMO-NODE-1  THE PYTHON DEMONSTRATION IN JAVASCRIPT FOR NODE.JS, HELD BY THE
+             PYTHON GOOD FILES                                    (2026-11-01)
+------------------------------------------------------------------------------
+PROBLEM   'support/demo/python/TEST' shows everything a test directory can
+          say, once. A node author is to see the same, over the node test
+          support ('support/test_writing/node'), and a port is only as good
+          as its proof that it says the same.
+DECISION  One '.js' per '.py', choice for choice, the same stems; the data
+          files copied, edited only where they named a Python file
+          ('build.pypes' and 'garage-space.hocon', in comments); the
+          producer of 'protocol.sh' and 'viewer.py' became node programs;
+          'hwut.conf' says what the Python one says, for node's files.
+          24 of 27 cases (and 'build.js', 'same = true': one link for two)
+          are '.link's to the Python GOODs.
+          NOTHING IS BUILT: 'node' runs each test as it stands, no
+          Makefile.
+          WHERE NODE HAS NO THREAD, a coroutine: 'demo.js race'/'pool',
+          'build.js parallel' and the producer of 'protocol.sh' run their
+          workers as async functions waking after drawn delays
+          ('setTimeout') -- the order is the timers', as Python's is the
+          scheduler's, and the potpourri tolerates it alike. 'shop.js
+          sell' alone takes REAL threads ('worker_threads'), since its
+          point is three writers on one SQLite file ('collision').
+          SQLITE is node's own, 'node:sqlite' (22.5+), so the demo wants no
+          npm package. Its 'ExperimentalWarning' is the runtime's, and is
+          held off stderr where the module is loaded (fixture.js has no
+          'stderr_ignored'). It has no trace callback: 'shop.js' logs each
+          statement itself, and 'PRAGMA busy_timeout' stands for Python's
+          'timeout=10'.
+          'Math.random' is the clock-seeded draw; 'gauss' is Box-Muller.
+          'DeterministicStream' and the timelines are the port's: their
+          output is exact, and links.
+COST      Each fixture call ('on_before_test', 'on_after_test') is a node
+          start. Measured: 'hwut.run --plain' 7 to 18 s (load of the
+          machine, other sessions running) against Python's 6 to 7 s;
+          'build.js' 0.4 s alone, 2.7 s inside a loaded run.
+
+DEMO-NODE-2  THE PORT'S LOCATION ON ONE LINE: NODE_PATH FIRST     (2026-11-01)
+------------------------------------------------------------------------------
+PROBLEM   Three tests ('garage.js', 'screen.js', and through them every
+          support module) need the port, and a face writes the demo out
+          beside a copy of it, replacing ONE literal.
+DECISION  'TEST/hwut_support.js', no test (in 'ignore'), is the one place:
+          'support(name)' first does 'require(name)' -- node's standard
+          resolution, NODE_PATH included, exactly what a user's own test
+          does after MAKE IT IMPORTABLE -- and only where THAT module is not
+          found takes the path of the line marked 'HWUT-SUPPORT-PATH',
+          relative to the file. A module that is found and fails is not
+          hidden by the fallback (the error names another module).
+MEASURED  The face simulated in '/tmp/x-node' (port copied without
+          'node_modules', links resolved to their texts, 'hwut-root.conf'
+          by 'services/_boundary.written', features' documents made
+          absolute as 'hwut.demo.python' does):
+            literal -> '/hwut-support-not-here', NODE_PATH and 'npm
+            install' of MAKE IT IMPORTABLE applied: 27 ok, 0 fail;
+            the same without NODE_PATH: 'Cannot find module' -- the
+            environment is what carries it;
+            literal -> '../node', no NODE_PATH ('npm install' alone, for
+            koffi): 27 ok, 0 fail.
+
+DEMO-NODE-3  THREE GOODS OF THEIR OWN                             (2026-11-01)
+------------------------------------------------------------------------------
+'screen.js--open', 'screen.js--scroll': the test prints the command it runs,
+          '> viewer.js race.txt'; the rest is byte-identical to Python's.
+'shop.js--report': the frame log names the test by hwut's '$HWUT_TEST',
+          'shop.js sell' / 'shop.js report'.
+'shop.js--report.stock.csv': byte-identical to Python's, but an output
+          file -- the bookkeeper links stdout alone (B-32: 'only stdout
+          links'), and 'hwut.good.link' refuses a '.csv'.
+Accepted through hwut: 'hwut.play', 'hwut.accept'; for 'shop.js report'
+the play runs no dependency, so the run's recording was accepted
+('hwut.accept --force' after 'hwut.run').
+
+DEMO-NODE-4  door.pype STAYS PYTHON                                (2026-11-01)
+------------------------------------------------------------------------------
+A pype script's actions are Python, whatever the application is written
+in: 'door.pype' is copied unchanged and fires into the Python 'hwut_fsm'.
+'hwut_fsm.js' serves a node test that holds the model itself; the pype
+only reads a log, and the GOODs link.
+
+DEMO-NODE-5  MEASURED                                             (2026-11-01)
+------------------------------------------------------------------------------
+'cd TEST && hwut.run --plain': 27 ok, 0 fail, twice -- the case count of
+'python/TEST' (27; its README says 28). Run by hand, every linked choice
+that prints exact text ('plain', 'garage.js' x4, 'protocol.sh' x3) is
+'diff'-identical to its Python GOOD; 'screen.js' differs in the one
+command line.
+==============================================================================

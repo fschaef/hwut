@@ -78,7 +78,9 @@ def show(name, line_list):
 def view(key_list):
     """RETURN: None. Runs the viewer on the sample, presses 'key_list',
     quits, and prints what changed after each step."""
-    path = os.path.join(HERE, "TMP", "race.txt")
+    #  ONE FILE PER RUN: 'open' and 'scroll' may run at once, and the
+    #  viewer shows the file's name only.
+    path = os.path.join(HERE, "TMP", "screen-%i" % os.getpid(), "race.txt")
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w") as fh:
         fh.write(SAMPLE)

@@ -1,0 +1,13 @@
+# garage-space.hocon -- THE TESTED SPACE of 'garage.py space', for a
+# reviewer to read and to edit without reading Python.
+#
+# Every combination of the three dimensions is one case: a garage of
+# 'capacity' spaces, empty at the start; 'arriving' cars drive up, then
+# 'leaving' cars drive out. The borders stand on both sides: no car, one
+# car, as many as fit, more than fit.
+
+space {
+    capacity = [1, 2, 3]
+    arriving = [0, 1, 2, 3, 4]
+    leaving  = [0, 1, 2, 3]
+}

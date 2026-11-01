@@ -68,7 +68,7 @@ asked() {               #  what the book shows, by the faces on PATH
     echo "version:      $(hwut.about --version)"
     echo "faces:        $(compgen -c hwut | grep -E '^hwut(\.|$)' | sort -u | wc -l) on PATH"
     echo "hwut.dev.*:   $(compgen -c hwut.dev. | wc -l) on PATH"
-    hwut.demo.python "$WORK/demo" > /dev/null
+    hwut.support python "$WORK/demo" > /dev/null
     cd "$WORK/demo/TEST"
     hwut.help > "$WORK/help.txt" 2>&1
     echo "hwut.help:    status $?, $(head -1 "$WORK/help.txt")"
@@ -127,7 +127,7 @@ image_asked() {         #  the image from outside, the host holding no hwut
     echo "faces:        $(run bash -c 'compgen -c hwut | grep -E "^hwut(\.|$)" | sort -u | wc -l') in the image"
     run hwut.help > "$WORK/help.txt" 2>&1
     echo "hwut.help:    status $?, $(head -1 "$WORK/help.txt")"
-    run hwut.demo.python /work/demo > /dev/null
+    run hwut.support python /work/demo > /dev/null
     run bash -c 'cd /work/demo/TEST && hwut --plain' 2>&1 | grep '^RESULTS'
     foreign=$(find "$WORK/mounted" ! -user "$(id -u)" | wc -l)
     echo "written:      $(find "$WORK/mounted" | wc -l | sed 's/[0-9]*/<n>/') entries, $foreign not the caller's"

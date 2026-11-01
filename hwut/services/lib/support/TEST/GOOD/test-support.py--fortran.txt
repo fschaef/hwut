@@ -1,0 +1,17 @@
+-- hwut.support fortran <dir>   (exit 0)
+   WRITTEN: <dir> -- the test writing support in Fortran, and its demonstration
+       <dir>/fortran
+       <dir>/c   (the Fortran support stands on it)
+       <dir>/TEST
+   NEXT:    cd <dir>/TEST && hwut --plain
+   MAKE IT IMPORTABLE -- for a test of your own:
+       export HWUT_SUPPORT_FORTRAN=<dir>/fortran
+   A TEST THEN WRITES:
+       use hwut_runner
+   NOTE:    the README shows the Makefile rule that compiles the support sources in order
+   <dir>: TEST c fortran hwut-root.conf
+-- as written, the MAKE IT IMPORTABLE lines applied
+   RESULTS: 27 ok, 0 fail
+-- the marked line pointing nowhere; unset: HWUT_SUPPORT_FORTRAN; then only the MAKE IT IMPORTABLE lines
+   RESULTS: 27 ok, 0 fail
+<hwut-end>

@@ -1,0 +1,16 @@
+-- hwut.support go <dir>   (exit 0)
+   WRITTEN: <dir> -- the test writing support in Go, and its demonstration
+       <dir>/go
+       <dir>/TEST
+   NEXT:    cd <dir>/TEST && hwut --plain
+   MAKE IT IMPORTABLE -- for a test of your own:
+       export HWUT_SUPPORT_GO=<dir>/go
+   A TEST THEN WRITES:
+       import "hwut/support/test_writing/go/hwutrunner"
+   NOTE:    in your test's own module, once: go mod edit -require=hwut/support/test_writing/go@v0.0.0 -replace=hwut/support/test_writing/go=$HWUT_SUPPORT_GO
+   <dir>: TEST go hwut-root.conf
+-- as written, the MAKE IT IMPORTABLE lines applied
+   RESULTS: 27 ok, 0 fail
+-- the marked line pointing nowhere; unset: HWUT_SUPPORT_GO; then only the MAKE IT IMPORTABLE lines
+   RESULTS: 27 ok, 0 fail
+<hwut-end>

@@ -1,0 +1,9 @@
+hwut.support python <dir> -> exit 2
+    REFUSED: '<dir>' is not empty -- name a new directory
+hwut.support python -> exit 2
+    REFUSED: 'hwut.support' takes two words, a language and the directory to write -- the languages: python, perl, c, cpp, java, rust, go, node, verilog, vhdl, bash, powershell, erlang, guile, haskell, prolog, fortran
+hwut.support python <dir> three -> exit 2
+    REFUSED: 'hwut.support' takes two words, a language and the directory to write -- the languages: python, perl, c, cpp, java, rust, go, node, verilog, vhdl, bash, powershell, erlang, guile, haskell, prolog, fortran
+hwut.demo.python <dir> -> exit 2
+    REFUSED: 'hwut.demo.python' is retired: the demonstration comes with the test writing support of its language => 'hwut.support python <dir>'
+<hwut-end>

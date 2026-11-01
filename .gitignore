@@ -11,3 +11,4 @@ bundle-*.sh
 *.tmp
 **/hwut.coverage
 **/services/_complete_db.py
+**/*.exe

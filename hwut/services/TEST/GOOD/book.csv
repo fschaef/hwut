@@ -82,7 +82,7 @@ test-book-defects-5.sh;accept-first;true;ok;;53;0
 ;conf-unread;true;ok;;53;13
 ;cov-remedy;true;ok;;53;21
 ;currencies;true;ok;;53;22
-;demo-documents;false;not-equivalent-with-nominal;;53;1
+;demo-documents;false;not-equivalent-with-nominal;stderr-untolerated;53;1
 ;exponent-law;true;ok;;53;2
 ;genomics;true;ok;;53;14
 ;header-once;true;ok;;53;3

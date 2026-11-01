@@ -1,0 +1,18 @@
+# compiler.pype -- A VOCABULARY, imported by 'build.pype': what a compiler
+# says, wherever in the build it says it. Never entered on its own; the
+# modes of 'build.pype' inherit it ('is: COMPILER').
+
+# 'quantity(s)': the duration, in whatever unit the log wrote it -- '84 ms'
+# or '0.084 s' -- bound as seconds.
+COMPILER/on: "cc -c" <source = "*.c"> "-o" <"*.o"> "(took" <took = quantity(s)> ")" => {
+    note(source=source)
+    compile_s += took
+}
+COMPILER/on: <where = "*.c:*:*:"> "warning:" => {
+    warning_set.add(pype.line())
+}
+
+COMPILER/on: <else> => {
+    breach_list.append("not understood in %s: %s" % (pype.mode_name(), pype.line()))
+}
+COMPILER/on: <eof> => ignore;

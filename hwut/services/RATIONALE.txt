@@ -8121,3 +8121,40 @@ COST      Every import of the Python support and every path naming the
           three directories, one level deeper below 'support/'. GOOD files
           that print those paths are re-recorded, each diff read. The
           package no longer carries the sixteen 'home = "support"' ports.
+
+E-217  'hwut.support <language>': THE SUPPORT AND ITS DEMONSTRATION, WRITTEN
+       OUT; 'hwut.demo.python' RETIRED                            (2026-11-01)
+------------------------------------------------------------------------------
+PROBLEM   An installed hwut offered one demonstration ('hwut.demo.python')
+          and no way to reach the test writing support of any other
+          language; nothing told a person what to do so that a test of their
+          own could import it.
+DECISION  THE PACKAGE CARRIES ALL OF 'support/' but the showcase, as one
+          archive beside the faces, 'services/lib/support/support.tar.xz'
+          (git-tracked files only, so no build product rides along). The
+          Python port also stands unpacked: the engine imports it.
+          ONE FACE, the language its first word (one of 'LANGUAGES.conf'):
+          'hwut.support <language> <dir>' writes '<dir>/<language>' (the support, its own TEST left
+          out), '<dir>/TEST' (the demonstration in that language, every
+          '.link' resolved into the nominal it names) and '<dir>/hwut-
+          root.conf' (the template), from 'support/' in a clone, else from
+          the archive. A demonstration exists for EVERY language whose
+          support is presented ('support/demo/<language>'), its GOOD files
+          '.link's to the Python demonstration's.
+          THE FACE SAYS HOW TO IMPORT: it ends with MAKE IT IMPORTABLE, the
+          'use' lines of the language's 'LANGUAGES.conf' entry with '<dir>'
+          filled in, and the line a test then writes ('test'). Proved by
+          'services/lib/support/TEST/test-support.py <language>': the
+          demonstration names the port on ONE line, marked
+          'HWUT-SUPPORT-PATH', by the literal '../../../test_writing/<lang>'
+          (in the tree) -- written out it reads '../<lang>'; in the test it
+          reads a path checked not to stand, every variable the 'use' lines set
+          is unset first, and with only those lines applied the
+          demonstration runs green.
+          'hwut.demo.python' IS RETIRED: refused by name, with the remedy
+          'hwut.support python <dir>'.
+COST      A 'title', 'use', 'test', 'note' and 'requires' per entry of
+          'LANGUAGES.conf'; the face reads its languages there, so a port
+          added there is offered without a line of code ('test-support.py
+          faces' says so). The showcase is not in the package; that is
+          decided later.

@@ -1,0 +1,17 @@
+-- hwut.support c <dir>   (exit 0)
+   WRITTEN: <dir> -- the test writing support in C, and its demonstration
+       <dir>/c
+       <dir>/TEST
+   NEXT:    cd <dir>/TEST && hwut --plain
+   MAKE IT IMPORTABLE -- for a test of your own:
+       export HWUT_SUPPORT_C=<dir>/c
+       export CPATH="<dir>/c${CPATH:+:$CPATH}"
+   A TEST THEN WRITES:
+       #include "hwut_runner.h"
+   NOTE:    and compile $HWUT_SUPPORT_C/hwut_runner.c $HWUT_SUPPORT_C/hwut_pytext.c with it
+   <dir>: TEST c hwut-root.conf
+-- as written, the MAKE IT IMPORTABLE lines applied
+   RESULTS: 27 ok, 0 fail
+-- the marked line pointing nowhere; unset: CPATH HWUT_SUPPORT_C; then only the MAKE IT IMPORTABLE lines
+   RESULTS: 27 ok, 0 fail
+<hwut-end>

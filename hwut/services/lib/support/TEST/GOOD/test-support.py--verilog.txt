@@ -1,0 +1,17 @@
+-- hwut.support verilog <dir>   (exit 0)
+   WRITTEN: <dir> -- the test writing support in SystemVerilog, and its demonstration
+       <dir>/verilog
+       <dir>/c   (the SystemVerilog support stands on it)
+       <dir>/TEST
+   NEXT:    cd <dir>/TEST && hwut --plain
+   MAKE IT IMPORTABLE -- for a test of your own:
+       export HWUT_SUPPORT_VERILOG=<dir>/verilog
+   A TEST THEN WRITES:
+       import hwut_runner::*;
+   NOTE:    built by the '%.exe' rule of the demonstration's Makefile (Verilator, DPI-C into <dir>/c)
+   <dir>: TEST c hwut-root.conf verilog
+-- as written, the MAKE IT IMPORTABLE lines applied
+   RESULTS: 27 ok, 0 fail
+-- the marked line pointing nowhere; unset: HWUT_SUPPORT_VERILOG; then only the MAKE IT IMPORTABLE lines
+   RESULTS: 27 ok, 0 fail
+<hwut-end>

@@ -1,0 +1,145 @@
+==============================================================================
+support/demo/erlang -- RATIONALE: where the demonstration fought Erlang, and
+how it was met
+==============================================================================
+
+DEMO-ERLANG-1  THE SUPPORT IS FOUND IN ONE PLACE: 'TEST/hwut_support.hrl'
+------------------------------------------------------------------------------
+Erlang's own mechanism is 'ERL_LIBS': directories of libraries, every
+'<lib>/ebin' of them on the code path from the VM's start. The marked
+line asks the VM whether it found the support so ('code:which(hwut_runner)')
+and only where it did not takes the fallback, a path relative to TEST.
+'HWUT_SUPPORT_ERLANG' is not read: there is a standard mechanism.
+
+The fallback is BUILT where stale, as the port's own 'hwut_boot.hrl'
+builds for the port's tests: 'make all' in the support directory, whose
+Makefile renames each product into place -- several tests starting at
+once build at once. The port's 'hwut_boot()' itself could not be used: it
+finds the support as the grandparent of the script.
+
+Only 'garage.erl' and 'screen.erl' include it: the other tests use no
+module of the support (as their Python originals import none).
+
+DEMO-ERLANG-2  AN ESCRIPT INCLUDES BEFORE IT RUNS
+------------------------------------------------------------------------------
+What an escript includes is read when it is compiled, at its start --
+before 'hwut_support()' has set a code path. So the support's location
+cannot be named by an '-include' (it would be a second place), and
+'garage.erl' states the five records of 'hwut_hocon.hrl' it reads itself,
+as that header states them. A test of one's own, with 'ERL_LIBS' set,
+writes '-include_lib("erlang/hwut_hocon.hrl")' instead (measured: it
+resolves).
+
+DEMO-ERLANG-3  NO SQLITE, NO JSON IN OTP 25
+------------------------------------------------------------------------------
+Python's shop is SQLite through 'sqlite3'; Erlang/OTP carries none, and a
+NIF or a port program for 'libsqlite3' would be a C build for one demo.
+What the shop needs of SQLite -- one writer at a time, the readers never
+seeing half a write, a writer that waits too long failing -- is had from
+the file system ('TEST/shop_db.hrl'): the tables as one file of Erlang
+terms; 'BEGIN IMMEDIATE' a lock file created with O_EXCL ('exclusive'),
+retried for 10 s, then 'database is locked'; 'COMMIT' the file written
+under a name of its own and renamed onto the database. The lock holds
+between the clerk processes of one VM and between VMs alike, so
+'collision' still says something true. The steps are logged on stderr
+('db: ...') as Python logs its SQL.
+
+'json' came with OTP 27; the delivery note is read by a reader of the
+JSON it holds (objects, arrays, strings, integers) in 'shop.erl'.
+
+DEMO-ERLANG-4  A TERMINAL PROGRAM IN ERLANG/OTP 25
+------------------------------------------------------------------------------
+OTP 25 has no raw mode ('shell:start_interactive({noshell, raw})' is 26).
+'viewer.erl' is started with '-noinput' (escript's '%%!' line: line 2,
+which is why the viewer carries no hwut header -- it is no test) so the
+VM never reads the keyboard; fd 0 and fd 1 are ONE PORT, keys arrive as
+messages and bytes leave unchanged. 'stty' sets raw mode and sets back
+what it found -- on the device '/proc/self/fd/0' names: a command
+'os:cmd' runs has no controlling terminal, so '/dev/tty' failed there
+(measured: 'stty' printed '/bin/sh: ... /dev/tty').
+
+DEMO-ERLANG-5  PROTOCOL.SH STAYS BASH, ITS PRODUCER IS ERLANG
+------------------------------------------------------------------------------
+A pipe into a pype is the shell's word; the five clients are five
+processes of one 'erl -noshell -eval'. One 'io:format' is one request to
+the VM's output, so no line is torn by another and Python's lock has no
+counterpart. 'door.pype' is copied unchanged: a pype script is Python,
+and its model is Python's 'hwut_fsm' whatever the application's language.
+
+DEMO-ERLANG-6  THREADS ARE PROCESSES; SHARED STATE IS A PROCESS
+------------------------------------------------------------------------------
+Every Python thread is a spawned process, joined by monitors. Where
+Python appends to a list under a lock (the pool's jobs, the clerks'
+sales), the workers send messages and the parent reads its mailbox after
+the join. The pool's queue is an 'atomics' counter. The two gates of
+'garage.erl race-*' share a garage: a process holding it, every step of
+a gate a CALL answered before the gate answers the dispatcher -- so the
+log is in the drawn order by construction, not by the scheduler. 'rand'
+seeds itself per process; Python's explicit clock seed has no line here.
+
+DEMO-ERLANG-7  THE FOUR GOOD FILES THAT ARE NO LINKS
+------------------------------------------------------------------------------
+    screen.erl--open.txt, screen.erl--scroll.txt
+                  the test prints the viewer's command, '> viewer.erl
+                  race.txt' (Python: '> viewer.py race.txt'); every other
+                  line is the Python GOOD's
+    shop.erl--report.txt
+                  the frame log names the test hwut ran, 'shop.erl sell'
+                  (Python: 'shop.py sell'), and pads it to 15 columns
+    shop.erl--report.stock.csv
+                  byte-identical to Python's, but a '.link' links the
+                  stdout text alone (bookkeeper B-32: 'only stdout
+                  links'); 'hwut.good.link' refuses a '.csv'
+Each was accepted through hwut: 'hwut.play', 'hwut.accept'. The report's
+recording had to come from 'hwut.run' -- 'hwut.play' runs no dependency,
+and its 'on_entry' restocks the shop -- so it was played and accepted
+once, run, and accepted again ('--force') from the run's recording.
+
+DEMO-ERLANG-8  NOTHING IS BUILT IN TEST
+------------------------------------------------------------------------------
+An escript is compiled at its start ('-mode(compile)': a 'fun plain/0'
+needs it), so TEST holds no Makefile and no product. The support's
+products stand in the support's directory ('ebin', 'hwut_vterm_port'),
+as the port's own tests leave them.
+
+'fixture.erl' alone runs INTERPRETED: it runs twice around every test of
+the directory, and compiling it costs more than running it (measured
+below).
+
+DEMO-ERLANG-9  WHAT LIES OUTSIDE THIS DIRECTORY
+------------------------------------------------------------------------------
+'hwut_vterm' builds its port program from the C port, '../c/hwut_vterm.c':
+a copy of the Erlang port without '<dir>/c' beside it fails 'screen.erl'
+('No rule to make target ../c/hwut_vterm.c'). A face that writes this
+demonstration out must write the C port's 'hwut_vterm.c' and '.h' too.
+
+'hwut.good.link' onto a 'same = true' test ('GOOD/build.erl.link') enters
+a CHOICE-LESS book entry, 'build.erl;;', beside the two choices the run
+registers; every run then reported 'build.erl in book, no such choice'.
+The entry was removed by the bookkeeper's own 'remove_choice(test, None)'.
+
+MEASURED (Erlang/OTP 25, erts 13.2.2.5; libvterm 0.3.3; two CPUs under a
+load of 12 to 21 from other sessions)
+------------------------------------------------------------------------------
+    hwut.run --plain   27 ok, 0 fail -- the case count of '../python/TEST'
+                       ('hwut --plain' there: 27 ok, 11.5 s); twice in a
+                       row: 36.9 s, 34.0 s
+    byte-identical     'garage.erl space/random/race-naive/race-atomic' and
+                       'door.erl broken' against the Python GOODs ('diff');
+                       'screen.erl' differs from Python's in its first line
+                       alone
+    fixture.erl        five 'check' runs: 0.89 s user interpreted, 1.62 s
+                       with '-mode(compile)'
+    a VM's start       'erl -noshell -eval halt().' 0.13 s user, about 1 s
+                       real under that load: it dominates every case
+    first use          'garage.erl space' with no 'ebin' yet: 20 s real,
+                       'make' of the support included
+    the face           port copied (tracked files), TEST copied with every
+                       '.link' resolved, the literal replaced, a fresh
+                       'hwut-root.conf', 'hwut --plain':
+                         '../erlang', nothing applied          27 ok
+                         '/hwut-support-not-here', MAKE IT
+                         IMPORTABLE applied                    27 ok
+                       each with the C port's 'hwut_vterm.[ch]' at
+                       '<dir>/c'; without them 25 ok, 'screen.erl' 2 fail
+==============================================================================

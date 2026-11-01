@@ -1,0 +1,151 @@
+==============================================================================
+support/demo/prolog -- RATIONALE
+==============================================================================
+
+DEMO-PROLOG-1 THE DEMONSTRATION OVER PROLOG, HELD BY THE PYTHON GOOD FILES
+                                                                      (2026-11-01)
+------------------------------------------------------------------------------
+PROBLEM   'support/demo/python/TEST' shows everything a test directory can
+          say, once. A Prolog author was to see the same, in Prolog, over
+          the Prolog test support -- and the proof that it IS the same is
+          that it prints what the Python demonstration was accepted for.
+DECISION  One application per Python application, choice for choice, the
+          same stems ('demo.pro', 'chamber.pro', 'door.pro', 'garage.pro',
+          'shop.pro' + 'fixture.pro', 'screen.pro' + 'viewer.pro',
+          'build.pro'; 'protocol.sh' stays a bash script, its producer a
+          Prolog program). The data files are the Python demonstration's;
+          'build.pypes' and 'garage-space.hocon' changed only where their
+          comments named a Python file. 'door.pype' is UNCHANGED although it
+          imports the Python 'hwut_fsm': a pype script is Python whatever
+          the application it reads ('hwut_fsm.pro' prints the same report
+          for a Prolog test that holds the model itself). Every GOOD is a
+          '.link' to the Python case's '.txt' but four (DEMO-PROLOG-2).
+          WHERE PROLOG FOUGHT, AND HOW IT WAS MET:
+          threads    'thread_create'/'thread_join', 'with_mutex' for the
+                     lock around a line, a message queue for the pool's
+                     jobs ('thread_get_message(Q, J, [timeout(0)])' is
+                     'get_nowait'). No fight.
+          layout     Python's '%-6s' and '%9.2f' are SWI's column stops:
+                     '~|~w~t~6+' and '~|~t~2f~9+' -- '~|' sets the stop
+                     where the text stands, so a field after literal text
+                     is measured from there, not from the line's start.
+          state      the garage is a term whose count is changed IN PLACE
+                     ('nb_setarg'): in the race two gates must see one
+                     counter. A gate is a behaviour closure over a cell of
+                     its own (step, what it saw), as the timeline module
+                     asks. The random stream is threaded through a 'foldl'.
+          the producer  SWI will not consult '/dev/stdin' (measured:
+                     "file does not exist"); 'load_files(producer,
+                     [stream(user_input)])' reads the heredoc, so no
+                     producer file stands beside the tests.
+          SQLite     SWI's library has none ('prosqlite' is a pack, not
+                     given). DEMO-PROLOG-3.
+          the viewer 'with_tty_raw/1' and 'get_single_char/1' are raw mode
+                     and an unbuffered key; a cursor key is three codes
+                     (ESC '[' letter), read as one key; 'tty_size/2' is the
+                     terminal's size. The screen GOOD came out identical to
+                     Python's but for the program's name.
+          the path   DEMO-PROLOG-4.
+          MEASURED (SWI-Prolog 9.0.4, cc 13.3, libvterm 0.3.3, SQLite from
+          libsqlite3.so.0): 'hwut.run --plain' in 'support/demo/python/TEST'
+          27 ok; in 'prolog/TEST' 27 ok, 0 fail, TWICE -- the first from no
+          built 'shop_db4pl.so' (33.7 s), the second 28.2 s. By hand
+          ('diff' against the Python GOOD): 'garage.pro' all four choices
+          and 'protocol.sh' all three byte-identical; 'build.pro' serial
+          and parallel through 'build.pypes' identical but the compile time
+          (a quantity under a law); 'door.pro' broken through 'door.pype'
+          identical; 'screen.pro' open and scroll identical but line 1.
+          THE FACE, simulated in '/tmp/x' (the port copied to
+          '/tmp/x/prolog', TEST copied with every '.link' resolved,
+          'hwut-root.conf' by '_boundary.written'): the marked literal
+          replaced by '../prolog', nothing applied: 27 ok; replaced by
+          '/hwut-support-not-here' with only 'export
+          HWUT_SUPPORT_PROLOG=/tmp/x/prolog': 27 ok; the same without that
+          line: 21 ok (garage and screen cannot find the support) -- the
+          variable is what carries it. BOTH 27s NEED '/tmp/x/c/hwut_vterm.c'
+          and '.h' beside the port: without them 25 ok, 'screen.pro' fails
+          building 'hwut_vterm4pl.so' (DEMO-PROLOG-5).
+COST      Two foreign libraries are built on first load -- the support's
+          'hwut_vterm4pl.so' and this directory's 'shop_db4pl.so' -- so a C
+          compiler, make and 'SWI-Prolog.h' are wanted, and both
+          directories writable. 'viewer.pro' starts a 'swipl' of its own in
+          the pseudo-terminal: about 2.8 s a screen choice.
+
+
+DEMO-PROLOG-2 FOUR GOOD FILES OF THEIR OWN                            (2026-11-01)
+------------------------------------------------------------------------------
+PROBLEM   A case whose output names its own program cannot share the Python
+          text, and not every subject may link.
+DECISION  Accepted through hwut ('hwut.play'/'hwut.run', then
+          'hwut.accept'), each for one reason:
+          screen.pro--open.txt, screen.pro--scroll.txt
+                     line 1 names the program run: '> viewer.pro race.txt'.
+          shop.pro--report.txt
+                     the frame log names the runs by 'HWUT_TEST': 'shop.pro
+                     sell', 'shop.pro report' (and the column of '%-15s'
+                     moves by one).
+          shop.pro--report.stock.csv
+                     byte-identical to Python's ('diff'), but a link stands
+                     only for the stdout subject (bookkeeper B-32:
+                     'hwut.good.link' refuses "is no '.txt' in a GOOD/").
+          'shop.pro report' was accepted from a WHOLE run: alone
+          ('hwut.play') it runs after a fresh 'on_entry' without the
+          delivery and the sale it depends on, so a first, wrong acceptance
+          let the run take it in, and 'hwut.accept --force' took the run's
+          recording.
+
+
+DEMO-PROLOG-3 SQLITE THROUGH A FOREIGN LIBRARY BUILT HERE             (2026-11-01)
+------------------------------------------------------------------------------
+PROBLEM   'shop.py' and 'fixture.py' stand on Python's 'sqlite3'; SWI-Prolog
+          has no SQLite, and no command line 'sqlite3' was installed
+          (measured).
+DECISION  'shop_db4pl.c' -- foreign predicates '$db_open', '$db_execute',
+          '$db_close' -- loads 'libsqlite3.so.0' by 'dlopen' (no header of
+          SQLite needed, the library Python's module stands on);
+          'shop_db.pro' runs 'make' here when it is loaded and loads the
+          result, as the support's 'hwut_vterm.pro' does. 'fixture.pro'
+          loads it at 'on_entry', before any test. The 'Makefile' compiles
+          and links in ONE 'cc' call under a name of its own process and
+          renames onto 'shop_db4pl.so' -- several processes may build at
+          once and none loads a half-written library. No test declares a
+          'build': hwut runs 'swipl <file>.pro'. A fault is
+          error(sqlite_error(Message), _), SQLite's own message; 'trace'
+          writes 'sql: <statement>' to stderr as 'set_trace_callback' does.
+COST      Another C piece; 'Makefile', 'shop_db4pl.c', '.so' and
+          'shop_db.pro' stand in 'ignore'.
+
+
+DEMO-PROLOG-4 WHERE THE SUPPORT STANDS: HWUT_SUPPORT_PROLOG            (2026-11-01)
+------------------------------------------------------------------------------
+PROBLEM   The port's location is to be named once, by the language's
+          standard mechanism where it has one.
+DECISION  SWI-Prolog has none that an environment can set: its library
+          path is the 'file_search_path/2' alias, extended by
+          'swipl -p library=<dir>' (a command-line option, and hwut writes
+          the command line) or by '~/.config/swi-prolog/lib' (the user's
+          own configuration); 'boot/init.pl' of 9.0.4 reads no variable for
+          it (measured: only PATH, XDG_*, and the like). So
+          'support_path.pro' defines the alias 'hwut' from
+          HWUT_SUPPORT_PROLOG, and from the fallback -- the port beside
+          this tree, relative to the file -- only where it is unset -- one line, marked 'HWUT-SUPPORT-PATH'. A test loads
+          'support_path.pro', then 'hwut('hwut_runner.pro')' -- the file
+          name in full: '.pro' is not among SWI's Prolog file types
+          (measured: 'hwut(space_iterator)' "does not exist").
+COST      A test of one's own writes two lines, not one: the alias from the
+          variable, then 'use_module' (README, MAKE IT IMPORTABLE).
+
+
+DEMO-PROLOG-5 WHAT STANDS OUTSIDE THIS DIRECTORY                      (2026-11-01)
+------------------------------------------------------------------------------
+          - The Prolog port is not self-contained: its 'Makefile' builds
+            'hwut_vterm4pl.so' from '../c/hwut_vterm.c' and '.h'. A face
+            that writes '<dir>/prolog' alone must write those two files as
+            '<dir>/c/', or the port carry them.
+          - A link of a non-stdout subject (an 'output' file such as
+            'stock.csv') is refused by B-32; the brief's "also for output
+            files" would need the bookkeeper to allow it.
+          - 'hwut.run' says "12 feature(s) not registered": the central
+            feature file has this directory's ids not yet
+            ('hwut.features.register', outside).
+==============================================================================

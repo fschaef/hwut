@@ -1,0 +1,16 @@
+-- hwut.support node <dir>   (exit 0)
+   WRITTEN: <dir> -- the test writing support in JavaScript (node.js), and its demonstration
+       <dir>/node
+       <dir>/TEST
+   NEXT:    cd <dir>/TEST && hwut --plain
+   MAKE IT IMPORTABLE -- for a test of your own:
+       export NODE_PATH=<dir>/node${NODE_PATH:+:$NODE_PATH}
+       (cd <dir>/node && npm install)
+   A TEST THEN WRITES:
+       const { HwutRunner } = require('hwut_runner');
+   <dir>: TEST hwut-root.conf node
+-- as written, the MAKE IT IMPORTABLE lines applied
+   RESULTS: 27 ok, 0 fail
+-- the marked line pointing nowhere; unset: NODE_PATH; then only the MAKE IT IMPORTABLE lines
+   RESULTS: 27 ok, 0 fail
+<hwut-end>

@@ -31,8 +31,15 @@ begins, status 0:
 
 A FIRST GREEN RUN, in any form:
 
-    hwut.demo.python ~/hwut-demo
-    cd ~/hwut-demo/TEST && hwut --plain        RESULTS: 28 ok, 0 fail
+    hwut.support python ~/hwut-demo
+    cd ~/hwut-demo/TEST && hwut --plain        RESULTS: 27 ok, 0 fail
+
+THE TEST WRITING SUPPORT OF ANOTHER LANGUAGE comes the same way, with the
+same demonstration in that language: 'hwut.support <language> <dir>', the
+language one of python, perl, c, cpp, java, rust, go, node, verilog, vhdl, bash,
+powershell, erlang, guile, haskell, prolog, fortran. The face ends with
+MAKE IT IMPORTABLE: the lines that make '<dir>/<language>' reach a test of
+your own, and the line such a test then writes.
 
 TAB COMPLETION: 'hwut --command-line-setup', then doc/HOWTO-COMPLETION.txt.
 

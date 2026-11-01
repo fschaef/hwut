@@ -87,7 +87,7 @@
 #                    shifted by the run's violation region.
 # propose-aligned    D-42b: one inserted line is one entry of the proposal.
 #                    MEASURED before: every later line a replacement.
-# demo-root          D-43, D-45: 'hwut.demo.python' writes the template
+# demo-root          D-43, D-45: 'hwut.support python' writes the template
 #                    root. MEASURED before: 'hwut { }'.
 # cov-dir            D-50: 'hwut.cov.run' takes '--cov-dir' beside '-o'.
 # labels-derived     D-56: '[derived]' in 'hwut-root.labels' -- recursive,
@@ -355,7 +355,7 @@ PYPE
         echo "exit $?"
         grep -v '^#  \|^$' p.txt ;;
     demo-root)
-        "$BIN/hwut.demo.python" demo > /dev/null 2>&1
+        "$BIN/hwut.support" python demo > /dev/null 2>&1
         "$BIN/hwut.config.show" --root-conf-template > template.txt 2>/dev/null
         cmp -s demo/hwut-root.conf template.txt && echo "root: the template" \
             || echo "root: NOT the template"

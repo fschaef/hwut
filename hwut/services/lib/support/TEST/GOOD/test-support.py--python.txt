@@ -1,0 +1,17 @@
+-- hwut.support python <dir>   (exit 0)
+   WRITTEN: <dir> -- the test writing support in Python, and its demonstration
+       <dir>/python
+       <dir>/TEST
+   NEXT:    cd <dir>/TEST && hwut --plain
+   MAKE IT IMPORTABLE -- for a test of your own:
+       export PYTHONPATH=<dir>/python${PYTHONPATH:+:$PYTHONPATH}
+   A TEST THEN WRITES:
+       from hwut_runner import HwutRunner
+   NOTE:    with hwut installed, nothing is needed: 'from hwut.support.test_writing.python.hwut_runner import HwutRunner'
+   <dir>: TEST hwut-root.conf python
+-- as written, the MAKE IT IMPORTABLE lines applied
+   RESULTS: 27 ok, 0 fail
+-- the marked line pointing nowhere; unset: PYTHONPATH; then only the MAKE IT IMPORTABLE lines
+   RESULTS: 27 ok, 0 fail
+   the copy imports
+<hwut-end>

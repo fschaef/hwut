@@ -1,0 +1,131 @@
+==============================================================================
+support/demo/haskell -- RATIONALE
+==============================================================================
+
+DEMO-HASKELL-1  THE PYTHON DEMONSTRATION, IN HASKELL, ON THE HASKELL PORT
+                                                                  (2026-11-01)
+------------------------------------------------------------------------------
+PROBLEM   The demonstration tree ('../python/TEST') shows a Python author
+          everything a test directory can say. A Haskell author is to be
+          shown the same, over the Haskell port of the test writing
+          support ('support/test_writing/haskell'), and the proof that it
+          IS the same is the Python demonstration's GOOD files.
+DECISION  One program per Python program, choice for choice, the same
+          stems: demo, chamber, door, garage, shop + fixture, screen +
+          viewer, build -- and 'protocol.sh''s producer, a bash heredoc of
+          Python there, is 'producer.hs' here. The data files are the
+          Python demonstration's; 'build.pypes' and 'garage-space.hocon'
+          name 'build.hs' / 'garage.hs' in their comments, the rest is
+          unchanged ('door.pype' too: a pype is Python whatever the program
+          is, so its model is the Python 'hwut_fsm'; the program only
+          prints). 24 of the 27 cases' GOODs are '.link's to the Python
+          GOODs; the three that are not, and the output file, are
+          DEMO-HASKELL-3.
+          WHERE THE DEMONSTRATION FOUGHT HASKELL, and how it was met:
+          no 'random'    GHC ships none (it is Hackage's), and the support's
+                         'DeterministicStream' is the opposite of what the
+                         clock-seeded choices want. 'ClockRandom.hs':
+                         SplitMix64 over an IORef, stepped atomically
+                         (several threads draw), seeded by the clock's
+                         nanoseconds; Box-Muller for 'gauss'.
+          no sqlite3,    'Sqlite.hs' binds the C library by the FFI
+            no json      ('safe' calls: a connection waiting for SQLite's
+                         lock blocks its OS thread, not the runtime --
+                         '-threaded'); its trace is 'sqlite3_expanded_sql'
+                         per statement, Python's 'set_trace_callback'. The
+                         delivery note is read by a JSON reader of 40 lines
+                         in 'shop.hs'.
+          threads        'forkIO' under the threaded runtime; an MVar is a
+                         lock, another a thread's 'join'. Python's
+                         'queue.Queue' is an MVar over a list.
+          a model with   'Garage' is a value, 'arrive'/'leave' steps of
+            state        'State Garage'; where two gates share it (the
+                         race) it is an IORef, and each gate's step and
+                         what it saw too: a Trigger is a record of
+                         functions closing over them.
+          'show' is not  the YAML of 'chamber.hs' prints '0.15', '0.01' --
+            'str'        'show' says '1.0e-2'; the port's 'floatRepr'.
+          no terminal    'viewer.hs' asks the size by 'ioctl TIOCGWINSZ'
+            size in      through 'capi' (the constant and the variadic call
+            'unix'       C's own); raw mode is 'tty.setraw''s modes, by
+                         'System.Posix.Terminal'.
+          no 'with'      'withTerminal' ('bracket'), as the port has it.
+          a pype named   'build.hs' and 'door.hs' print no '<hwut-end>':
+            in a header  the pype does; the choice-less error paths exit 1
+                         as Python's do.
+          HERE           Python's '__file__' is the executable's directory
+                         ('getExecutablePath'): 'TMP/shop.db', the HOCON
+                         file and 'viewer.exe' are found beside the program
+                         wherever hwut starts it from.
+          MEASURED (GHC 9.4.7, libsqlite3 3.45.1, libvterm 0.3.3, this worktree,
+          a loaded machine): 'garage.exe''s four choices 'cmp'-identical
+          to the Python GOODs; 'screen.exe''s identical but for the one
+          line of DEMO-HASKELL-3; every other case passes against the
+          Python GOOD it links. 'hwut.run --plain' in
+          'TEST/': 27 ok, 0 fail, twice -- the first from a 'make clean'
+          directory, building all ten programs (33 - 50 s wall), the second
+          17 - 23 s (the 'slow' choice alone waits 3 s). One 'ghc' build peaks
+          at 143 - 190 MB (garage, with five support modules), under the
+          default build caps; 1.7 - 11.5 s each at -O0 on the loaded
+          machine; '-dynamic' executables of 28 - 490 KB. A case then
+          starts in some 20 ms.
+COST      A test is built before it runs: GHC, make and a C compiler where
+          the demonstration stands, and the executables run only beside
+          their GHC's shared libraries ('-dynamic', as the port's). 'door'
+          and 'build' are Haskell programs judged by Python pypes: the
+          pype is hwut's, not the program's language. The helpers are
+          built by 'on_entry' (no header builds them), one after the
+          other, inside its 20 s 'script_caps' (some 8 s MEASURED); 'make
+          -j3' there was MEASURED to end the script by its memory cap
+          (three 'ghc' at once).
+
+DEMO-HASKELL-2  WHERE THE SUPPORT STANDS: ONE LINE OF THE MAKEFILE  (2026-11-01)
+------------------------------------------------------------------------------
+PROBLEM   The demonstration is written out beside a copy of the port, and a
+          user's own test must find the port with no more than the lines
+          'README.txt' gives. GHC has NO variable of the environment for a
+          directory to import modules from (GHC_PACKAGE_PATH and package
+          environments name package databases, not source directories).
+DECISION  The variable 'HWUT_SUPPORT_HASKELL', on the one line of 'Makefile'
+          marked 'HWUT-SUPPORT-PATH', with '?=': the environment WINS over
+          the directory written there, which is the port as the clone
+          places it beside this demonstration. Every other path derives
+          from it: '-i$(SUPPORT)', the modules a target depends on, and
+          the C port 'Hwut.Vterm' binds, '$(SUPPORT)/../c' -- beside the
+          Haskell port, as the port's own Makefile has it. 'make' keeps the
+          blanks before a comment in the value: 'SUPPORT' is its '$(strip)'.
+          MEASURED, the face simulated in '/tmp/x-haskell' ('/tmp/x' was
+          taken by another session): the port and the C port copied to
+          '<dir>/haskell' and '<dir>/c', TEST copied with every '.link'
+          resolved into the text it names, the feature documents made
+          absolute, 'hwut-root.conf' written by 'services/_boundary', then
+          'hwut --plain': with the directory replaced by '../haskell' and
+          no variable set, 27 ok; replaced by '/hwut-support-not-here' and
+          only 'export HWUT_SUPPORT_HASKELL=<dir>/haskell' applied, 27 ok.
+COST      A user's own build must name the variable ('-i...'): there is no
+          way to make a module importable to a bare 'ghc' from outside.
+
+DEMO-HASKELL-3  THE GOOD FILES THAT ARE NOT LINKS                 (2026-11-01)
+------------------------------------------------------------------------------
+PROBLEM   Some output names the program's own file, which is not the
+          Python one.
+DECISION  Own GOODs, accepted through hwut ('hwut.play'/'hwut.run', then
+          'hwut.accept'), one line each:
+          screen.hs--open.txt, screen.hs--scroll.txt
+                    the first line is the command run, '> viewer.exe
+                    race.txt' -- Python's '> viewer.py race.txt'; every
+                    other line, the screen itself, is the Python GOOD's.
+          shop.hs--report.txt
+                    the frame log holds '$HWUT_TEST', 'shop.hs sell',
+                    'shop.hs report' -- Python's 'shop.py ...'. Accepted
+                    from a 'hwut.run' recording: a 'hwut.play' of 'report'
+                    alone opens a fresh shop and runs neither of its
+                    dependencies.
+          shop.hs--report.stock.csv
+                    the same text as Python's; but a '.link' holds stdout
+                    alone (bookkeeper B-32, "only stdout links"), and
+                    'hwut.good.link' refuses a '.csv'. An own copy until
+                    the engine links output files.
+COST      Four files that a change of the Python demonstration does not
+          reach.
+==============================================================================

@@ -1,0 +1,17 @@
+-- hwut.support prolog <dir>   (exit 0)
+   WRITTEN: <dir> -- the test writing support in Prolog (SWI), and its demonstration
+       <dir>/prolog
+       <dir>/c   (the Prolog (SWI) support stands on it)
+       <dir>/TEST
+   NEXT:    cd <dir>/TEST && hwut --plain
+   MAKE IT IMPORTABLE -- for a test of your own:
+       export HWUT_SUPPORT_PROLOG=<dir>/prolog
+   A TEST THEN WRITES:
+       :- getenv('HWUT_SUPPORT_PROLOG', Dir), asserta(user:file_search_path(hwut, Dir)).
+       :- use_module(hwut('hwut_runner.pro')).
+   <dir>: TEST c hwut-root.conf prolog
+-- as written, the MAKE IT IMPORTABLE lines applied
+   RESULTS: 27 ok, 0 fail
+-- the marked line pointing nowhere; unset: HWUT_SUPPORT_PROLOG; then only the MAKE IT IMPORTABLE lines
+   RESULTS: 27 ok, 0 fail
+<hwut-end>

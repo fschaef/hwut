@@ -1,0 +1,132 @@
+==============================================================================
+support/demo/java -- RATIONALE
+==============================================================================
+
+DEMO-JAVA-1   THE PYTHON DEMONSTRATION IN JAVA, HELD BY THE PYTHON GOODS
+                                                                      (2026-11-01)
+------------------------------------------------------------------------------
+PROBLEM   '../python/TEST' shows, once each, everything a test directory can
+          say. A Java test author is to see the same, written in Java, with
+          the Java port of the test writing support -- and the same GOOD
+          files prove it says the same.
+DECISION  One Java file per Python file, choice for choice, the same stems
+          ('demo.java', 'chamber.java', 'door.java', 'garage.java',
+          'shop.java' + 'fixture.java', 'screen.java' + 'viewer.java',
+          'build.java'); 'protocol.sh' stays a bash test, its producer is
+          'producer.java'. The data files are the Python demo's, unchanged
+          but for two comments that named a Python file ('build.pypes',
+          'garage-space.hocon'). Every GOOD that can be is a '.link' to the
+          Python demo's '.txt' (24 of 27 cases).
+          HOW IT IS BUILT: each test says 'build { framework = "make",
+          executable = "%.exe" }'; the Makefile compiles 'x.java' with the
+          support classes it uses into 'x.classes/' -- one directory per
+          target, nothing shared (E-210) -- and writes the launcher 'x.exe',
+          as the port's own 'TEST/Makefile' does. The Makefile names the
+          class after the file ('garage' -> 'Garage'), so the garage's unit
+          under test is the nested 'Garage.Counter'.
+          WHERE A TEST STANDS: Java has no '__file__'; a program finds its
+          directory as the parent of the classes directory it runs from
+          (its class's code source) -- wherever hwut starts it.
+MEASURED  (JDK 21.0.12, libvterm 0.3.3, libsqlite3.so.0, load ~26 on 2 CPUs
+          from parallel sessions) 'hwut.run --plain' in 'TEST/': 27 ok, 0
+          fail -- the Python demo's count -- twice. Before linking, every
+          deterministic output compared with the Python program's by 'diff':
+          'garage' (all four choices), 'door' (both): identical.
+
+DEMO-JAVA-2   WHERE THE SUPPORT STANDS: CLASSPATH, ONE LINE      (2026-11-01)
+------------------------------------------------------------------------------
+PROBLEM   A face writes this demo out beside a copy of the port and rewrites
+          one line; a user's own test must find the support by Java's own
+          means alone.
+DECISION  The Makefile's 'SUPPORT' line, marked 'HWUT-SUPPORT-PATH', is the
+          one place: CLASSPATH first, then the fallback beside this tree. It
+          is javac's STANDARD mechanism: without '-sourcepath', javac
+          searches the class path for SOURCES and compiles what a test
+          imports into its '-d' directory -- so 'export CLASSPATH=<dir>/java'
+          is all a user needs (README, MAKE IT IMPORTABLE). The Makefile
+          passes both as '-sourcepath .:$(SUPPORT)' ('.' for 'Sqlite.java');
+          a fallback that stands nowhere is harmless behind a CLASSPATH that
+          does. The launchers' '-cp' overrides CLASSPATH at run time.
+MEASURED  The face simulated in '/tmp/x-javademo' (not '/tmp/x': parallel
+          sessions write there): the literal replaced by '../java', nothing
+          applied -- 27 ok; replaced by '/hwut-support-not-here', only
+          'export CLASSPATH=...' applied -- 27 ok. A test of one's own
+          ('import hwut.HwutRunner;', the javac/java lines of the README)
+          compiled and ran with that line alone.
+
+DEMO-JAVA-3   THREE GOODS OF THEIR OWN                           (2026-11-01)
+------------------------------------------------------------------------------
+          'screen.java--open.txt', 'screen.java--scroll.txt': the first line
+          names the program run, '> viewer.exe race.txt' (Python's
+          '> viewer.py race.txt'); every other line is the Python GOOD's.
+          'shop.java--report.txt': the frame log names the test runs,
+          'shop.java sell', 'shop.java report' -- one character longer than
+          'shop.py report', it fills the '%-15s' column. Each recorded by
+          'hwut.play' and blessed by 'hwut.accept'; 'shop.java report'
+          bootstrapped so (a play opens a fresh shop), then its frame
+          recorded by 'hwut.run' -- delivery and sale before it, by its
+          dependency -- and blessed by 'hwut.accept --force'.
+          'shop.java--report.stock.csv': the SAME bytes as the Python
+          demo's ('cmp'), yet a copy: a link holds stdout alone (bookkeeper
+          B-32), and 'hwut.good.link' refuses a source that is no '.txt'.
+
+DEMO-JAVA-4   SQLITE WITHOUT A DRIVER                            (2026-11-01)
+------------------------------------------------------------------------------
+PROBLEM   The shop keeps its stock in SQLite. Python brings 'sqlite3'; the
+          JDK brings no SQLite and no JDBC driver for it, and a jar would be
+          one more thing to install.
+DECISION  'Sqlite.java' calls 'libsqlite3.so.0' through the Foreign Function
+          & Memory API, as the port's 'Vterm' calls libvterm: open_v2 with a
+          busy timeout (Python's 'timeout=10'), autocommit (its
+          'isolation_level=None'), prepare/bind/step/finalize, SQLite's own
+          message as the error; every statement told to a trace on stderr
+          (its 'set_trace_callback'). The delivery note is read by a JSON
+          reader of 40 lines in 'shop.java': the JDK reads no JSON.
+COST      libsqlite3 must stand at run time (it does wherever python3's
+          sqlite3 works).
+
+DEMO-JAVA-5   THE FRAME IS A JAVA PROGRAM, BUILT ON ENTRY        (2026-11-01)
+------------------------------------------------------------------------------
+PROBLEM   'on_entry' opens the shop before any test runs; 'delivery.json'
+          is run by 'execute' with the shop, but has no build of its own;
+          two tests building one target at once would share it.
+DECISION  'on_entry' is 'make -s fixture.exe shop.exe && ./fixture.exe
+          open': both built before anything is dispatched, one after the
+          other; hwut's later 'make shop.exe' finds it up to date.
+          'script_caps' is 120 s where Python's is 20 s.
+MEASURED  'make fixture.exe shop.exe' 31 s under the load of parallel
+          sessions (20 s cut the frame in the first run: 'wall clock
+          exceeded'); a 'check' 0.3 s for a test that is no shop's, 2 s for
+          one that is (the JVM, then libsqlite3).
+
+DEMO-JAVA-6   THE VIEWER WITHOUT TERMIOS; ONE WRITE PER SCREEN   (2026-11-01)
+------------------------------------------------------------------------------
+PROBLEM   Java has no 'termios' or 'tty.setraw', no 'os.get_terminal_size'.
+DECISION  'viewer.java' asks 'stty' on its own terminal (stdin inherited):
+          'stty -g' saves, 'stty raw -echo' sets, 'stty size' measures,
+          'stty <saved>' restores. The alternate screen's switch goes out in
+          ONE write with the first screen.
+MEASURED  Written apart, the switch reached the terminal and the screen did
+          not within the terminal's settle time (0.1 s) once in a few runs
+          under load: 'run' returned on a blank screen, 'title bar: plain'.
+          In one write: 'screen.java scroll' identical to its GOOD three
+          times running, and in every hwut run since.
+
+DEMO-JAVA-7   THE PRODUCER BY THE SINGLE-FILE LAUNCHER           (2026-11-01)
+------------------------------------------------------------------------------
+          'protocol.sh' runs 'java producer.java': no support class, so no
+          build -- and so no target three choices could build at once.
+          JAVA_TOOL_OPTIONS goes onto the command line and out of the
+          environment, as in the launchers: a JVM that finds it says so on
+          stderr, and hwut fails a run on stderr.
+
+DEMO-JAVA-8   A BOOK ROW 'hwut.good.link' LEFT                   (2026-11-01)
+------------------------------------------------------------------------------
+          Linking 'GOOD/build.java.txt' ('same = true': one GOOD for both
+          choices) entered a choice-less row 'build.java;;' in the book, and
+          every run said 'build.java  in book, no such choice' (28 cases,
+          one failing). 'hwut.sanitize.propose' declined to forget it (it
+          would take the whole test). The row was taken out of
+          'GOOD/book.csv' by hand, the two choice rows kept. A defect of
+          'hwut.good.link' for a 'same' nominal, outside this directory.
+==============================================================================

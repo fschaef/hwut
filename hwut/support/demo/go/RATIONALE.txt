@@ -1,0 +1,96 @@
+==============================================================================
+support/demo/go -- RATIONALE
+==============================================================================
+
+DEMO-GO-1  THE PYTHON DEMONSTRATION IN GO, HELD BY ITS GOOD FILES
+           (asked 2026-11-01)                                   (2026-11-01)
+------------------------------------------------------------------------------
+PROBLEM   'demo/python/TEST' shows everything a test directory can say. A Go
+          author is owed the same directory over the Go support -- and the
+          proof that it says the same: the same output.
+DECISION  One Go program per Python program, the same stems ('demo.go',
+          'door.go', 'garage.go', 'shop.go' + 'fixture.go', 'screen.go' +
+          'viewer.go', 'build.go', 'chamber.go'); 'protocol.sh' stays bash,
+          its producer is Go ('producer.go'). The data files are Python's,
+          unchanged but for two comments naming 'build.py' and 'garage.py'.
+          'door.pype' imports Python's 'hwut_fsm', unchanged: a pype's
+          actions are Python whatever the application's language -- the
+          pype is hwut's face, not a library of the test (as the Go
+          support's README says of 'hwut.pype'). 'hwut.conf' says what the
+          Python one says, for the Go programs; 'hwut-features.conf' has the
+          same keys and titles.
+MEASURED  go1.24.7, libvterm 0.3.3, libsqlite3 3.53.1: 'hwut.run --plain' in
+          TEST: 27 ok, 0 fail -- the case count of 'python/TEST' -- twice
+          (21.6 s from a clean directory, 12.8 s; warm build cache). Every
+          output that links was compared by 'diff' with the Python GOOD
+          where the run is deterministic ('door', 'garage' four choices,
+          'build' through the pype system, 'stock.csv'): identical.
+
+DEMO-GO-2  WHERE THE SUPPORT STANDS: ONE LINE, A WORKSPACE PER TARGET
+                                                                (2026-11-01)
+------------------------------------------------------------------------------
+PROBLEM   Go has no search path for a module (GOPATH is not read in module
+          mode); a 'go.mod' names a local module by 'replace', a 'go.work'
+          by 'use' -- both are files, neither reads a variable. The port's
+          location must be named in ONE line, the variable first.
+DECISION  The Makefile's line marked 'HWUT-SUPPORT-PATH': HWUT_SUPPORT_GO
+          where it is set, else the port beside this demo in the clone.
+          Each target writes a workspace of its own, '.gowork/<stem>.work'
+          ('use' this directory's module 'hwutdemo' and the support), and
+          builds with GOWORK naming it: no file shared between targets but
+          Go's build cache (services E-210 -- several tests build at once).
+          'GOFLAGS' is unexported: '-mod=mod' (the port's Makefile) is
+          refused in workspace mode.
+MEASURED  The face simulated in '/tmp/x-golang-demo' (not '/tmp/x': other
+          ports' simulations wrote there at the same time): the literal
+          replaced by '../go', nothing applied -- 27 ok on an EMPTY build
+          cache (110 s); replaced by '/hwut-support-not-here', only
+          'export HWUT_SUPPORT_GO=<dir>/go' applied -- 27 ok (25 s); the
+          same without the export -- the build fails, naming the path. A
+          test of one's own with its own 'go.mod': the 'go mod edit' line of
+          the README, then 'go build' and '--hwut-info' answer.
+
+DEMO-GO-3  THE PROGRAMS THAT ARE NO TEST ARE BUILT BY 'on_entry'
+                                                                (2026-11-01)
+------------------------------------------------------------------------------
+PROBLEM   Python runs 'fixture.py', 'viewer.py', the producer and 'shop.py
+          deliver' as they stand. Go must build them first -- before the
+          entry script stocks the shop, and before 'delivery.json' (a test
+          without a build) calls 'shop.exe'. Builds are dispatched work;
+          'on_entry' runs before any dispatch (scheduler: the frame).
+DECISION  'on_entry = "make -s helpers && ./fixture.exe open"': fixture,
+          viewer, producer and shop built once, before any test, then the
+          shop stocked. 'script_caps' rises from Python's 20 s to 180 s and
+          states 'file_size_mb = 256': on a cold cache the build of the two
+          cgo programs outlasts 20 s, and Go's runtime archive exceeds the
+          default 10 MB per file (support/test_writing/go README). A later
+          'make shop.exe' by the test's own build finds it current.
+          SQLITE: Go's standard library has none and nothing is downloaded;
+          'sqlite.go' (built into shop and fixture) loads 'libsqlite3.so.0'
+          by 'dlopen' -- the library Python's 'sqlite3' stands on -- and
+          declares its eleven functions: cgo, no header. The SQL log on
+          stderr is written before each statement, as Python's trace.
+          viewer.go: Go has no 'termios'; raw mode and the size are ioctl
+          system calls (TCGETS, TCSETS, TCSETSW = 0x5403, TIOCGWINSZ).
+MEASURED  On an empty build cache the whole run took 110 s, 27 ok; the
+          entry script stood inside its 180 s.
+
+DEMO-GO-4  THE GOOD FILES THAT ARE NOT LINKS                    (2026-11-01)
+------------------------------------------------------------------------------
+'screen.go--open.txt', '--scroll.txt'  the screen names 'viewer.exe' (and
+          the sample file 'demo.go'); Python's names 'viewer.py'.
+'shop.go--report.txt'  the frame log holds $HWUT_TEST, 'shop.go'.
+'shop.go--report.stock.csv'  byte-identical to Python's, but an output file
+          cannot link: 'hwut.good.link' refuses a source that is no '.txt',
+          and the bookkeeper resolves links for stdout alone (B-32, "only
+          stdout links").
+All four accepted through hwut: 'hwut.play', 'hwut.accept'; the report's
+again after a full run ('hwut.accept --force'), since a play of one case
+runs no case it depends on.
+          THE BOOK: 'hwut.good.link' of the 'same = true' text 'build.py.txt'
+          to 'GOOD/build.go.txt' entered a CHOICE-LESS case 'build.go' in
+          'GOOD/book.csv' besides its two choices -- 28 cases, one 'in book,
+          no such choice'; 'hwut.sanitize.propose' would not forget it
+          ("would take the whole test"). The book was written anew by the
+          run (E-41: every linked nominal registered).
+==============================================================================

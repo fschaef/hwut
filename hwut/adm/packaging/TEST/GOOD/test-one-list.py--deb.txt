@@ -9,6 +9,6 @@
     /usr/bin:      the faces of bin/ but hwut.dev.*: True
     completions:   one link per face: True
     package:       True
-    TEST directories: support/demo/python/TEST
+    TEST directories: 
     postinst, prerm: True
 <hwut-end>

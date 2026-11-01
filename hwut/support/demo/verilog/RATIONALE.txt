@@ -1,0 +1,131 @@
+==============================================================================
+support/demo/verilog -- RATIONALE
+==============================================================================
+
+DEMO-VERILOG-1  THE PYTHON DEMONSTRATION IN SYSTEMVERILOG: ONE SIMULATION
+                PER APPLICATION, THE PYTHON GOODS LINKED        (2026-11-01)
+------------------------------------------------------------------------------
+PROBLEM   'support/demo/python/TEST' shows everything a test directory can
+          say. A SystemVerilog author wants the same, over the SystemVerilog
+          port of the test support ('support/test_writing/verilog') -- in a
+          language whose programs are simulations, built by Verilator, with
+          no threads, no clock of the world, no terminal, no database.
+DECISION  One '.sv' per '.py', choice for choice, the same stems: demo,
+          chamber, door, garage, build, shop + fixture, screen + viewer, and
+          'producer.sv' for the producer 'protocol.sh' ran as inline Python.
+          Each builds to '<stem>.exe' through the 'Makefile' (hwut by the
+          header's 'build', services E-210); the helpers no header builds
+          -- fixture, producer, and 'shop.exe' that 'delivery.json' is
+          executed by -- are built by 'on_entry'. 'protocol.sh' stays bash:
+          it is the Python demonstration's own shape, a shell piping a
+          producer into a pype. The pype scripts, 'build.pypes', the HOCON
+          and the JSON are the Python ones; 'build.pypes' and
+          'garage-space.hocon' only renamed in their comments the files
+          they name.
+          WHAT PYTHON DOES WITH THREADS, the simulation does with PROCESSES
+          ('fork ... join'), each waiting a delay drawn at random in
+          SIMULATED time: demo's race and pool, build's parallel jobs, the
+          producer's clients, the shop's clerks. The order of their lines is
+          the draw's, as in Python it is the scheduler's.
+          THE RUN'S RANDOMNESS is the port's 'DeterministicStream', seeded
+          per run by 64 bits of '/dev/urandom' -- Python seeds by the clock;
+          a simulation has none of the world's.
+          THE OPERATING SYSTEM through DPI-C into the C library itself, no
+          C of this directory: SQLite ('sqlite3_open', '_exec', '_prepare_v2'
+          ... '-lsqlite3', in 'shop_db.sv'), 'mkdir' and 'remove'; for the
+          viewer 'ioctl(TIOCGWINSZ)' and 'tcgetattr'/'cfmakeraw'/'tcsetattr'
+          (the structs held as bit vectors larger than they are). The
+          command line and the exit status are the port's ('hwut_runner').
+          The delivery note, JSON, is read by the port's 'hwut_hocon': the
+          note's outer object, refused by HOCON at the top, bound to a key
+          ('delivery = {').
+          THE STAMP of the chamber's sensors is today's in UTC: the boot time
+          of '/proc/stat' plus '/proc/uptime', the civil date computed.
+          GOODS: 23 of the 26 stdout GOODs are '.link's to the Python
+          demonstration's '.txt' ('hwut.good.link'). Three, and the one
+          output file's, are this directory's own, accepted through
+          'hwut.play' and 'hwut.accept' ('shop.sv report' from the OUT of a
+          whole 'hwut.run': alone it misses the delivery and the sale):
+              screen.sv--open.txt, screen.sv--scroll.txt
+                  the test prints '> viewer.exe race.txt', the program it
+                  runs -- Python's prints '> viewer.py race.txt'; the sample
+                  file shown names 'demo.sv'.
+              shop.sv--report.txt
+                  the frame log names the test run by hwut's 'HWUT_TEST':
+                  'shop.sv sell', not 'shop.py sell'.
+              shop.sv--report.stock.csv
+                  the same bytes as Python's -- but an output file's GOOD
+                  cannot be a link: the engine follows '.link' for stdout
+                  alone ('good_link.link_path_of').
+          THE PORT'S LOCATION stands on ONE line of the 'Makefile', marked
+          'HWUT-SUPPORT-PATH': 'HWUT_SUPPORT_VERILOG ?= <the clone's port>'.
+          SystemVerilog has no standard search path for packages (a build
+          names its files), so the variable is the mechanism, and the
+          environment's value takes precedence ('?='). The C port is found
+          from it, '$(SUPPORT)/../c' -- the SystemVerilog port reaches into
+          it by DPI-C, so wherever the support is written, 'c' must stand
+          beside 'verilog'.
+          THE BOOK: 'hwut.good.link' onto 'build.sv.txt' -- one GOOD for both
+          choices, 'same = true' -- entered a choice-less 'build.sv' in
+          'GOOD/book.csv', and the run said 'in book, no such choice'; the
+          line was taken out by hand, the run's own 'parallel'/'serial'
+          entries kept.
+COST      A first run builds ten simulations: 30 s to 2 min each on this
+          machine, three at once in 'on_entry'. Concurrency is simulated --
+          a clerk's transaction is never interrupted by another clerk, so
+          SQLite's lock is contended only between 'delivery.json' and
+          'shop.sv sell', which hwut keeps apart ('collision'). The viewer
+          leans on Linux's struct sizes and 'TIOCGWINSZ'.
+
+DEMO-VERILOG-2  'on_entry' BUILDS, AND ITS CAPS ARE A BUILD'S     (2026-11-01)
+------------------------------------------------------------------------------
+PROBLEM   'on_entry' must build the fixture, the producer and 'shop.exe'
+          before anything runs: the Python 'script_caps { timeout_sec = 20 }'
+          and the script defaults (512 MB, 32 processes, 300 s CPU) cannot
+          hold three Verilator builds.
+DECISION  'make -s -j 3' under 'script_caps { timeout_sec = 600, cpu_sec =
+          900, memory_mb = 2048, child_process_max_n = 128, file_size_mb =
+          256, disk_mb = 1024 }'; every header's 'build { caps { memory_mb =
+          2048  file_size_mb = 256  disk_mb = 1024 } }' (services E-212).
+          MEASURED: a build peaks at some 450 MB (the port: 435), 30 s to 2
+          min wall clock, 10 to 70 s CPU on a shared machine. 'garage.sv'
+          (six packages) failed under the default caps twice over: g++ died
+          writing Verilator's precompiled header ('File size limit exceeded'
+          -- the header is over 64 MB, under 256 MB; the default is 10), and
+          the build's scratch passed the default 100 MB of disk.
+COST      The frame's caps are wide for 'fixture.exe check' too; it needs
+          none of them.
+
+DEMO-VERILOG-3  VERILATOR 5.020, MEASURED, AND HOW THE CODE MEETS IT
+                                                                (2026-11-01)
+------------------------------------------------------------------------------
+PROBLEM   Code the language admits, which Verilator 5.020 compiles wrong or
+          refuses.
+DECISION  Written around, each where it bit:
+          '$fgets' as the condition of a 'while', in a class method, was
+          never called (strace: the file opened and closed, no read) -- it
+          stands as a statement of its own, 'if ($fgets(...) == 0) break;'
+          in a 'forever', everywhere;
+          a queue pattern as an argument ('run('{"./viewer.exe", path})') is
+          refused, and a function call in 'super.new' generated C++ that
+          does not compile -- lists are built by 'push_back' and passed by
+          variable; 'super.new' takes a literal pattern, as the port's tests
+          do;
+          a ternary of string literals is a vector -- cast by string'();
+          'table' and 'cell' are reserved words -- renamed;
+          a 64-bit literal needs its size ('64'h10_0000_0000');
+          '$finish' prints a line -- every program ends by the port's
+          'exit_'.
+COST      The code reads less like SystemVerilog as a book writes it.
+
+MEASURED (2026-11-01, Verilator 5.020, g++ 13): 'hwut.run --plain' in TEST
+from a clean directory (no '*.exe', no TMP, no OUT): 27 ok, 0 fail, 98 s --
+the same 27 cases as 'python/TEST' (its book); again: 27 ok, 0 fail, 4 s.
+WRITTEN OUT as a face would ('<dir>' = '/tmp/x-verilog': the port at
+'<dir>/verilog', the C port at '<dir>/c', TEST with every '.link' resolved
+into its text, the root's 'hwut-root.conf' written by
+'services/_boundary.written'), 'hwut --plain' in '<dir>/TEST':
+    fallback '../verilog', no variable set           27 ok, 0 fail, 95 s
+    fallback '/hwut-support-not-here',
+    'export HWUT_SUPPORT_VERILOG=<dir>/verilog'      27 ok, 0 fail, 89 s
+==============================================================================

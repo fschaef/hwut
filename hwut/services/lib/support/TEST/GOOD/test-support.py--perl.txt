@@ -1,0 +1,15 @@
+-- hwut.support perl <dir>   (exit 0)
+   WRITTEN: <dir> -- the test writing support in Perl, and its demonstration
+       <dir>/perl
+       <dir>/TEST
+   NEXT:    cd <dir>/TEST && hwut --plain
+   MAKE IT IMPORTABLE -- for a test of your own:
+       export PERL5LIB=<dir>/perl${PERL5LIB:+:$PERL5LIB}
+   A TEST THEN WRITES:
+       use Hwut::Runner;
+   <dir>: TEST hwut-root.conf perl
+-- as written, the MAKE IT IMPORTABLE lines applied
+   RESULTS: 27 ok, 0 fail
+-- the marked line pointing nowhere; unset: PERL5LIB; then only the MAKE IT IMPORTABLE lines
+   RESULTS: 27 ok, 0 fail
+<hwut-end>

@@ -33,7 +33,11 @@ by PATH and by path alike.
                         hwut.rename   hwut.move
                         hwut.sanitize hwut.sanitize.propose
                         hwut.sanitize.apply  hwut.pype
-                        hwut.demo.python
+                        hwut.support (<language> <dir>, the language one
+                        of 17: python, perl, c, cpp, java, rust, go, node,
+                        verilog, vhdl, bash, powershell, erlang, guile,
+                        haskell, prolog, fortran); hwut.demo.python,
+                        retired (E-217)
 
     hwut            THE DEFAULT FACE: 'hwut' alone is 'hwut.run'. A
                     bare 'hwut' states no wish, and a wish that states

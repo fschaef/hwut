@@ -1,0 +1,88 @@
+==============================================================================
+support/demo/perl -- RATIONALE
+==============================================================================
+
+DEMO-PERL-1  THE PYTHON DEMONSTRATION IN PERL, HELD BY ITS GOOD FILES
+                                                                  (2026-11-01)
+------------------------------------------------------------------------------
+PROBLEM   The Python demonstration ('../python/TEST') shows everything a
+          test directory can say. A Perl author should see the same, in
+          Perl, over the Perl test support -- and a second set of GOOD files
+          would only prove that the Perl demo agrees with itself.
+DECISION  One Perl application per Python application, choice for choice,
+          the same stems ('demo.pl', 'door.pl', 'garage.pl', 'shop.pl' +
+          'fixture.pl', 'screen.pl' + 'viewer.pl', 'chamber.pl',
+          'build.pl'); 'protocol.sh' stays a bash script, its live producer
+          a Perl program. The data files are the Python demo's: '.pype',
+          '.pypes', '.hocon', '.json' -- 'build.pypes' and
+          'garage-space.hocon' only name the Perl file in their comments.
+          'door.pype' imports Python's 'hwut_fsm': a pype script is Python,
+          whatever language the application under it is written in.
+          24 of the 27 cases' GOODs are '.link's to the Python GOODs.
+          MEASURED (2026-11-01, Perl 5.38.2): 'hwut.run --plain' 27 ok,
+          twice; 'garage.pl' prints byte for byte the Python GOODs on the
+          first run (the deterministic stream and the timeline are the
+          support's); every clock-seeded choice passes on every run.
+COST      A change of the Python demo's printed words fails this directory
+          until the Perl programs follow -- which is the point.
+
+DEMO-PERL-2  THREE GOODS OF THEIR OWN, BECAUSE THE OUTPUT NAMES PERL'S FILES
+                                                                  (2026-11-01)
+------------------------------------------------------------------------------
+PROBLEM   'Aim for zero' own GOODs; but some output names the program.
+DECISION  Accepted through hwut ('hwut.accept --unlink' over a recording):
+          screen.pl--open, screen.pl--scroll   the test prints the command
+                     it runs, '> viewer.pl race.txt', and the file shown
+                     on the screen names 'demo.pl race'.
+          shop.pl--report   the frame log names the runs it stands around,
+                     'before shop.pl sell' -- '$HWUT_TEST' is the Perl file.
+          shop.pl--report.stock.csv   the SAME BYTES as the Python one, but
+                     an output file cannot be linked: 'hwut.good.link'
+                     refuses a source that is no '.txt', and the engine
+                     follows a '.link' for stdout's nominal only
+                     ('bookkeeper/good_link.py', 'link_path_of'). Its own
+                     copy until the engine links output files.
+COST      Four files to keep in step by hand where the Python demo's words
+          change.
+
+DEMO-PERL-3  WHERE THE DEMONSTRATION FOUGHT PERL                  (2026-11-01)
+------------------------------------------------------------------------------
+THE SUPPORT'S PATH, NAMED ONCE   Two tests use the support ('garage.pl',
+          'screen.pl'); both load 'SupportPath.pm' from their own directory,
+          whose one line marked 'HWUT-SUPPORT-PATH' APPENDS the support to
+          @INC. Appended, not 'use lib' (which prepends): PERL5LIB, Perl's
+          standard mechanism, stands before it and wins. A relative path is
+          taken from the test's directory ($FindBin::Bin), an absolute one
+          as written. MEASURED: with the path replaced by a directory that
+          does not exist and only 'export PERL5LIB=<dir>/perl' applied, the
+          written-out demo runs 27 ok; with it replaced by the copy's
+          relative place and no PERL5LIB, 27 ok as well.
+NO SQLITE IN PERL'S CORE   Python has 'sqlite3'; Perl has DBI with
+          DBD::SQLite only from outside the core, and here neither stood.
+          FFI::Platypus -- wanted by 'Hwut::Vterm' already -- binds
+          'libsqlite3' directly ('ShopDb.pm': open, busy timeout,
+          prepare/bind/step, 'sqlite3_expanded_sql' for the stderr log as
+          Python's trace callback prints it). No new dependency.
+THREE CLERKS ARE PROCESSES, NOT THREADS   An FFI handle is not to be
+          shared across ithreads; each clerk is a fork with a connection of
+          its own, and tells each committed sale through one pipe (one
+          write per line, so the pipe's order is the order of booking).
+          'database is locked' is met by the busy timeout as in Python.
+A THREAD STARTS WITH ITS PARENT'S 'rand'   Perl's ithreads clone the
+          interpreter, the random state with it: three workers drawing
+          their delays would draw the same. 'demo.pl race' draws the delays
+          before the threads start; 'pool' and 'build.pl parallel' seed
+          each thread from the parent's stream.
+NO 'random.gauss', NO 'tty.setraw', NO 'os.get_terminal_size'   Box-Muller
+          over 'rand'; POSIX::Termios set as 'tty.setraw' sets it; the
+          window size by 'TIOCGWINSZ' ('sys/ioctl.ph', as 'Hwut::Vterm'
+          sets it).
+'.pm' IS A PERL TEST'S EXTENSION   The root's language table names '.pl',
+          '.pm', '.t' for Perl, so 'SupportPath.pm' and 'ShopDb.pm' stand in
+          'ignore' with the other helpers.
+THE BOOK AND A SHARED GOOD   'hwut.good.link' over 'build.py.txt' (one
+          GOOD for both choices, 'same = true') entered 'build.pl' as a
+          choice-less case in the book, and the run said 'in book, no such
+          choice'. The book was written afresh by the run instead
+          (E-41, 'REGISTERED'); reported, not mended here.
+==============================================================================

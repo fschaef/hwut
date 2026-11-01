@@ -5,7 +5,7 @@
     launched by one entry point:  True
 
 --- what the stage holds ---
-    TEST directories:  support/demo/python/TEST
+    TEST directories:  
     WORK directories:  0
     completion table:  0
     adm/version.py             True

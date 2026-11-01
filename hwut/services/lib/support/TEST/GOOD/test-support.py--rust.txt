@@ -1,0 +1,17 @@
+-- hwut.support rust <dir>   (exit 0)
+   WRITTEN: <dir> -- the test writing support in Rust, and its demonstration
+       <dir>/rust
+       <dir>/TEST
+   NEXT:    cd <dir>/TEST && hwut --plain
+   MAKE IT IMPORTABLE -- for a test of your own:
+       export HWUT_SUPPORT_RUST=<dir>/rust
+       rustc --edition 2021 -O --crate-type rlib --crate-name hwut -o <dir>/libhwut.rlib $HWUT_SUPPORT_RUST/src/lib.rs
+   A TEST THEN WRITES:
+       use hwut::hwut_runner::HwutRunner;
+   NOTE:    built with 'rustc --edition 2021 -O --extern hwut=<dir>/libhwut.rlib my-test.rs'
+   <dir>: TEST hwut-root.conf rust
+-- as written, the MAKE IT IMPORTABLE lines applied
+   RESULTS: 27 ok, 0 fail
+-- the marked line pointing nowhere; unset: HWUT_SUPPORT_RUST; then only the MAKE IT IMPORTABLE lines
+   RESULTS: 27 ok, 0 fail
+<hwut-end>

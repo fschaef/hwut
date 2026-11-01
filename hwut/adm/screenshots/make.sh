@@ -17,10 +17,10 @@ OUT=$(mkdir -p "${1:-$VUT/doc/img}" && cd "${1:-$VUT/doc/img}" && pwd)
 WORK=$(mktemp -d)
 trap 'tmux kill-session -t hwut-shot 2>/dev/null; rm -rf "$WORK"' EXIT
 cp -r "$VUT" "$WORK/hwut"
-rm -rf "$WORK/hwut/.git" "$WORK"/hwut/demo/*/TEST/OUT
+rm -rf "$WORK/hwut/.git" "$WORK"/hwut/support/demo/*/TEST/OUT
 export PYTHONPATH="$WORK${PYTHONPATH:+:$PYTHONPATH}" COLUMNS=100 TERM=xterm-256color
 BIN="$WORK/hwut/bin"
-DEMO="$WORK/hwut/demo/python/TEST"
+DEMO="$WORK/hwut/support/demo/python/TEST"
 
 scene() {           # scene DIR FILE TITLE BODY -- one program, one choice, accepted
     mkdir -p "$1/GOOD"
@@ -34,7 +34,7 @@ scene() {           # scene DIR FILE TITLE BODY -- one program, one choice, acce
 sed -i 's/1 2 3/1 2 4/' "$DEMO/demo.py"
 
 #  scene: an invoice whose behaviour changed
-INV="$WORK/hwut/demo/acceptscene/TEST"
+INV="$WORK/hwut/support/demo/acceptscene/TEST"
 scene "$INV" invoice.sh "Scene: a report whose behaviour changed" \
 'echo "invoice 4711"; echo "  3 x widget        30.00"; echo "  2 x gadget        25.00"
 echo "  1 x gizmo         12.50"; echo "net               67.50"; echo "tax 19%           12.83"
@@ -43,7 +43,7 @@ sed -i 's/3 x widget        30.00/4 x widget        40.00/; s/67.50/77.50/; s/12
 (cd "$INV" && "$BIN/hwut.run" --plain invoice.sh totals > /dev/null 2>&1)
 
 #  scene: failures that are not a plain difference
-HLP="$WORK/hwut/demo/helpscene/TEST"
+HLP="$WORK/hwut/support/demo/helpscene/TEST"
 scene "$HLP" forgot.sh "Scene: stops before it is done" 'echo "step one"; echo "step two"; echo "<hwut-end>"' go
 scene "$HLP" crash.sh  "Scene: dies"                   'echo "step one"; echo "<hwut-end>"' go
 scene "$HLP" build.sh  "Scene: does not build"         'echo "building"; echo "<hwut-end>"' go

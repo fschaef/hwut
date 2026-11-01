@@ -28,7 +28,7 @@
 # input there.)
 HERE=$(cd "$(dirname "$0")" && pwd)
 #  THE PYPE IS THE FACE ON PATH in an installed hwut, and a copy written
-#  by 'hwut.demo.python' stands anywhere; in the clone, the module below.
+#  by 'hwut.support python' stands anywhere; in the clone, the module below.
 if command -v hwut.pype > /dev/null 2>&1; then
     pype() { hwut.pype "$@"; }
 else

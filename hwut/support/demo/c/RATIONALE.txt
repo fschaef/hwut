@@ -1,0 +1,83 @@
+==============================================================================
+support/demo/c -- RATIONALE
+==============================================================================
+
+DEMO-C-1  THE DEMONSTRATION OVER PYTHON, IN C, HELD BY THE PYTHON GOODS
+                                                                  (2026-11-01)
+------------------------------------------------------------------------------
+PROBLEM   The Python demonstration ('../python/TEST') shows once everything a
+          test directory can say. A C author needs the same tree in C, built
+          by the C port of the test support ('test_writing/c'), and the proof
+          that it says the same: the same GOOD files.
+DECISION  One C program per Python program, choice for choice, the same stems
+          ('demo.c', 'chamber.c', 'door.c', 'garage.c', 'shop.c' + 'fixture.c',
+          'screen.c' + 'viewer.c', 'build.c'); 'protocol.sh' stays a bash test,
+          its producer is 'producer.c'. The pype scripts, 'delivery.json' and
+          'garage-space.hocon' are the Python demo's, only comments that named
+          a '.py' renamed. Every GOOD is a '.link' to the Python GOOD but the
+          four of DEMO-C-2.
+          BUILT BY ONE 'Makefile' in TEST (services E-210): each test's header
+          says 'build { framework = "make", executable = "%.exe" }'; each
+          target compiles its source WHOLE with the support '.c' files it
+          uses -- no shared object, so hwut's parallel builds cannot collide.
+          THE HELPERS no header builds ('fixture.exe', 'producer.exe', and
+          'shop.exe', which 'delivery.json' is executed by) are built by
+          'on_entry' before 'fixture.exe open' -- once, before any test runs,
+          so no two builds of one target ever race; 'viewer.exe' is a
+          prerequisite of 'screen.exe', built by that one build.
+          WHERE THE SUPPORT STANDS: C has no standard search path for SOURCES
+          (CPATH finds headers, not the '.c' a test must compile), so the
+          Makefile's one marked line is 'HWUT_SUPPORT_C ?= <fallback>': make's
+          '?=' lets the environment's HWUT_SUPPORT_C win, the fallback is the
+          clone's port. A user's two lines (README, MAKE IT IMPORTABLE) set
+          HWUT_SUPPORT_C and CPATH.
+          WHERE C FOUGHT THE DEMONSTRATION, and how it was met:
+            random      the clock-seeded draws are a splitmix64 stream and
+                        Box-Muller (libc's 'rand' is neither thread-safe nor
+                        portable in its sequence); 'garage.c random' uses the
+                        support's DeterministicStream, so its GOOD is exact.
+            threads     pthreads; the workers print under one mutex, as
+                        Python's under its lock.
+            '%s' of a float  Python prints '0.15', C's '%g' would too, but
+                        not in general: 'chamber.c' prints the configuration
+                        by 'pytext_float_repr'.
+            round()     the picture uses 'nearbyint' -- half to even, as
+                        Python's 'round' (its region is ignored anyway).
+            __file__    a program finds its directory by '/proc/self/exe':
+                        the executables stand in TEST, beside their data.
+            JSON        no library in libc: 'shop.c' reads the note by a
+                        small reader of its own (objects, arrays, strings,
+                        numbers, literals).
+            sqlite3's trace  'sqlite3_trace_v2(SQLITE_TRACE_STMT)' logs
+                        every statement on stderr, as 'set_trace_callback'.
+            no 'with'   the terminal is freed by hand ('VtermTerminal_free').
+            an async Trigger  the gates are 'Trigger's with a vtable
+                        ('Gate_vtable'); 'fire' needs no yield.
+          MEASURED (wd-c worktree, 2026-11-01): 'hwut.run --plain' in TEST
+          27 ok of 27 -- the Python demo's count -- twice in a row, the
+          first after 'make clean'. The face simulated: the port copied to
+          '<x>/c', TEST to '<x>/TEST' with every '.link' resolved, the
+          root's 'hwut-root.conf' written: with the marked literal replaced
+          by '../c' and no environment, 27/27; replaced by
+          '/hwut-support-not-here' with only the MAKE IT IMPORTABLE lines,
+          27/27; the same without those lines, 19 ok 11 fail (the control:
+          the environment is what built it).
+COST      The demonstration wants a C compiler, make, pthreads, the SQLite
+          library with its header (Debian: libsqlite3-dev) and, at run time,
+          libvterm. 'door.pype' imports the Python 'hwut_fsm': the pype is a
+          Python program whatever the application's language.
+
+DEMO-C-2  FOUR GOODS OF THEIR OWN                                  (2026-11-01)
+------------------------------------------------------------------------------
+          screen.c--open.txt, screen.c--scroll.txt  the first line narrates
+                the command run, '> viewer.exe race.txt'; Python's says
+                'viewer.py'. The screen itself is the same, byte for byte.
+          shop.c--report.txt  the frame log names the test run, 'shop.c
+                sell', where Python's says 'shop.py sell'.
+          shop.c--report.stock.csv  its text IS the Python GOOD's, but a
+                '.link' holds stdout alone (bookkeeper B-32; 'hwut.good.link'
+                refuses a '.csv'): accepted with 'shop.c report'.
+          Each was recorded by hwut and accepted by 'hwut.accept --unlink'
+          over a link to the Python GOOD ('shop.c report' recorded by
+          'hwut.run', since 'hwut.play' runs no dependency).
+==============================================================================

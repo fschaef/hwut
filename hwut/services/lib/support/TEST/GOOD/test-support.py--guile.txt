@@ -1,0 +1,16 @@
+-- hwut.support guile <dir>   (exit 0)
+   WRITTEN: <dir> -- the test writing support in Scheme (GNU Guile), and its demonstration
+       <dir>/guile
+       <dir>/c   (the Scheme (GNU Guile) support stands on it)
+       <dir>/TEST
+   NEXT:    cd <dir>/TEST && hwut --plain
+   MAKE IT IMPORTABLE -- for a test of your own:
+       export GUILE_LOAD_PATH=<dir>/guile${GUILE_LOAD_PATH:+:$GUILE_LOAD_PATH}
+   A TEST THEN WRITES:
+       (use-modules (hwut runner))
+   <dir>: TEST c guile hwut-root.conf
+-- as written, the MAKE IT IMPORTABLE lines applied
+   RESULTS: 27 ok, 0 fail
+-- the marked line pointing nowhere; unset: GUILE_LOAD_PATH; then only the MAKE IT IMPORTABLE lines
+   RESULTS: 27 ok, 0 fail
+<hwut-end>

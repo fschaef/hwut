@@ -1,0 +1,3 @@
+# What TEST/Makefile builds on first load of TEST/shop_db.pro -- no source.
+/TEST/shop_db4pl.so
+/TEST/shop_db4pl.so.*.so

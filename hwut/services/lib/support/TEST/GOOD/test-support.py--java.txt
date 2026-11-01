@@ -1,0 +1,16 @@
+-- hwut.support java <dir>   (exit 0)
+   WRITTEN: <dir> -- the test writing support in Java, and its demonstration
+       <dir>/java
+       <dir>/TEST
+   NEXT:    cd <dir>/TEST && hwut --plain
+   MAKE IT IMPORTABLE -- for a test of your own:
+       export CLASSPATH="<dir>/java${CLASSPATH:+:$CLASSPATH}"
+   A TEST THEN WRITES:
+       import hwut.HwutRunner;
+   NOTE:    built with 'javac --release 21 --enable-preview', run with 'java --enable-preview --enable-native-access=ALL-UNNAMED'
+   <dir>: TEST hwut-root.conf java
+-- as written, the MAKE IT IMPORTABLE lines applied
+   RESULTS: 27 ok, 0 fail
+-- the marked line pointing nowhere; unset: CLASSPATH; then only the MAKE IT IMPORTABLE lines
+   RESULTS: 27 ok, 0 fail
+<hwut-end>

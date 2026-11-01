@@ -22,11 +22,14 @@ list to keep in step.
 
 THE STAGE is the package 'hwut' as a user receives it:
 
-    in    engine, services, auxiliary, support/demo, of support/test_writing
-          its LANGUAGES.conf and every port with 'home = "hwut"' (E-216),
+    in    engine, services, auxiliary, of support/test_writing its
+          LANGUAGES.conf and every port with 'home = "hwut"' (E-216),
+          ALL of 'support/' but the showcase as one archive,
+          'services/lib/support/support.tar.xz', which the face
+          'hwut.support <language> <dir>' writes out from (E-217),
           adm/version.py, adm/requirement-list.txt, bin/.hwut.conf,
           doc/HOWTO-*.txt
-    out   every TEST directory but the demonstration's, WORK, what a run
+    out   every TEST directory, WORK, what a run
           leaves (OUT, TMP, traces, logs, caches), the completion table
           (written by 'hwut --command-line-setup' where it is installed),
           the shims of 'bin/' (an installed face is an entry point,
@@ -48,12 +51,14 @@ from hwut.services.lib import requirements                  # noqa: E402
 from hwut.adm.support_layout     import shipped_tuple, SUPPORT, \
                                         LANGUAGE_FILE        # noqa: E402
 
-TOP_TUPLE  = ("engine", "services", "auxiliary",
-              os.path.join("support", "demo"))
+TOP_TUPLE  = ("engine", "services", "auxiliary")
 FILE_TUPLE = ("adm/version.py", "adm/requirement-list.txt",
               "bin/.hwut.conf")
 DOC_GLOB_RE = re.compile(r"^HOWTO-.*\.txt$")
-KEEP_TEST  = os.path.join("support", "demo", "python", "TEST")
+#  THE ARCHIVE: every file of 'support/' but the showcase, which is a root
+#  of its own and no part of the package (yet).
+ARCHIVE         = os.path.join("services", "lib", "support", "support.tar.xz")
+ARCHIVE_LEAVE   = (os.path.join("support", "demo", "showcase"),)
 LEFT_BEHIND = ("TMP", "OUT", "WORK", "__pycache__", ".ruff_cache",
                "htmlcov", "hwut-traces*", "hwut.log", ".coverage",
                "_complete_db.py", "*.pyc")
@@ -84,11 +89,49 @@ def _ignored(directory, name_list):
     RETURN: set[str], the names below 'directory' the stage leaves out.
     """
     out = set(shutil.ignore_patterns(*LEFT_BEHIND)(directory, name_list))
-    relative = os.path.relpath(directory, HWUT)
-    for name in name_list:
-        if name == "TEST" and os.path.join(relative, name) != KEEP_TEST:
-            out.add(name)
+    out |= {name for name in name_list if name == "TEST"}
     return out
+
+
+def support_file_list():
+    """
+    RETURN: list[str], every file of 'support/' (paths below hwut) the
+            archive carries: the files git tracks where hwut is a git work
+            tree -- so no build product rides along -- else every file but
+            what a run leaves; the showcase left out either way.
+    """
+    done = subprocess.run(["git", "-C", HWUT, "ls-files", "-z", "support"],
+                          capture_output=True, text=True)
+    if done.returncode == 0 and done.stdout:
+        path_list = [p for p in done.stdout.split("\0") if p]
+    else:
+        path_list, left = [], shutil.ignore_patterns(*LEFT_BEHIND)
+        for directory, sub_list, name_list in os.walk(
+                os.path.join(HWUT, "support")):
+            sub_list[:] = [d for d in sub_list
+                           if d not in left(directory, sub_list)]
+            path_list += [os.path.relpath(os.path.join(directory, n), HWUT)
+                          for n in name_list
+                          if n not in left(directory, name_list)]
+    return sorted(p for p in path_list
+                  if os.path.isfile(os.path.join(HWUT, p))
+                  and not p.startswith(tuple(a + os.sep
+                                             for a in ARCHIVE_LEAVE)))
+
+
+def archived(path):
+    """
+    RETURN: int, the number of files written into the archive 'path' --
+            'support_file_list()', each under its path below hwut.
+    """
+    import tarfile
+    file_list = support_file_list()
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with tarfile.open(path, "w:xz") as archive:
+        for relative in file_list:
+            archive.add(os.path.join(HWUT, relative), arcname=relative,
+                        recursive=False)
+    return len(file_list)
 
 
 def stage(target):
@@ -104,6 +147,7 @@ def stage(target):
                         ignore=_ignored)
     shutil.copy2(os.path.join(HWUT, LANGUAGE_FILE),
                  os.path.join(package, LANGUAGE_FILE))
+    archived(os.path.join(package, ARCHIVE))
     for relative in FILE_TUPLE:
         os.makedirs(os.path.join(package, os.path.dirname(relative)),
                     exist_ok=True)

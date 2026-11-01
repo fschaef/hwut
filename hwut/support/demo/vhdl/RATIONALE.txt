@@ -1,0 +1,126 @@
+==============================================================================
+support/demo/vhdl -- RATIONALE
+==============================================================================
+
+DEMO-VHDL-1  THE PYTHON DEMONSTRATION IN VHDL, PROGRAM FOR PROGRAM, HELD BY
+             THE PYTHON GOOD FILES                               (2026-11-01)
+------------------------------------------------------------------------------
+PROBLEM   The demonstration shows what a test directory can say. Over VHDL
+          it must say the same, through the VHDL test support, and prove it
+          by printing what the Python programs print.
+DECISION  One VHDL entity per Python program, choice for choice; the data
+          files the Python demonstration's, changed only where they name a
+          Python file ('build.pypes', 'garage-space.hocon': comments).
+          PYTHON'S THREADS ARE PROCESSES: the workers of 'demo race' and
+          'pool', the five clients of 'producer.vhd', the two jobs of
+          'build parallel' and the three clerks of 'shop sell' are VHDL
+          processes waiting drawn times of the SIMULATION
+          ('wait for rng.uniform(..) * 1 ms'); the simulator wakes them in
+          the order of their times, which is the draw's. No real time
+          passes: 'build' prints the drawn compile times, the law
+          'compile < 5 s' judges them.
+          THE CLOCK'S RANDOM is ieee.math_real's 'uniform', seeded from the
+          clock by C; gauss is Box and Muller. Python's 'random' is not
+          reproduced -- every choice that draws passes by its tolerance,
+          not by the draw. 'garage random' uses the support's
+          DeterministicStream and is byte-identical to Python's.
+          'protocol.sh' stays a bash script (it is the plumbing between a
+          producer and a pype); its producer is 'producer.vhd'.
+          MEASURED (GHDL 4.1.0 mcode, gcc 13, libsqlite3, libvterm 0.3.3):
+          'hwut.run --plain' in 'TEST/' from 'make clean': 27 ok, 0 fail
+          (63.6 s, the builds included); again: 27 ok, 0 fail (17.8 s) --
+          27 cases as in 'python/TEST'. 'garage' (4 choices) and 'door'
+          through 'door.pype' 'cmp' equal to the Python GOODs; 'screen'
+          differs from Python's in its first line alone.
+COST      Every program elaborates its design anew at each run (some
+          70 ms). The shop's clerks do not contend for SQLite's lock as
+          threads would: the simulation runs one process at a time; the
+          'collision' between 'delivery.json' and 'shop.vhd sell' is said
+          all the same, as the directory's word.
+
+DEMO-VHDL-2  A COMMAND LINE FOR A SIMULATION: GENERICS AND 'HWUT_ARGV'
+------------------------------------------------------------------------------
+PROBLEM   VHDL reads no argv, GHDL's mcode backend writes no executable,
+          and GHDL refuses a '-g' generic the entity does not declare.
+          'fixture.exe check before <app> <choice>' takes four arguments.
+DECISION  'Makefile' writes 'x.exe', which runs 'demo_launch.sh x'; that
+          runs 'ghdl -r' on 'x.work' with the generics HWUT_ARGC and
+          HWUT_ARGV1 (the runner's, as the port's launcher gives them) and
+          HERE, the directory -- every entity declares these three. EVERY
+          argument stands in the environment variable 'HWUT_ARGV' as well,
+          each ended by a newline ('argument(i)' in 'demo_vhpi.vhd').
+          MEASURED: GHDL 4.1.0 rejects a control character in a generic's
+          value ('incorrect character'), and '-gX=' -- an EMPTY value --
+          ends in 'GHDL Bug occurred' (ghdllocal.adb:89); the launcher
+          passes no HWUT_ARGV1 for an empty first argument, which leaves
+          the default, "". The port's 'hwut_launch.sh' passes '-gHWUT_ARGV1='
+          for an empty argument and meets the same failure.
+          MEASURED: a foreign subprogram called while a process's
+          declarations are ELABORATED ('constant c : string :=
+          argument(1);') is refused ('call to foreign procedure is not
+          supported'); the argument is read in the process's body.
+COST      An argument holds no newline.
+
+DEMO-VHDL-3  WHAT VHDL CANNOT DO ITSELF, BY VHPIDIRECT, IN THE TARGET'S OWN
+             LIBRARY
+------------------------------------------------------------------------------
+PROBLEM   The demonstration needs the clock (a seed, a calibration stamp),
+          files and directories, stderr, SQLite and a raw terminal --
+          beyond what the port's 'hwut_vhpi.c' gives.
+DECISION  'demo_vhpi.c', declared by 'demo_vhpi.vhd' and 'demo_sql.vhd',
+          linked into each target's 'libhwut_vhdl.so' with the port's glue:
+          the one library name every 'foreign' attribute gives. SQLite is
+          compiled in (-DDEMO_SQLITE, -lsqlite3) for 'shop.exe' and
+          'fixture.exe' alone. The C side decides and formats nothing; the
+          viewer draws in VHDL and gets only raw mode, its size and the
+          bytes of a key from C (textio reads lines, not keys).
+
+DEMO-VHDL-4  THREE GOOD FILES OF THIS DIRECTORY'S OWN, AND ONE COPY
+------------------------------------------------------------------------------
+PROBLEM   The GOOD files are '.link's to the Python demonstration's where
+          the output is the same. Where it names this directory's files it
+          is not.
+DECISION  'screen.vhd--open.txt', 'screen.vhd--scroll.txt': the first line
+          names the program started, '> viewer.exe race.txt' (Python's
+          '> viewer.py race.txt'); the rest is Python's, byte for byte.
+          'shop.vhd--report.txt': the frame log names the test run,
+          'shop.vhd sell' (Python's 'shop.py sell'), and 'shop.vhd report'
+          fills the '%-15s' column whole. 'shop.vhd--report.stock.csv' IS
+          Python's text, but a copy: 'hwut.good.link' takes only a '.txt'
+          ('is no .txt in a GOOD/') -- an output file cannot be linked.
+          All three accepted through hwut ('hwut.play' + 'hwut.accept';
+          the report from a full run, since it reports what 'delivery.json'
+          and 'shop.vhd sell' left, with 'hwut.accept --force --unlink').
+          'GOOD/build.vhd.link', the 'same = true' GOOD, is written by
+          hand: 'hwut.good.link' entered it in the book as a choice-less
+          case ('build.vhd;;'), which the run then refused ('in book, no
+          such choice'); the run itself registered both choices.
+
+DEMO-VHDL-5  THE SUPPORT'S PLACE: ONE LINE, 'HWUT_SUPPORT_VHDL'
+------------------------------------------------------------------------------
+PROBLEM   A face writes the demonstration out beside a copy of the port;
+          the place of the port must be said once, and a user's own line
+          must be enough.
+DECISION  VHDL has no standard search path, and GHDL none read from the
+          environment ('-P' is a flag of each call). The line marked
+          'HWUT-SUPPORT-PATH' in 'Makefile' is 'HWUT_SUPPORT_VHDL ?= <the
+          clone's relative path>': the environment's value wins, the path
+          is the fallback. The C modules the port wraps are found at
+          '$(HWUT_SUPPORT_VHDL)/../c' -- the port is not whole without them.
+          MEASURED, a copy in /tmp/x-vhdl (the port at 'vhdl', the C
+          modules at 'c', TEST with every '.link' resolved, the root conf
+          '_boundary.written'): the fallback replaced by '../vhdl', nothing
+          set: 27 ok, 0 fail. Replaced by '/hwut-support-not-here' with
+          'export HWUT_SUPPORT_VHDL=/tmp/x-vhdl/vhdl' alone: 27 ok, 0 fail;
+          without it: 2 ok, 32 fail (every build fails).
+
+DEMO-VHDL-6  THE HELPERS ARE BUILT ON ENTRY
+------------------------------------------------------------------------------
+PROBLEM   'delivery.json' (header-less, executed by 'shop.exe'),
+          'protocol.sh' (fed by 'producer.exe') and the frame scripts
+          ('fixture.exe') need programs no header builds.
+DECISION  'on_entry' runs 'make -s fixture.exe producer.exe shop.exe' before
+          'fixture.exe open'; 'protocol.sh' builds its producer where it is
+          missing. 'script_caps' allows 120 s, not Python's 20: a cold
+          build of the three is some 10 s, more on a loaded machine.
+==============================================================================

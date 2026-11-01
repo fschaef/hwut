@@ -1,0 +1,17 @@
+-- hwut.support vhdl <dir>   (exit 0)
+   WRITTEN: <dir> -- the test writing support in VHDL, and its demonstration
+       <dir>/vhdl
+       <dir>/c   (the VHDL support stands on it)
+       <dir>/TEST
+   NEXT:    cd <dir>/TEST && hwut --plain
+   MAKE IT IMPORTABLE -- for a test of your own:
+       export HWUT_SUPPORT_VHDL=<dir>/vhdl
+   A TEST THEN WRITES:
+       use work.hwut_runner.all;
+   NOTE:    built by the '%.exe' rule of the demonstration's Makefile
+   <dir>: TEST c hwut-root.conf vhdl
+-- as written, the MAKE IT IMPORTABLE lines applied
+   RESULTS: 27 ok, 0 fail
+-- the marked line pointing nowhere; unset: HWUT_SUPPORT_VHDL; then only the MAKE IT IMPORTABLE lines
+   RESULTS: 27 ok, 0 fail
+<hwut-end>

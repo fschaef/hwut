@@ -1,0 +1,113 @@
+==============================================================================
+support/demo/rust -- RATIONALE
+==============================================================================
+
+DEMO-RUST-1  THE PYTHON DEMONSTRATION IN RUST, CHOICE FOR CHOICE  (2026-11-01)
+------------------------------------------------------------------------------
+PROBLEM   'support/demo/python/TEST' shows everything a test directory can
+          say, once. A Rust author is to see the same, written in Rust and
+          using the Rust port of the test writing support
+          ('support/test_writing/rust', the crate 'hwut').
+DECISION  One Rust application per Python application, the same stems:
+          demo, chamber, door, garage, shop + fixture, screen + viewer,
+          build; 'protocol.sh' stays a bash test, its producer is the Rust
+          program 'producer.rs' (the two hand-written streams 'broken' and
+          'slow' are bash in the Python demonstration too). The data files
+          ('.pype', '.pypes', '.hocon', '.json') are the Python
+          demonstration's, unchanged: a pype script is written in pype,
+          whatever language the application is ('door.pype' imports the
+          Python 'hwut_fsm' INSIDE the pype). 'hwut.conf' says what the
+          Python one says; 'hwut-features.conf' is the Python one (its
+          documents resolve from here as from there: the same depth).
+          ONE MAKEFILE, run by hwut where it stands (services E-210), per
+          test whose header says 'build { framework = "make", executable =
+          "%.exe" }'. No two targets share an output: 'garage.exe' and
+          'screen.exe' each compile their own copy of the support crate into
+          'build-<stem>/'; the modules 'clock_random.rs' and 'shop_db.rs'
+          are SOURCES included by 'mod', not intermediates.
+          THE PROGRAMS THAT ARE NO TESTS -- 'fixture.exe' (the frame
+          scripts), 'viewer.exe', 'producer.exe' -- and 'shop.exe', which
+          the header-less 'delivery.json' runs by 'execute', are built by
+          'make helpers', the first word of 'on_entry'. 'on_entry' runs
+          before any dispatch, so no test's build runs beside it; hwut's
+          own build of 'shop.rs' then finds 'shop.exe' made.
+          WHERE RUST HAS NO STANDARD LIBRARY FOR IT, the demonstration
+          declares the C it needs by hand, as the port does ('posix.rs'):
+          SQLite ('shop_db.rs': five functions of libsqlite3, linked by
+          '#[link(name = "sqlite3")]'), termios and TIOCGWINSZ for the
+          viewer's raw mode, 'localtime_r'/'strftime' for the chamber's
+          calibration stamp. Random numbers seeded by the clock are
+          'clock_random.rs' (xorshift64*, Box-Muller for 'gauss'); the
+          delivery note's JSON is read by some 80 lines in 'shop.rs'.
+          'garage.rs' draws by the support's DeterministicStream, so its
+          'random' GOOD is the Python one, exact.
+          WHERE THE SUPPORT STANDS is ONE line, in 'TEST/Makefile', marked
+          'HWUT-SUPPORT-PATH':
+              SUPPORT_AT = $(or $(HWUT_SUPPORT_RUST),<fallback>)
+          Rust has no search path for a crate (rustc takes '--extern'
+          only; cargo is not used): the variable HWUT_SUPPORT_RUST is the
+          mechanism, and it wins over the fallback, the port's relative
+          path in hwut's tree. 'make' keeps blanks before a comment in a
+          value: the marker follows the ')' directly, and the value is
+          used through '$(strip ...)'.
+MEASURED  On this worktree (rustc 1.97.0, libvterm 0.3.3, libsqlite3
+          3.x): 'hwut.run --plain' in 'TEST/' from 'make clean': 27 ok, 0
+          fail (72 s idle, 89 s at load 20 on two cores -- the first
+          run building ten programs and the crate twice); again: 27 ok,
+          0 fail (7-13 s) -- the same 27 cases as 'python/TEST'.
+          'demo.rs plain', 'garage.rs' (all four choices) and 'door.rs'
+          through 'door.pype' print byte for byte the Python GOODs.
+          The face, simulated in '/tmp/x' -- the port copied to
+          '/tmp/x/rust', TEST with every '.link' resolved, the fallback
+          replaced, 'export HWUT_SUPPORT_RUST=/tmp/x/rust' alone applied:
+          27 ok with the fallback '../rust', and 27 ok with the fallback
+          '/hwut-support-not-here'.
+          THE BUILD HAS CAPS OF ITS OWN: every header says 'build { ...
+          caps { timeout_sec = 900 } }' (services E-212), and
+          'script_caps' allows 'make helpers' 900 s. MEASURED: under the
+          directory's 'app_defaults' (60 s) alone, at load 28 on two
+          cores, both crate builds were 'killed by supervisor'. The runs
+          keep 'app_defaults', as in Python.
+COST      The first run compiles some 100 s of CPU (the crate with '-O',
+          twice). 'shop.rs' and 'fixture.rs' need libsqlite3 to link
+          (Debian: libsqlite3-dev). 'viewer.rs' and 'chamber.rs' carry
+          glibc's layout assumptions ('struct termios', 'struct tm' held
+          in buffers larger than glibc's; TIOCGWINSZ 0x5413: Linux).
+
+DEMO-RUST-2  WHAT HWUT DOES NOT LINK, AND HOW IT WAS MET          (2026-11-01)
+------------------------------------------------------------------------------
+PROBLEM   Two cases could not be held by '.link' as the brief asks:
+          an OUTPUT FILE's GOOD ('shop.rs--report.stock.csv'): a '.link'
+          stands only in place of a stdout '.txt' (bookkeeper B-32;
+          'hwut.good.link' refuses "is no '.txt' in a GOOD/"); and a
+          'same = true' GOOD ('build.py.txt'): 'hwut.good.link' entered a
+          choice-less 'build.rs' in the book beside its two choices, and
+          the run said "build.rs in book, no such choice".
+DECISION  'shop.rs--report.stock.csv' is accepted through hwut ('hwut.run',
+          then 'hwut.accept shop.rs report --force'); it is MEASURED equal
+          to the Python 'shop.py--report.stock.csv' ('diff'). The
+          choice-less 'build.rs' row was taken out of 'GOOD/book.csv' by
+          hand; 'build.rs.link' stands and both choices pass against it.
+COST      Until 'hwut.good.link' links output files and same-GOODs, a
+          change to the Python CSV GOOD is not followed here.
+
+DEMO-RUST-3  THE GOODS OF THEIR OWN, AND WHY                      (2026-11-01)
+------------------------------------------------------------------------------
+          'screen.rs open', 'screen.rs scroll': the transcript names the
+          program run, '> viewer.exe race.txt' (Python: '> viewer.py');
+          and the file shown names its demonstration, '## demo.rs race'.
+          'shop.rs report': the frame log names the test hwut ran,
+          'shop.rs sell' (Python: 'shop.py sell'), from $HWUT_TEST.
+          Recorded by 'hwut.play'/'hwut.run', blessed by 'hwut.accept'.
+          MEASURED: 'shop.rs--report.txt' is the Python GOOD with 'shop.py'
+          replaced by 'shop.rs', and nothing else.
+
+DEMO-RUST-4  TWO CHOICES OF ONE TEST, ONE SCRATCH FILE            (2026-11-01)
+------------------------------------------------------------------------------
+PROBLEM   MEASURED: the second run failed 'screen.rs scroll' once: 'open'
+          and 'scroll', run at once, both wrote 'TMP/race.txt'; the viewer
+          of one read the file while the other had truncated it ('lines
+          1-0 of 0'). 'python/TEST/screen.py' writes the same one file.
+DECISION  Each choice writes its sample to 'TMP/<choice>/race.txt' -- the
+          name on the screen stays 'race.txt'. Three runs after: 27 ok.
+==============================================================================

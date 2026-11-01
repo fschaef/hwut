@@ -1,0 +1,16 @@
+-- hwut.support bash <dir>   (exit 0)
+   WRITTEN: <dir> -- the test writing support in bash, and its demonstration
+       <dir>/bash
+       <dir>/c   (the bash support stands on it)
+       <dir>/TEST
+   NEXT:    cd <dir>/TEST && hwut --plain
+   MAKE IT IMPORTABLE -- for a test of your own:
+       export PATH="<dir>/bash:$PATH"
+   A TEST THEN WRITES:
+       source hwut_runner.sh
+   <dir>: TEST bash c hwut-root.conf
+-- as written, the MAKE IT IMPORTABLE lines applied
+   RESULTS: 27 ok, 0 fail
+-- the marked line pointing nowhere; unset: nothing; then only the MAKE IT IMPORTABLE lines
+   RESULTS: 27 ok, 0 fail
+<hwut-end>

@@ -1,0 +1,70 @@
+==============================================================================
+support/demo/guile -- RATIONALE
+==============================================================================
+
+DEMO-GUILE-1 THE DEMONSTRATION IN SCHEME, HELD BY THE PYTHON GOOD FILES
+                                                                  (2026-11-01)
+------------------------------------------------------------------------------
+PROBLEM   The demonstration tree existed over Python only. A Scheme author
+          needs the same tree in Scheme, on the Guile port of the test
+          support ('../../test_writing/guile'), and its proof is the same
+          as the port's: the same text, held by the Python GOOD files.
+DECISION  One '.scm' per Python application, the same stems, choice for
+          choice; data files copied (two comments renamed '.py' to '.scm':
+          'build.pypes', 'garage-space.hocon'); 'protocol.sh' stays bash,
+          its producer is Scheme. 24 of 27 cases are '.link's.
+          WHERE SCHEME FOUGHT, AND HOW IT WAS MET:
+          sqlite    Guile has no SQLite binding and the demo installs
+                    nothing: 'shop-db.scm' calls libsqlite3.so.0 through
+                    '(system foreign)' -- open_v2, busy_timeout, prepare_v2,
+                    bind, step, column, finalize; 70 lines. The 'sql:' trace
+                    on stderr is written by 'db-exec' itself (with '?'
+                    unexpanded; stderr is ignored, so it is no GOOD).
+          json      no JSON reader in Guile 3.0's own modules: 30 lines of
+                    recursive descent in 'shop.scm'.
+          termios   no termios and no window size in Guile: 'viewer.scm'
+                    calls libc's tcgetattr/cfmakeraw/tcsetattr, ioctl
+                    TIOCGWINSZ and read by '(system foreign)'.
+          printf    no '%.2f' that rounds as Python's: (ice-9 format) works
+                    on the decimal string. 'fixed' rounds the EXACT rational
+                    of the double, half to even -- C's and Python's rule --
+                    a few lines, written in each file that prints floats.
+          'when'    a parameter named 'when' shadows the syntax; the
+                    fixture's word is 'moment' (found at the first run).
+          threads   Guile's POSIX threads with a mutex around each printed
+                    line (race, pool, sell, build parallel, the producer):
+                    the scheduler's order, as in Python.
+          the path  ONE line, 'support-path.scm', marked 'HWUT-SUPPORT-PATH'.
+                    GUILE_LOAD_PATH is Guile's standard mechanism: Guile puts
+                    it on '%load-path' at start, the line APPENDS the
+                    fallback, so GUILE_LOAD_PATH takes precedence and
+                    HWUT_SUPPORT_GUILE is not needed. Each test that wants
+                    the support says '(load "support-path.scm")', resolved
+                    by Guile from the test's own file, whatever the cwd.
+          MEASURED, on this worktree (Guile 3.0.9, libvterm 0.3.3, SQLite
+          3 by libsqlite3.so.0): 'hwut.run --plain' in TEST: 27 ok, 0 fail,
+          twice (18 s, 21 s; Python's 12 s -- every module interpreted, no
+          '.go'). 'garage.scm' all four choices 'diff'-identical to the
+          Python GOOD by hand before linking. The face simulated in /tmp/x
+          (port at /tmp/x/guile, links resolved, hwut-root.conf by
+          '_boundary.written'): fallback '../guile', no other line: 27 ok;
+          fallback '/hwut-support-not-here' with only the GUILE_LOAD_PATH
+          line: 27 ok; the same without it: 21 ok, 6 fail (garage 4, screen
+          2) -- the line is what makes it importable.
+COST      The fixed-point helper stands in three files ('demo', 'chamber',
+          'build'), not in a shared module: each file reads alone, as the
+          Python one does. SQLite and libc are reached through the FFI: a
+          libsqlite3 that is absent fails 'shop.scm' and the fixture.
+
+DEMO-GUILE-2 THREE GOODS OF THEIR OWN, ONE COPY                    (2026-11-01)
+------------------------------------------------------------------------------
+          'screen.scm--open', 'screen.scm--scroll': the test narrates the
+          program it starts, "> viewer.scm race.txt" (Python: viewer.py),
+          and the sample file shown says 'demo.scm race'.
+          'shop.scm--report': the frame log names the test runs, "shop.scm
+          sell" -- the fixture writes the test's own file name.
+          'shop.scm--report.stock.csv': the same bytes as the Python
+          'shop.py--report.stock.csv', but a COPY: a '.link' holds stdout
+          only (bookkeeper B-32, 'good_link.py': "only stdout links");
+          'hwut.good.link' refuses a '.csv'.
+==============================================================================

@@ -1,0 +1,21 @@
+# vut-register 5 generation:20 apps:1 marks:0=19
+test;choice;verdict;report;stain;test_id;choice_id
+test-support.py;bash;true;ok;;0;0
+;c;true;ok;;0;1
+;cpp;true;ok;;0;2
+;erlang;true;ok;;0;3
+;faces;true;ok;;0;4
+;fortran;true;ok;;0;5
+;go;true;ok;;0;6
+;guile;true;ok;;0;7
+;haskell;true;ok;;0;8
+;java;true;ok;;0;9
+;node;true;ok;;0;10
+;perl;true;ok;;0;11
+;powershell;true;ok;;0;12
+;prolog;true;ok;;0;13
+;python;true;ok;;0;14
+;refused;true;ok;;0;15
+;rust;true;ok;;0;16
+;verilog;true;ok;;0;17
+;vhdl;true;ok;;0;18

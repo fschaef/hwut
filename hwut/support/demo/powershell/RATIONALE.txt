@@ -1,0 +1,133 @@
+==============================================================================
+support/demo/powershell -- RATIONALE
+==============================================================================
+
+DEMO-POWERSHELL-1  THE SUPPORT IS FOUND AT RUN TIME; ITS CLASSES ARE MADE
+                   KNOWN BY NAME                                  (2026-11-01)
+------------------------------------------------------------------------------
+PROBLEM   The port's own tests reach the modules by 'using module
+          ../<name>.psm1'. That path is a LITERAL read when the file is
+          parsed: no variable can say where it points, so a test written
+          out beside a copy of the port, or pointed at one by an
+          environment variable, cannot use it.
+DECISION  'TEST/hwut_support.ps1', dot-sourced by every application with
+          the modules it uses, imports them ('Import-Module -Global') and
+          enters every class and enum each defines as a TYPE ACCELERATOR
+          (System.Management.Automation.TypeAccelerators): '[HwutRunner]',
+          '[DeterministicStream]', 'catch [LibraryMissing]' then work in the
+          test as after 'using module'. It also calls
+          'Initialize-HwutConsole' (invariant culture, UTF-8, no colour).
+          MEASURED: without the accelerators a module's class is not found
+          after 'Import-Module' ('Unable to find type'); with them it is.
+COST      A class of the test cannot DERIVE from a class of the support: a
+          base class must resolve when the file is parsed, before any line
+          runs -- MEASURED, the accelerators do not reach the parser, not
+          even from a module named by 'using module ./x.psm1'. 'garage.ps1'
+          's 'Gate' is therefore no 'Trigger' as in Python; it carries what
+          the dispatcher asks of one ('timeline', 'name', 'Fire',
+          'OnTermination'). Port types are kept out of the test's class
+          declarations for the same reason. The accelerator table is an
+          internal of PowerShell, stable since 5.1.
+
+DEMO-POWERSHELL-2  HWUT_SUPPORT_POWERSHELL, NOT PSModulePath       (2026-11-01)
+------------------------------------------------------------------------------
+PROBLEM   PowerShell's own mechanism is PSModulePath. It finds a module
+          only as '<path>/<name>/<name>.psm1' (or '.psd1'); the port's
+          modules stand flat in one directory. MEASURED: PSModulePath set
+          to the port, 'Import-Module hwut_runner' fails ('no valid module
+          file was found').
+DECISION  The marked line of 'hwut_support.ps1' takes HWUT_SUPPORT_POWERSHELL
+          where it is set, else the port in hwut's own tree, relative to
+          the helper ('[System.IO.Path]::Combine' -- an absolute
+          replacement stays absolute). MAKE IT IMPORTABLE (README) is one
+          line, 'export HWUT_SUPPORT_POWERSHELL=<dir>/powershell'; a test of
+          one's own may as well write 'using module <dir>/powershell/...'.
+COST      Were the port laid out for PSModulePath (a folder per module, or
+          one manifest), 'using module hwut_runner' would find it by name
+          and DEMO-POWERSHELL-1's cost would vanish -- a change outside
+          this directory, not made.
+
+DEMO-POWERSHELL-3  pwsh UNDER hwut's FILE CAP                      (2026-11-01)
+------------------------------------------------------------------------------
+PROBLEM   .NET's W^X double mapping sizes a memory file to 2 TiB as pwsh
+          starts; under hwut's 10 MB per-file cap (RLIMIT_FSIZE) pwsh dies
+          of SIGXFSZ before it reads the script (port RATIONALE PS-1).
+DECISION  'hwut.conf' states 'file_size_mb = 2097152' twice: in
+          'app_defaults' (every test, and 'delivery.json''s 'execute') and
+          in 'script_caps' (the frame and 'fixture.ps1'). Where pwsh is the
+          CHILD of a test -- the producer of 'protocol.sh', the viewer under
+          'screen.ps1' -- it is started with 'DOTNET_EnableWriteXorExecute=0',
+          which the parent can set and pwsh itself cannot.
+          MEASURED: 'ulimit -f 10240; pwsh -c 1' dies (SIGXFSZ, status
+          153); with DOTNET_EnableWriteXorExecute=0 it prints '1'.
+COST      One cap in 'app_defaults' rather than in each header (the port's
+          choice): a test copied out of this directory carries no cap.
+
+DEMO-POWERSHELL-4  SQLITE, THREADS, RUNSPACES                     (2026-11-01)
+------------------------------------------------------------------------------
+PROBLEM   Python's shop has 'sqlite3' and 'threading'. .NET carries no
+          SQLite; a PowerShell thread is a runspace that knows none of the
+          script's functions or variables.
+DECISION  'shop_db.ps1': a small C# class over libsqlite3 by P/Invoke,
+          compiled in memory by Add-Type once per process (no file is
+          written: two tests building at once share nothing). The trace on
+          stderr is 'sqlite3_expanded_sql', as Python's trace callback.
+          Threads are 'ForEach-Object -Parallel'; what a worker needs comes
+          by '$using:'. 'build.ps1' hands its two block functions to each
+          job as text and defines them there, and sets the invariant
+          culture in the job (a runspace thread takes the system's).
+          Workers write through [Console]::Out, which .NET synchronises; a
+          job writes its whole block in one call ('make -O').
+          The fixture loads the database only for the shop's tests: every
+          other run costs a pwsh start, no compile.
+COST      Each test run pays two pwsh starts in the frame
+          ('on_before_test', 'on_after_test'); the directory runs in 78 s
+          where Python's runs in 16 s (MEASURED, load average about 13 on
+          2 CPUs: pwsh starts in 2.2 s wall, 0.34 s CPU).
+
+DEMO-POWERSHELL-5  THREE GOODs OF THEIR OWN                        (2026-11-01)
+------------------------------------------------------------------------------
+PROBLEM   Every GOOD is to be a link to the Python demo's where the output
+          is the same.
+DECISION  24 of 27 cases are '.link's. Three are accepted here through
+          hwut ('hwut.play' / 'hwut.run', then 'hwut.accept'):
+          screen.ps1--open, screen.ps1--scroll   the first line is
+              '> viewer.ps1 race.txt' -- the program it runs is this
+              directory's
+          shop.ps1--report (and its '.stock.csv') the frame log names the
+              test that ran, 'shop.ps1 sell'. The '.stock.csv' is the
+              Python one byte for byte, but only stdout links (bookkeeper
+              B-32; 'hwut.good.link' refuses a '.csv').
+          'hwut.good.link' of 'build.py.txt' ('same = true') entered a
+          choice-less 'build.ps1' in the book beside the two choices; the
+          run then said 'in book, no such choice'. That row was taken out
+          of 'GOOD/book.csv' by hand.
+
+DEMO-POWERSHELL-6  THE VIEWER, AS pwsh STARTS                      (2026-11-01)
+------------------------------------------------------------------------------
+PROBLEM   'VtermTerminal.Run' returns once the application wrote and then
+          went quiet. pwsh writes the keypad mode ('ESC [?1h ESC =') as .NET
+          takes the terminal, long before the first screen: Run returned on
+          a blank screen, the keys came while the terminal still echoed,
+          and the echo stood in the title row. MEASURED (script(1) with
+          TERM=xterm-256color).
+DECISION  'screen.ps1' waits for the first screen by what it must show
+          ('Expect('lines 1-')'); 'viewer.ps1' takes the terminal over
+          (raw, no echo: 'TreatControlCAsInput', 'KeyAvailable') before its
+          first draw, and writes the alternate screen and the first screen
+          as one burst. Keys are read by [Console]::ReadKey, which reads
+          the arrow in either encoding.
+
+MEASURED (pwsh 7.4.6, .NET 8, libvterm 0.3; worktree wd-powershell, load
+average 10-19 on 2 CPUs from neighbouring sessions):
+          'hwut.run --plain' in TEST: 27 ok, 0 fail -- twice (78 s, 103 s);
+          the Python demo: 27 ok (16 s). The written-out demo ('/tmp/x':
+          the port copied to 'powershell/', links resolved to text, the
+          root conf as 'hwut.demo.python' writes it): with the fallback as
+          '../powershell', 27 ok; with it as '/hwut-support-not-here' and
+          only HWUT_SUPPORT_POWERSHELL set, 27 ok -- and without the
+          variable the helper throws, naming the variable. 'garage.ps1':
+          all four choices byte-identical to the Python GOODs; 'door.ps1'
+          through 'door.pype' identical; 'screen.ps1' differs from the
+          Python GOOD in its first line alone.
+==============================================================================

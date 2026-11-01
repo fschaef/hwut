@@ -1,0 +1,115 @@
+==============================================================================
+support/demo/bash -- RATIONALE
+==============================================================================
+
+DEMO-BASH-1  THE PYTHON DEMONSTRATION IN BASH, HELD BY THE PYTHON GOOD FILES
+                                                                      (2026-11-01)
+------------------------------------------------------------------------------
+PROBLEM   The demonstration ('../python/TEST') shows everything a test
+          directory can say, over Python. A bash author needs the same,
+          over the bash port of the test writing support.
+DECISION  One bash application per Python one, choice for choice, the same
+          stems ('demo.sh', 'chamber.sh', 'protocol.sh', 'door.sh',
+          'garage.sh', 'shop.sh' + 'fixture.sh', 'screen.sh' + 'viewer.sh',
+          'build.sh'); the data files copied, where they named a Python file
+          renamed ('build.pypes', 'garage-space.hocon'). 'hwut.conf' says
+          what the Python one says, for the bash files, and ignores
+          'support.sh' besides. Every GOOD a '.link' to the Python GOOD
+          ('hwut.good.link'), but four (DEMO-BASH-4).
+COST      None in the comparison; what bash lacks is met in the
+          applications (DEMO-BASH-2, -3).
+
+DEMO-BASH-2  WHERE BASH FOUGHT, AND HOW IT WAS MET
+------------------------------------------------------------------------------
+NO FLOAT       the climate chamber's plant, controller and noise, the
+               k-means of 'demo.sh clusters': awk (POSIX), seeded per run
+               from SRANDOM. Numbers that a GOOD shows exactly ('value:
+               19.92', 'load 29.8') are drawn as integers and printed
+               with a decimal point.
+NO THREADS     a worker, a client, a clerk, a build job is a background
+               subshell. A line is one 'echo' -- one write, never torn --
+               so no lock where Python takes one to print. Where Python
+               takes a lock to SHARE (the job queue of 'pool'), a counter
+               file under 'flock'. 'build.sh parallel' prints a job's block
+               whole when it ends ('make -O'): the job writes into a file
+               of its process's own 'mktemp' directory -- no shared
+               intermediate -- and 'wait -n -p' names who ended first.
+NO SQLITE      the shop's database is a directory of text tables under
+               'TMP/shop.db' ('opening', 'stock', 'journal'); a writer
+               holds 'flock' on its 'lock', 10 s at most, else 'database is
+               locked' -- SQLite's one writer, and the 'collision' the
+               directory declares means the same. The statements are still
+               logged on stderr ('stderr_ignored').
+NO JSON        'delivery.json' is read by pattern ('note', 'supplier',
+               '{ "item", "qty" }'): the note has one shape. jq is no
+               requirement a demonstration should add.
+NO OBJECTS     the garage and the gates are associative arrays passed by
+               name; a gate is the class 'Gate' of 'deterministic_timeline'
+               ('Gate_fire'); a list the race logs into is a global array
+               the gate names.
+THE VIEWER     'viewer.sh' is bash: 'stty raw -echo', 'stty size', a key by
+               'read -rsN1' and an escape sequence's rest by 'read -t
+               0.05'; a whole screen is ONE 'printf', as Python's flush.
+               The screens are the Python viewer's, cell for cell.
+THE PYPES      stay Python: a pype's actions are Python, the pype is hwut's
+               face and no library of the test. 'door.pype' therefore fires
+               into Python's 'hwut_fsm' -- the bash port's 'hwut_fsm.sh' is
+               the same model for a bash test that fires events itself.
+               'protocol.sh''s producer is bash (in the Python demo it was
+               a Python here-document).
+
+DEMO-BASH-3  WHERE THE SUPPORT STANDS: PATH, BASH'S OWN SEARCH
+------------------------------------------------------------------------------
+PROBLEM   A demonstration written elsewhere must find the port by what a
+          user does for a test of his own -- and the place is to be said
+          once.
+DECISION  Bash's own mechanism: 'source <name>' without '/' looks the name
+          up on PATH ('shopt sourcepath', on by default). The user exports
+          'PATH="<dir>/bash:$PATH"' and writes 'source hwut_runner.sh'.
+          'support.sh' -- sourced by every test that needs the support --
+          APPENDS the fallback to PATH on the one line marked
+          'HWUT-SUPPORT-PATH', so a PATH that names the port already is
+          searched first and wins. The fallback is a path relative to TEST,
+          or an absolute one. No HWUT_SUPPORT_BASH: PATH is the standard.
+COST      A test of this directory starts with two lines ('support.sh',
+          then the module) where a user's test has one.
+
+DEMO-BASH-4  THE GOOD FILES THAT ARE NO LINKS
+------------------------------------------------------------------------------
+screen.sh--open.txt, screen.sh--scroll.txt
+          name the program shown: '> viewer.sh race.txt', and the sample
+          file names 'demo.sh race'. Accepted by 'hwut.play' and
+          'hwut.accept'.
+shop.sh--report.txt
+          the frame log names the test: 'before shop.sh sell'. Accepted
+          from a 'hwut.run' recording ('hwut.accept --force'): only a run
+          plays the dependency first; a play starts from 'on_entry' alone.
+shop.sh--report.stock.csv
+          the same bytes as the Python GOOD ('cmp'), but only stdout links
+          (bookkeeper B-32; 'hwut.good.link' refuses a '.csv'). Accepted
+          with the report.
+
+DEMO-BASH-5  MEASURED (2026-11-01, bash 5.2.21, mawk 1.3.4, libvterm 0.3.3)
+------------------------------------------------------------------------------
+          'hwut.run --plain' in TEST: 27 ok, 0 fail -- the Python demo's
+          count -- three runs, about 7 s each. Every linked case printed
+          the Python GOOD's text where it does not vary ('diff': garage's
+          four, door's two, protocol's clean and broken, delivery, the
+          build's summary but for its bound compile time).
+          The face, simulated: the port copied without its built server,
+          the demo's TEST with every link resolved, 'hwut-root.conf' as
+          'hwut.demo.python' writes it. The fallback replaced by '../bash':
+          27 ok. Replaced by '/hwut-support-not-here' with only 'export
+          PATH="<dir>/bash:$PATH"' applied: 27 ok; without that line 21 ok,
+          6 fail -- the line is what finds the support. Both need the C
+          port's 'hwut_vterm.c' and '.h' at '<dir>/c': without them
+          'screen.sh' cannot build the vterm server (DEMO-BASH-6).
+
+DEMO-BASH-6  OUTSIDE THIS DIRECTORY
+------------------------------------------------------------------------------
+          'hwut_vterm.sh' builds 'hwut_vterm_server' in the port's own
+          directory from '../c/hwut_vterm.c': a face that writes the bash
+          port alone leaves 'screen.sh' failing ('No rule to make target
+          ../c/hwut_vterm.c'). The face must write the C port's two files
+          beside it, or the port must carry them. Not worked around here.
+==============================================================================

@@ -1,0 +1,17 @@
+-- hwut.support haskell <dir>   (exit 0)
+   WRITTEN: <dir> -- the test writing support in Haskell, and its demonstration
+       <dir>/haskell
+       <dir>/c   (the Haskell support stands on it)
+       <dir>/TEST
+   NEXT:    cd <dir>/TEST && hwut --plain
+   MAKE IT IMPORTABLE -- for a test of your own:
+       export HWUT_SUPPORT_HASKELL=<dir>/haskell
+   A TEST THEN WRITES:
+       import Hwut.Runner
+   NOTE:    built with 'ghc -i$HWUT_SUPPORT_HASKELL ...'
+   <dir>: TEST c haskell hwut-root.conf
+-- as written, the MAKE IT IMPORTABLE lines applied
+   RESULTS: 27 ok, 0 fail
+-- the marked line pointing nowhere; unset: HWUT_SUPPORT_HASKELL; then only the MAKE IT IMPORTABLE lines
+   RESULTS: 27 ok, 0 fail
+<hwut-end>

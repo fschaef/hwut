@@ -1,0 +1,17 @@
+-- hwut.support cpp <dir>   (exit 0)
+   WRITTEN: <dir> -- the test writing support in C++, and its demonstration
+       <dir>/cpp
+       <dir>/c   (the C++ support stands on it)
+       <dir>/TEST
+   NEXT:    cd <dir>/TEST && hwut --plain
+   MAKE IT IMPORTABLE -- for a test of your own:
+       export HWUT_SUPPORT_CPP=<dir>/cpp
+   A TEST THEN WRITES:
+       #include "hwut_runner.hpp"
+   NOTE:    and compile the support's .cpp files and $HWUT_SUPPORT_CPP/../c/*.c with it
+   <dir>: TEST c cpp hwut-root.conf
+-- as written, the MAKE IT IMPORTABLE lines applied
+   RESULTS: 27 ok, 0 fail
+-- the marked line pointing nowhere; unset: HWUT_SUPPORT_CPP; then only the MAKE IT IMPORTABLE lines
+   RESULTS: 27 ok, 0 fail
+<hwut-end>
