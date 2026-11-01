@@ -58,9 +58,9 @@ import os
 import sys
 
 import config                                                    # noqa: F401
-from hwut.test_writing_support.python.hwut_runner import HwutRunner
-from hwut.test_writing_support.python import hwut_vterm
-from hwut.test_writing_support.python.hwut_vterm import (Screen, Terminal,
+from hwut.support.test_writing.python.hwut_runner import HwutRunner
+from hwut.support.test_writing.python import hwut_vterm
+from hwut.support.test_writing.python.hwut_vterm import (Screen, Terminal,
                                                            LibraryMissing,
                                                            ATTRIBUTE_SGR_DB)
 

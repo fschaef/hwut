@@ -577,7 +577,7 @@ The faces:
     hwut.pype    (pype.py)
                  the pype LINE-MATCHING FILTER, as a face. The language
                  -- parser, modes, trace, usage line -- lives in
-                 'test_writing_support/hwut_pype' and is tested there;
+                 'services/lib/pype' and is tested there;
                  this face owns the DOOR: '--help' on stdout, 0; no
                  argument naming an existing script, or a dangling
                  '--pype-dir', refused with the usage, 2; a script that
@@ -645,7 +645,7 @@ the operations component. 'stability.py' faces NO component: it runs
 'run.py' repeatedly and reads what the Bookkeeper kept -- a face over
 a face, which is where a question about SEVERAL runs belongs.
 'list.py' faces the exploration alone: it selects and prints, and
-runs nothing. 'pype.py' faces 'test_writing_support/hwut_pype': the
+runs nothing. 'pype.py' faces 'services/lib/pype': the
 interpreter is test-writing support, and the face is the tool's door to
 it. 'play.py' runs ONE choice and renders the reading of
 what it produced under that test's own setup; it judges nothing and

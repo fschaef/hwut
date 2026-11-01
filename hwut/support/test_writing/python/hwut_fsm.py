@@ -8,7 +8,7 @@ PURPOSE: A STATE MACHINE AS A TEST'S MODEL OF THE SYSTEM UNDER TEST -- the
          does not allow, and every forbidden state entered, is PRINTED as a
          line -- so it lands in the GOOD file and the comparison judges it.
 
-    from hwut.test_writing_support.python.hwut_fsm import Machine
+    from hwut.support.test_writing.python.hwut_fsm import Machine
 
     m = Machine.from_string('''
         initial: idle

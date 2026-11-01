@@ -42,7 +42,7 @@ import sys
 import contextlib
 
 import config                                                    # noqa F401
-from hwut.test_writing_support.python.script_runner import tree_boundary  # noqa: E402
+from hwut.support.test_writing.python.script_runner import tree_boundary  # noqa: E402
 from   config import HwutRunner                                  # noqa F401,E402
 
 from hwut.services.run import main as run_main                  # noqa E402

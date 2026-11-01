@@ -1,5 +1,5 @@
 ==============================================================================
-test_writing_support/node -- RATIONALE
+support/test_writing/node -- RATIONALE
 ==============================================================================
 
 JS-1  THE PYTHON TEST SUPPORT PORTED TO JAVASCRIPT FOR NODE.JS, HELD BY THE

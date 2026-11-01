@@ -8,7 +8,7 @@ PURPOSE: THE 'hwut.demo.python' COMMAND LINE -- a demonstration tree of
     hwut.demo.python <dir>
 
 <dir> receives 'hwut-root.conf' and 'TEST/' -- the demonstration of
-'demo/python/TEST', its tests and their GOOD files. Then:
+'support/demo/python/TEST', its tests and their GOOD files. Then:
 
     cd <dir>/TEST && hwut --plain
 
@@ -34,7 +34,8 @@ from ..._exit  import E_ExitCode
 NAME     = "hwut.demo.python"
 LANGUAGE = "python"
 SOURCE   = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(
-               __file__)), "..", "..", "..", "demo", LANGUAGE, "TEST"))
+               __file__)), "..", "..", "..", "support", "demo", LANGUAGE,
+               "TEST"))
 #  What a run left in the source tree is no part of the demonstration.
 LEFT_BEHIND = ("OUT", "TMP", "__pycache__", "hwut-traces*", "hwut.log",
                ".coverage")
@@ -83,7 +84,7 @@ def _documents_repointed(path):
             the file does not stand.
 
     A COPY KEEPS ITS REFERENCES (ND1): the paths were relative to
-    'demo/python/TEST'; copied elsewhere, 18 of them pointed nowhere.
+    'support/demo/python/TEST'; copied elsewhere, 18 of them pointed nowhere.
     """
     import re
     if not os.path.isfile(path): return 0

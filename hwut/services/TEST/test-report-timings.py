@@ -47,7 +47,7 @@ import config                                                       # noqa: F401
 
 from hwut.engine.bookkeeper.traces import system_key
 from hwut.services.lib.report import timings
-from hwut.test_writing_support.python.hwut_runner import HwutRunner
+from hwut.support.test_writing.python.hwut_runner import HwutRunner
 
 
 ROW_TUPLE = (

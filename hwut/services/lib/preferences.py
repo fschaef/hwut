@@ -44,7 +44,7 @@ ______________________________________________________________________________
 import os
 import sys
 
-from ...test_writing_support.python import hwut_hocon
+from ...support.test_writing.python import hwut_hocon
 from ...engine.display.colour import (word_list_valid, sgr, paint,   # noqa: F401
                                        toolkit_style, ELEMENT_ROLE_DB)
 

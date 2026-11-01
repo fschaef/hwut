@@ -25,7 +25,7 @@ RETURNS:
     A dictionary mapping subject_idx to a list of tuples: (nominal_idx, AnalogyDb|None).
 """
 
-from hwut.test_writing_support.python.deterministic_random import DeterministicStream
+from hwut.support.test_writing.python.deterministic_random import DeterministicStream
 from hwut.engine.compare.contract.analogy_db import AnalogyDb
 from hwut.engine.compare.region.potpourri.potential_pair_db import PotentialPairDb
 

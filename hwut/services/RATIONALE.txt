@@ -8077,3 +8077,47 @@ COST      The language count and the template's 'extensions' lines grow by
           one: 'coverage/database/TEST/test-record.py election' (57
           languages) and 'test-face-words.sh boundary' (55 lines), each diff
           read.
+
+E-216  'support/': THE TEST WRITING SUPPORT AND THE DEMO; PYPE INTO THE
+       FACES; THE 'home' FLAG                                     (2026-11-01)
+------------------------------------------------------------------------------
+PROBLEM   'test_writing_support/' held seventeen ports and, beside them, the
+          interpreter of a face ('hwut_pype'); 'demo/' stood apart. The
+          ports may leave for a repository of their own one day; the Python
+          port may not: hwut's own tests and modules import it, and the
+          other sixteen '.link' their GOOD files to it.
+DECISION  'adm/migrate-support.sh' moves, by 'git mv' alone:
+              test_writing_support/hwut_pype  -> services/lib/pype
+                  hwut_pype.py                ->     pype.py
+              test_writing_support            -> support/test_writing
+              demo                            -> support/demo
+          The face 'services/pype.py' stays; its interpreter is in
+          'services/lib/pype', as every face's library is in 'services/lib'.
+          The import path is 'hwut.support.test_writing.python'. Every
+          directory id of the feature registry is redirected; no external
+          id changes ('test_writing_support.hwut_pype.pipe-filter' names
+          the same feature as before).
+          PYTHON STANDS WITH THE OTHERS, with one flag:
+          'support/test_writing/LANGUAGES.conf' lists every port with
+          'home = "hwut"' or 'home = "support"' and names the one
+          'reference = true'. 'adm/support_layout.py' makes it checkable
+          (adm/TEST 'test-support-layout.py'): every directory listed, one
+          reference at home in hwut, no '.link' beyond its port and the
+          reference, and no file of hwut outside 'support/test_writing'
+          naming a 'home = "support"' port. The package carries
+          'support/demo', 'LANGUAGES.conf' and the 'home = "hwut"' ports.
+          A split takes the 'support' ports and a read-only copy of the
+          reference, so their links still resolve.
+          THE ENGINE RUNS THE PYPE INTERPRETER, IT DOES NOT IMPORT IT:
+          'stage_canonicalise' imported 'hwut_pype' for its '__file__' --
+          legal while it lay in the foundation, an engine -> services edge
+          now. It names the file once ('PYPE_INTERPRETER') and starts a
+          process from it, which is all it ever did with it.
+          THE RECORDS KEEP THE PATHS OF THEIR DAY: the numbered RATIONALE
+          of 'engine' and 'services', 'adm/WORK', DISCUSSIONS. There,
+          'test_writing_support/X' reads 'support/test_writing/X' and
+          'demo/' reads 'support/demo/'.
+COST      Every import of the Python support and every path naming the
+          three directories, one level deeper below 'support/'. GOOD files
+          that print those paths are re-recorded, each diff read. The
+          package no longer carries the sixteen 'home = "support"' ports.

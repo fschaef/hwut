@@ -87,10 +87,10 @@ import textwrap
 import sys
 import config                                                       # noqa: F401
 
-from hwut.test_writing_support.python.hwut_runner import HwutRunner
-from hwut.test_writing_support.python.script_runner import CRunScript as _CRunScript
+from hwut.support.test_writing.python.hwut_runner import HwutRunner
+from hwut.support.test_writing.python.script_runner import CRunScript as _CRunScript
 from hwut.engine.procsitter.api import spawn
-from hwut.test_writing_support.hwut_pype.hwut_pype import parse as _parse, Interpreter, PypeError, generate_example_input
+from hwut.services.lib.pype.pype import parse as _parse, Interpreter, PypeError, generate_example_input
 import re
 
 
@@ -128,7 +128,7 @@ def lawful(script_txt):
 
 
 def parse(script_txt, file_name, **keyword_db):
-    """RETURN: what 'hwut_pype.parse' returns for the LAWFUL fixture."""
+    """RETURN: what 'pype.parse' returns for the LAWFUL fixture."""
     return _parse(lawful(script_txt), file_name, **keyword_db)
 
 
@@ -155,11 +155,11 @@ class CRunScript(_CRunScript):
         super().__init__(file_name, shebang, script_txt_list, *rest,
                          **keyword_db)
 
-#  TWO WAYS IN. 'python3 hwut_pype.py' drives the INTERPRETER itself, which
+#  TWO WAYS IN. 'python3 pype.py' drives the INTERPRETER itself, which
 #  is what this suite tests; a she-bang line names the LAUNCHER 'hwut.pype',
 #  since that is what a she-bang line names in the wild.
 LAUNCHER_PATH = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "..", "..", "..",
+    os.path.join(os.path.dirname(__file__), "..", "..", "..", "..",
                  "bin", "hwut.pype"))
 
 
@@ -623,7 +623,7 @@ def _run_pipe_file_inputs():
                      order as one stream; trace positions name the file.
     """
     interpreter_path = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), "..", "hwut_pype.py"))
+        os.path.join(os.path.dirname(__file__), "..", "pype.py"))
     work_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                             "tmp-file-input-work")
     os.makedirs(work_dir, exist_ok=True)
@@ -664,7 +664,7 @@ def run_examples():
     example_dir = os.path.abspath(
         os.path.join(os.path.dirname(__file__), "..", "examples"))
     interpreter = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), "..", "hwut_pype.py"))
+        os.path.join(os.path.dirname(__file__), "..", "pype.py"))
     for stem in ("01-test-report", "02-build-phases", "03-sensor-watch",
                  "04-log-router", "05-service-discovery"):
         banner(stem)
@@ -697,7 +697,7 @@ def run_generate():
     example_dir = os.path.abspath(
         os.path.join(os.path.dirname(__file__), "..", "examples"))
     interpreter = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), "..", "hwut_pype.py"))
+        os.path.join(os.path.dirname(__file__), "..", "pype.py"))
     for stem in ("01-test-report", "02-build-phases", "03-sensor-watch",
                  "04-log-router", "05-service-discovery"):
         banner(stem)
@@ -1146,7 +1146,7 @@ def run_boundaries_stack():
 
     banner("--trace: gcc-style 'file:line:' diagnostics on stderr")
     interpreter_path = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), "..", "hwut_pype.py"))
+        os.path.join(os.path.dirname(__file__), "..", "pype.py"))
     with CRunScript(
             file_name       = "tmp-trace.pype",
             shebang         = "#!" + LAUNCHER_PATH,
@@ -1203,7 +1203,7 @@ def run_boundaries_stack():
 
     banner("--dry-run checks the script and reads no input")
     interpreter = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), "..", "hwut_pype.py"))
+        os.path.join(os.path.dirname(__file__), "..", "pype.py"))
     with CRunScript(
             file_name       = "tmp-dry.pype",
             shebang         = "#!" + LAUNCHER_PATH,
@@ -1320,7 +1320,7 @@ def run_imports():
                      pipeline exit status.
     """
     interpreter_path = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), "..", "hwut_pype.py"))
+        os.path.join(os.path.dirname(__file__), "..", "pype.py"))
     work_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                             "tmp-import-work")
     lib_dir  = os.path.join(work_dir, "lib")
@@ -1431,7 +1431,7 @@ def run_compat():
     """
     import ast
     source_path = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), "..", "hwut_pype.py"))
+        os.path.join(os.path.dirname(__file__), "..", "pype.py"))
     with open(source_path) as fh:
         tree = ast.parse(fh.read())
     finding_list = []
@@ -1447,7 +1447,7 @@ def run_compat():
                 finding_list.append(("annotation", node.lineno))
             if node.args.kwonlyargs:
                 finding_list.append(("keyword-only args", node.lineno))
-    banner("forbidden constructs in hwut_pype.py")
+    banner("forbidden constructs in pype.py")
     if finding_list:
         for kind, line_n in finding_list:
             print("VIOLATION: %s at line %d" % (kind, line_n))
@@ -1504,7 +1504,7 @@ def run_pipe():
     """
     _run_pipe_file_inputs()
     interpreter = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), "..", "hwut_pype.py"))
+        os.path.join(os.path.dirname(__file__), "..", "pype.py"))
     script_txt_list = [
         'SCAN/on: "PASS" <n = int> ":" <f = "*.txt"> => {',
         '    print("ok %d %s" % (n, f))',

@@ -1,12 +1,12 @@
 ==============================================================================
-test_writing_support/go -- THE PYTHON TEST SUPPORT, IN GO
+support/test_writing/go -- THE PYTHON TEST SUPPORT, IN GO
 ==============================================================================
 
 1  WHAT STANDS HERE
 ------------------------------------------------------------------------------
 Every module a Python test author is given in '../python' is given to a Go
 test author here, with the same behaviour and the same printed words -- one
-package per module, in the module 'hwut/test_writing_support/go' ('go.mod'):
+package per module, in the module 'hwut/support/test_writing/go' ('go.mod'):
 
     hwutrunner/             hwut_runner.py           the front end of a test
                                                      application: --hwut-info,
@@ -40,7 +40,7 @@ A Go test starts:
 
     import (
         "os"
-        "hwut/test_writing_support/go/hwutrunner"
+        "hwut/support/test_writing/go/hwutrunner"
     )
 
     func main() {
@@ -98,7 +98,7 @@ text. Its GOOD files are not copies: every one is a '.link' to the Python
 test's '.txt' (bookkeeper B-32):
 
     TEST/GOOD/test-hwut_fsm.go--masks.link
-        ../../../python/TEST/GOOD/test-hwut_fsm.py--masks.txt
+        ../../../../python/TEST/GOOD/test-hwut_fsm.py--masks.txt
 
 So the Go package is held against what the Python module was accepted for,
 byte for byte -- as the Perl and the C ports are; 47 cases in six tests.
@@ -187,7 +187,7 @@ puts Go's build cache in 'TEST/.gocache'.
 ------------------------------------------------------------------------------
 'script_runner.py'   a fixture for hwut's own tests of its faces, not given
                      to test authors.
-'hwut_pype'          a face ('hwut.pype') and its scripts, not a library a
+'hwut.pype'          a face ('services/lib/pype') and its scripts, not a library a
                      test imports: a Go test pipes through it as a Python
                      test does.
 ==============================================================================

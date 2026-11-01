@@ -517,7 +517,7 @@ failure_db = MappingProxyType({f.failure_id: f for f in (
     _failure(_F.PYPE_FILE_SYNTAX_ERROR, "pype script syntax error",
              "The pype script does not parse; the HINTS line names the "
              "place.",
-             "Mend the script (hwut_pype MANUAL, 'hwut.pype' runs it by "
+             "Mend the script (pype MANUAL, 'hwut.pype' runs it by "
              "hand)."),
     _failure(_F.PYPE_CONTAINED, "pype killed by supervisor",
              "The supervisor killed the pype filter: a cap was hit.",

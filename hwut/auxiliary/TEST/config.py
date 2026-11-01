@@ -11,7 +11,7 @@ named 'hwut/', then inserts that directory's parent into sys.path.
 
 After 'import config' (as the first import in a test file), all of:
 
-    from hwut.test_writing_support.python.hwut_runner import HwutRunner
+    from hwut.support.test_writing.python.hwut_runner import HwutRunner
     from hwut.engine.procsitter.api import ...
 
 work normally.
@@ -38,9 +38,9 @@ while True:
     _cur = _parent
 
 #  THE WALK'S FINDING, EXPORTED. Tests that reach a SIBLING component
-#  (e.g. hwut_pype) take the hwut directory from here instead of
+#  (e.g. the pype tests) take the hwut directory from here instead of
 #  counting '..' -- a hop count is a silent hostage to the layout, and
 #  it is this file that knows where 'hwut' is.
 HWUT_DIRECTORY = _cur
 
-from hwut.test_writing_support.python.hwut_runner import HwutRunner # noqa E401
+from hwut.support.test_writing.python.hwut_runner import HwutRunner # noqa E401

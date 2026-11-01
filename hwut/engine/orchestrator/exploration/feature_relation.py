@@ -50,8 +50,8 @@ import posixpath
 import re
 from   dataclasses import dataclass
 
-from ....test_writing_support.python import hwut_hocon
-from ....test_writing_support.python.hwut_hocon import (ScalarNode,
+from ....support.test_writing.python import hwut_hocon
+from ....support.test_writing.python.hwut_hocon import (ScalarNode,
                                                         ListNode,
                                                         ObjectNode)
 from ...bookkeeper.api import Bookkeeper

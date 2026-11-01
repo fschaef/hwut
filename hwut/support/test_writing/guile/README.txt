@@ -1,5 +1,5 @@
 ==============================================================================
-test_writing_support/guile -- THE PYTHON TEST SUPPORT, IN SCHEME (GNU GUILE)
+support/test_writing/guile -- THE PYTHON TEST SUPPORT, IN SCHEME (GNU GUILE)
 ==============================================================================
 
 1  WHAT STANDS HERE
@@ -74,7 +74,7 @@ text. Its GOOD files are not copies: every one is a '.link' to the Python
 test's '.txt' (bookkeeper B-32):
 
     TEST/GOOD/test-hwut_fsm.scm--masks.link
-        ../../../python/TEST/GOOD/test-hwut_fsm.py--masks.txt
+        ../../../../python/TEST/GOOD/test-hwut_fsm.py--masks.txt
 
 47 cases in six tests; 'hwut.good.link.show TEST/GOOD' lists them. What
 Python prints of its own values Scheme prints by '(hwut pytext)':

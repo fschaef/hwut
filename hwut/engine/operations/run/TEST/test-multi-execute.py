@@ -60,7 +60,7 @@ import tempfile
 from dataclasses import replace
 import config                                                       # noqa: F401
 
-from hwut.test_writing_support.python.hwut_runner import HwutRunner    # noqa: E402
+from hwut.support.test_writing.python.hwut_runner import HwutRunner    # noqa: E402
 from   hwut.engine.operations.run.multi_execute \
                                           import MultiExecute       # noqa: E402
 from   hwut.engine.operations.run.provider \
@@ -99,7 +99,7 @@ _FIXTURE = """\
 import sys
 sys.path.insert(0, %(root)r)
 with open('launch.log', 'a') as fh: fh.write('launched\\n')
-from hwut.test_writing_support.python.hwut_runner import HwutRunner
+from hwut.support.test_writing.python.hwut_runner import HwutRunner
 
 def run_alpha():
     print('alpha speaks')

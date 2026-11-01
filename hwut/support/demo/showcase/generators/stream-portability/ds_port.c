@@ -1,4 +1,4 @@
-/* ds_port.c -- DeterministicStream (hwut test_writing_support) in C, for the
+/* ds_port.c -- DeterministicStream (hwut support/test_writing) in C, for the
  * firmware side of a test: the target replays the stream the host recorded.
  * usage: ds_port int|gauss SEED N                                        */
 #include <math.h>

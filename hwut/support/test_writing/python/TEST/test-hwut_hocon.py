@@ -86,7 +86,7 @@ ______________________________________________________________________________
 import sys
 from config import HwutRunner                                # noqa: F401
 
-from hwut.test_writing_support.python.hwut_hocon import (parse, SourceLine,
+from hwut.support.test_writing.python.hwut_hocon import (parse, SourceLine,
                                                       ScalarNode, ListNode,
                                                       ObjectNode)
 
@@ -333,7 +333,7 @@ def mutated(stream, text):
 def test_fuzz():
     """RETURN: None. Every mutated header ends and answers faults."""
     import signal
-    from hwut.test_writing_support.python.deterministic_random import \
+    from hwut.support.test_writing.python.deterministic_random import \
         DeterministicStream
 
     class Hang(Exception):

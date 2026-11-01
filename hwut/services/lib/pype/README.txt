@@ -10,7 +10,7 @@ ______________________________________________________________________________
 
 FILES:
 
-    hwut_pype.py    parser and interpreter.
+    pype.py         parser and interpreter.
     pype_system.py  systems of scripts ('.pypes'): reading, running,
                     drawing (RQ-2).
     manual.txt      user manual with grammar, semantics, idioms.

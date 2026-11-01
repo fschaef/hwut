@@ -20,7 +20,7 @@ header names 'door.pype', which stands between it and the comparison and
 closes the stream at '<eof>'.
 
 'door.pype' parses the log and fires every event into a state machine
-('hwut_fsm', test_writing_support/python):
+('hwut_fsm', support/test_writing/python):
 
     closed ---( open )---> open ---( close )---> closed
     closed ---( lock )---> locked ---( unlock )---> closed

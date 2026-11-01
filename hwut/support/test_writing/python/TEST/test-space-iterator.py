@@ -30,8 +30,8 @@ ______________________________________________________________________________
 import sys
 import config                                                       # noqa: F401
 
-from hwut.test_writing_support.python.hwut_runner import HwutRunner
-from hwut.test_writing_support.python             import space_iterator
+from hwut.support.test_writing.python.hwut_runner import HwutRunner
+from hwut.support.test_writing.python             import space_iterator
 
 
 def banner(label):

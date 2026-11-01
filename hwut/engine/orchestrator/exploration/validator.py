@@ -20,7 +20,7 @@ ______________________________________________________________________________
 import re
 
 from .fault         import Fault, E_FaultKind
-from ....test_writing_support.python.hwut_hocon import (ScalarNode,
+from ....support.test_writing.python.hwut_hocon import (ScalarNode,
                                                       ListNode,
                                                       ObjectNode)
 from ...bookkeeper.api import BOOK_FORBIDDEN_IN_NAME

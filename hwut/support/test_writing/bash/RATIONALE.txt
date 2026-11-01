@@ -1,5 +1,5 @@
 ==============================================================================
-test_writing_support/bash -- RATIONALE
+support/test_writing/bash -- RATIONALE
 ==============================================================================
 
 SH-1  THE PYTHON TEST SUPPORT PORTED TO BASH, HELD BY THE PYTHON GOOD FILES

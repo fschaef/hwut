@@ -1,28 +1,28 @@
 STATUS: 0
 THE OUTER PICTURE {
     adm {
-        9 module(s): cythonizer.py, dependency.py, fail_book.py, good_audit.py, import_graph.py, python_tracer.py, ... (3 more)
-        --> engine
+        13 module(s): book_stain.py, cythonizer.py, dependency.py, fail_book.py, good_audit.py, import_graph.py, ... (7 more)
+        --> engine, services, support
     }
     auxiliary {
-        5 module(s): async_helper.py, binary_codec.py, clock.py, directory_mutex.py, parent_child_list.py
+        8 module(s): async_helper.py, binary_codec.py, clock.py, directory_mutex.py, no_entry.py, parent_child_list.py, ... (2 more)
         imports nothing of this tree
     }
     engine {
-        186 module(s): api.py, bookkeeper.py, configuration.py, group_table.py, observation.py, stream_store.py, ... (180 more)
-        --> adm, auxiliary, test_writing_support
+        208 module(s): api.py, bookkeeper.py, configuration.py, good_link.py, group_table.py, id_scope.py, ... (202 more)
+        --> adm, auxiliary, support
     }
     services {
-        67 module(s): _accept_common.py, _boundary.py, _cases.py, _config.py, _core.py, _exit.py, ... (61 more)
-        --> auxiliary, engine, test_writing_support
+        127 module(s): _accept_common.py, _boundary.py, _cases.py, _complete.py, _complete_setup.py, _config.py, ... (121 more)
+        --> adm, auxiliary, engine, support
     }
-    test_writing_support {
-        8 module(s): hwut_pype.py, __init__.py, deterministic_random.py, deterministic_timeline.py, hwut_hocon.py, hwut_runner.py, ... (2 more)
+    support {
+        58 module(s): account.py, eventstore.py, eventstore_noversion.py, jobqueue.py, accounts.py, accounts_naive.py, ... (52 more)
         imports nothing of this tree
     }
 }
 STATUS: 1
 THE LAYERING {
-    LAYERING VIOLATED -- 1 edge(s) no rule permits:
+    LAYERING VIOLATED -- 4 edge(s) no rule permits:
 }
 <hwut-end>

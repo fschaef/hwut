@@ -1,5 +1,5 @@
 ==============================================================================
-test_writing_support/haskell -- RATIONALE
+support/test_writing/haskell -- RATIONALE
 ==============================================================================
 
 HS-1  THE PYTHON TEST SUPPORT PORTED TO HASKELL, HELD BY THE PYTHON GOOD FILES

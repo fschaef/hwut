@@ -1,5 +1,5 @@
 ==============================================================================
-test_writing_support/powershell -- THE PYTHON TEST SUPPORT, IN POWERSHELL 7
+support/test_writing/powershell -- THE PYTHON TEST SUPPORT, IN POWERSHELL 7
 ==============================================================================
 
 1  WHAT STANDS HERE
@@ -62,7 +62,7 @@ text. Its GOOD files are not copies: every one is a '.link' to the Python
 test's '.txt' (bookkeeper B-32):
 
     TEST/GOOD/test-hwut_fsm.ps1--masks.link
-        ../../../python/TEST/GOOD/test-hwut_fsm.py--masks.txt
+        ../../../../python/TEST/GOOD/test-hwut_fsm.py--masks.txt
 
 47 cases in six tests, the same that hold the other ports.
 
@@ -173,7 +173,7 @@ the script; see RATIONALE PS-1.
 ------------------------------------------------------------------------------
 'script_runner.py'   a fixture for hwut's own tests of its faces, not given
                      to test authors.
-'hwut_pype'          a face ('hwut.pype') and its scripts, not a library a
+'hwut.pype'          a face ('services/lib/pype') and its scripts, not a library a
                      test links: a PowerShell test pipes through it as a
                      Python test does.
 ==============================================================================

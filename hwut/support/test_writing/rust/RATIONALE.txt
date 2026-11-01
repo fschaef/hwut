@@ -1,5 +1,5 @@
 ==============================================================================
-test_writing_support/rust -- RATIONALE
+support/test_writing/rust -- RATIONALE
 ==============================================================================
 
 RS-1  THE PYTHON TEST SUPPORT PORTED TO RUST, HELD BY THE PYTHON GOOD FILES

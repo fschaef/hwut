@@ -44,14 +44,14 @@ import os
 import re
 import sys
 
-#  THE INTERPRETER'S MODULE, bound by 'bind' -- not imported: 'hwut_pype'
+#  THE INTERPRETER'S MODULE, bound by 'bind' -- not imported: 'pype'
 #  also runs as a plain script ('__main__'), and its PypeError must be
 #  the one this module raises.
 _core = None
 
 
 def bind(core_module):
-    """RETURN: None. Makes 'core_module' (hwut_pype, however it was
+    """RETURN: None. Makes 'core_module' (pype, however it was
                      loaded) the interpreter this module drives."""
     global _core
     _core = core_module

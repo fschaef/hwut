@@ -1,5 +1,5 @@
 ==============================================================================
-test_writing_support/powershell -- RATIONALE
+support/test_writing/powershell -- RATIONALE
 ==============================================================================
 
 PS-1  THE PYTHON TEST SUPPORT PORTED TO POWERSHELL 7, HELD BY THE PYTHON

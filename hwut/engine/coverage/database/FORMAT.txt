@@ -369,7 +369,7 @@ is BINARY (9.4); its text spelling is the presentation, which
 'coverage/output.py' and 'database/gathered.py'; the codecs of versions
 1 and 2 refuse it.
 
-A WHOLE OUTPUT, from 'demo/python', the three kinds of file together:
+A WHOLE OUTPUT, from 'support/demo/python', the three kinds of file together:
 
     test_run_id_db.csv
         directory;test;choice;test_run_id

@@ -50,7 +50,7 @@ ______________________________________________________________________________
 import os
 import sys
 
-from hwut.test_writing_support.python.hwut_vterm import Terminal, LibraryMissing
+from hwut.support.test_writing.python.hwut_vterm import Terminal, LibraryMissing
 
 HERE   = os.path.dirname(os.path.abspath(__file__))
 SAMPLE = """\

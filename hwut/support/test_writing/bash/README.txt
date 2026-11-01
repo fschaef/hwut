@@ -1,5 +1,5 @@
 ==============================================================================
-test_writing_support/bash -- THE PYTHON TEST SUPPORT, IN BASH
+support/test_writing/bash -- THE PYTHON TEST SUPPORT, IN BASH
 ==============================================================================
 
 1  WHAT STANDS HERE
@@ -93,7 +93,7 @@ text. Its GOOD files are not copies: every one is a '.link' to the Python
 test's '.txt' (bookkeeper B-32):
 
     TEST/GOOD/test-hwut_fsm.sh--masks.link
-        ../../../python/TEST/GOOD/test-hwut_fsm.py--masks.txt
+        ../../../../python/TEST/GOOD/test-hwut_fsm.py--masks.txt
 
 So the bash module is held against what the Python module was accepted for,
 byte for byte -- as the Perl and C modules are; 47 cases in six tests.
@@ -166,7 +166,7 @@ whether the library is there.
 ------------------------------------------------------------------------------
 'script_runner.py'   a fixture for hwut's own tests of its faces, not given
                      to test authors.
-'hwut_pype'          a face ('hwut.pype') and its scripts, not a library a
+'hwut.pype'          a face ('services/lib/pype') and its scripts, not a library a
                      test sources: a bash test pipes through it as a Python
                      test does.
 ==============================================================================

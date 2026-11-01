@@ -1,5 +1,5 @@
 ==============================================================================
-test_writing_support/haskell -- THE PYTHON TEST SUPPORT, IN HASKELL
+support/test_writing/haskell -- THE PYTHON TEST SUPPORT, IN HASKELL
 ==============================================================================
 
 1  WHAT STANDS HERE
@@ -81,7 +81,7 @@ text. Its GOOD files are not copies: every one is a '.link' to the Python
 test's '.txt' (bookkeeper B-32):
 
     TEST/GOOD/test-hwut_fsm.hs--masks.link
-        ../../../python/TEST/GOOD/test-hwut_fsm.py--masks.txt
+        ../../../../python/TEST/GOOD/test-hwut_fsm.py--masks.txt
 
 47 cases in six tests. What Python prints of its own values -- True, None, a
 float's shortest form, a str, bytes, list or tuple literal -- the Haskell
@@ -151,7 +151,7 @@ the modules to bytecode at every call; the fuzz takes 3.7 s), and cannot run
 ------------------------------------------------------------------------------
 'script_runner.py'   a fixture for hwut's own tests of its faces, not given
                      to test authors.
-'hwut_pype'          a face ('hwut.pype') and its scripts, not a library a
+'hwut.pype'          a face ('services/lib/pype') and its scripts, not a library a
                      test links: a Haskell test pipes through it as a Python
                      test does.
 ==============================================================================

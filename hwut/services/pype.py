@@ -2,7 +2,7 @@
 ______________________________________________________________________________
 
 PURPOSE: THE 'hwut.pype' COMMAND LINE -- the pype line-matching filter,
-         as a face over 'test_writing_support/hwut_pype'.
+         as a face over 'services/lib/pype'.
 
     hwut.pype [--trace|--trace-plain] [--pype-dir DIR ...] SCRIPT [INPUT ...]
     hwut.pype --example SCRIPT
@@ -37,8 +37,8 @@ import os
 import sys
 
 from ._exit import E_ExitCode
-from ..test_writing_support.hwut_pype.hwut_pype import USAGE
-from ..test_writing_support.hwut_pype.hwut_pype import main \
+from .lib.pype.pype import USAGE
+from .lib.pype.pype import main \
                                                      as interpreter_main
 
 PROGRAM_NAME = "hwut.pype"

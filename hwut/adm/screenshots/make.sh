@@ -63,7 +63,7 @@ snap() {            # snap NAME DIR ROWS TITLE COMMAND [KEY...]
     python3 "$HERE/render.py" "$WORK/$name.ans" "$OUT/$name.png" "$title"
 }
 
-snap hwut-run                "$DEMO" 24 'demo/python/TEST $ hwut'                          'hwut'
+snap hwut-run                "$DEMO" 24 'support/demo/python/TEST $ hwut'                          'hwut'
 snap hwut-run-diff           "$DEMO"  8 'hwut.diff -y demo.py plain'                   'hwut.diff -y demo.py plain'
 snap hwut-accept-interactive "$INV"  13 'hwut.merge invoice.sh totals (two takes made)' \
      'hwut.merge invoice.sh totals' j Enter j j j Enter

@@ -1,5 +1,5 @@
 ==============================================================================
-test_writing_support/prolog -- RATIONALE
+support/test_writing/prolog -- RATIONALE
 ==============================================================================
 
 PRO-1 THE PYTHON TEST SUPPORT PORTED TO PROLOG, HELD BY THE PYTHON GOOD FILES

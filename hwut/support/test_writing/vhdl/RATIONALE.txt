@@ -1,5 +1,5 @@
 ==============================================================================
-test_writing_support/vhdl -- RATIONALE
+support/test_writing/vhdl -- RATIONALE
 ==============================================================================
 
 VH-1  THE PYTHON TEST SUPPORT PORTED TO VHDL -- NATIVE WHERE VHDL CAN, THE C

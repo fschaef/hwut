@@ -42,7 +42,7 @@ import tempfile
 
 import config                                                   # noqa: F401
 
-from hwut.test_writing_support.python.hwut_runner import HwutRunner
+from hwut.support.test_writing.python.hwut_runner import HwutRunner
 from hwut.engine.coverage.database.record import (CoverageRecord,
                                                  FileCoverage)
 from hwut.engine.coverage.database.binary import pack_record

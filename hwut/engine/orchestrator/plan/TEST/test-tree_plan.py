@@ -34,7 +34,7 @@ import tempfile
 from config import HwutRunner                                # noqa: F401
 
 from hwut.engine.orchestrator.exploration.tree_explorer import explore_tree
-from hwut.test_writing_support.python.script_runner import tree_boundary  # noqa: E402
+from hwut.support.test_writing.python.script_runner import tree_boundary  # noqa: E402
 from hwut.engine.orchestrator.plan.tree import (determine_tree,
                                                print_tree_plan)
 from hwut.engine.orchestrator.plan.wish import Wish

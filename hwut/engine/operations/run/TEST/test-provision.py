@@ -85,7 +85,7 @@ from hwut.engine.bookkeeper.api import Store            # noqa E402
 #  once, and the counted path went on pointing into the void.
 from   config import HWUT_DIRECTORY                               # noqa E402
 
-PYPE = os.path.join(HWUT_DIRECTORY, "test_writing_support", "hwut_pype", "hwut_pype.py")
+PYPE = os.path.join(HWUT_DIRECTORY, "services", "lib", "pype", "pype.py")
 
 _SORT_SCRIPT = ("on: <bof> => {\n"
                 "    collected = []\n"

@@ -64,7 +64,7 @@ python   pint>=0.26.2            census  python3-pint                    quantit
 #        RQ-7, measured with 0.26.2 only; Debian's numbering not measured
 
 library  vterm           census  libvterm0              testing terminal programs ('hwut_vterm')
-#        read by 'test_writing_support/python/hwut_vterm.py'; red without it:
+#        read by 'support/test_writing/python/hwut_vterm.py'; red without it:
 #        'test-hwut_vterm.py', 'keyed/TEST/test-screen.py'
 
 program  pdflatex        road    texlive-latex-base     'hwut.cov.conv.to_pdf'

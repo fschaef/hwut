@@ -1,4 +1,4 @@
 
---- forbidden constructs in hwut_pype.py ---
+--- forbidden constructs in pype.py ---
 clean: no f-strings, no annotations, no walrus, no keyword-only arguments
 <hwut-end>

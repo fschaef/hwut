@@ -208,7 +208,7 @@ import shutil
 import tempfile
 import config                                                   # noqa: F401
 
-from hwut.test_writing_support.python.hwut_runner import HwutRunner
+from hwut.support.test_writing.python.hwut_runner import HwutRunner
 from hwut.engine.coverage.configuration import CoverageConfig
 from hwut.engine.coverage.database.record import format_record, line_n
 from hwut.engine.coverage.readers.reader import framework_of, registered_tuple

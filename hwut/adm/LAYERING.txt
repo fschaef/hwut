@@ -81,16 +81,26 @@ DOOR engine/coverage/api
 DOOR engine/bookkeeper/api
 
 #  THE FOUNDATION IS SEALED FOR THE SAME REASON. 'auxiliary' and
-#  'test_writing_support' import nothing of this tree, which is what makes
+#  'support/test_writing' import nothing of this tree, which is what makes
 #  them a foundation; the seal is that sentence, made checkable.
+#  Of 'support/test_writing' only 'python/' holds Python modules, so only
+#  the Python port can be imported here; that it may be is its
+#  'home = "hwut"' in 'support/test_writing/LANGUAGES.conf', and that
+#  nothing of hwut names another port is 'adm/support_layout.py' (E-216).
 SEALED auxiliary
-SEALED test_writing_support
+SEALED support/test_writing
+
+#  THE ADMINISTRATION reads with the foundation: 'adm/support_layout.py'
+#  parses 'LANGUAGES.conf' with the Python port's HOCON parser, and the
+#  package is built from what it says (E-216).
+adm*                -> support/test_writing
+adm/packaging       -> adm
 
 #  THE ENGINE rests on the foundation, and its parts rest on one
 #  another in one direction.
 engine/*            -> adm
 engine/*            -> auxiliary
-engine/*            -> test_writing_support*
+engine/*            -> support/test_writing
 
 engine/bookkeeper   -> engine/compare
 engine/coverage     -> engine/bookkeeper
@@ -122,7 +132,7 @@ engine/orchestrator -> engine/protocol
 services*           -> adm
 services*           -> auxiliary
 services*           -> engine/*
-services*           -> test_writing_support*
+services*           -> support/test_writing
 
 #  A FACE FAMILY AND ITS PARENT. 'services -> services/lib' is a face
 #  reaching for a family's door ('lib/labels', 'lib/viewers');

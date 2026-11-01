@@ -49,7 +49,7 @@ import os
 import sys
 
 import config                                                   # noqa: F401
-from hwut.test_writing_support.python.hwut_runner import HwutRunner
+from hwut.support.test_writing.python.hwut_runner import HwutRunner
 from hwut.engine.coverage.readers.reader import registered_tuple, framework_of
 
 REAL = os.path.join(os.path.dirname(os.path.abspath(__file__)),

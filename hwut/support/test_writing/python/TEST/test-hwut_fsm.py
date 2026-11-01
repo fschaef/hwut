@@ -42,8 +42,8 @@ ______________________________________________________________________________
 import sys
 import config                                                       # noqa: F401
 
-from hwut.test_writing_support.python.hwut_runner import HwutRunner
-from hwut.test_writing_support.python.hwut_fsm    import Machine, FsmError
+from hwut.support.test_writing.python.hwut_runner import HwutRunner
+from hwut.support.test_writing.python.hwut_fsm    import Machine, FsmError
 
 #  THE PROTOCOL OF EVERY CHOICE: a request is waited on, granted, released;
 #  a fault while busy crashes it -- which must never happen.

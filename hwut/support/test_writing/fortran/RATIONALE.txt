@@ -1,5 +1,5 @@
 ==============================================================================
-test_writing_support/fortran -- RATIONALE
+support/test_writing/fortran -- RATIONALE
 ==============================================================================
 
 F-1   THE PYTHON TEST SUPPORT PORTED TO FORTRAN -- NATIVE, BUT FOR LIBVTERM

@@ -73,7 +73,7 @@ ______________________________________________________________________________
 import sys
 import config                                                   # noqa: F401
 
-from hwut.test_writing_support.python.hwut_runner import HwutRunner
+from hwut.support.test_writing.python.hwut_runner import HwutRunner
 from hwut.engine.coverage.database.measure import (I_Measure, PointMeasure,
                                          NamedPointMeasure, register,
                                          measure_of, measure_of_tag,

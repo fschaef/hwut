@@ -29,7 +29,7 @@ sys.path.insert(0, "../../../../")
 from hwut.engine.compare.configuration import Configuration
 import hwut.engine.compare.main        as     main
 import hwut.engine.compare.TEST.line_provider as line_provider
-from hwut.test_writing_support.python.deterministic_random import DeterministicStream
+from hwut.support.test_writing.python.deterministic_random import DeterministicStream
 
 
 async def run_test(subject_timeline, nominal_timeline):

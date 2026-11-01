@@ -1,5 +1,5 @@
 ==============================================================================
-test_writing_support/erlang -- RATIONALE
+support/test_writing/erlang -- RATIONALE
 ==============================================================================
 
 ERL-1 THE PYTHON TEST SUPPORT PORTED TO ERLANG: VALUES WHERE IT IS DATA,

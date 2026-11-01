@@ -1,5 +1,5 @@
 ==============================================================================
-test_writing_support/cpp -- THE PYTHON TEST SUPPORT, IN C++
+support/test_writing/cpp -- THE PYTHON TEST SUPPORT, IN C++
 ==============================================================================
 
 1  WHAT STANDS HERE
@@ -82,7 +82,7 @@ text. Its GOOD files are not copies: every one is a '.link' to the Python
 test's '.txt' (bookkeeper B-32):
 
     TEST/GOOD/test-hwut_fsm.cpp--masks.link
-        ../../../python/TEST/GOOD/test-hwut_fsm.py--masks.txt
+        ../../../../python/TEST/GOOD/test-hwut_fsm.py--masks.txt
 
 So the C++ module is held against what the Python module was accepted for,
 byte for byte -- as the C and Perl modules are; 47 cases in six tests.
@@ -151,5 +151,5 @@ says whether the library is there. No other package is wanted.
 Anything the C modules do: the C++ modules convert, own and throw; they
 parse, draw and schedule nothing themselves.
 'script_runner.py'   a fixture for hwut's own tests of its faces.
-'hwut_pype'          a face ('hwut.pype'), not a library a test links.
+'hwut.pype'          a face ('services/lib/pype'), not a library a test links.
 ==============================================================================

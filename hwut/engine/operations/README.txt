@@ -1246,7 +1246,7 @@ WHO ENDS A STREAM:
                      launch wherever a stdout canonicaliser stands
                      (per run for plain tests; session-wide for
                      interactive ones). An absent token on a pype-d
-                     stream criticises the SCRIPT (hwut_pype MANUAL
+                     stream criticises the SCRIPT (pype MANUAL
                      1b).
 
 COMPLETENESS AND CONTAINMENT ARE ORTHOGONAL: the token is the

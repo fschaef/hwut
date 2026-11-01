@@ -1,5 +1,5 @@
 ==============================================================================
-test_writing_support/verilog -- RATIONALE
+support/test_writing/verilog -- RATIONALE
 ==============================================================================
 
 SV-1  THE PYTHON TEST SUPPORT PORTED TO SYSTEMVERILOG: NATIVE WHERE THE

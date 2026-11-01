@@ -22,7 +22,7 @@ The last line ends at the matching brace; a trailing comment closer after it
 (' */') lies outside the region and needs no tolerance of its own.
 ______________________________________________________________________________
 """
-from ....test_writing_support.python.hwut_hocon import SourceLine
+from ....support.test_writing.python.hwut_hocon import SourceLine
 
 
 def unwrap(text, region):

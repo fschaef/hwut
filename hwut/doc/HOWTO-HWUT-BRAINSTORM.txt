@@ -598,7 +598,7 @@ BIN DISCIPLINE
       columns
     - A STAND-IN TOOL PROVES THE CHAIN, NOT THE CALL. The coverage
       pages ran a 'witness' tool whose wrap APPENDS a flag to the
-      call; every one was green. MEASURED (demo/python, coverage.py
+      call; every one was green. MEASURED (support/demo/python, coverage.py
       7.16, the command a person types): the real tool takes a SCRIPT
       where the chain handed it a COMMAND, read 'python3' as the file
       to run, and all four cases ended 'cut-short [FAIL]'. One page

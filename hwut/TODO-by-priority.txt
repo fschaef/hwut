@@ -610,7 +610,7 @@ TIER 5  WAITING ON A RULING
 [ ] r-11d the keyed screen has no page through a terminal. RULED
          2026-10-09: libvterm, not pyte. No Python module binding it
          was found; the library stands in the container recipe.
-         2026-10-09: the binding is written -- 'test_writing_support/
+         2026-10-09: the binding is written -- 'support/test_writing/
          python/hwut_vterm.py', a ctypes wrapper, with its page; then
          'Terminal' (an application run in it, observed by callbacks)
          and 'keyed/TEST/test-screen.py', the merge screen as drawn.

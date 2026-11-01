@@ -743,7 +743,7 @@ THE HOCON PARSER produces the ANNOTATED TREE: every key, every value and
 every block carries its position in the source file. It does not live here:
 it is test-writing support and stands at
 
-    hwut/test_writing_support/python/hocon_parser.py
+    hwut/support/test_writing/python/hocon_parser.py
 
 with its own TEST directory. Every supported language is given a parser that
 behaves the same way; the Python one's GOOD files are the description the

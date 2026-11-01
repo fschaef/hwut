@@ -7,7 +7,7 @@
 # the report says what the events covered of the model.
 
 on: <entry> => {
-    from hwut.test_writing_support.python.hwut_fsm import Machine
+    from hwut.support.test_writing.python.hwut_fsm import Machine
     door = Machine.from_string("""
         initial:   closed
         final:     closed, locked

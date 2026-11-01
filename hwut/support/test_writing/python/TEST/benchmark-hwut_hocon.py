@@ -23,7 +23,7 @@ import platform
 
 import config                                                   # noqa: F401
 
-from hwut.test_writing_support.python.hwut_hocon import parse, SourceLine
+from hwut.support.test_writing.python.hwut_hocon import parse, SourceLine
 
 
 HEADER = "@" + '''hwut {

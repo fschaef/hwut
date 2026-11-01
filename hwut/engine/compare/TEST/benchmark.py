@@ -13,7 +13,7 @@ sys.path.insert(0, "../../../../")
 
 from hwut.engine.compare.configuration import Configuration
 import hwut.engine.compare.main as main
-from hwut.test_writing_support.python.deterministic_random import DeterministicStream
+from hwut.support.test_writing.python.deterministic_random import DeterministicStream
 
 # --- Configuration Constants ---
 POTPOURRI_BLOCK_SIZE = 32

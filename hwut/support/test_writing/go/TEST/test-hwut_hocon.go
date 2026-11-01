@@ -36,10 +36,10 @@ import (
 	"strings"
 	"time"
 
-	dr "hwut/test_writing_support/go/deterministicrandom"
-	"hwut/test_writing_support/go/hwuthocon"
-	"hwut/test_writing_support/go/hwutrunner"
-	"hwut/test_writing_support/go/pytext"
+	dr "hwut/support/test_writing/go/deterministicrandom"
+	"hwut/support/test_writing/go/hwuthocon"
+	"hwut/support/test_writing/go/hwutrunner"
+	"hwut/support/test_writing/go/pytext"
 )
 
 func banner(label string) { fmt.Printf("\n--- %s ---\n", label) }

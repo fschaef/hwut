@@ -54,7 +54,7 @@ import inspect
 import tempfile
 import config                                                       # noqa: F401
 
-from hwut.test_writing_support.python.hwut_runner import HwutRunner    # noqa: E402
+from hwut.support.test_writing.python.hwut_runner import HwutRunner    # noqa: E402
 from hwut.engine.operations.run.provider import (             # noqa: E402
                                                I_Provider,
                                                I_ProxyProvider,

@@ -66,7 +66,7 @@ import re
 import unicodedata
 from   dataclasses import dataclass
 
-from ....test_writing_support.python.hwut_hocon import (ScalarNode,
+from ....support.test_writing.python.hwut_hocon import (ScalarNode,
                                                         ObjectNode)
 from .fault            import Fault, E_FaultKind, Position
 from .finder           import REGISTRY_FILE_NAME

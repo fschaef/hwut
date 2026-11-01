@@ -80,7 +80,7 @@ import tempfile
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 
 import config                                                    # noqa F401
-from hwut.test_writing_support.python.script_runner import tree_boundary  # noqa: E402
+from hwut.support.test_writing.python.script_runner import tree_boundary  # noqa: E402
 from   config import HwutRunner                                  # noqa F401,E402
 
 from hwut.auxiliary.no_entry import NO_ENTRY_MARKER_FILE   # noqa E402

@@ -238,7 +238,7 @@ COMPONENT, and 'nothing leaves here' is the whole of a contract's
 claim -- so it holds however coarsely the rest is declared.
 
 SEALED TODAY: 'engine/compare/contract', 'engine/procsitter',
-'auxiliary', 'test_writing_support'.
+'auxiliary', 'support/test_writing'.
 
 THREE OF THE FOUR NEEDED NO MOVING, ONLY DECLARING. They already
 imported nothing of this tree; the seal is that sentence made
@@ -523,7 +523,7 @@ a relative import cannot work:
     TEST/ scripts             run by path; their 'config.py' puts the
                               package on 'sys.path'
     adm/ tools                run by path ('python3 adm/<tool>.py')
-    test_writing_support/     given to test authors, who may import them
+    support/test_writing/     given to test authors, who may import them
                               as top-level modules
     demo/                     run by path
     engine/compare/feeder/ui.py   run by path

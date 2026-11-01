@@ -17,7 +17,7 @@
 # ---------------------------------------------------------------------------
 #
 # THE PYPE FACE IS A DOOR, NOT A LANGUAGE. The language is tested where
-# it lives ('test_writing_support/hwut_pype/TEST'); this suite drives
+# it lives ('services/lib/pype/TEST'); this suite drives
 # the face and shows what the shell reads: stdout, stderr folded in,
 # exit status.
 #

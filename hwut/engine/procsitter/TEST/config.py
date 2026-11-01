@@ -11,7 +11,7 @@ named 'hwut/', then inserts that directory's parent into sys.path.
 
 After 'import config' (as the first import in a test file), all of:
 
-    from hwut.test_writing_support.python.hwut_runner import HwutRunner
+    from hwut.support.test_writing.python.hwut_runner import HwutRunner
     from hwut.engine.procsitter.procsitter import ...
 
 work normally.
@@ -37,4 +37,4 @@ while True:
         )
     _cur = _parent
 
-from hwut.test_writing_support.python.hwut_runner import HwutRunner # noqa E401
+from hwut.support.test_writing.python.hwut_runner import HwutRunner # noqa E401

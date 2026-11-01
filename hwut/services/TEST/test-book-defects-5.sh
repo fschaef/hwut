@@ -279,12 +279,12 @@ EOF
     runner-words)
         cat > one.py <<'EOF'
 import sys
-from hwut.test_writing_support.python.hwut_runner import HwutRunner
+from hwut.support.test_writing.python.hwut_runner import HwutRunner
 HwutRunner(sys.argv, "one;", {None: lambda: print("the one")}).run()
 EOF
         cat > two.py <<'EOF'
 import sys
-from hwut.test_writing_support.python.hwut_runner import HwutRunner
+from hwut.support.test_writing.python.hwut_runner import HwutRunner
 HwutRunner(sys.argv, "two;", {"a": lambda: print("A"), "b": lambda: print("B")}).run()
 EOF
         #  THE APPLICATION'S OWN CLOSING TOKEN is shown as '<end>': this

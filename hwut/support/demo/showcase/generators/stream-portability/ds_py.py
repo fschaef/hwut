@@ -4,7 +4,7 @@ whichever Python runs this file. usage: pythonX.Y ds_py.py int|gauss SEED N
 import os, random, shutil, sys
 sys.path.insert(0, os.path.realpath(os.path.join(
     os.path.dirname(os.path.realpath(shutil.which("hwut"))), "..", "..")))
-from hwut.test_writing_support.python.deterministic_random import DeterministicStream
+from hwut.support.test_writing.python.deterministic_random import DeterministicStream
 
 kind, seed, n = sys.argv[1], int(sys.argv[2]), int(sys.argv[3])
 if kind == "random":

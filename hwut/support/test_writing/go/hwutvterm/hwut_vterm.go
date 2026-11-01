@@ -60,7 +60,7 @@ import (
 	"time"
 	"unsafe"
 
-	"hwut/test_writing_support/go/pytext"
+	"hwut/support/test_writing/go/pytext"
 )
 
 // LIBRARY_VARIABLE is the environment variable that names the library's

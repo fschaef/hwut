@@ -10,7 +10,7 @@ WHO ENDS A STREAM:
                            -- the test application MUST NOT produce
                            the token (it cannot place it safely) and
                            never has to; an absent token criticises
-                           the PYPE SCRIPT (hwut_pype MANUAL).
+                           the PYPE SCRIPT (pype MANUAL).
     a PLAIN stream         the application itself; HwutRunner, the
                            reference implementation, emits it as a
                            choice's last act.

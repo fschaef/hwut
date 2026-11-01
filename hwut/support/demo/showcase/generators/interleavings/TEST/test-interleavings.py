@@ -71,8 +71,8 @@ import sys
 
 sys.path.insert(0, os.path.realpath(os.path.join(
     os.path.dirname(os.path.realpath(shutil.which("hwut"))), "..", "..")))
-import hwut.test_writing_support.python.space_iterator as space_iterator
-from hwut.test_writing_support.python.deterministic_timeline import Trigger, TriggerDispatcher
+import hwut.support.test_writing.python.space_iterator as space_iterator
+from hwut.support.test_writing.python.deterministic_timeline import Trigger, TriggerDispatcher
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, ".."))

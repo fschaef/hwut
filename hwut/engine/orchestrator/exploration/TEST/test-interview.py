@@ -58,7 +58,7 @@ import shutil
 import tempfile
 import config                                                       # noqa: F401
 
-from hwut.test_writing_support.python.hwut_runner import HwutRunner
+from hwut.support.test_writing.python.hwut_runner import HwutRunner
 from hwut.engine.orchestrator.exploration.hwut_info_interview import (specification_of,
                                                         interview,
                                                         INTERVIEW_CAPS)

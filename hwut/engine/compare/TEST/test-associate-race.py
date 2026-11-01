@@ -32,7 +32,7 @@ import hwut.engine.compare.main          as main
 import hwut.engine.compare.engine.pretty as pretty
 import hwut.engine.compare.TEST.line_provider as line_provider
 
-from hwut.test_writing_support.python.deterministic_random import DeterministicStream
+from hwut.support.test_writing.python.deterministic_random import DeterministicStream
 
 async def test(subject_timeline, nominal_timeline):
     config = Configuration()

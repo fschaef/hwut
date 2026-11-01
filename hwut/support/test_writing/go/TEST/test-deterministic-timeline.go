@@ -31,8 +31,8 @@ import (
 	"fmt"
 	"os"
 
-	dt "hwut/test_writing_support/go/deterministictimeline"
-	"hwut/test_writing_support/go/hwutrunner"
+	dt "hwut/support/test_writing/go/deterministictimeline"
+	"hwut/support/test_writing/go/hwutrunner"
 )
 
 func banner(label string) { fmt.Printf("\n--- %s ---\n", label) }

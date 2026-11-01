@@ -26,7 +26,7 @@ sys.path.insert(0, this_directory)
 from hwut.engine.compare.region.potpourri.solver.csp_arc_consistency import (propagate_blockers,  #noqa E402
                                                                      pad_ids_to_bitmask)
 
-from hwut.test_writing_support.python.deterministic_random import DeterministicStream                                 #noqa E402
+from hwut.support.test_writing.python.deterministic_random import DeterministicStream                                 #noqa E402
 
 if "--hwut-info" in sys.argv:
     print("Propagate Blockers: Constraint Propagation;")

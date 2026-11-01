@@ -4,7 +4,7 @@ hwut_runner -- FRONT END OF A HWUT TEST APPLICATION
 
 A test application constructs one HwutRunner and calls '.run()'.
 
-    from hwut.test_writing_support.python.hwut_runner import HwutRunner
+    from hwut.support.test_writing.python.hwut_runner import HwutRunner
 
 THE IMPORT PATH (S7): under 'hwut.run' and 'hwut.play' the module is
 found because every 'hwut.*' launcher exports PYTHONPATH with the

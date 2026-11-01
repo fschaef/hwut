@@ -11,7 +11,7 @@ never be reached. The test fires every event it observes into it; every
 move the model does not allow is printed as one line, and so it lands in
 the GOOD file, where the comparison judges it.
 
-    from hwut.test_writing_support.python.hwut_fsm import Machine
+    from hwut.support.test_writing.python.hwut_fsm import Machine
 
     m = Machine.from_string("""
         initial:   idle
@@ -32,7 +32,7 @@ test application and in a pype script's effect alike.
 NOT PYPE'S MODES. A pype script's modes are the READER's state: what it
 expects to parse next. A Machine is the SYSTEM's. A script parses with its
 modes and fires what it parsed into a Machine; the demo
-'demo/python/TEST/door.py' with 'door.pype' shows the pair.
+'support/demo/python/TEST/door.py' with 'door.pype' shows the pair.
 
 
 1  THE MODEL AS TEXT

@@ -24,7 +24,7 @@ REQUIREMENT  The garage admits a car only while a space is free, lets a car
              than it has spaces -- also when two gates admit at once.
 
 No choice writes its cases out by hand. Each GENERATES them, with one of
-hwut's helpers for writing tests (hwut/test_writing_support/python):
+hwut's helpers for writing tests (hwut/support/test_writing/python):
 
 space        'garage-space.hocon' states the tested space -- capacities,
              cars arriving, cars leaving -- in hwut's HOCON, read by
@@ -65,11 +65,11 @@ ______________________________________________________________________________
 import os
 import sys
 
-import hwut.test_writing_support.python.space_iterator as space_iterator
-import hwut.test_writing_support.python.hwut_hocon as hwut_hocon
-from hwut.test_writing_support.python.deterministic_random   import DeterministicStream
-from hwut.test_writing_support.python.deterministic_timeline import Trigger, TriggerDispatcher
-from hwut.test_writing_support.python.hwut_runner            import HwutRunner
+import hwut.support.test_writing.python.space_iterator as space_iterator
+import hwut.support.test_writing.python.hwut_hocon as hwut_hocon
+from hwut.support.test_writing.python.deterministic_random   import DeterministicStream
+from hwut.support.test_writing.python.deterministic_timeline import Trigger, TriggerDispatcher
+from hwut.support.test_writing.python.hwut_runner            import HwutRunner
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 

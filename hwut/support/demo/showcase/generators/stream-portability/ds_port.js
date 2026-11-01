@@ -1,4 +1,4 @@
-// ds_port.js -- DeterministicStream (hwut test_writing_support) in JavaScript,
+// ds_port.js -- DeterministicStream (hwut support/test_writing) in JavaScript,
 // for a web front end replaying a recorded stream. BigInt is not needed for
 // the product -- 48271 * (2^31 - 2) < 2^47 is exact in a Number (2^53) --
 // it is kept so that '%' and the int conversions read as integer arithmetic.

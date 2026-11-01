@@ -1,5 +1,5 @@
 ==============================================================================
-test_writing_support/vhdl -- THE PYTHON TEST SUPPORT, IN VHDL
+support/test_writing/vhdl -- THE PYTHON TEST SUPPORT, IN VHDL
 ==============================================================================
 
 1  WHAT STANDS HERE
@@ -98,7 +98,7 @@ text. Its GOOD files are not copies: every one is a '.link' to the Python
 test's '.txt' (bookkeeper B-32):
 
     TEST/GOOD/test-hwut_fsm.vhd--masks.link
-        ../../../python/TEST/GOOD/test-hwut_fsm.py--masks.txt
+        ../../../../python/TEST/GOOD/test-hwut_fsm.py--masks.txt
 
 47 cases in six tests. 'hwut.good.link.show TEST/GOOD' lists them.
 

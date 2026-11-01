@@ -1,5 +1,5 @@
 ==============================================================================
-test_writing_support/c -- RATIONALE
+support/test_writing/c -- RATIONALE
 ==============================================================================
 
 C-1   THE PYTHON TEST SUPPORT PORTED TO C, HELD BY THE PYTHON GOOD FILES

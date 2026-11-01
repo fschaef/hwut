@@ -80,7 +80,7 @@ import tempfile
 from config import HwutRunner                                # noqa: F401
 
 from hwut.engine.orchestrator.plan.wish import Wish
-from hwut.test_writing_support.python.script_runner import tree_boundary  # noqa: E402
+from hwut.support.test_writing.python.script_runner import tree_boundary  # noqa: E402
 from hwut.engine.orchestrator.run.orchestrate import orchestrator
 from hwut.engine.orchestrator.run.dispatcher import \
                                              test_run_dispatcher_factory

@@ -550,7 +550,7 @@ in the graph: production is tee'd, control is answered.
 Two supervised calls, two attribution records: contained on BOTH ends. The
 controller may equally be a pype script in its own procsitter --
 
-    ctrl_argv = ["python3", "-u", "tools/hwut_pype/hwut_pype.py",
+    ctrl_argv = ["python3", "-u", "services/lib/pype/pype.py",
                  "dialogue.pype"]
     # dialogue.pype -- the subject asks, pype answers:
     #     on: "capital-of-france" => {

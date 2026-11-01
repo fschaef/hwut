@@ -23,9 +23,9 @@ import (
 	"os"
 	"strings"
 
-	"hwut/test_writing_support/go/hwutrunner"
-	"hwut/test_writing_support/go/pytext"
-	"hwut/test_writing_support/go/spaceiterator"
+	"hwut/support/test_writing/go/hwutrunner"
+	"hwut/support/test_writing/go/pytext"
+	"hwut/support/test_writing/go/spaceiterator"
 )
 
 func banner(label string) { fmt.Printf("\n--- %s ---\n", label) }

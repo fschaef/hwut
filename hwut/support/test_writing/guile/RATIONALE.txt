@@ -1,5 +1,5 @@
 ==============================================================================
-test_writing_support/guile -- RATIONALE
+support/test_writing/guile -- RATIONALE
 ==============================================================================
 
 SCM-1 THE PYTHON TEST SUPPORT PORTED TO SCHEME (GNU GUILE), HELD BY THE

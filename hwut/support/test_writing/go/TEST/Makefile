@@ -3,7 +3,7 @@
 #
 # The Go test applications, each built by 'go build' from its one source:
 # the support packages are found through '../go.mod' (module
-# 'hwut/test_writing_support/go'). Go's build cache holds what two targets
+# 'hwut/support/test_writing/go'). Go's build cache holds what two targets
 # share, and it is safe for builds at the same time; no other file is shared
 # between two targets, so hwut may build several tests of this directory at
 # once (services E-210: the build runs here, where this Makefile stands).

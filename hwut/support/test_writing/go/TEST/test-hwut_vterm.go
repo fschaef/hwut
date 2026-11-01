@@ -34,9 +34,9 @@ import (
 	"strings"
 	"time"
 
-	"hwut/test_writing_support/go/hwutrunner"
-	"hwut/test_writing_support/go/hwutvterm"
-	"hwut/test_writing_support/go/pytext"
+	"hwut/support/test_writing/go/hwutrunner"
+	"hwut/support/test_writing/go/hwutvterm"
+	"hwut/support/test_writing/go/pytext"
 )
 
 const ESC = "\x1b"

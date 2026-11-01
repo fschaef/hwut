@@ -22,7 +22,8 @@ list to keep in step.
 
 THE STAGE is the package 'hwut' as a user receives it:
 
-    in    engine, services, auxiliary, test_writing_support, demo,
+    in    engine, services, auxiliary, support/demo, of support/test_writing
+          its LANGUAGES.conf and every port with 'home = "hwut"' (E-216),
           adm/version.py, adm/requirement-list.txt, bin/.hwut.conf,
           doc/HOWTO-*.txt
     out   every TEST directory but the demonstration's, WORK, what a run
@@ -44,13 +45,15 @@ HWUT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(
 sys.path.insert(0, os.path.dirname(HWUT))
 from hwut.services._launch          import shim_module_db   # noqa: E402
 from hwut.services.lib import requirements                  # noqa: E402
+from hwut.adm.support_layout     import shipped_tuple, SUPPORT, \
+                                        LANGUAGE_FILE        # noqa: E402
 
-TOP_TUPLE  = ("engine", "services", "auxiliary", "test_writing_support",
-              "demo")
+TOP_TUPLE  = ("engine", "services", "auxiliary",
+              os.path.join("support", "demo"))
 FILE_TUPLE = ("adm/version.py", "adm/requirement-list.txt",
               "bin/.hwut.conf")
 DOC_GLOB_RE = re.compile(r"^HOWTO-.*\.txt$")
-KEEP_TEST  = os.path.join("demo", "python", "TEST")
+KEEP_TEST  = os.path.join("support", "demo", "python", "TEST")
 LEFT_BEHIND = ("TMP", "OUT", "WORK", "__pycache__", ".ruff_cache",
                "htmlcov", "hwut-traces*", "hwut.log", ".coverage",
                "_complete_db.py", "*.pyc")
@@ -95,9 +98,12 @@ def stage(target):
     """
     package = os.path.join(target, "hwut")
     os.makedirs(package)
-    for top in TOP_TUPLE:
+    for top in TOP_TUPLE + tuple(os.path.join(SUPPORT, port)
+                                 for port in shipped_tuple(HWUT)):
         shutil.copytree(os.path.join(HWUT, top), os.path.join(package, top),
                         ignore=_ignored)
+    shutil.copy2(os.path.join(HWUT, LANGUAGE_FILE),
+                 os.path.join(package, LANGUAGE_FILE))
     for relative in FILE_TUPLE:
         os.makedirs(os.path.join(package, os.path.dirname(relative)),
                     exist_ok=True)

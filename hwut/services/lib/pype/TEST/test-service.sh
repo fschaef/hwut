@@ -27,14 +27,14 @@
 # Python test frame stands between the service and its caller; the caller
 # IS the shell, as it will be in the field.
 #
-#     producer ──► │ pipe │ ──► hwut_pype script.pype ──► stdout
+#     producer ──► │ pipe │ ──► hwut.pype script.pype ──► stdout
 #
 # The display: STIMULUS first (the command line and what flows in), then
 # REACTION (what comes out, verbatim). A reader compares the two by eye;
 # the GOOD file is the blessed description of the behaviour.
 # ---------------------------------------------------------------------------
 HERE=$(cd "$(dirname "$0")" && pwd)
-PYPE="python3 $HERE/../hwut_pype.py"
+PYPE="python3 $HERE/../pype.py"
 
 case "$1" in
     --hwut-info)
@@ -64,7 +64,7 @@ on: <eof> => {
         print(line)
 }
 EOF
-    echo "STIMULUS  printf 'zebra\\napple\\nmango\\n' | hwut_pype sort.pype"
+    echo "STIMULUS  printf 'zebra\\napple\\nmango\\n' | hwut.pype sort.pype"
     echo "REACTION"
     printf 'zebra\napple\nmango\n' | $PYPE "$WORK/sort.pype" | sed 's/^/    /'
     echo "SUCCESS: the filter is one stage of a pipe, like any other."
@@ -93,7 +93,7 @@ absent_script)
     #  The habitat's classic accident: the script path is wrong.
     printf 'a line\n' | $PYPE "$WORK/no-such.pype" > "$WORK/out" 2>"$WORK/err"
     code=$?
-    echo "STIMULUS  hwut_pype no-such.pype   (the file does not exist)"
+    echo "STIMULUS  hwut.pype no-such.pype   (the file does not exist)"
     echo "REACTION  exit code: $code"
     echo "          stdout   : $(wc -c < "$WORK/out") bytes"
     echo "          stderr   : $(head -1 "$WORK/err" | sed "s|$WORK|<work>|")"

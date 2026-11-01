@@ -1,5 +1,5 @@
 ==============================================================================
-test_writing_support/java -- THE PYTHON TEST SUPPORT, IN JAVA
+support/test_writing/java -- THE PYTHON TEST SUPPORT, IN JAVA
 ==============================================================================
 
 1  WHAT STANDS HERE
@@ -89,7 +89,7 @@ text. Its GOOD files are not copies: every one is a '.link' to the Python
 test's '.txt' (bookkeeper B-32):
 
     TEST/GOOD/test-hwut_fsm.java--masks.link
-        ../../../python/TEST/GOOD/test-hwut_fsm.py--masks.txt
+        ../../../../python/TEST/GOOD/test-hwut_fsm.py--masks.txt
 
 So the Java classes are held against what the Python modules were accepted
 for, byte for byte -- as the C and Perl ports are; 47 cases in six tests.
@@ -193,7 +193,7 @@ test of these classes states 'build { framework = "make", executable =
 ------------------------------------------------------------------------------
 'script_runner.py'   a fixture for hwut's own tests of its faces, not given
                      to test authors.
-'hwut_pype'          a face ('hwut.pype') and its scripts, not a library a
+'hwut.pype'          a face ('services/lib/pype') and its scripts, not a library a
                      test links: a Java test pipes through it as a Python
                      test does.
 ==============================================================================

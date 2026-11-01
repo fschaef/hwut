@@ -63,7 +63,7 @@ ______________________________________________________________________________
 import sys
 import config                                                   # noqa: F401
 
-from hwut.test_writing_support.python.hwut_runner import HwutRunner
+from hwut.support.test_writing.python.hwut_runner import HwutRunner
 from hwut.engine.coverage.database.record import (ranges_of, FileCoverage,
                                         CoverageRecord, merge)
 from hwut.engine.coverage.database.index import (TestIndex, index_of, Gathered,

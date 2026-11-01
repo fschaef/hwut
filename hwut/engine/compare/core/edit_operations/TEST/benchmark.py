@@ -16,7 +16,7 @@ from typing import List, Tuple
 # Ensure VUT is in path
 sys.path.insert(0, "../" * 8)
 
-from hwut.test_writing_support.python.deterministic_random import DeterministicStream
+from hwut.support.test_writing.python.deterministic_random import DeterministicStream
 from hwut.engine.compare.reading.line_element import E_ToleranceId, LineElement, LineElementString
 from hwut.engine.compare.engine.line import Line
 import hwut.engine.compare.core.edit_operations.line as edit_line

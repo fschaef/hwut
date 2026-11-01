@@ -343,7 +343,7 @@ def test_recording_sidecars():
                  "on: <eof> => {\n    for one in sorted(kept):\n"
                  "        print(one)\n}\n")
     pype = os.path.join(os.path.dirname(__file__), "..", "..", "..",
-                        "test_writing_support", "hwut_pype", "hwut_pype.py")
+                        "services", "lib", "pype", "pype.py")
     configuration = TestConfiguration(
         source_file    = "demo.py",
         source_kind    = E_SourceKind.INTERPRETED,

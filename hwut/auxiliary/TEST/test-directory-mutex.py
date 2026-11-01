@@ -64,7 +64,7 @@ import tempfile
 import subprocess
 import config                                                       # noqa: F401
 
-from hwut.test_writing_support.python.hwut_runner import HwutRunner    # noqa: E402
+from hwut.support.test_writing.python.hwut_runner import HwutRunner    # noqa: E402
 from hwut.auxiliary.directory_mutex import (             # noqa: E402
                                                MkdirMutex,
                                                DirectoryBusy,

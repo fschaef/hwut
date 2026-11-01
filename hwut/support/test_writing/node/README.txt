@@ -1,5 +1,5 @@
 ==============================================================================
-test_writing_support/node -- THE PYTHON TEST SUPPORT, IN JAVASCRIPT FOR NODE.JS
+support/test_writing/node -- THE PYTHON TEST SUPPORT, IN JAVASCRIPT FOR NODE.JS
 ==============================================================================
 
 1  WHAT STANDS HERE
@@ -44,7 +44,7 @@ its OWN file, so it runs from any working directory:
         choice_map: { plain, tricky },             // '-' alone: choice-less
     }).run();
 
-(the path is the test's own way to '<...>/test_writing_support/node'.) The
+(the path is the test's own way to '<...>/support/test_writing/node'.) The
 heads of the modules say how each is used; where a Python README explains a
 module ('../python/README-hwut_fsm.txt', '-hwut_hocon', '-hwut_vterm',
 '-hwut_runner'), it explains the node module too.
@@ -57,7 +57,7 @@ text. Its GOOD files are not copies: every one is a '.link' to the Python
 test's '.txt' (bookkeeper B-32):
 
     TEST/GOOD/test-hwut_fsm.js--masks.link
-        ../../../python/TEST/GOOD/test-hwut_fsm.py--masks.txt
+        ../../../../python/TEST/GOOD/test-hwut_fsm.py--masks.txt
 
 So the node module is held against what the Python module was accepted for,
 byte for byte -- as the Perl and the C modules are; 47 cases in six tests.
@@ -150,7 +150,7 @@ test does.
 ------------------------------------------------------------------------------
 'script_runner.py'   a fixture for hwut's own tests of its faces, not given
                      to test authors.
-'hwut_pype'          a face ('hwut.pype') and its scripts, not a library a
+'hwut.pype'          a face ('services/lib/pype') and its scripts, not a library a
                      test links: a node test pipes through it as a Python
                      test does.
 ==============================================================================

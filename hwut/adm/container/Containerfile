@@ -37,7 +37,7 @@
 #                            own tool, not by a marker directory
 #     libvterm0, libvterm-dev
 #                            the terminal a page of the keyed screen is
-#                            read through ('test_writing_support/python/
+#                            read through ('support/test_writing/python/
 #                            hwut_vterm.py' binds it) (ruled 2026-10-09, r-11d: "use
 #                            libvterm ... do not use pyte")
 #     texlive-latex-base, texlive-latex-recommended, latexmk

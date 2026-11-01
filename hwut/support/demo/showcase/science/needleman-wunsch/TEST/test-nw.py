@@ -72,7 +72,7 @@ import tempfile
 
 sys.path.insert(0, os.path.realpath(os.path.join(
     os.path.dirname(os.path.realpath(shutil.which("hwut"))), "..", "..")))
-from hwut.test_writing_support.python.deterministic_random import DeterministicStream
+from hwut.support.test_writing.python.deterministic_random import DeterministicStream
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 MATCH, MISMATCH, GAP = 1, -1, -1                 # the classic case

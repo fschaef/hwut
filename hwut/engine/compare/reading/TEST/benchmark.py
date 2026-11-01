@@ -5,7 +5,7 @@ import time
 import string
 from hwut.engine.compare.configuration import ConfigurationPatternFinder
 from hwut.engine.compare.reading.pattern_finder import PatternFinder
-from hwut.test_writing_support.python.deterministic_random import DeterministicStream
+from hwut.support.test_writing.python.deterministic_random import DeterministicStream
 
 def string_stream(n=10000, complexity=0.5, seed=0x42):
     """

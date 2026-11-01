@@ -23,8 +23,8 @@ PURPOSE: LINE PROVIDERS ON A DRAWN TIMELINE -- a subject and a nominal that
     consumer that still needs end-of-stream must be done before cleanup.
 ________________________________________________________________________________
 """
-from hwut.test_writing_support.python.deterministic_timeline import Trigger
-from hwut.test_writing_support.python.deterministic_timeline import TriggerDispatcher
+from hwut.support.test_writing.python.deterministic_timeline import Trigger
+from hwut.support.test_writing.python.deterministic_timeline import TriggerDispatcher
 
 from   typeguard import typechecked
 import asyncio

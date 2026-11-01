@@ -112,7 +112,7 @@ from hwut.engine.coverage.database.record import (CoverageRecord,
                                                    FileCoverage)
 from hwut.services.lib.report import features
 from hwut.services.lib.face import record_check
-from hwut.test_writing_support.python.hwut_runner import HwutRunner
+from hwut.support.test_writing.python.hwut_runner import HwutRunner
 
 
 def banner(label):

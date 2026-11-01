@@ -1,5 +1,5 @@
 ==============================================================================
-test_writing_support/perl -- RATIONALE
+support/test_writing/perl -- RATIONALE
 ==============================================================================
 
 PL-1  THE PYTHON TEST SUPPORT PORTED TO PERL, HELD BY THE PYTHON GOOD FILES

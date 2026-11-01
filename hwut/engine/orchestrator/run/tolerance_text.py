@@ -38,7 +38,7 @@ ______________________________________________________________________________
 import copy
 import re
 
-from ....test_writing_support.python import hwut_hocon
+from ....support.test_writing.python import hwut_hocon
 from ..exploration import validator
 from ..exploration.unwrapper import plain_lines
 #  ONE PRINTER OF VALUES (exploration X-PRINTED): what the pane shows is

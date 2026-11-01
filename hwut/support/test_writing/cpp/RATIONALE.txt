@@ -1,5 +1,5 @@
 ==============================================================================
-test_writing_support/cpp -- RATIONALE
+support/test_writing/cpp -- RATIONALE
 ==============================================================================
 
 CPP-1 THE PYTHON TEST SUPPORT PORTED TO C++, AS THIN FACES OVER THE C PORT,

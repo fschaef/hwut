@@ -1,0 +1,19 @@
+   python       home = hwut  (reference)
+   perl         home = support
+   cobol        home = support
+   FAULT: support/test_writing/LANGUAGES.conf:4: 'lisp': 'home' is one of hwut, support
+   FAULT: 'support/test_writing/fortran' is not listed in LANGUAGES.conf
+   FAULT: 'cobol' is listed, but 'support/test_writing/cobol' does not stand
+   FAULT: 'support/test_writing/perl/TEST/GOOD/t--b.link' links beyond its port and the reference: '../../../../../engine/GOOD.txt'
+   FAULT: 'engine/x.py':1 names the 'home = support' port 'perl'
+   support layout: 5 fault(s)
+   exit 1
+-- two references
+   python       home = hwut  (reference)
+   perl         home = support  (reference)
+   fortran      home = support
+   FAULT: 2 ports say 'reference = true' -- exactly one does
+   FAULT: the reference 'perl' has 'home = support' -- a reference stays with hwut
+   support layout: 2 fault(s)
+   exit 1
+<hwut-end>

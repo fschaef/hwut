@@ -38,7 +38,7 @@ import (
 	"strconv"
 	"strings"
 
-	"hwut/test_writing_support/go/pytext"
+	"hwut/support/test_writing/go/pytext"
 )
 
 // EParseFault is the kind of a fault.

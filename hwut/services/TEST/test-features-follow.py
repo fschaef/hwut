@@ -47,7 +47,7 @@ import config                                                       # noqa: F401
 
 from hwut.engine.bookkeeper.api import Bookkeeper
 from hwut.services import rename, remove
-from hwut.test_writing_support.python.hwut_runner import HwutRunner
+from hwut.support.test_writing.python.hwut_runner import HwutRunner
 
 
 def banner(label):

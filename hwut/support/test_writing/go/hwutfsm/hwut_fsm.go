@@ -39,7 +39,7 @@ import (
 	"sort"
 	"strings"
 
-	"hwut/test_writing_support/go/pytext"
+	"hwut/support/test_writing/go/pytext"
 )
 
 // FsmError is a model that cannot be meant -- named with its line where read

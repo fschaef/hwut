@@ -1,0 +1,20 @@
+   python       home = hwut  (reference)
+   perl         home = support
+   c            home = support
+   cpp          home = support
+   java         home = support
+   rust         home = support
+   go           home = support
+   node         home = support
+   verilog      home = support
+   vhdl         home = support
+   bash         home = support
+   powershell   home = support
+   erlang       home = support
+   guile        home = support
+   haskell      home = support
+   prolog       home = support
+   fortran      home = support
+   support layout: holds
+   exit 0
+<hwut-end>

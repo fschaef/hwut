@@ -1,5 +1,5 @@
 ==============================================================================
-test_writing_support/fortran -- THE PYTHON TEST SUPPORT, IN FORTRAN
+support/test_writing/fortran -- THE PYTHON TEST SUPPORT, IN FORTRAN
 ==============================================================================
 
 1  WHAT STANDS HERE
@@ -97,7 +97,7 @@ text. Its GOOD files are not copies: every one is a '.link' to the Python
 test's '.txt' (bookkeeper B-32):
 
     TEST/GOOD/test-hwut_fsm.f90--masks.link
-        ../../../python/TEST/GOOD/test-hwut_fsm.py--masks.txt
+        ../../../../python/TEST/GOOD/test-hwut_fsm.py--masks.txt
 
 So the Fortran module is held against what the Python module was accepted
 for, byte for byte -- as the C and the other ports are; 47 cases in six
@@ -172,7 +172,7 @@ says whether the library is there.
 ------------------------------------------------------------------------------
 'script_runner.py'   a fixture for hwut's own tests of its faces, not given
                      to test authors.
-'hwut_pype'          a face ('hwut.pype') and its scripts, not a library a
+'hwut.pype'          a face ('services/lib/pype') and its scripts, not a library a
                      test links: a Fortran test pipes through it as a Python
                      test does.
 ==============================================================================

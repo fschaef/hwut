@@ -1,5 +1,5 @@
 ==============================================================================
-test_writing_support/verilog -- THE PYTHON TEST SUPPORT, IN SYSTEMVERILOG
+support/test_writing/verilog -- THE PYTHON TEST SUPPORT, IN SYSTEMVERILOG
 ==============================================================================
 
 1  WHAT STANDS HERE
@@ -92,7 +92,7 @@ text. Its GOOD files are not copies: every one is a '.link' to the Python
 test's '.txt' (bookkeeper B-32):
 
     TEST/GOOD/test-hwut_fsm.sv--masks.link
-        ../../../python/TEST/GOOD/test-hwut_fsm.py--masks.txt
+        ../../../../python/TEST/GOOD/test-hwut_fsm.py--masks.txt
 
 47 cases in six tests, the same that hold the other ports.
 'hwut.good.link.show TEST/GOOD' lists them.
@@ -163,5 +163,5 @@ says whether the library is there. No other package is wanted.
 ------------------------------------------------------------------------------
 Anything the C modules do -- parse, draw a screen, run a pseudo-terminal.
 'script_runner.py'   a fixture for hwut's own tests of its faces.
-'hwut_pype'          a face ('hwut.pype'), not a library a test links.
+'hwut.pype'          a face ('services/lib/pype'), not a library a test links.
 ==============================================================================

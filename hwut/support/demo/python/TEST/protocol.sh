@@ -32,7 +32,7 @@ HERE=$(cd "$(dirname "$0")" && pwd)
 if command -v hwut.pype > /dev/null 2>&1; then
     pype() { hwut.pype "$@"; }
 else
-    ROOT=$(cd "$HERE/../../../.." && pwd)
+    ROOT=$(cd "$HERE/../../../../.." && pwd)
     export PYTHONPATH="$ROOT${PYTHONPATH:+:$PYTHONPATH}"
     pype() { python3 -m hwut.services.pype "$@"; }
 fi

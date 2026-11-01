@@ -29,9 +29,9 @@ import (
 	"os"
 	"strings"
 
-	"hwut/test_writing_support/go/hwutfsm"
-	"hwut/test_writing_support/go/hwutrunner"
-	"hwut/test_writing_support/go/pytext"
+	"hwut/support/test_writing/go/hwutfsm"
+	"hwut/support/test_writing/go/hwutrunner"
+	"hwut/support/test_writing/go/pytext"
 )
 
 // THE PROTOCOL OF EVERY CHOICE: a request is waited on, granted, released; a

@@ -1,5 +1,5 @@
 ==============================================================================
-test_writing_support/perl -- THE PYTHON TEST SUPPORT, IN PERL
+support/test_writing/perl -- THE PYTHON TEST SUPPORT, IN PERL
 ==============================================================================
 
 1  WHAT STANDS HERE
@@ -28,7 +28,7 @@ A Perl test starts:
 
     #! /usr/bin/env perl
     # @hwut { choices = ["plain", "tricky"] }
-    use FindBin;  use lib "$FindBin::Bin/<path to test_writing_support/perl>";
+    use FindBin;  use lib "$FindBin::Bin/<path to support/test_writing/perl>";
     use Hwut::Runner;
     Hwut::Runner->new(argv => \@ARGV, title => "...",
                       choice_map => { plain => \&plain, tricky => \&tricky })->run;
@@ -45,7 +45,7 @@ text. Its GOOD files are not copies: every one is a '.link' to the Python
 test's '.txt' (bookkeeper B-32):
 
     TEST/GOOD/test-hwut_fsm.pl--masks.link
-        ../../../python/TEST/GOOD/test-hwut_fsm.py--masks.txt
+        ../../../../python/TEST/GOOD/test-hwut_fsm.py--masks.txt
 
 So the Perl module is held against what the Python module was accepted for,
 byte for byte, and a change of either that the other does not follow is a
@@ -108,7 +108,7 @@ asks by hand whether the library is there.
 ------------------------------------------------------------------------------
 'script_runner.py'   a fixture for hwut's own tests of its faces, not given
                      to test authors.
-'hwut_pype'          a face ('hwut.pype') and its scripts, not a library a
+'hwut.pype'          a face ('services/lib/pype') and its scripts, not a library a
                      test imports: a Perl test pipes through it as a Python
                      test does.
 ==============================================================================

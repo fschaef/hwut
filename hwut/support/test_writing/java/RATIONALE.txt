@@ -1,5 +1,5 @@
 ==============================================================================
-test_writing_support/java -- RATIONALE
+support/test_writing/java -- RATIONALE
 ==============================================================================
 
 J-1   THE PYTHON TEST SUPPORT PORTED TO JAVA, HELD BY THE PYTHON GOOD FILES

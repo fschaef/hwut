@@ -15,7 +15,7 @@ ______________________________________________________________________________
 
 PURPOSE: THE SCREEN A PERSON SEES (audit r10, r-11d), not what the driver
          decided: 'hwut.merge' is started by its launcher in
-         a terminal ('test_writing_support/python/hwut_vterm.py',
+         a terminal ('support/test_writing/python/hwut_vterm.py',
          libvterm), on a tree whose one test changed after it was
          accepted. The face cannot tell this terminal from a person's.
 
@@ -40,7 +40,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 VUT  = os.path.abspath(os.path.join(HERE, "..", "..", "..", "..", ".."))
 sys.path.insert(0, os.path.dirname(VUT))
 
-from hwut.test_writing_support.python.hwut_vterm import (Terminal,   # noqa: E402
+from hwut.support.test_writing.python.hwut_vterm import (Terminal,   # noqa: E402
                                                         LibraryMissing)
 
 ROW_N, COLUMN_N = 12, 100

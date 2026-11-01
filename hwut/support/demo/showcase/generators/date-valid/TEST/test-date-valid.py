@@ -59,7 +59,7 @@ import sys
 
 sys.path.insert(0, os.path.realpath(os.path.join(
     os.path.dirname(os.path.realpath(shutil.which("hwut"))), "..", "..")))
-import hwut.test_writing_support.python.space_iterator as space_iterator
+import hwut.support.test_writing.python.space_iterator as space_iterator
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 UNIT = os.path.join(HERE, "..")

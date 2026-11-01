@@ -47,7 +47,7 @@ by PATH and by path alike.
                     law binds.
 
     hwut.pype       is one of them: 'services/pype.py', the face over
-                    'test_writing_support/hwut_pype'. A '#! /usr/bin/env
+                    'services/lib/pype'. A '#! /usr/bin/env
                     hwut.pype' she-bang line reaches it when this
                     directory is on PATH.
 

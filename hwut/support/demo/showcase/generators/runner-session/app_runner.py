@@ -6,7 +6,7 @@ run the same application both ways."""
 import os, shutil, sys
 sys.path.insert(0, os.path.realpath(os.path.join(
     os.path.dirname(os.path.realpath(shutil.which("hwut"))), "..", "..")))
-from hwut.test_writing_support.python.hwut_runner import HwutRunner
+from hwut.support.test_writing.python.hwut_runner import HwutRunner
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import numfmt
 
