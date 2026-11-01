@@ -1,0 +1,144 @@
+==============================================================================
+test_writing_support/prolog -- RATIONALE
+==============================================================================
+
+PRO-1 THE PYTHON TEST SUPPORT PORTED TO PROLOG, HELD BY THE PYTHON GOOD FILES
+                                                                      (2026-11-01)
+------------------------------------------------------------------------------
+PROBLEM   A Prolog test author -- hwut runs '.pro' with the 'swipl'
+          interpreter of 'hwut-root.conf' -- had no runner, no deterministic
+          stream, no model, no parser and no screen. As for every port, the
+          port is only as good as its proof that it behaves alike. Prolog is
+          the one language of the ports that thinks in RELATIONS, not in
+          procedures: the port was to show what the support becomes there,
+          not to transliterate it.
+DECISION  One module per Python module ('README.txt', section 1); one test
+          per Python test, choice for choice; every case's GOOD a '.link' to
+          the Python case's '.txt' -- the 47 cases that hold every port.
+          Prefixed predicate names ('fsm_', 'dr_', ...), Python's after the
+          prefix; a bool is success, None failure, keywords an option list,
+          an exception error(Formal, _) with Python's text as its message.
+          MODULE BY MODULE -- what the idiom made of it, and what it showed:
+          space_iterator  THE BEST FIT. The product IS a relation:
+                    'space_point(Basis, P) :- maplist(member-of, Basis, P)'.
+                    Backtracking retries the last choice first, so the
+                    rightmost dimension changes fastest -- itertools' order
+                    with nothing written to make it; the empty basis has one
+                    solution, an empty dimension none, as Python's NOTES say.
+          deterministic_random  THE STREAM IS A VALUE, THREADED: every draw
+                    takes the stream before and gives the stream after as its
+                    last two arguments -- a DCG's hidden pair -- so a
+                    sequence of draws is a grammar body, and the fuzz's
+                    'mutated' is a DCG over the stream. Python's object is a
+                    state machine whose state Prolog makes explicit; it fit,
+                    with one lesson: 'coin' must RETURN true/false -- a coin
+                    that failed would take its own draw back. No identity: a
+                    marker keys by value (as Perl, bash).
+          deterministic_timeline  A TASK IS A SUSPENDED GOAL. 'dt_yield' is
+                    shift/1; what is left of the goal is a continuation, a
+                    term; 'dt_task_step' is reset/3 -- one turn of asyncio's
+                    loop; gather steps tasks in the order given. CANCEL IS
+                    LITERAL: the continuation is dropped, so nothing of the
+                    run -- no on_termination -- ever happens: Python's
+                    "abandonment, not an ending" is what Prolog does by
+                    forgetting a term. A subclass is a BEHAVIOUR, a closure
+                    sent messages 'fire(T)' and 'on_termination(E)'; a
+                    message with no clause FAILS, and that failure is the
+                    base class -- abstract 'fire' (NotImplementedError),
+                    silent 'on_termination': Python's asymmetry fell out of
+                    one rule. IT FOUGHT shared mutation: a producer's item
+                    seen by a consumer, a stop flag set by a trigger, are one
+                    cell changed in place (nb_setarg); and 'findall' COPIES
+                    -- built with it, the schedule would hold triggers whose
+                    state is a copy's (the stopper would stop a copy's
+                    dispatcher, the producer fill a copy's cell), so the
+                    schedule is built by recursion. The
+                    stopper holds its dispatcher by a variable bound AFTER
+                    the dispatcher is made -- a logic variable as a forward
+                    reference, a cyclic term no one prints.
+          hwut_fsm  THE MODEL IS FACTS: the text's transitions are asserted
+                    as 'edge(Id, State, Event, Target)', with 'model_state',
+                    'model_forbidden', 'final'; unreachable states and dead
+                    ends are 'findall's, path_to a breadth-first search over
+                    'edge/4' that takes the goal when first SEEN -- the
+                    Python's order, so the first path in event order among
+                    the shortest comes out as the GOOD has it. Python's
+                    three regular expressions are grammars over codes; the
+                    leftmost arrow is found by 'append/3', whose prefixes
+                    come shortest first. 'with disallowed()' is
+                    setup_call_cleanup. WHAT FOUGHT: the RUN's state (where
+                    it stands, visits, counts, masks) is a world retracted
+                    and asserted per event -- natural for the database,
+                    global by nature, hence the machine id on every fact and
+                    'fsm_free'.
+          hwut_hocon  A GRAMMAR OVER CODES. The lines are laid end to end,
+                    each with a newline after it -- the last too, which makes
+                    'at the last line's end' and 'past the text' the same
+                    place, as Python's cursor has them -- and the list of
+                    codes IS the cursor: a position is computed from the
+                    length of what is left. Faults are a difference list
+                    threaded through every nonterminal. The decimal, the
+                    radix forms and the roman numeral are nonterminals; the
+                    roman regex's backtracking is the grammar's own. A radix
+                    number of any size is an integer (unbounded). THE FUZZ'S
+                    BOUND is 'call_with_time_limit', which raises out of the
+                    parse as Python's SIGALRM does. What fought: nothing
+                    much -- Python's parser is a hand-written recursive
+                    descent, which a DCG is.
+          hwut_runner  The choice map is 'Name-Goal' pairs, the goals called
+                    in the caller's module (a meta-predicate). INTERACTIVE
+                    MODE RUNS EVERY CHOICE IN A CHILD (fork/1, dup/2 of
+                    library(unix)): 'halt' in SWI 9.0 cannot be caught (measured), so a
+                    child is the only way a choice's halt ends that choice
+                    alone. No choice runs in the session's process, so its
+                    own fd 1 stays the UP channel (no dup of it is needed --
+                    library(unix) has dup2 only) and fd 2 points at a stray
+                    sink. Parallel mode forks a WAITER per choice, which
+                    forks the choice, waits, and says 'done' itself: SWI's
+                    wait/2 blocks (no WNOHANG), and a forking process holds
+                    no threads -- the runner turns SWI's GC thread off.
+          hwut_vterm  NO WAY BUT C: Prolog cannot call libvterm, open a
+                    pseudo-terminal or wait on one with a timeout. SWI's own
+                    foreign interface is the language's route into C, so
+                    'hwut_vterm4pl.c' puts the C port's 'hwut_vterm.c',
+                    UNCHANGED, behind foreign predicates (no second
+                    reimplementation, no server process). The C callbacks
+                    call back into Prolog while the C call runs; the
+                    closures stay on the Prolog side (one C door per kind),
+                    an exception a closure raises is kept and raised when
+                    the C call returns. Built on first LOAD by 'make' here,
+                    linked under a name of its own and renamed (atomic).
+          hwut_pytext  SWI writes a float's shortest round-trip text
+                    ('~w'); its digits and exponent are laid out as Python's
+                    repr -- fixed for a decimal point in (-4, 16]. 'round'
+                    is Python's, half to even.
+          WHAT IT SHOWED ABOUT THE DESIGN: the modules whose Python is
+          DECLARATIVE -- a product, a model and its questions, a grammar --
+          became shorter and plainer in Prolog than in Python; the ones whose
+          Python is a mutable OBJECT shared between parties -- the timeline's
+          triggers, the FSM's run, the terminal's callbacks -- are where
+          Prolog had to say 'in place' or 'in the database' out loud. The
+          tests' printed words never had to bend.
+          MEASURED, on this worktree (SWI-Prolog 9.0.4, libvterm 0.3.3, cc
+          13.3, Python 3.13.17): every one of the 47 choices byte-identical
+          ('cmp') to the Python GOOD, the gauss values too (the 1e-12 band
+          was not needed); 'py_float_repr' against Python's 'repr' on 199967
+          doubles (random bit patterns and uniform in [-1e6, 1e6]): no
+          difference; 'fuzz' -- 3000 mutated headers from seed 4711 -- 619
+          clean, 2381 with faults, 0 hang, 0 exception, 0.7 s the choice
+          (0.24 ms a parse; the bound is 0.5 s a parse); the interactive
+          protocol by hand (info, run by name and by index, unknown choice,
+          bad command, parallel with a choice that raises and one that
+          halts 7: 'done <c> 7'). 'hwut.run --plain' in 'TEST/': 47 ok, 0
+          fail, twice -- the first run from no built library, which it built
+          (5 s each).
+COST      A bool, a None and an exception are conventions (success, failure,
+          error terms), not types: a statement whose result is not wanted is
+          'ignore(fsm_fire(...))'. A machine's facts are global to the module
+          and outlive the test's variables until 'fsm_free'. A marker keys by
+          value, not identity. 'hwut_vterm.pro' wants cc, make and
+          'SWI-Prolog.h' on the machine, besides libvterm; the library is a
+          build product in this directory ('.gitignore'); 'vterm_run' takes
+          no 'env' -- set the process's environment first. 'test-hwut_vterm'
+          runs its applications with 'python3', as the C test does.
+==============================================================================

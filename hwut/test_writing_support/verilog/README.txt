@@ -1,5 +1,5 @@
 ==============================================================================
-test_writing_support/sv -- THE PYTHON TEST SUPPORT, IN SYSTEMVERILOG
+test_writing_support/verilog -- THE PYTHON TEST SUPPORT, IN SYSTEMVERILOG
 ==============================================================================
 
 1  WHAT STANDS HERE

@@ -8059,3 +8059,21 @@ COST      Re-recorded: 'plan/TEST/test-wish.py refused' (the words);
           'features/TEST/test-wish.py' path, ext, keys, together -- the
           paths become ids ('f/gateway/buses' is 'f/buses'), the
           selections unchanged; a path and an internal id now refused.
+
+
+E-215  'scheme' IN 'language-setup': GNU GUILE                       (2026-11-01)
+------------------------------------------------------------------------------
+PROBLEM   The Scheme port of the test support (test_writing_support/guile)
+          found no entry: '.scm' selected no language, and a test could not
+          be run by an interpreter.
+DECISION  'scheme { extensions = [".scm", ".ss"] interpreter = "guile
+          --no-auto-compile" coverage = [] }' in 'hwut-root.conf' and in the
+          template a new root receives ('services/_boundary.py'). Without
+          '--no-auto-compile', tests running at once compile the same modules
+          into '~/.cache' and write notes to stderr. 'coverage = []': nobody
+          vouches for a Scheme coverage tool yet -- an empty list is an
+          answer.
+COST      The language count and the template's 'extensions' lines grow by
+          one: 'coverage/database/TEST/test-record.py election' (57
+          languages) and 'test-face-words.sh boundary' (55 lines), each diff
+          read.

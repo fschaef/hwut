@@ -1,0 +1,123 @@
+==============================================================================
+test_writing_support/guile -- RATIONALE
+==============================================================================
+
+SCM-1 THE PYTHON TEST SUPPORT PORTED TO SCHEME (GNU GUILE), HELD BY THE
+      PYTHON GOOD FILES                                               (2026-11-01)
+------------------------------------------------------------------------------
+PROBLEM   A Scheme test author -- hwut runs '.scm' with the 'scheme'
+          interpreter of 'hwut-root.conf', 'guile --no-auto-compile' -- had
+          no runner, stream, model, parser or screen. As for the eleven ports
+          before (perl PL-1, c C-1, ...), a port is only as good as its proof
+          that it behaves alike; and Scheme is FUNDAMENTALLY DIFFERENT from
+          them: first-class continuations, code as data, no classes.
+DECISION  One Guile module '(hwut ...)' per Python module ('README.txt',
+          section 1); one test per Python test, choice for choice; every
+          case's GOOD a '.link' to the Python case's '.txt' -- the 47 cases
+          that hold every port. Pure Guile: '(system foreign)' reaches
+          libvterm and libc directly, so no route into '../c' was needed.
+          RECORDS, NOT GOOPS: every Python class here is data plus
+          procedures with ONE overridable pair of methods (a trigger's
+          'fire' / 'on_termination') and one subclass (Terminal of Screen).
+          The first is a closure in a record field -- a subclass's state is
+          what its closures close over -- the second a screen record whose
+          terminal part is filled. GOOPS would add generic dispatch for two
+          methods and a class system the reader must learn.
+          MODULE BY MODULE, what the idiom made of it:
+          deterministic-timeline -- THE POINT. A task is a REAL SUSPENDED
+            COMPUTATION: '(pause)' (asyncio.sleep(0)) is an 'abort-to-prompt'
+            to the task's prompt; the handler keeps the delimited
+            continuation and queues the task; the scheduler resumes it by
+            calling it. 'gather', 'await', 'cancel!', 'timeline-run' are 60
+            lines over a queue. SHOWN: Python's 'async def fire' versus
+            plain 'def on_termination' is function colouring, forced by
+            asyncio -- here 'fire' is an ordinary procedure, and any
+            procedure it calls may pause; the Python ruling 'NOT a
+            coroutine' becomes a statement about WHEN it runs, not its type.
+            Cancellation resumes the continuation with 'cancel and raises
+            '&task-cancelled' at the pause -- asyncio's semantics -- rather
+            than dropping it, so a 'dynamic-wind' inside the task still
+            unwinds; nothing is announced, as owed.
+          fsm -- THE MODEL IS AN S-EXPRESSION: the text is read into
+            statements ((#:initial idle) (idle request waiting grant busy)
+            (#:state limbo) ...), the machine is built from that list
+            ('fsm-from-sexp', open to a test that writes the model as quoted
+            data), 'fsm->string' writes 'fsm->sexp' back as text. SHOWN: the
+            Python text format IS a serialisation of a list of statements;
+            ':' is the only text-only device and is resolved by the reader,
+            with the line-numbered errors, in Python's order. A phase
+            ('with m.disallowed') is 'dynamic-wind': lifted whatever way the
+            block is left, and set again where a continuation re-enters it
+            -- a case Python's 'with' cannot meet. FOUGHT: Python sorts
+            tuples and sets for free; Guile has no general order, so every
+            sorted report names its comparator.
+          hocon -- THE TREE IS AN S-EXPRESSION ('(object (1 . 1) (entry "a"
+            (1 . 1) (scalar (1 . 5) 1)) ...)'), the test takes it apart with
+            '(ice-9 match)': Python's four dataclasses were tags all along.
+            FOUGHT: Scheme has one false, so HOCON's nothing is the symbol
+            'null' (#f is the boolean); Guile's 'regexp' is POSIX through the
+            locale's encoding, so the token, decimal and strict roman forms
+            are scanners; Guile's 'string->number' refuses "1e400" ("Value
+            out of range", Python: inf) and computes "1e99999" exactly, so a
+            decimal float is converted here by exact rational arithmetic,
+            its magnitude clamped first. The fuzz bound: a SIGALRM handler
+            that throws -- Guile runs it as an async in the parsing thread,
+            so it leaves the parse as Python's raise does.
+          deterministic-random -- a record of one integer; Guile's exact
+            integers carry MINSTD as Python's do. A marker keys by 'eq?'.
+            SHOWN: the Python test's 'FRESH container' and 'sub-pool' claims
+            rest on CPython interning string literals; Scheme guarantees that
+            identity for SYMBOLS, so the Scheme test draws symbols.
+          space-iterator -- a lazy SRFI-41 stream (Python's generator), and
+            'space-for-each' APPLIES the procedure to a point: one argument
+            per dimension, as Python's tuple unpacks. ('do' is Scheme's
+            syntax.)
+          runner -- an association list for the choice map. '(exit n)' is a
+            throw to 'quit, caught per choice in interactive mode, so the
+            session goes on in this process (Python's default scheme; C
+            forks). The ports are set to UTF-8 -- under a C locale Guile
+            writes '?' for 'ä' -- and flushed before fd 1 and 2 move.
+          pytext -- Scheme's numeric tower tells int from float as Python
+            does, so 'py-repr' needs no hint (Perl's does). 'number->string'
+            already writes the shortest round-trip digits; only the layout
+            ('1.0e-6' -> '1e-06') is redone. Guile's log, cos and sqrt ARE
+            the C library's: no libm by FFI was needed.
+          vterm -- libvterm and libc ('openpty', 'read', 'write') by
+            '(system foreign)'. A struct BY VALUE reaches a Scheme callback
+            as a pointer ('parse-c-struct') and is passed as one
+            ('make-c-struct'); the callback closures are kept in the
+            terminal record while libvterm points at them. The child is
+            'primitive-fork' (no threads run, no warning): 'setsid', the
+            slave OPENED by name -- a session leader opening a terminal
+            makes it its controlling one, so the variadic ioctl TIOCSCTTY is
+            not called through the FFI -- dup'ed to 0, 1, 2, the rest
+            closed, 'execlp'. The window size is 'openpty's argument.
+          THE INTERPRETER 'guile --no-auto-compile' (asked to check): it
+          works and should stay. Auto-compilation would write '.go' files
+          into ~/.cache from tests started at once -- the same module
+          compiled by several -- and print notes on stderr; interpreted,
+          Guile is fast enough (below). Only where a distribution installs
+          'guile3.0' without the 'guile' name would the entry need changing.
+          MEASURED, on this worktree (Guile 3.0.9, libvterm 0.3.3, Python
+          3.13): every one of the 47 choices byte-identical ('cmp') to the
+          Python GOOD, the gauss values too (the 1e-12 band was not needed);
+          'py-float-repr' against Python's 'repr' on 299856 doubles (random
+          bit patterns and uniform in [-1e6, 1e6]): no difference; the
+          decimal conversion against Python's 'float()' on 30000 random
+          decimals, exponents -340..320 (subnormals, overflow): no
+          difference; 'fuzz' -- 3000 mutated headers from seed 4711 -- 619
+          clean, 2381 with faults, 0 hang, 0 exception, 1.3 s the choice;
+          the interactive protocol by hand: 'done' 0, 3 for '(exit 3)', 1
+          for an error (backtrace in the error sink), the session going on.
+          'hwut.run --plain' in 'TEST/': 47 ok, 0 fail, twice (5 s each).
+COST      A change to a Python module's printed words fails the Scheme test
+          until the module follows -- which is the point. The modules are
+          interpreted on every run (no '.go'); the whole directory takes 5 s.
+          A choice runs in the session's process, so a choice that changes
+          the process (the environment, a module's cache) must put it back
+          -- 'missing' does, for HWUT_LIBVTERM and the loaded library. A
+          test that wants marker identity across written places draws
+          symbols, not strings. The runner's 'parallel="process"' scheme is
+          not ported (no case asks for it). 'test-hwut_vterm.scm' runs its
+          applications with 'python3', as the C test does.
+==============================================================================

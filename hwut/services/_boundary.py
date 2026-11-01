@@ -193,6 +193,9 @@ hwut {
         clojure       { extensions      = [".clj", ".cljs", ".cljc"]
                         interpreter     = "clojure"
                         coverage        = ["cloverage"] }
+        scheme        { extensions      = [".scm", ".ss"]
+                        interpreter     = "guile --no-auto-compile"
+                        coverage        = [] }
         common-lisp   { extensions      = [".lisp", ".lsp"]
                         interpreter     = "sbcl --script"
                         coverage        = ["sb-cover"] }

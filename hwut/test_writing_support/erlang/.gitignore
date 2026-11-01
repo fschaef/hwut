@@ -1,0 +1,4 @@
+# What the Makefile builds here on first use by a test -- no source.
+/ebin/
+/hwut_vterm_port
+/hwut_vterm_port.*[0-9]

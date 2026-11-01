@@ -1,0 +1,145 @@
+==============================================================================
+test_writing_support/erlang -- RATIONALE
+==============================================================================
+
+ERL-1 THE PYTHON TEST SUPPORT PORTED TO ERLANG: VALUES WHERE IT IS DATA,
+      PROCESSES WHERE IT ACTS, A PORT WHERE IT IS OUTSIDE THE VM  (2026-11-01)
+------------------------------------------------------------------------------
+PROBLEM   An Erlang test author -- hwut runs '.erl' with the 'escript'
+          interpreter of hwut-root.conf -- had no runner, stream, timeline,
+          model, parser or screen. Erlang is unlike the eleven languages
+          ported so far: no mutable object, no shared memory, no loop
+          scheduler a library drives -- processes and messages instead. The
+          port was to map each module onto that way of thinking, not
+          transliterate it, and still print the Python GOODs byte for byte.
+DECISION  One module per Python module ('README.txt', section 1); one escript
+          test per Python test, choice for choice; every case's GOOD a
+          '.link' to the Python case's '.txt' -- 47 cases. Module by module:
+          THE RUNNER. A choice is a PROCESS, its group leader its output:
+          Python's 'dup2' of fd 1 onto a sink is, in Erlang, the I/O system's
+          own design -- every process the choice spawns (a trigger, a task)
+          inherits the leader, so their 'io:format' lands in the choice's
+          sink with no descriptor touched. 'SystemExit(n)' is
+          'hwut_runner:exit(N)', an exit signal the runner reads; a crash is
+          status 1 with class, reason and stack in the error sink. The UP
+          channel is 'user' (fd 1), the stray sink the runner's own leader and
+          the logger's file. FIT: natural. FOUGHT: stderr -- 'standard_error'
+          is the VM's fd 2 and has no per-process redirection; nothing in
+          the tests writes there, a crash report is written to the sink by
+          the runner. And the VM's ONE OS environment: a sequential session
+          sets it back to the session's entry before each choice
+          ('test-hwut_vterm' sets COLUMNS and HWUT_LIBVTERM), which is what
+          Python's process scheme gets by forking.
+          THE STREAM is a VALUE, the state LAST: '{N, S1} = next_int(0, 9,
+          S0)' -- OTP's 'rand:uniform_s' convention. A process was weighed
+          and refused: draws of concurrent callers would come in scheduler
+          order, and determinism would hang on who asked first; a value makes
+          the caller say the order, and a kept stream is replay. The marker
+          is a value too; it keys on the candidate's VALUE -- Erlang has no
+          identity, which the Python docstring's own argument (identity
+          against container addresses) turns out not to need: equal values
+          in fresh containers are the same candidates. 'math' is libm:
+          gauss is bit-identical, the GOOD's tolerance unused; 'round' is
+          away from zero, so 'gauss_int' rounds half to even itself.
+          THE TIMELINE is where the model's assumption became visible.
+          Python's determinism rests on asyncio's single thread: 'await
+          sleep(0)' quietly means "every ready task runs one step, in FIFO
+          order". In Erlang nothing is quiet: a trigger is a process holding
+          its state, a task ('gather's coroutine) is a process, and the
+          DISPATCHER is the process that decides who runs -- it sends 'fire'
+          to one trigger and waits for the answer, then hands each task a
+          TURN ('{turn, D}') and waits until it gives it back ('Yield()'),
+          then the next firing. No message is sent that the dispatcher did
+          not start, so the drawn interleaving is the GOOD's whatever the
+          VM's scheduler does. Python's consumer polled 'producer.item' in
+          shared memory; here it asks the trigger process ('call(T, Fun)'),
+          synchronously, in its turn. 'stop' is 'fire' returning {stop, S}
+          (gen_* style); CANCEL is an exit signal -- 'exit(D, cancelled)'
+          kills the process carrying the run, which is literally what
+          "abandoned, not ended" says: no announcement can follow, the
+          tasks linked to it go with it, 'run' returns {error, cancelled}.
+          The abstract 'fire' is a behaviour without the callback; a
+          behaviour is a module ('-callback', 'on_termination' optional) or
+          a map of the same funs -- an escript defines no module.
+          THE ITERATOR is a fold over the dimensions, outer first; 'do'
+          returns the list. FIT: trivially -- a comprehension's generator
+          order IS the product's.
+          THE FSM is a VALUE: 'fire' returns the verdict and the machine
+          that follows; masks, forbidden states and phases ('disallowed',
+          'forbidding': the block is a fun from machine to machine) change
+          the value. gen_statem lends the VOCABULARY -- state, event,
+          transition, 'state(M)' -- but not the shape: a gen_statem IS the
+          system, one state at a time and its states code; this machine
+          WATCHES one, its states data, possibly a set of them (DFA=False).
+          A test of a gen_statem would fire the events OTP's 'sys' debug
+          hook reports into it. The model text is read by 're' (unicode,
+          ucp: Python's \w); a refusal is a throw inside the module and
+          {error, {fsm_error, Text}} at its API.
+          THE HOCON PARSER is binary matching: the cursor -- line, byte
+          offset, the faults so far -- is a record threaded through every
+          function, each returning what it read and the cursor after it;
+          Python's mutable cursor and its fault list become one value. The
+          bytes HOCON reads are ASCII, so a byte scan never splits a
+          character; a column is counted in characters where a line holds
+          more. FOUGHT: no infinity ('1e999' is the atom inf), and Erlang's
+          float reader wants digits around the point ('.5', '1e-6' are
+          rewritten). The fuzz's bound is a PROCESS PER PARSE, killed past
+          0.5 s -- Erlang's answer to SIGALRM, and a cleaner one: the hung
+          parse is gone, not interrupted.
+          THE SCREEN: Erlang calls C only by a NIF -- inside the VM's
+          process, where libvterm's crash or a blocking 'select' would be
+          the VM's -- or by a PORT. So 'hwut_vterm_port.c' puts the C port's
+          'hwut_vterm.c', unchanged, behind '{packet, 4}' framing with
+          length-prefixed fields (no %-encoding, unlike the bash server):
+          one program per screen or terminal, its lifetime the object's and
+          its owner's. Python's CALLBACKS became MESSAGES to the owner, as a
+          gen_tcp socket's active mode: '{hwut_vterm, T, {change, Name,
+          Lines}}' in the mailbox before the call returns. That showed a
+          piece of the Python test's design: its key callback printed a
+          label from a variable the test reassigned between presses -- a
+          closure over MUTABLE state; Erlang's closures capture values, so
+          the test prints each label itself, from the messages, after the
+          call. The bytes and lines are the same.
+          PYTEXT: the float's DIGITS are Erlang's own ('[short]', shortest
+          round-trip -- Python's), only the layout is rewritten; 'str_repr'
+          escapes by Python's own printability table (the VM knows no
+          Unicode categories): 713 ranges, generated by Python 3.13.
+          THE ESCRIPT FINDS ITS MODULES, measured against the other routes:
+          an escript starts in about 145 ms interpreted, 250..280 ms with
+          '-mode(compile)'; a make-built launcher ('erl -pa ebin') starts in
+          122 ms; compiling the support modules at each start costs 770 ms.
+          Chosen: escript, as hwut-root.conf runs '.erl', '-mode(compile)'
+          (an interpreted escript knows no 'fun f/0' and evaluates every
+          line), the support modules compiled ONCE into '../ebin' and put on
+          the path relative to 'escript:script_name()' ('hwut_boot.hrl',
+          8 ms to load); 'make' runs only where a module is missing or
+          stale, with atomic renames for tests that build at once. The
+          100 ms a launcher would save is paid once per interactive
+          session, not per choice; in exchange a test needs no build
+          declaration and stays one file.
+          MEASURED, on this worktree (Erlang/OTP 25, libvterm 0.3.3, Python
+          3.13.17): all 47 cases byte-identical ('cmp') to the Python GOODs,
+          gauss included; 'hwut.run --plain' in 'TEST/': 47 ok, 0 fail,
+          twice -- the first from a clean directory, building 'ebin' and
+          the port program (8.5 s; 5.7 s the second); 'float_repr' against 'repr' on 200000 doubles,
+          'str_repr' on all 1112064 code points but the surrogates: no
+          difference; 'fuzz' 619 clean, 2381 with faults, 0 hang, 0
+          exception (0.45 s the choice, the VM's start included); a screen
+          made and closed in 2 ms. What SEEING_APP reports from inside the
+          pseudo-terminal is the GOOD's: three terminal streams, a
+          controlling terminal, 44 x 10, TERM=xterm-256color, COLUMNS=None
+          though the test set 300, the cursor question answered, status 3.
+COST      A value API threads its state: a test writes 'M1', 'M2', ... or a
+          fold where Python mutates one object. A trigger's or the
+          dispatcher's process ends with the process that made it, not
+          when the run ends. A marker cannot keep two equal candidates
+          apart unless they are tagged. 'hwut_vterm' wants cc and make
+          besides libvterm, and one object is used by the process that made
+          it (the port's owner); 'test-hwut_vterm.erl' runs its applications
+          with 'python3', as the C test does. A choice that writes to
+          'standard_error' or to 'user' itself bypasses its sinks. The
+          printability table is Python 3.13's: a later Python that knows
+          more characters prints some of them as written. A change to a
+          Python module's printed words fails the Erlang test until the
+          Erlang module follows -- which is the point.
+==============================================================================

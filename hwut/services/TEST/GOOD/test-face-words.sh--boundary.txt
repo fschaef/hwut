@@ -53,7 +53,7 @@ STATUS: 0
 == hwut.sanitize.apply proposal.txt
  root ../.. ........................................................... [DONE]
 Done 1/1
-    written: hwut-root.conf, 54 'extensions' lines
+    written: hwut-root.conf, 55 'extensions' lines
 == a face, now
 ./test-a.sh
 STATUS: 0

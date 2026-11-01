@@ -5,7 +5,7 @@ INSPECT: 'test-parse.py'  -> python
          stated wins      -> lua
 
 --- the shipped root conf: candidates per language, in preference order ---
-INSPECT: read with 0 fault(s); 56 language(s)
+INSPECT: read with 0 fault(s); 57 language(s)
          python  -> ('coverage', 'slipcover', 'trace')
          c++     -> ('gcov', 'llvm-cov', 'kcov')
          pascal  -> ()

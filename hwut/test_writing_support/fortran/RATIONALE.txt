@@ -1,0 +1,130 @@
+==============================================================================
+test_writing_support/fortran -- RATIONALE
+==============================================================================
+
+F-1   THE PYTHON TEST SUPPORT PORTED TO FORTRAN -- NATIVE, BUT FOR LIBVTERM
+      THROUGH ISO_C_BINDING -- HELD BY THE PYTHON GOOD FILES  (2026-11-01)
+------------------------------------------------------------------------------
+PROBLEM   After eleven ports, a Fortran (2008/2018, gfortran 13) test author
+          wants the same modules. Fortran is FUNDAMENTALLY DIFFERENT from
+          Python: it thinks in arrays of fixed type, its texts have one
+          length per array, it has no exceptions, no coroutines, no
+          closures, no object identity, arrays from 1 -- and it has derived
+          types with type-bound procedures, polymorphism ('class'),
+          'class(*)', optional arguments, generic names, STAT/ERRMSG, and a
+          standard way into C (ISO_C_BINDING). A port is only as good as its
+          proof that it behaves alike, and asked: say what the idiom made of
+          each module, and what that showed about the design.
+DECISION  One Fortran module per Python module (README.txt, section 1); one
+          test per Python test, choice for choice; every case's GOOD a
+          '.link' to the Python case's '.txt' -- the 47 cases that hold the
+          other ports. NATIVE everything but libvterm and the
+          pseudo-terminal, which bind the C port; fork, dup2, setenv bind
+          libc ('hwut_posix', non-variadic functions only: 'creat', not
+          'open'). Module by module:
+          hwut_runner -- a choice is a name and a PROCEDURE POINTER, the
+            choice list an array constructor; the modes as Python's, the
+            command line by 'get_command_argument', the protocol read by
+            'read(*,'(a)',advance='no')'. FIT: Fortran units write through
+            to descriptors 1 and 2, so a forked child that points them at
+            its sinks needs nothing else -- every unit flushed before 'fork'
+            and before '_exit'. 'stop 3, quiet=.true.' is SystemExit(3).
+          deterministic_random -- MINSTD in 'integer(int64)', no tricks;
+            'next_int' generic over default and 64-bit integers. FOUGHT:
+            identity. Python's SelectionMarker keys on 'id()'; a Fortran
+            value has none, so the caller gives each candidate an integer
+            identity -- which states the design's claim more plainly than
+            'id()' does: the memory is the candidate's, never the
+            container's. Positions are 1-based; the tests print one less.
+          deterministic_timeline -- the clearest fit: Trigger is a derived
+            type, MyTrigger 'extends' it and overrides 'fire' -- Python's
+            class hierarchy word for word, the base 'fire' setting
+            TIMELINE_NOT_IMPLEMENTED. The dispatcher holds references
+            ('ref(a)', a 'class(Trigger), pointer'), as Python's list holds
+            objects. NO COROUTINES, and 'do concurrent'/coarrays promise no
+            ORDER: a Task is an abstract type whose deferred 'advance' runs
+            to the next yield; the dispatcher IS its run's task (one firing
+            per step); 'gather' steps in the given order. The schedule is
+            read off the timelines tick by tick, digit by digit, trigger by
+            trigger -- stable by construction, no sort.
+          space_iterator -- FIT, and it showed something: Fortran does not
+            walk the product, it WRITES IT DOWN, one column per point
+            ('product_points'), position i of point p being
+            'mod((p-1)/stride(i), extent(i)) + 1'. The count is
+            'product(extent)', and Fortran's product of no factors is 1, of a
+            0 is 0: Python's two special cases (empty basis: one point;
+            empty dimension: none) are the arithmetic's own answers.
+          hwut_fsm -- THE MODEL IS A TABLE: states and events are positions
+            in sorted name lists, a transition three integers, Python's sets
+            of states logical arrays ('current_f', 'forbid_f'), a mask a
+            logical matrix over (0:state, event) whose row 0 is 'every
+            state'. Python's dict-and-set questions become 'any', 'count',
+            'pack' -- and the report's sorted order falls out of the
+            positions. FsmError is STAT/ERRMSG; absent, 'error stop'. 'where'
+            is 'class(*)' (int, str, None by 'select type'); 'with m.
+            disallowed(...)' a procedure argument handed the machine. The
+            model text is scanned natively, the regexes written out as in C.
+          hwut_hocon -- native, Fortran strings sufficing once texts are
+            deferred-length. THE TREE IS AN ARENA: all nodes in one array,
+            children as positions, an object's child carrying its key --
+            Python's Entry is the child itself. The roman form needs no
+            backtracking: the regex admits exactly the CANONICAL numerals of
+            1..3999, so a text is valid where its value writes back to it.
+            THE BOUND: Fortran has no signal to raise out of a hung parse
+            (Python's timer, C's siglongjmp), so the parser bounds itself --
+            past 16 calls of 'skip_blank' per character the text counts as
+            ended and 'hung' says so. Deterministic, and it reaches every
+            loop, since every loop of the parser asks 'at_end'.
+          hwut_vterm -- BOUND: the C port's 'VtermScreen'/'VtermTerminal'
+            behind 'bind(c)' interfaces, its structures mirrored as
+            interoperable types (the cell read field by field). The classes
+            are Fortran's ('Terminal extends(Screen)'), opened by the
+            constructor and closed by 'close' like a unit -- no finalizer, a
+            copy is the same screen. Callbacks: C calls a 'bind(c)'
+            trampoline with 'c_loc' of a slot in a module table, which holds
+            the Fortran procedure pointer.
+          hwut_pytext -- 'repr' is ONE generic name over real64, character
+            and logical, as in Python. The float: the smallest 'ES'
+            precision whose text reads back, then laid out (the C port's
+            algorithm); gfortran writes ES and reads correctly rounded.
+          WHAT IT SHOWED about the design: where the Python model is a
+          set, a table or a product (fsm, space_iterator) Fortran's arrays
+          state it more directly than Python; where it is an object graph
+          with identity (marker, dispatcher's references, HOCON's tree) or
+          control flow (coroutines, exceptions, 'with') Fortran must name
+          what Python leaves implicit -- an identity integer, a pointer, an
+          arena index, a step function, a STAT. None of it changed a printed
+          word.
+          GFORTRAN 13 DEFECTS MET, and avoided (each MEASURED): an impure
+          function in the subscript of an assignment of a type with a
+          deferred-length component is evaluated twice ('x = pool(f())':
+          wrong text, or SIGSEGV) -- draws go to a variable first; a
+          structure constructor of a non-constant-length text inside an
+          array constructor, or of a type nesting deferred-length texts,
+          writes beyond its block (valgrind) -- texts are pushed by
+          'hwut_text%push', records filled component by component; the
+          constructor 'TriggerRef(a)' for some extended types is an internal
+          compiler error -- 'ref(a)' instead.
+          MEASURED, on this worktree, gfortran 13.3.0, gcc 13, libvterm
+          0.3.3, Python 3.13: all 47 cases byte-identical to the Python GOODs
+          ('cmp'); 'fuzz' -- 3000 mutated headers from seed 4711 -- 619
+          clean, 2381 with faults, 0 hang, 0 exception; the bound, on a copy
+          of the parser with its two loop guards removed, reports 267 hangs
+          and ends; 'repr' of 200011 doubles (100000 random bit patterns,
+          100000 uniform, the edges) identical to Python's; every choice but
+          'keys' and 'unnoticed' clean under valgrind with '-fcheck=all';
+          --interactive answers 'info', 'run' by name and by index, 'fail
+          ... unknown-choice', 'fail - bad-command', 'bye'; 'make -j6' of the
+          six targets at once, no warning. 'hwut.run --plain' in 'TEST/',
+          twice (the first from 'make clean'): 47 ok, 0 fail each time.
+COST      libvterm and the pseudo-terminal are the C port's: a C fault there
+          is a Fortran fault, and a change to the Python module's words fails
+          C, C++ and Fortran until the C module follows. 'hwut_posix' decodes
+          'waitpid' as Linux does, and 'creat' stands for 'open'. Integers
+          are 64 bits: a HOCON integer beyond them saturates where Python's
+          grows. The HOCON bound is the parser's own, not a clock: a parser
+          slow but finite would pass it. A callback table of 64 slots per
+          program. The choices of a test are module procedures (README.txt,
+          section 1): an internal procedure as a pointer target costs an
+          executable stack.
+==============================================================================

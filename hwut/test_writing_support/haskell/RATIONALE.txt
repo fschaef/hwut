@@ -1,0 +1,141 @@
+==============================================================================
+test_writing_support/haskell -- RATIONALE
+==============================================================================
+
+HS-1  THE PYTHON TEST SUPPORT PORTED TO HASKELL, HELD BY THE PYTHON GOOD FILES
+                                                                      (2026-11-01)
+------------------------------------------------------------------------------
+PROBLEM   A Haskell test author -- 'hwut-root.conf' knows '.hs' -- had no
+          runner, no deterministic stream, no model, no parser and no
+          screen. As for the eleven ports before (perl PL-1, c C-1, ...), a
+          port is only as good as its proof that it behaves alike. Haskell
+          is the first port with no mutable object, no statement and no
+          implicit effect: each module had to be mapped onto the language's
+          own way of thinking, not transliterated.
+DECISION  One module per Python module ('README.txt', section 1); one
+          Haskell test per Python test, choice for choice; every case's GOOD
+          a '.link' to the Python case's '.txt' -- the same 47 cases.
+          PURE VALUES, IO AT THE EDGE. Module by module, what the idiom made
+          of it, and what it showed about the design:
+          deterministic_random -- THE STREAM IS A VALUE, a draw an action of
+            'State DeterministicStream' ('Draw'). It fit at once: Python's
+            promise "same state, same draw" is referential transparency
+            here, held by the type. What fought: 'SelectionMarker' keys on
+            object IDENTITY, which Haskell values have not; it keys on the
+            value ('Ord a'). The tests pass unchanged because Python's
+            candidates were interned strs -- identity WAS equality there;
+            the identity is Python's mechanism, not the design's need.
+          deterministic_timeline -- asyncio became a COROUTINE MONAD of the
+            module's own (some 45 lines, no library): 'resume' runs a task
+            to its next 'yield'; 'gather' resumes the tasks round by round
+            in the order given, which IS asyncio's ready queue -- 'yielding'
+            interleaves step for step. A cancellation is DROPPING the
+            suspended rest: "an abandonment, not an ending" is literally
+            what happens, and no announcement can follow. A Trigger is a
+            record of functions; a subclass a record update. What fought:
+            what Python's tasks share through 'self' (the producer's item,
+            the stop flag) is an IORef; the trigger that stops ITS OWN
+            dispatcher is a knot ('fixIO'), where Python assigns the
+            reference after construction. And 'fire' is abstract only at
+            run time ('NotImplementedError', for the GOOD's words): a typed
+            port would refuse a trigger without 'fire' at compile time --
+            the 'abstract' choice tests what the type system makes moot.
+            An unnamed trigger is 'trigger-<i>', its place: no address.
+          space_iterator -- the module VANISHES into the language: 'do'' is
+            the list monad's 'sequence', lazy as Python's generator, and its
+            two edges ('[]' gives one empty point, an empty dimension none)
+            are that monad's laws, not special cases. A basis of ints and
+            strs is a basis of one sum type the test declares.
+          hwut_fsm -- the best fit: the Machine is a value, 'fire' its
+            transition in a State monad, Python's 'write' callback (print by
+            default) a Writer LOG, 'FsmError' an ExceptT, 'with
+            m.disallowed()' a function of the block that lifts the mask in
+            'catchError' too. A test choice is ONE pure computation whose
+            log -- the machine's breach lines and the test's own lines
+            ('write') in order -- is printed at the end. The Python design
+            had already kept the model apart from its output (the 'write'
+            parameter): that is what made the port pure without a change.
+            'from_string' is a plain 'Either', a fold over the lines.
+          hwut_hocon -- a pure function, as its Python contract already
+            says ("accumulates faults ... never raises"): the faults are
+            part of the result. Inside, the cursor stepping the lines is
+            the state of a small hand-written combinator ('P' = State over
+            cursor and faults; 'fault' records, 'skipLine' recovers).
+            PARSEC SHIPS WITH GHC 9.4.7 and was NOT taken: its model --
+            consume or fail, one error -- is not this parser's, which
+            records a fault and goes on at the next line, and the fuzz holds
+            the port to the Python parser's every step, recovery included.
+            The regular expressions are written out (the decimal one as a
+            scanner; the strict roman numerals as the table of 1..3999 they
+            accept); a float is read EXACTLY, as a Rational, and rounded
+            once ('read' takes neither '.5' nor '+7'; an exponent past 400
+            digits is infinity or zero, not a huge power). What laziness
+            changed: a parse that is not forced never runs, so the fuzz's
+            bound ('timeout', Python's SIGALRM) wraps an 'evaluate' of a
+            walk over the whole tree and every fault's text.
+          hwut_vterm -- FFI. GHC's FFI cannot pass a C structure by value;
+            libvterm takes 'VTermPos' and hands 'VTermRect' by value. So the
+            module binds the C PORT ('../c/hwut_vterm.c', unchanged, compiled
+            into the test's build directory), which loads libvterm by
+            'dlopen', measures its cell layout, owns the pseudo-terminal and
+            calls back: 'foreign import ccall' its functions, 'hsc2hs' its
+            structures' offsets (none copied by hand), "wrapper" imports
+            for the callbacks -- Haskell closures, freed with the terminal.
+            Haskell's own: 'Cell' and 'Event' as values ('show' is Python's
+            'str'), 'VtermError' one constructor per Python exception,
+            'bracket' for 'with', and the class 'ScreenLike' for Python's
+            'Terminal(Screen)' -- the Terminal's 'feed' also forwards. The C
+            port's API, written for C callers, is exactly the FFI's surface.
+          hwut_runner -- the protocol is Python's; each choice of
+            '--interactive' runs in a child ('forkProcess', as the C port
+            forks), its fd 1 and 2 on the sinks, so 'exitWith' ends the
+            choice. stdin, stdout, stderr are set to UTF-8, whatever the
+            locale hwut runs under.
+          PyText -- a class 'PyRepr' with Show's own trick ('pyReprList' a
+            method), so a [Char] prints as a str and every other list as a
+            list. GHC's 'floatToDigits' (and so 'show') is NOT Python's
+            repr: MEASURED on 300000 random bit patterns, 140 differ --
+            shortest, but not always the CORRECTLY ROUNDED one of that
+            length ('245010723912258.13' where Python says '.12'). The port
+            does what 'c/hwut_pytext.c' does with '%.*e' and 'strtod', in
+            exact Rational arithmetic: the fewest digits, rounded half to
+            even, that read back.
+          BUILT, NOT INTERPRETED. 'hwut-root.conf' runs '.hs' with 'runghc';
+          the tests declare 'build { framework = "make" }' instead, and
+          'TEST/Makefile' compiles each target with 'ghc --make -O0
+          -dynamic -outputdir build-<stem>': no object shared between
+          targets, so they build at the same time safely. The C source of
+          the vterm target is compiled by 'cc' into its build directory --
+          given to ghc, its object would land beside '../c/hwut_vterm.c'.
+          MEASURED, on this worktree (GHC 9.4.7, hsc2hs 0.68.8, libvterm
+          0.3.3, Python 3.13.17): every one of the 47 choices byte-identical
+          ('cmp') to the Python GOOD, the gauss values too (the 1e-12 band
+          was not needed); 'floatRepr' against Python's 'repr' on 300000
+          doubles of random bit patterns and 400002 ordinary ones (k/1000001,
+          1.37 sqrt k - 300): no difference. 'fuzz' -- 3000 mutated headers
+          from seed 4711 -- 619 clean, 2381 with faults, 0 hang, 0
+          exception, and beyond the counts: the 3000 printed TREES and
+          their faults identical to Python's, line for line (63692 lines).
+          'runghc': 0.7 - 0.9 s per case (it compiles to bytecode at every
+          call; the fuzz 3.7 s), and it cannot run the vterm test (hsc2hs,
+          the C object). 'make': 0.9 - 1.5 s per target at -O0, one 'ghc'
+          at some 200 MB peak -- under the default caps, so the headers
+          state none; a case then starts in 0.02 s, the fuzz runs 0.8 s.
+          -O1 builds in 3 - 4 s for a fuzz of 0.13 s: not worth it here.
+          '-dynamic' links 240 - 430 KB executables against GHC's shared
+          boot libraries; static ones are some 14 MB, beyond a run's
+          default 10 MB file cap. 'hwut.run --plain' in 'TEST/': 47 ok,
+          0 fail, twice -- the first from a clean directory, building all
+          six (7.5 s), the second 4.5 s.
+COST      The executables run only where their GHC's shared libraries
+          stand ('-dynamic'). 'Hwut.Vterm' is a '.hsc', so a vterm test needs
+          the Makefile's 'hsc2hs' step and a C compiler, besides libvterm;
+          'runghc' runs the five other tests, slowly. A SelectionMarker
+          keys by value, not identity. What Python's coroutines share is an
+          IORef; a FSM test's lines are printed when its run is over, not as
+          they happen (an endless model run would print nothing).
+          'test-hwut_vterm.hs' runs its applications with 'python3', as the
+          C test does. The six features 'haskell-*' are not yet registered
+          in 'hwut-root-features.conf' (outside this directory):
+          'hwut.run' says '6 feature(s) not registered'.
+==============================================================================
