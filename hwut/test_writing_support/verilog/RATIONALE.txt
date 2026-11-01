@@ -1,0 +1,100 @@
+==============================================================================
+test_writing_support/sv -- RATIONALE
+==============================================================================
+
+SV-1  THE PYTHON TEST SUPPORT PORTED TO SYSTEMVERILOG: NATIVE WHERE THE
+      LANGUAGE CAN, DPI-C INTO THE C PORT WHERE IT CANNOT; HELD BY THE
+      PYTHON GOOD FILES                                            (2026-11-01)
+------------------------------------------------------------------------------
+PROBLEM   After Perl, C, C++, Java, Rust, Go and Node, a SystemVerilog test
+          author wants the same modules -- a language whose programs are
+          simulations: no command line of its own, no fork, no file
+          descriptors, no exceptions, no coroutines, no IEEE text of a
+          double, no way to load a C library but DPI-C. A port is only as
+          good as its proof that it behaves alike.
+DECISION  One SV package per Python module (README.txt, section 1); one SV
+          test per Python test, choice for choice; every case's GOOD a
+          '.link' to the Python case's '.txt' -- the 47 cases that hold the
+          other ports.
+          THE SIMULATOR: Verilator 5.020 ('--binary'), not Icarus Verilog
+          12 -- classes with virtual methods, queues, strings, 'process',
+          semaphores and DPI-C ('chandle', 'context' imports, exports) are
+          what the port is made of; Icarus has little of them.
+          NATIVE: the runner's modes, info block, dispatch and protocol
+          words (a test derives 'HwutRunner' and overrides the task 'play');
+          'DeterministicStream' and 'SelectionMarker' (64-bit arithmetic,
+          $ln/$cos/$sqrt, round-half-even written out); 'SpaceIterator';
+          the timeline -- 'Trigger' a class with a virtual task 'fire', a
+          'Task' an SV PROCESS ('fork ... join_none'), 'cancel' its
+          'process::kill'.
+          THE YIELD IS EXPLICIT: 'Loop::sleep0' puts the running task at the
+          end of the queue of those waiting and wakes the first (a semaphore
+          per task). MEASURED, the simulator's own order cannot carry it:
+          two processes waiting on '#1' wake in an order the LRM leaves open,
+          and Verilator 5.020 woke the later one first ('cancel' printed a
+          second firing); '#0' crashed the simulation (a coroutine handle
+          destroyed twice). The semaphore queue IS asyncio's round-robin, so
+          the drawn interleaving is the one that happens on any simulator.
+          THROUGH DPI-C (the brief's "prefer the foreign-function route into
+          '../c'"): the command line ('/proc/self/cmdline' -- the generated
+          'main' keeps argv, '$value$plusargs' sees '+name' alone), 'fork'
+          per interactive choice (the child is the whole simulation, copied
+          where it stood), the UP channel, stdin, '_exit' after a flush (no
+          '$finish' line, no destructor of a suspended process);
+          'hwut_fsm' and 'hwut_hocon' -- the C parsers, the SV side owning
+          the C object (FSM: a 'chandle', every line the machine writes
+          comes back through the export 'hwut_sv_fsm_write' to its
+          'Writer'), resp. copying the C tree into SV classes at once;
+          'hwut_vterm' -- libvterm by 'dlopen' and the pseudo-terminal, the
+          C terminal's events and region changes coming back through two
+          exports to the SV terminal's callback objects; Python's float,
+          str and bytes text. The '*_dpi.c' files convert; they parse,
+          draw and schedule nothing.
+          WHAT PYTHON RAISES is returned (README.txt, section 2): null or
+          0/-1 and a text ('error', 'Machine::refusal', 'last_error',
+          'raised').
+          THE HOCON FUZZ draws the stream natively, as Python does, and
+          bounds each parse in C ('setitimer', 'siglongjmp' within
+          'hwut_hocon_dpi.c' -- no SV frame is crossed).
+          THE BUILD ('TEST/Makefile'): per target a directory of its own,
+          '<target>.obj' -- the C compiled as C by $(CC), Verilator's C++
+          and the link there, removed after; nothing shared, so hwut may
+          build several tests at once (E-210). 'build { caps { memory_mb =
+          2048 } }' in every header (E-212): MEASURED peak 435 MB, the
+          default 512.
+          VERILATOR 5.020, MEASURED, AND HOW THE CODE MEETS IT: a local
+          queue without initializer keeps its content from the last call
+          where the function is inlined into a loop -- every local queue is
+          initialized ('= {}'); a 'case' on a function call drew the stream
+          more than once -- the selector is drawn into a variable first; a
+          package function may not recurse -- the HOCON tree is copied by a
+          class method; nested '{...} patterns, queue patterns as arguments
+          and empty-queue defaults are refused -- built by 'push_back',
+          passed by variable, 'Machine::create' takes its lists positionally;
+          a ternary of two string literals is a vector (an empty one a NUL)
+          -- cast by string'(); a DPI export in a package is found only in
+          the scope 'TOP.<package>' -- the C side sets it; make does not
+          relink when only a '.o' changed -- the Makefile starts each target
+          afresh.
+          MEASURED, on this tree (the seven ports) with Verilator 5.020 and
+          g++ 13.3: all 47 cases byte-identical to the Python GOODs ('cmp');
+          'fuzz' -- 3000 mutated HOCON headers from seed 4711 -- 619 clean,
+          2381 with faults, 0 hang, 0 exception; --interactive answers
+          'info', 'run' by name and by index, 'fail ... unknown-choice',
+          'fail - bad-command' and 'bye' as the C runner. 'hwut.run --plain'
+          in 'TEST/', twice: 47 ok, 0 fail each time -- the first from a
+          clean directory, the six simulations built by hwut through the
+          Makefile (some 10 s each).
+COST      Every test links the C modules it reaches, so a C fault is an SV
+          fault and a change to a Python module's printed words fails the
+          C and the SV tests until the C module follows -- one
+          implementation, held once. The C core's limits stand (the sizes
+          of 'hwut_fsm.h', 'hwut_vterm.h'). Linux alone ('/proc'). Strings
+          hold no zero byte, so 'bytes_repr' and the screen's feed take
+          none. Candidates of the stream are strings or indices; equal texts
+          are one candidate. A yield needs the loop: a process that waits
+          by its own means ('#', '@') between two 'sleep0' is outside the
+          drawn interleaving. A build wants 2 GB and Verilator; it takes
+          some 10 s per test. 'test-hwut_vterm.sv' runs its applications
+          with 'python3', since they are the Python test's own.
+==============================================================================

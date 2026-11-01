@@ -1,0 +1,66 @@
+==============================================================================
+test_writing_support/vhdl -- RATIONALE
+==============================================================================
+
+VH-1  THE PYTHON TEST SUPPORT PORTED TO VHDL -- NATIVE WHERE VHDL CAN, THE C
+      PORT BY VHPIDIRECT WHERE IT CANNOT -- HELD BY THE PYTHON GOOD FILES
+                                                                  (2026-11-01)
+------------------------------------------------------------------------------
+PROBLEM   After Perl, C, C++, Java, Rust, Go and Node, a VHDL test author
+          wants the same modules. VHDL reads no command line, has no
+          exceptions, no function values, no coroutines, 32-bit integers,
+          no list of texts a function could take, and no way to fork, open a
+          pseudo-terminal or call a C library but VHPIDIRECT. A port is only
+          as good as its proof that it behaves alike.
+DECISION  One VHDL package per Python module (README.txt, section 1); one
+          VHDL test per Python test, choice for choice; every case's GOOD a
+          '.link' to the Python case's '.txt' -- the 47 cases that hold the
+          other ports.
+          NATIVE: the runner (modes, the info block, Levenshtein, the
+          interactive protocol read by textio), DeterministicStream (MINSTD
+          by Schrage's decomposition in 32-bit integers), SpaceIterator, the
+          TriggerDispatcher and its run. A trigger's class is a 'kind', its
+          overridden methods the generic subprograms of the generic package
+          'deterministic_timeline_run'. ASYNCIO'S TASKS ARE PROCESSES: a
+          'TaskLoop' keeps asyncio's ready queue, a signal 'turn' (resolved
+          to the largest serial, so every process may drive it) wakes the
+          one whose turn it is -- 'sleep(0)' puts the yielder last, 'gather'
+          and 'await' block, 'cancel' ends the task at its next yield.
+          THROUGH VHPIDIRECT ('hwut_vhpi.c', into the C modules of '../c'):
+          what VHDL cannot -- fork and descriptors for --interactive, exit,
+          the environment; libm's sqrt/log/cos for 'gauss' (GHDL's math_real
+          is IEEE's VHDL body, its cos off from libm in the 9th digit,
+          MEASURED); Python's repr of a float, str, bytes; the FSM model
+          text and run, the HOCON parser (the tree copied into VHDL records),
+          libvterm and the pseudo-terminal. The glue keeps C objects behind
+          integer handles and leaves texts in one result buffer; C's
+          callbacks are queued and delivered by the Terminal method that
+          caused them, to the generics of 'hwut_vterm_terminal'.
+          A LAUNCHER: GHDL's mcode backend writes no executable; 'test-x.exe'
+          runs 'ghdl -r' on the target's own work directory with the command
+          line as generics (HWUT_ARGC, HWUT_ARGV1) and the glue library on
+          LD_LIBRARY_PATH. Each target builds its own work directory and
+          library: parallel builds share nothing (services E-210).
+          RESERVED WORDS rename what Python names freely: select ->
+          select_index, report -> print_report / report_changes, wait ->
+          wait_exit, open -> create, file -> file_name, exit -> process_exit.
+          MEASURED, on this worktree with GHDL 4.1.0 (mcode), gcc 13,
+          libvterm 0.3.3: all 47 cases byte-identical to the Python GOODs
+          ('cmp'); 'fuzz' -- 3000 mutated HOCON headers from seed 4711 --
+          619 clean, 2381 with faults, 0 hang, 0 exception; 'yielding' and
+          'cancel' unchanged with the processes declared in the reverse
+          order; --interactive answers 'info', 'run' by name and by index,
+          'fail ... unknown-choice', 'fail - bad-command' and 'bye'.
+          'hwut.run --plain' in 'TEST/', twice (the first from 'make clean'):
+          47 ok, 0 fail each time.
+COST      Everything but the native modules is the C port's: a C fault is a
+          VHDL fault, and a change to a Python module's printed words fails
+          C, C++ and VHDL until the C module follows. A GHDL run elaborates
+          the design anew each time (some 20 ms). A str_list holds no LF in
+          an item -- none of these modules' items does; an application's
+          argv is NUL-separated for that reason. Fixed sizes bound a cell's
+          text (32 bytes), an event's text (512), 64 triggers, 16 tasks, 256
+          choices, 4096 live C handles. Not ported: Python's Machine(...)
+          from a transition list, 'disallowed'/'forbidding' as blocks (VHDL
+          hands over no block), parallel interactive choices.
+==============================================================================

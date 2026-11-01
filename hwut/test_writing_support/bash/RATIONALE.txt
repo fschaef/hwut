@@ -1,0 +1,95 @@
+==============================================================================
+test_writing_support/bash -- RATIONALE
+==============================================================================
+
+SH-1  THE PYTHON TEST SUPPORT PORTED TO BASH, HELD BY THE PYTHON GOOD FILES
+                                                                      (2026-10-31)
+------------------------------------------------------------------------------
+PROBLEM   A bash test author -- hwut runs '.sh' with the 'bash' interpreter of
+          'hwut-root.conf' -- had no runner, no deterministic stream, no
+          model, no parser and no screen. As for Perl (perl PL-1) and C (c
+          C-1), a port is only as good as its proof that it behaves alike.
+DECISION  One sourced module per Python module ('README.txt', section 1);
+          one bash test per Python test, choice for choice; every case's
+          GOOD a '.link' to the Python case's '.txt' -- the 47 cases that
+          hold the Perl, C and later ports.
+          BASH'S OWN MEANS WHERE BASH HAS THEM. The runner, the stream
+          (bash's arithmetic is 64 bit: MINSTD's product fits), the
+          timeline, the iterator, the FSM and the HOCON parser are pure
+          bash. An object is a global associative array named by the
+          caller and passed by name (namerefs); a method is
+          '<module>_<class>_<method> <object> ...'; a result stands in
+          REPLY or REPLY_LIST, a bool is the status, an exception is
+          status 1 and the text in FSM_ERROR or VTERM_ERROR(_KIND) -- what
+          '$(...)' would cost (a process, and every change the call made)
+          rules it out for any call that changes state. A class is a
+          function prefix ('MyTrigger_fire'); a coroutine a step function
+          stepped round-robin in the order given -- asyncio's, as in Perl
+          and C. Keyword arguments are 'key=value' words.
+          THE INTERACTIVE PROTOCOL is Python's; each choice runs in a
+          SUBSHELL with fd 1 and fd 2 on its sinks, so 'exit' in a choice
+          ends the choice, not the session (Python catches SystemExit, C
+          forks); 'parallel=process' runs the subshell in the background,
+          which writes its own 'done' when it ends -- one 'printf' per line
+          on the UP channel, so lines never interleave.
+          A FLOAT IS ITS TEXT, computed and written by awk (POSIX, the
+          platform's libm, as Python's): 'next_float', 'gauss', every '%r'.
+          'float_repr' is the shortest text that reads back, fixed for a
+          decimal point in (-4, 16] -- the Perl port's algorithm. 'coin'
+          needs no float: n / 1000001 < p is compared exactly, as rationals,
+          for a decimal p of up to nine places (awk else).
+          THE HOCON PARSER IS BASH, ONE PROCESS: the cursor is a set of
+          locals of 'hocon_parse' (dynamic scope), the line's text is
+          scanned as BYTES (LC_ALL=C), a column counted in characters where
+          the line holds UTF-8. A radix number beyond 60 bits is converted
+          in limbs of nine decimals -- Python's int has no bound. THE BOUND
+          of the fuzz is the parse's own: bash cannot leave a function from
+          a trap (Python's SIGALRM raises), and a timer process per parse
+          is 3000 processes; so 'bound_s=' makes the parse's two loops look
+          at EPOCHREALTIME, and past the bound the cursor jumps to the end
+          and the parse returns 2. A real hang -- a loop that consumes
+          nothing -- passes through one of those two loops, so it is
+          caught.
+          LIBVTERM AND THE PSEUDO-TERMINAL ARE THE C PORT'S. Bash cannot
+          call into a C library, open a pseudo-terminal, or wait on one with
+          a timeout; 'python3' is not allowed as the support's engine (the
+          Python applications of 'test-hwut_vterm' are the system under test
+          only). So 'hwut_vterm_server.c' puts '../c/hwut_vterm.c',
+          UNCHANGED, behind a line protocol -- one request a line, %-encoded
+          fields, 'event'/'change' lines while a command runs, then 'ok' or
+          'err <Python's exception name> <text>' -- and 'hwut_vterm.sh' runs
+          it as the shell's coprocess: one per process, started with the
+          first screen, ended with the last 'vterm_close'. A callback is a
+          bash function, called as its line arrives -- in the order the C
+          module calls its own. HWUT_LIBVTERM travels with every 'new' (the
+          'missing' choice sets it in bash), the exported environment with
+          every 'run' (Python passes 'os.environ' at that moment).
+          BUILT ON FIRST USE, not declared: 'hwut_vterm.sh' runs 'make' in
+          this directory when the server is missing or older than a source
+          -- so a bash test that sources the module needs no 'build { }'
+          in its header and no Makefile beside it, and 'TEST/' builds
+          nothing. Tests that start at once may build at once: the
+          Makefile links into '<target>.<pid>' and renames -- atomic.
+          MEASURED, on this worktree (bash 5.2.21, mawk 1.3.4, libvterm
+          0.3.3, Python 3.13): every one of the 47 choices byte-identical
+          ('cmp') to the Python GOOD, the gauss values too (the 1e-12 band
+          was not needed); 'float_repr' against Python's 'repr' on 200000
+          doubles (random bit patterns and uniform in [-1e6, 1e6]): no
+          difference; 'fuzz' -- 3000 mutated headers from seed 4711 --
+          619 clean, 2381 with faults, 0 hang, 0 exception, at 4.3 ms per
+          parse (13 s the choice; the bound is 0.5 s a parse). 'hwut.run
+          --plain' in 'TEST/': 47 ok, 0 fail, twice -- the first run from no
+          built server, which it built (18 s each).
+COST      Bash is slow: the HOCON fuzz is the slowest choice of all the
+          ports (13 s against C's well under one); a header is parsed in
+          milliseconds, which is what an author meets. A bool, a None and
+          an exception are conventions (status, empty, *_ERROR), not types;
+          the nameref of an object must not meet a caller's local of the
+          same name ('circular name reference') -- the modules' locals carry
+          their module's prefix. A SelectionMarker keys by value, not
+          identity. An exit status 128+n of a choice is bash's, where Python
+          says -n for a signal. 'hwut_vterm.sh' wants cc and make on the
+          machine, besides libvterm; the server is a build product in this
+          directory ('.gitignore'). 'test-hwut_vterm.sh' runs its
+          applications with 'python3', as the C test does.
+==============================================================================

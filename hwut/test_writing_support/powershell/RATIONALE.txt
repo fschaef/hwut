@@ -1,0 +1,76 @@
+==============================================================================
+test_writing_support/powershell -- RATIONALE
+==============================================================================
+
+PS-1  THE PYTHON TEST SUPPORT PORTED TO POWERSHELL 7, HELD BY THE PYTHON
+      GOOD FILES                                                      (2026-11-01)
+------------------------------------------------------------------------------
+PROBLEM   A further port after Perl, C, C++, Java, Rust, Go and node: a
+          PowerShell test author is to be given what a Python one is, with
+          the same printed words -- and a port is only as good as its proof
+          that it behaves alike.
+DECISION  One script module ('.psm1') per Python module ('README.txt',
+          section 1), no build: 'pwsh' runs a test as it stands (the
+          'powershell' interpreter of hwut-root.conf), the test finding the
+          modules by 'using module ../<name>.psm1'. One test per Python test,
+          choice for choice; every case's GOOD a '.link' to the Python case's
+          '.txt' -- 47 cases.
+          NATIVE WHERE POWERSHELL CAN: classes, exceptions as classes, the
+          stream, the timeline, the space, the FSM and the HOCON parser are
+          PowerShell; float layout from .NET's own shortest digits
+          ('ToString("R")'); Math.Log/Cos are the C library's on Linux, so no
+          P/Invoke of libm was needed (MEASURED below). Only what PowerShell
+          cannot say -- C functions, structures by value, callbacks, 'char*[]'
+          -- is C# ('hwut_vterm_native.cs'), compiled by Add-Type at run time.
+          Not a binding over '../c': libvterm and libc are called directly
+          through P/Invoke, as the Java port calls them through its FFM API
+          ('java/hwut/Posix.java'), with no helper process and no fork.
+          NO COROUTINES: as in the C port a task is a step function
+          ('AsyncTask'), 'Gather' steps tasks in the order given.
+          ONE PROCESS PER SESSION: --interactive runs each choice in the
+          session's process, [Console]::Out/Error pointed at the sinks, 'exit
+          n' caught by a nested pipeline -- a child pwsh per choice would cost
+          ~0.5 s each. 'test-hwut_vterm.ps1 missing' therefore puts
+          HWUT_LIBVTERM and the forgotten library back on leaving, so the
+          choices after it in the session probe the real library.
+          libvterm's callbacks only queue (C# 'Recorder'); the PowerShell
+          side drains the queue after every call into the library.
+          THE FILE CAP: every test header states 'caps { file_size_mb =
+          2097152 }' (README section 3) -- MEASURED by strace: .NET's W^X
+          double mapping 'ftruncate's a memfd to 2^41 bytes at start; pwsh
+          dies of SIGXFSZ under any smaller RLIMIT_FSIZE, 2097152 MB passes.
+          It stands in each header, not in TEST/hwut.conf's 'app_defaults'
+          (which works as well, MEASURED), so a test copied elsewhere runs.
+          MEASURED (pwsh 7.4.6, .NET 8, libvterm 0.3, glibc; worktree
+          wl-ps): all 47 cases byte-identical to the Python GOODs (raw
+          output, 'cmp', normal mode), 'gauss' included -- the tolerance
+          region unused; 'hwut.run --plain' in 'TEST/': 47 ok, 0 fail, twice
+          (19.5 s, 22.4 s); 'fuzz' -- 3000 mutated headers from seed 4711 --
+          619 clean, 2381 with faults, 0 hang, 0 exception (9.6 s; one parse
+          ~5 ms); 'FloatRepr' against Python's repr on 200000 doubles (random
+          bits, scaled, integral, rounded): no difference; 'StrRepr' against
+          repr on every code point but surrogates: 627 differ -- exactly the
+          characters Unicode 15.1 assigned, which .NET 8's tables (15.0) do
+          not know and escape. pwsh start: 0.47 s to '--hwut-info'; Add-Type
+          of the native edge 0.66 s, once per process (a vterm choice 1.5 s
+          in all, an interactive session of three vterm choices 1.5 s) --
+          well within hwut's 300 s session; stdout UTF-8 without BOM ('ä日'
+          as in the GOOD); no banner, progress record or ANSI colour reaches
+          stdout or stderr of a choice (the runner sets $ProgressPreference,
+          $PSStyle.OutputRendering 'PlainText', the invariant culture).
+          What SEEING_APP reports from inside the pseudo-terminal is the
+          GOOD's: three streams terminals, a controlling terminal, 44 x 10,
+          TERM=xterm-256color, COLUMNS=None though the test set 300, the
+          cursor question answered, exit status 3.
+COST      Each test carries the 2 TiB file cap; what writes a large file
+          under it is no longer caught. pwsh is started as 'pwsh <test>
+          <choice>': a user's profile runs first and may print, and pwsh
+          tries start-up telemetry (MEASURED: connections to
+          dc.services.visualstudio.com, refused by the proxy here) -- both
+          belong to the interpreter line, not to the script. A NATIVE
+          process a choice starts writes on the session's fd 1/2, not on the
+          sinks. Strings from PowerShell to C# turn $null into '' (the C#
+          side treats '' as none). The libc numbers are Linux/glibc's. A
+          change to a Python module's printed words fails these tests until
+          the PowerShell module follows -- which is the point.
+==============================================================================

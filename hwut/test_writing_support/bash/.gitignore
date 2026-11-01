@@ -1,0 +1,3 @@
+# What the Makefile builds here on first use of hwut_vterm.sh -- no source.
+/hwut_vterm_server
+/hwut_vterm_server.*[0-9]
