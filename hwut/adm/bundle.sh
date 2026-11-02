@@ -841,7 +841,11 @@ fi
 if [ $NEW = 0 ] && [ $CHANGED = 0 ] && [ $DEL = 0 ]; then
     echo "== already applied: nothing to do"; exit 0
 fi
-if [ $SAME = 0 ] && [ $CHANGED = 0 ] && [ $DEL = 0 ] && [ ! -f hwut-root.conf ] && [ $HERE = 0 ]; then
+#  THE ANCHOR, WHERE IT STANDS, IS THE ROOT'S MARK: a bundle of new files
+#  alone, applied where the sender's root conf stands ('hwut/hwut-root.conf'),
+#  is at its root.
+if [ $SAME = 0 ] && [ $CHANGED = 0 ] && [ $DEL = 0 ] && [ ! -f hwut-root.conf ] \
+   && { [ -z "$ANCHOR" ] || [ ! -f "$ANCHOR" ]; } && [ $HERE = 0 ]; then
     echo "!! not one listed file stands here and no 'hwut-root.conf' marks a root --"
     echo "   this is not the receiving root. REFUSED, '--force' or not; 'sh $SELF --here'"
     echo "   creates them here anyway."; exit 2

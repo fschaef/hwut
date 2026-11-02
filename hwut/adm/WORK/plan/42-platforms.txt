@@ -1,0 +1,193 @@
+==============================================================================
+plan/42-platforms -- THE FIRST RELEASE, IN ORDERED CUTS
+==============================================================================
+
+VERSION: 1
+
+COMPONENTS: engine/platforms (new), engine/orchestrator, engine/protocol,
+            engine/bookkeeper, engine/display, services, support/, adm.
+INTEND:     adm/WORK/intend/42-platforms.txt (rulings 1-22)
+SPEC:       adm/WORK/spec/42-platforms.txt (VERSION 1)
+
+A worker reads intend, spec and this file, finds STATE, performs the next
+step and ONLY the next step, proves it, bumps STATE and VERSION, returns a
+bundle. A step that exposes a fork STOPS and reports -- nothing moves past
+an unreported fork. Each step is one bundle on the author's current
+commit, proved on a fresh extraction with the census.
+
+______________________________________________________________________________
+
+STATE
+
+    next step:      P-1
+    done:           (none)
+    measured:       2026-11-02 on the dev tree (08217f1 + bundles 31..35):
+                    17 non-test readers of the book (engine 10, services
+                    6, adm 2 -- the list under P-6); 27 files import the
+                    wish (engine/orchestrator/plan/wish.py, 'parse_wish').
+
+______________________________________________________________________________
+
+THE ORDER, AND WHY
+
+    Behaviour before formatting (bin section 4): every cut up to P-7
+    changes NO existing nominal -- a tree without a 'platform' key runs
+    as today, byte for byte. The console's new lines (P-7) and the book's
+    column (P-6) are the cuts that move GOOD files, each alone, each
+    classified line by line.
+
+    P-1  engine/platforms: the helper, 'local' and 'container'
+    P-2  the conf key 'platform'
+    P-3  the wish words '-p', '--exclude-local'; who takes them
+    P-4  the decision: S, Q(B), F(B); refusal; not-run; no exploring
+    P-5  the hand-over and the stream
+    P-6  the book's 'platform' column
+    P-7  the console: markers, '(linux)'
+    P-8  'support/' becomes the bubble
+    P-9  the author's run on a real container; residue to the bins
+
+______________________________________________________________________________
+
+P-1  engine/platforms -- THE HELPER (spec section 4)
+------------------------------------------------------------------------------
+    NEW  engine/platforms/__init__.py   is_available, start, run, stop,
+                                        keys -- dispatched on 'kind';
+                                        'kind_tuple()' the known kinds
+         engine/platforms/local.py
+         engine/platforms/container.py  the engine and root finding moved
+                                        from services/lib/dev/podman/
+                                        _common.py ('engine', 'root_of');
+                                        '_common.py' imports them from
+                                        here (the dev faces unchanged)
+         engine/platforms/README.txt, RATIONALE.txt (P-1..)
+    'run' is written here but only its ARGV is proven (P-5 drives it).
+    PROOF  engine/platforms/TEST/test-container.py, the engine a fake
+           on PATH (a script answering 'image inspect', 'build', 'run'
+           by what a file says): available; no engine; image absent,
+           recipe there / absent; build ok; build failed (the ERROR line,
+           its last 5 lines); the run's argv for podman and for docker;
+           keys('container').
+           services/lib/dev/podman/TEST unchanged, green.
+    IMPORTS  engine/platforms imports only the engine and the standard
+             library. No test checks the central law today (measured: no
+             TEST reads imports for it); P-1 adds one choice to its own
+             TEST that reads the modules with 'ast' and names any import
+             of 'services'.
+
+P-2  THE CONF KEY (spec section 1)
+------------------------------------------------------------------------------
+    engine/orchestrator/exploration: 'platform' joins ROOT_ONLY_KEY_SET;
+    its reader turns the list into a tuple of (name, spec) -- "local" a
+    bare string, every entry's keys checked against
+    'platforms.keys(kind)'. The faults of spec section 1, by name.
+    'hwut.sanitize' lists the key as known (no proposal fault).
+    PROOF  the exploration's TEST: one choice per fault, one for a list
+           that reads; a 'platform' in a 'hwut.conf' is the root-only
+           fault. The census unchanged: no tree has the key yet.
+
+P-3  THE WISH WORDS (spec section 2)
+------------------------------------------------------------------------------
+    engine/orchestrator/plan/wish.py: 'Wish.platform_tuple',
+    'Wish.exclude_local_f'; parsed, spelt back; '--exclude-local' without
+    '-p' refused. A face says whether it takes them (a flag beside the
+    'digest_f' and 'feature_f' of 'parse_wish'): hwut.run, hwut.play,
+    hwut.sanitize yes; every other face that parses a wish refuses by
+    name. The 27 importers are read, not guessed: each one listed in the
+    step's report as 'takes' or 'refuses'.
+    The words reach nothing yet: S is computed and handed to the
+    orchestrator, which ignores it until P-4.
+    PROOF  wish TEST (parse, spell back, refusal); one face that refuses
+           ('hwut.report -p linux'), one that takes ('hwut.run -p linux'
+           on a tree without the key: a NOTE "-p linux: no bubble below
+           requires it", the run as without '-p').
+           Help pages re-recorded where WISH_HELP is shown -- read line
+           by line: only the two words added.
+
+P-4  THE DECISION (spec section 3, rulings 12, 19, 21)
+------------------------------------------------------------------------------
+    The walk reads every bubble's 'platform' before the first event and
+    computes Q(B), F(B). |F(B)| > 1 anywhere: REFUSED at the start, every
+    B named. F(B) = {}: the bubble is NOT RUN -- a 'not-run' event
+    (engine/protocol: the new kind, the optional 'platform' field on
+    every kind), not explored, not interviewed, nothing written (ruling
+    21); its inner bubbles decided on their own (ruling 19). F(B) = {f},
+    f not local: is_available false -> NOT RUN, 'reachable'; true -> a
+    placeholder that emits 'not-run' with text "handing over: P-5" (the
+    hand-over is P-5's).
+    The fold ignores 'not-run' (counts nothing); the console shows it,
+    for now, as the plain NOTE line the vocabulary's fallback prints --
+    its marker form is P-7's.
+    PROOF  engine/orchestrator/TEST, a fixture tree of three bubbles
+           (none, [linux], [local, linux]) with one inner bubble of no
+           platform inside [linux]: every S of {local}, -p linux,
+           --exclude-local -p linux; the refusal; the inner bubble run;
+           an interview counter at zero for every not-run bubble; no
+           file written below a not-run bubble (the tree listed before
+           and after). engine/protocol/TEST: 'not-run' and 'platform'
+           round-trip.
+
+P-5  THE HAND-OVER AND THE STREAM (spec sections 4, 5; ruling 20)
+------------------------------------------------------------------------------
+    The placeholder of P-4 becomes: start; run(f, spec, B, wish, sink);
+    stop in a 'finally'. 'container.run' reads the far stdout through
+    'event_of', drops tree-begun/tree-done, re-roots 'directory', adds
+    'platform', turns an unreadable line or a far status other than 0/1
+    into a 'fault'. The near 'tree-begun' lists the bubble's TEST
+    directories by the walk alone. The wish re-rooted at B.
+    PROOF  the fake engine of P-1, its 'run' answering with the event
+           lines of a recorded real run (a 'hwut.run --log' of a small
+           local fixture, taken on this machine): the near run's console
+           and RESULTS equal the same fixture run locally, but for the
+           platform field; an unreadable line; a far status 2; a SIGTERM
+           during the run calls stop (E-55).
+
+P-6  THE BOOK'S COLUMN (spec section 6) -- A FORMAT CUT, ALONE
+------------------------------------------------------------------------------
+    'GOOD/book.csv' gains a last column 'platform', empty for local. The
+    readers, every one checked (bin 5c):
+        engine/bookkeeper/bookkeeper.py, test_id_db.py, id_scope.py,
+          test_run_info/__init__.py, test_run_info/info.py
+        engine/orchestrator/exploration/feature_relation.py
+        engine/display/coverage_reason.py, failure.py
+        engine/coverage/output.py
+        services/run.py, report.py, sanitize.py, remove.py,
+          lib/report/features.py, lib/cov/run.py
+        adm/fail_book.py, adm/book_stain.py
+    An old book (no column) reads as all-local; the first write adds it.
+    PROOF  the census twice; every changed GOOD line classified: only a
+           book header and a trailing ';' may move. 'hwut.report' over a
+           book with a 'linux' row shows it.
+
+P-7  THE CONSOLE (spec section 6) -- A FORMAT CUT, ALONE
+------------------------------------------------------------------------------
+    The final tree's marker lines '[PLATFORM not available]', '[PLATFORM
+    not reachable]', the NOTE's reason beside; '(linux)' once per
+    directory measured on a platform. Plain, TUI and keyed viewers
+    alike. RESULTS untouched (ruling 21).
+    PROOF  services/TEST: hwut.run over the P-4 fixture, each marker;
+           the census unchanged (no tree has the key yet) -- any moved
+           line is a defect.
+
+P-8  'support/' BECOMES THE BUBBLE (spec section 8; rulings 18, 19)
+------------------------------------------------------------------------------
+    support/hwut-root.conf (the 'linux' entry, image 'hwut-dev', recipe
+    '../adm/container/Containerfile'); the support's feature entries
+    moved from 'hwut-root-features.conf' into its registry by
+    'hwut.features.*' faces, not by hand;
+    support/test_writing/python/TEST/hwut-root.conf with no platform.
+    PROOF  the census from the top: 'support/' one marker line, python/
+           TEST run here, RESULTS smaller by exactly the support's other
+           cases; the features report: no feature lost, the moved ones
+           under the bubble. adm/support_layout.py green.
+
+P-9  THE AUTHOR'S RUN; THE BINS
+------------------------------------------------------------------------------
+    On the author's machine (label 'needs-container'):
+        hwut.dev.podman.build
+        hwut.run -p linux                  the whole tree, support/ inside
+        hwut.run --exclude-local -p linux  support/ alone
+    Reported back: RESULTS of each, the time, any fault. A red case here
+    is a finding, not a step: it goes to the author before anything else.
+    Then the residue: engine/platforms/README.txt (how to say a platform),
+    RATIONALE entries (engine, services) for rulings 1-22, the book note
+    for the writers; intend, spec and this plan deleted from WORK.

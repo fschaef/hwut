@@ -1,0 +1,1098 @@
+==============================================================================
+spec/26-hwut-bench -- REMOTE EXECUTION: DESIGN
+==============================================================================
+
+VERSION: 15
+
+COMPONENTS: test_writing_support/remote_execution (new),
+            engine/orchestrator/exploration (the validator: 'bench { }'),
+            engine/orchestrator/run (a condition on build order, axis Q),
+            services (hwut.sanitize.bench.defaults).
+INTEND:     adm/WORK/intend/26-hwut-bench.txt
+STATUS:     nothing built; nothing open.
+
+CONTENTS
+
+     1  Orientation                       the two sides; what the user
+                                          does; who reads what
+     2  Terms                             the words, defined once
+     3  Axes, laws, couplings             every rule's home
+
+        PART A -- THE PROTOCOL            PROTOCOL.txt, MAP.txt
+     4  The line                          (a constant, not an axis)
+     5  G     The address space
+     6  H     The verbs
+     7  K, L  Outcome and agent life
+     8  J     The wait contract
+     9  A     The agent implementations
+    10  M, N  Reception and recovery
+
+        PART B -- THE BENCH               README.txt
+    11        The bench entry: 'bench { }'
+    12  C     Transport, and opening a session
+    13  B     Time domain
+    14  D, F  Loader and image identity
+    15  E     Bench reset
+    16  Q     Ownership
+    17        Bench requirements
+
+        PART C -- THE WRITER              README.txt
+    18  O  Session scope and the picture
+    19        The test, as the writer writes it
+    20        A session on the wire
+    21        The simulation twin
+    22        Systems with their own API: real-time HIL, ROS 2,
+              automotive ECUs, instruments
+
+        PART D -- DELIVERY
+    23  Prototypes
+    24  Files
+    25  Delivery order
+
+==============================================================================
+1  ORIENTATION
+==============================================================================
+
+    THE TWO SIDES
+
+                HOST                                      TARGET
+     the machine that runs hwut              a board, a simulator or an
+     and the test application                emulator
+
+    +---------------------------------+          +------------------------+
+    | test application    (writer)    |          | agent                  |
+    |   prints rows and '##' lines    |          |   remote_execution/    |
+    |---------------------------------|          |   target/<impl>/       |
+    | host modules                    |   link   |   verilog | c | python |
+    |   remote_execution/host/        |<========>|                        |
+    |   session  the protocol         |  serial  |   map <---> UUT        |
+    |   link     the byte stream      |  tcp     |                        |
+    |   entry    the bench entry      |  ssh     +------------------------+
+    |   <loader> flash, reset         |  launch              ^
+    |   capture  rows from captures   |                      |
+    +---------------------------------+                      |
+           |              |                                  |
+           |              +---- loader (vendor tool) --------+
+           |                    puts the image on the target
+           v
+    hwut-root.conf  bench { <name> { link, loader, ... } }
+
+    host           the machine that runs hwut and the test application
+    host modules   the Python modules in remote_execution/host/: session,
+                   link, entry, one module per loader, capture
+    target         the board, simulator or emulator
+    agent          the program or circuit on the target that drives the
+                   UUT for the host; one implementation per directory in
+                   remote_execution/target/: verilog, c, python
+    UUT            the unit under test, beside the agent on the target
+    link           the byte stream between host and agent
+    loader         the vendor tool that puts an image on the target, run
+                   through its host module
+    bench          one named entry of 'bench { }': a target, its link and
+                   its loader
+
+    WHAT THE USER DOES -- everything else is done by the modules; the
+    protocol (Part A) stays hidden from the user.
+
+       user           hwut          make+loader     host modules        agent
+         |              |                |                |               |
+         |  ONCE PER BENCH                                                |
+         |  wire the target; install the vendor tool                      |
+         |  hwut.sanitize.bench.defaults; fill in the entry               |
+         |              |                |                |               |
+         |  ONCE PER TEST                                                 |
+         |  copy a prototype: remote_execution/proto/<name>/              |
+         |  put the UUT beside the agent: verilog -- in the top           |
+         |    level; c, python -- write uut_run(stim, report)             |
+         |  write the test application: vectors, prints                   |
+         |  hwut.play; accept the GOOD                                    |
+         |              |                |                |               |
+         |  EVERY RUN                                                     |
+         |-- hwut.run ->|                |                |               |
+         |              |-- build ------>|                |               |
+         |              |                |-- image id? flash if stale --->|
+         |              |-- run a choice ---------------->|               |
+         |              |                |                |-- open ------>|
+         |              |                |                |-- reset ----->|
+         |              |                |                |-- vectors --->|
+         |              |<- rows, '##' lines -------------|               |
+         |<- verdict ---|                |                |               |
+
+    The protocol of Part A runs inside 'open', 'reset' and 'vectors'.
+
+    The host reads and writes bytes of a map; one verb, 'x', applies a
+    stimulus and returns the outcome and the report. Every reply is the
+    content of a read. hwut learns one thing: the block 'bench { }' of
+    hwut-root.conf; it never talks to a board.
+
+    Running example: an 8-bit registered adder on a MAX 10 at 50 MHz,
+    LATENCY 1; a = 03, b = 04, sum = 007. Stimulus a[15:8] b[7:0]
+    (2 bytes), report sum[8:0] (2 bytes).
+
+    READING PATHS
+
+    reader                       reads, in order        may skip
+    ------                       ---------------        --------
+    the author, who rules        1, 2, 3; then any      --
+    implementer, agent           1, 2, 3, 4 to 9        11 to 25
+    implementer, host modules    1 to 16                17 to 22
+    test writer                  1, 2, 11, 14, 17 to 23 4 to 10
+    book writers                 1, 20, 19, 21, 18, 22  3 to 17
+
+==============================================================================
+2  TERMS
+==============================================================================
+
+    Each word below is used in this one sense throughout. The number names
+    the section that specifies it.
+
+    THE PICTURE
+      host           the machine that runs hwut and the test application
+      target         the board, simulator or emulator that runs the agent
+      UUT            the unit under test, on the target
+      agent          the circuit or program on the target that drives the
+                     UUT for the host (9)
+      agent implementation
+                     one of target/verilog, target/c, target/python
+      agent start    power-up, configuration or process start of an agent
+      link           the ordered byte stream between host and agent (12)
+      line           one command or reply on the link (4)
+      token          the hex digit that pairs a reply with its command (4)
+      noise          what section 4 classes as noise
+      verified line  a line that is not noise
+      map            the agent's byte-addressed space (5)
+      last, status   map bytes 18 and 19 (5, 7)
+      fresh          bit 7 of status (7)
+      reset write    'w 3f <byte>': the UUT reset through the map (7)
+      SW, RW         the stimulus and report lengths in bytes (5)
+      LATENCY, RESET_CYCLES
+                     verilog parameters: sample delay and UUT reset
+                     length, in cycles (8, 9)
+      wait contract  mode, LATENCY, timeout and its unit (8)
+      phy            the agent's byte interface: a UART, or stdio under
+                     simulation (9)
+      deadline       how long the host waits for a reply (10)
+      ladder         the host's recovery procedure (10)
+      hello          the read 'r 0 1a' that opens a session (5, 12)
+
+    THE BENCH
+      bench          a target with its link and loader, named by one entry
+                     of 'bench { }' in hwut-root.conf (11)
+      entry key      a key of that entry: serial, baud, link_margin, boot,
+                     loader, ... (11)
+      loader         the tool that puts an image on the target (14)
+      loader module    host/<loader>.py: 'flash' and 'reset' for one loader
+                     (14, 15)
+      image id       the hash baked into an image; map 08 (14)
+      bench reset    the return of the agent to its start state, from
+                     outside the link (15)
+      collision group, label
+                     hwut's: the tests that share one owner (R-32); the
+                     hosts that have the board (intend 25)
+      caps           hwut's bounds on a choice
+
+    THE WRITER
+      writer         the author of a test application
+      choice         a part of a test application that hwut runs and
+                     compares on its own
+      session        the host's use of an agent from opening the link to
+                     closing it (18)
+      picture        a choice's output, compared against its GOOD file
+      row            a line of the picture that is compared
+      '##' line      a line of the picture that is not compared
+      note           the writer's callable that prints a '##' line (18)
+
+==============================================================================
+3  AXES, LAWS, COUPLINGS
+==============================================================================
+
+    Every rule of this design is a statement about one axis, or one of the
+    couplings below. Any combination of axis values not excluded there is
+    meaningful. The axes and their laws are stated here only; sections 4
+    to 21 specify each axis without repeating its law.
+
+    axis               values                         owner         sect.
+    ----               ------                         -----         -----
+    A agent impl.      verilog, c, python             target/<impl>/    9
+    B time domain      wall, virtual                  entry key        13
+                                                      'time'
+    C transport        serial, tcp, ssh, launch, can  host/link.py     12
+    D loader           quartus, openfpgaloader,       loader module,   14
+                       openocd, esptool, copy, none   entry key
+                                                      'loader'
+    E bench reset      reload, probe, line, reopen,   loader module    15
+                       power                          'reset', entry
+                                                      key 'power'
+    F image identity   id = H(inputs, toolchain);     Makefile,        14
+                       board: equal, differs, absent  map 08
+    G address space    regions * access (section 5)   MAP.txt           5
+    H verb             r, w, x  (p reserved)          PROTOCOL.txt      6
+    J wait contract    mode * LATENCY * timeout *     agent            8
+                       reset length                   parameters,
+                                                      map 0e, 14
+    K outcome of 'x'   00 none, 01 done, 02 timeout,  map 19 [1:0]      7
+                       03 expired
+    L agent life       fresh in {1, 0} * last         map 19 [7], 18    7
+    M reception        reply, other token, noise      host/session.py  10
+    N recovery         acted, not acted, restarted,   host/session.py  10
+                       busy, refused, silent, ended
+    O picture class    row, '##'                      the writer       18
+    Q ownership        collision group * label        hwut (R-32),     16
+                                                      labels
+
+    THE LAW OF EACH AXIS
+
+    A  An agent implementation implements MAP and PROTOCOL; verilog counts its
+       timeout in the clock it shares with the UUT, c and python in ticks.
+    B  In wall time every host wait is bounded in seconds; in virtual
+       time only hwut's caps bound it.
+    C  A transport is an ordered stream of bytes; only a UART on the path
+       has a bit rate ('baud').
+    D  A loader flashes iff the agent's image differs from the built id,
+       and succeeds iff they are equal afterwards.
+    E  After a bench reset the agent is in its start state: last = ff,
+       fresh = 1.
+    F  The id has one source, the hash of the inputs; stale iff the board's
+       id differs.
+    G  A byte operation on a byte that does not permit it is refused.
+    H  'r' never acts; 'w' and 'x' write 'last' before they act; every
+       reply is the content of a read.
+    J  Every wait of the agent ends within 'timeout' counts.
+    K  01 and 02 are behaviour of the UUT; 03 is a failure.
+    L  fresh holds from agent start until the reset write; last is ff only
+       since start.
+    M  Only a verified line with the expected token is a reply; the agent
+       answers only verified lines; everything else is counted.
+    N  Recovery is decided by one idempotent read; nothing is applied
+       twice.
+    O  A row is a function of the stimuli, the wait contract and the UUT.
+    Q  One owner per board; within a collision group the build and the run
+       of one application are adjacent.
+
+    THE COUPLINGS -- every place where two axes depend on each other; all
+    are necessary.
+
+    coupling      statement                                         sect.
+    --------      ---------                                         -----
+    A * K         verilog yields outcomes 00, 01, 02; c and python      9
+                  yield 00, 01, 03 with the poll seam, 00, 01 with
+                  the run seam
+    A * J         only verilog has LATENCY and RESET_CYCLES; c and      9
+                  python report mode 0 (wait for done)
+    J * O         the wait contract is part of every row's meaning:    18
+                  the writer prints it as a row
+    J * J         timeout >= max(LATENCY, RESET_CYCLES); a write        8
+                  below is refused: '! limit'
+    G * deadline  an address may wait: 'x' and the reset write wait    10
+                  up to timeout / clock; every other address answers
+                  at once
+    B * C         time = virtual sets link_margin and boot to inf on   13
+                  any transport
+    C * deadline  a link with 'baud' adds two line times               10
+    C * E         on transports 'launch' and 'ssh' the bench reset is  15
+                  reopening
+    C * D         loader 'copy' requires transport 'ssh'; loader       14
+                  'esptool' uses the serial address as its target
+    D * E         reload: quartus with a .sof, openfpgaloader; probe:  15
+                  openocd; line: esptool; reopen: launch, ssh; power:
+                  any, when 'power' is set
+    L * H         a 'w' or 'x' never carries the token in 'last'        6
+    L * N         reconciliation compares 'last' with the token and    10
+                  with the previous 'last'
+    M * C         every transport is ordered; the token alphabet       12
+                  relies on it
+
+    The column 'sect.' names where the coupling is put to work; the
+    statement stands here only.
+
+==============================================================================
+PART A -- THE PROTOCOL
+==============================================================================
+
+    Sections 4 to 10 are PROTOCOL.txt and MAP.txt: all an implementer of an
+    agent needs.
+
+==============================================================================
+4  THE LINE
+==============================================================================
+
+        b x 0403 *2b95\n
+        | | \__/  \__/
+        | |  |     +-- CRC-16 over "b x 0403"
+        | |  +-------- bytes in address order: 04 03 = 0x0304, little-endian
+        | +----------- verb
+        +------------- token 0..f: the host chooses, the reply echoes it
+
+        b 010700 *8bff\n      the reply: status 01, report 07 00
+
+    LINE   := TOKEN ' ' BODY ' *' CRC '\n'
+    TOKEN  := one hex digit
+    BODY   := words of [a-z0-9]+, or '!' and a word, single spaces between
+    BYTES  := hex digit pairs, contiguous, in address order
+    CRC    := CRC-16/CCITT-FALSE: poly 0x1021, init 0xffff, refin false,
+              refout false, xorout 0; check("123456789") = 29b1;
+              input TOKEN ' ' BODY as transmitted, not ' *';
+              four lowercase hex digits, most significant first
+    length <= 80 bytes, trailer and '\n' included
+
+    NOISE, on both sides counted and never answered: a line whose CRC
+    fails, a line over 80 bytes, '\r', and every byte outside
+    [a-z0-9 !*\n]. An empty line flushes a partial line.
+
+==============================================================================
+5  G -- THE ADDRESS SPACE
+==============================================================================
+
+    A linear, byte-addressed space; a multi-byte value is little-endian.
+
+    offset len  access  name      content
+    ------ ---  ------  ----      -------
+    00     4    r       magic     'hwut' (68 77 75 74 on the wire)
+    04     4    r       proto     1
+    08     4    r       image     IMAGE_ID (section 14)
+    0c     1    r       stim len  SW, 1..32
+    0d     1    r       rep len   RW, 1..32
+    0e     1    r       mode      [0] 1: sample LATENCY cycles after apply;
+                                      0: wait for done to rise
+                                  [1] 1: run seam (c, python); 0: poll
+    0f     1    r       discard   lines discarded since start, stops at ff
+    10     4    r       clock     Hz of the count 'timeout' uses
+    14     4    rw      timeout   counts a wait may take (section 8)
+    18     1    r       last      token of the last 'w' or 'x'; ff after
+                                  start
+    19     1    r       status    [1:0] outcome, [7] fresh (section 7)
+    1a     RW   r       report    the UUT's outputs
+    3f     1    w       reset     any write resets the UUT          waits
+    40     SW   rw      stim      the UUT's inputs
+    100    ..   rw      bus       optional: the UUT's own registers, or
+    ..ffff                        the MCU's memory; no wait states; word
+                                  buses take aligned 4-byte runs
+    10000.. -   -       xfer      reserved (o-5)
+
+    REFUSED with '! limit': every other address, a read of a w-only byte,
+    a write of an r-only byte, a length of 0, a read of more than 35
+    bytes, an access a word bus cannot take.
+
+    THE SESSION IN ADDRESSES
+
+    hello    r 0 1a    (00 .. 19: identity, contract, last, status)
+    reset    w 3f 01
+    vector   x <stim>
+    recover  r 18 2+RW (last, status, report)
+
+==============================================================================
+6  H -- THE VERBS
+==============================================================================
+
+    host --> agent       agent --> host              acts
+    r <addr> <len>       the bytes of r addr len     no
+    w <addr> <bytes>     the bytes of r 19 1         yes
+                         (status, after the write)
+    x <bytes>            the bytes of r 19 1+RW      yes: the apply and the
+                         (status, report)            wait of section 7
+    p                    ! unknown                   reserved
+
+    REFUSALS -- the command did not act; sent only for verified lines:
+
+        ! unknown   verb not known
+        ! syntax    malformed body
+        ! limit     section 5; and 'x <bytes>' with a byte count other
+                    than SW
+        ! busy      an 'x' or the reset write is pending
+
+==============================================================================
+7  K, L -- OUTCOME AND AGENT LIFE
+==============================================================================
+
+    status (19)   [1:0] outcome of the last 'x'   [7] fresh
+
+    outcome  00  none: no 'x' since start or since the reset write
+             01  done: the report holds the UUT's answer
+             02  timeout: no done within 'timeout' UUT cycles -- data
+             03  expired: no done within 'timeout' ticks -- a failure
+
+    'x <bytes>', inside the agent:
+
+        "b x 0403"
+            |
+            +--> last   <- b
+            +--> stim   <- 04 03
+            +--> strobe apply, one cycle -----------> UUT
+            +--> wait (section 8) --> outcome <- 01 | 02 | 03
+            +--> reply: status, report  "b 010700"
+
+    THE RESET WRITE: last <- token; UUT reset (section 8); outcome <- 00;
+    fresh <- 0; report unchanged; reply: status.
+
+==============================================================================
+8  J -- THE WAIT CONTRACT
+==============================================================================
+
+    mode 0   the agent waits for done to rise after the apply strobe
+    mode 1   done is not used; the report is sampled LATENCY cycles after
+             the strobe
+    timeout  counts any wait may take: an 'x', a reset
+    reset    verilog: uut_rst high for RESET_CYCLES; c, python: complete
+             when uut_reset() returns
+
+    stim and report are stable from the strobe to the sample.
+
+    The wait contract is mode, LATENCY, timeout and its unit.
+
+==============================================================================
+9  A -- THE AGENT IMPLEMENTATIONS
+==============================================================================
+
+    VERILOG (target/verilog/):
+
+              +---------------------- agent -------------------------+
+    uart_rx ->| phy > line > CRC > parser > map -+- stim[SW*8] ------+-> UUT
+    uart_tx <-| phy < line < CRC <---------------+  apply -----------+->
+              |                                  |  uut_rst ---------+->
+              |  timeout counter (clk)           +<- done -----------+--
+              |                                  +<- report[RW*8] ---+--
+       clk -->|  bus master (optional):                              |
+              |    addr wdata we re rdata ---------------------------+<> bus
+              +------------------------------------------------------+
+       parameters  SW, RW (1..32, refused otherwise at synthesis),
+                   IMAGE_ID, CLOCK_HZ, TIMEOUT, LATENCY (0: mode 0),
+                   RESET_CYCLES, BAUD
+       phy_stdio.v replaces phy_uart.v by $fgetc / $fwrite and calls
+       $fflush after every '\n'
+
+    C (target/c/) and PYTHON (target/python/):
+
+       hooks, from the port     int      agent_getc(void);  /* -1: none */
+                                void     agent_putc(int c); /* '\n' flushes */
+                                uint32_t agent_tick(void);
+                                /* getc reads an interrupt- or DMA-fed ring
+                                   of at least two lines */
+       seam, from the writer    void uut_reset(void);   /* the UUT only */
+         run (default)          void uut_run(const uint8_t *stim,
+                                             uint8_t *report);
+                                /* returns when done; may block */
+         poll                   void uut_start(const uint8_t *stim);
+                                int  uut_done(uint8_t *report); /* 1: done */
+       main loop                for (;;) agent_poll();
+       The writer provides one of the two seams; the agent reports it in
+       mode [1]. With the run seam the agent is deaf while uut_run runs:
+       no '! busy', no outcome 03; a call that never returns is "agent
+       silent" (section 10). With the poll seam the main loop never
+       blocks.
+       'clock' = the rate of agent_tick;
+       elapsed = (uint32_t)(agent_tick() - start), wrap-around tolerated
+
+    Outcomes and mode per implementation: couplings A * K and A * J
+    (section 3).
+
+    Every implementation passes the 'x' oracle of
+    target/verilog/TEST/test-agent.py: the reply to 'x' equals
+    the bytes of the following 'r 19 1+RW'.
+
+==============================================================================
+10  M, N -- RECEPTION AND RECOVERY
+==============================================================================
+
+    RECEPTION (host): a verified line with another token is a late reply,
+    noted and discarded.
+
+    DEADLINE, per command:
+
+        deadline = waits + line_time + link_margin
+        waits      timeout / clock    'x' and the reset write; else 0
+        line_time  2 * 80 * 10 / baud  when the entry has 'baud'; else 0
+        link_margin                    the entry's (section 13)
+
+    THE LADDER
+
+        no reply by the deadline:
+          r       --> resend, new token
+          w, x    --> r 18 2+RW --+-- last = token          --> acted: the
+                                  |                             bytes after
+                                  |                             last are the
+                                  |                             reply
+                                  +-- last = previous last  --> not acted:
+                                  |                             resend, new
+                                  |                             token
+                                  +-- anything else         --> restarted
+        fresh = 1 in any status after the session's reset --> restarted
+        ! busy                  --> wait one deadline, resend; counts as a
+                                    failure
+        ! unknown|syntax|limit  --> raise
+        end of file (launch,    --> silent
+        ssh)
+        3 failures in a row     --> silent; any reply with the command's
+                                    token resets the count
+
+        restarted, silent --> close the link, bench reset (section 15),
+                              reopen, hello; then raise: the choice fails
+
+    A LOST REPLY -- acted:
+
+    6 x ffff *23d9 ----------------------> last := 6, outcome 01,
+          <---- 6 01fe03 *3ddb               report fe 01
+                crc("6 01fe03") = 1d99 != 3ddb: noise
+    7 r 18 4 *5e0c ---------------------->
+          <---- 7 0601fe01 *edd4           last 6 = token: the reply is
+                                           01fe01
+
+    A LOST COMMAND -- not acted (the previous 'x' had token 2):
+
+    3 x 0403 *a722 -------X
+    4 r 18 4 *9679 ---------------------->
+          <---- 4 02010700 *eff0           last 2 = previous: resend
+    5 x 0403 *27e9 ---------------------->
+          <---- 5 010700 *8783
+
+    A REBOOT -- the agent restarted since the session's reset:
+
+    8 x 0403 *718d ---------------------->
+          <---- 8 810700 *dca5             fresh = 1: restarted
+
+==============================================================================
+PART B -- THE BENCH
+==============================================================================
+
+==============================================================================
+11  THE BENCH ENTRY: 'bench { }'
+==============================================================================
+
+    hwut-root.conf:
+
+    bench {
+      max10 { serial = "/dev/serial/by-id/usb-FTDI_..."  baud = 115200
+              low_latency = true  boot = 1.0
+              loader = quartus  cable = "USB-Blaster [1-3]" }
+      disco { serial = "/dev/serial/by-id/usb-STM..."  baud = 115200
+              boot = 3.0
+              loader = openocd  cfg = "board/stm32f4discovery.cfg" }
+      esp   { serial = "/dev/serial/by-id/usb-Silicon..."  baud = 115200
+              dtr = false  rts = false  boot = 2.0
+              loader = esptool  image_offset = 0 }
+      pi    { host = "pi@board"  boot = 30.0
+              loader = copy  agent = "hwut-agent/agent.py" }
+      sim   { launch = "vvp TMP/uut.vvp"  time = virtual  boot = inf
+              loader = none }
+    }
+
+    KEYS -- closed; an unknown key is refused
+
+    key           axis  meaning
+    ---           ----  -------
+    serial        C     the UART device
+    tcp           C     host:port
+    host          C     ssh target
+    launch        C     the command whose stdio is the link
+    can           C     CAN interface (socketcan name, e.g. can0)
+    can_ids       C     "<host->agent id>:<agent->host id>", hex
+    baud          C     bit rate of the UART on the path
+    dtr, rts      C     levels set before open; false = deasserted, the
+                        pin high
+    low_latency   C     FTDI latency timer 1 ms
+    link_margin   C, B  seconds added to every deadline, or inf
+    time          B     wall (default) | virtual
+    boot          B     seconds the hello may take, or inf; mandatory
+    loader        D     quartus | openfpgaloader | openocd | esptool |
+                        copy | none
+    cable         D     quartus: the cable as jtagconfig lists it
+    board         D     openfpgaloader: the board name it knows
+    cfg           D     openocd: the board configuration
+    image_offset  D     esptool: offset of the merged image
+    agent         C, D  ssh and copy: the agent's path on <host>
+    power         E     a command that power-cycles the board
+
+    VALIDATION. hwut validates a map of maps of scalars;
+    entry.get(name) validates the KEYS and the one-transport rule
+    (section 12), and refuses a placeholder: "bench max10: fill in
+    serial". An inner root's benches are its own (D-56). The device paths
+    stand for every host that carries the bench's label.
+
+    DEFAULTS. hwut.sanitize.bench.defaults writes such a block into a
+    hwut-root.conf that has none, with '<device>', '<cfg>', '<host>'
+    placeholders; a tree with a block is left as it is and told so; one
+    line per bench written.
+
+==============================================================================
+12  C -- TRANSPORT, AND OPENING A SESSION
+==============================================================================
+
+    transport  entry key            the link
+    ---------  ---------            --------
+    serial     serial = "<device>"  the UART; 'baud', 'dtr', 'rts',
+                                    'low_latency' apply
+    tcp        tcp = "host:port"    a socket (ser2net, a JTAG-UART bridge);
+                                    'baud' applies when a UART is behind it
+    ssh        host = "<host>"      ssh -T -o BatchMode=yes <host> exec
+                                    <agent>
+    launch     launch = "<command>" a process on stdio (vvp, qemu
+                                    -serial stdio)
+    can        can = "<interface>"  ISO-TP (ISO 15765-2) over CAN or CAN FD
+               can_ids = "7e0:7e8"  through python-can; the two ids carry
+                                    one byte stream each way; ordered, a
+                                    line is one or more ISO-TP messages
+
+    An entry has exactly one of the five keys. link.open(entry) is
+    the only constructor; the test and the loader modules both use it.
+
+    OPENING:
+
+    host                                         agent
+    serial: DTR/RTS set before open, exclusive, low latency, input flushed
+    '\n'
+    t r 0 1a -------------------------------->   t: a random token
+          <-- noise, stale replies, boot log      counted
+          <-- t <26 bytes>                        the reply: token t, the
+                                                  magic
+
+    No reply within 'boot' --> "no agent". The hello is repeated every
+    deadline on serial and tcp, sent once on ssh and launch. A discarded
+    line equal to the line sent is counted as an echo: "no agent: link
+    echoes".
+
+    From the hello: proto != 1 --> "protocol <n>"; image != image_id -->
+    "stale agent"; else noted: proto, image, lengths, mode, clock,
+    timeout, discarded lines, bytes discarded by the host.
+
+==============================================================================
+13  B -- TIME DOMAIN
+==============================================================================
+
+    time = wall      link_margin and boot are seconds
+    time = virtual   link_margin = boot = inf; the choice is bounded by
+                     hwut's caps (vvp; qemu with -icount)
+
+    defaults   link_margin  serial 50 ms, tcp 200 ms, ssh 500 ms,
+                            launch 1 s
+               boot         mandatory in every entry
+
+==============================================================================
+14  D, F -- LOADER AND IMAGE IDENTITY
+==============================================================================
+
+    inputs --> TMP/image_id --> uut.sof --> [board runs it?] --no--> loader
+       hash, compared               |yes                              |
+                                    +--> nothing to do                v
+                                                      [board runs it now?]
+                                                        no --> BUILD FAIL
+
+    THE MAKEFILE (the writer's); the rule for TMP/image_id is the shared
+    fragment host/image_id.mk, included:
+
+    RE        := $(REMOTE_EXECUTION)
+    INPUTS    := $(sort $(wildcard src/*.v $(RE)/target/verilog/*.v) \
+                        uut.qsf uut.sdc Makefile)
+    TOOLCHAIN := quartus_sh --version
+    include $(RE)/host/image_id.mk
+
+    # host/image_id.mk:
+    TMP/image_id: FORCE
+    	mkdir -p TMP
+    	(cat $(INPUTS); $(TOOLCHAIN)) | sha256sum | cut -c1-8 > $@.new
+    	cmp -s $@.new $@ || mv $@.new $@
+    	test -f TMP/image_id.vh -a ! TMP/image_id.vh -ot $@ || \
+    	  echo "\`define IMAGE_ID 32'h$$(cat $@)" > TMP/image_id.vh
+    uut.sof: TMP/image_id
+    	quartus_sh --flow compile uut
+    flash: uut.sof
+    	python3 -m remote_execution.host.quartus \
+    	        flash max10 uut.sof $$(cat TMP/image_id)
+    .PHONY: flash FORCE
+
+    INPUTS names everything that changes the image; TOOLCHAIN names the
+    compiler's version command. TMP/image_id changes only when the hash
+    does.
+
+    THE TEST:  @hwut { build = "make flash" }
+
+    THE LOADER MODULE, host/<loader>.py, the same for every loader:
+
+        python3 -m remote_execution.host.<loader> \
+                flash <bench> <image> <image-id>
+          open (section 12) --> port held by another process: "bench
+                                busy"; device absent: "no device";
+                                exit 1; nothing flashed
+          hello: image = <image-id> --> "already on <bench>", exit 0
+          else: close; flash; reopen; hello within 'boot';
+                exit 0 only if the image is now running
+
+    loader   flash
+    ------   -----
+    quartus  quartus_pgm -c <cable> -m jtag -o "p;<image>"  (.pof: "pv;")
+    openfpgaloader  openFPGALoader -b <board> <image>  (SRAM)
+    openocd  openocd -f <cfg> -c "program <image> verify reset exit"
+    esptool  esptool --port <serial> write_flash <image_offset> <image>
+             (a merged image); run
+    copy     scp <image> and the id file into a temporary directory on
+             <host>, then mv into <agent>'s directory
+    none     -- (launch: the image is the command's argument)
+
+    case                 outcome
+    ----                 -------
+    inputs changed       new id; compile; flash; confirm
+    nothing changed      no flash
+    someone reflashed    flash; confirm
+    port busy            BUILD FAIL "bench busy"
+    device absent        BUILD FAIL "no device"
+    board unpowered      BUILD FAIL (no agent; the loader fails)
+    flash did not take   BUILD FAIL
+
+==============================================================================
+15  E -- BENCH RESET
+==============================================================================
+
+        python3 -m remote_execution.host.<loader> reset <bench> [<image>]
+
+    always with the link closed.
+
+    kind     action
+    ----     ------
+    reload   quartus, openfpgaloader: configure <image> again
+    probe    openocd -f <cfg> -c "init; reset run; exit"
+    line     esptool --port <serial> --after hard_reset run
+    reopen   launch, ssh: end and restart the process
+    power    any loader, when the entry has 'power': run it first
+
+==============================================================================
+16  Q -- OWNERSHIP
+==============================================================================
+
+    The tests of one board are a collision group (R-32); a label keeps
+    them on hosts that have the board.
+
+    CONDITION ON HWUT: no other build of the group runs between the build
+    and the run of one application. Delivery step 4 verifies it.
+
+    Two roots holding one board are detected only as "stale agent" or
+    "bench busy".
+
+==============================================================================
+17  BENCH REQUIREMENTS
+==============================================================================
+
+    port names     /dev/serial/by-id/..., never /dev/ttyUSB<n>
+    the agent UART carries nothing else: no console, no log, no getty
+    micro-ROS      firmware whose UART belongs to micro-ROS gives the agent
+                   a second UART, a USB-CDC port or a CAN id pair
+    U-Boot         on a board whose console shares the agent UART,
+                   autoboot does not wait for a key
+    ModemManager   ignores the port: udev ENV{ID_MM_DEVICE_IGNORE}="1"
+    CDC-ACM        a port that vanishes on target reset is reopened after
+                   the reset, within 'boot'
+    FPGA pins      the agent's TX pin has a weak pull-up in the .qsf
+    ssh            key login
+
+    TIMEOUTS
+
+    what                      default            set by
+    ----                      -------            ------
+    agent 'timeout'           TIMEOUT parameter  'w 14 <counts>'
+    command deadline          section 10         link_margin
+    hello window              --                 boot (mandatory)
+    failures before silent    3                  session(failures=)
+    loader                    120 s              module argument
+    the whole choice          hwut's caps        @hwut { caps { } }
+
+==============================================================================
+PART C -- THE WRITER
+==============================================================================
+
+==============================================================================
+18  O -- SESSION SCOPE AND THE PICTURE
+==============================================================================
+
+    A session is one choice: it opens, resets, applies, closes.
+    session.open() opens the link and says hello; the writer
+    resets; Session.vector() and Session.write() raise unless this session
+    has reset; leaving the 'with' block closes the link.
+
+    The writer prints the wait contract as a row, Session.contract().
+    Everything else the session knows is a '##' line, delivered through
+    'note'.
+
+    ## agent: proto 1  image 3f9a07c1  stim 2  report 2  50 MHz
+    ## discarded 12 bytes, 0 lines
+    contract: sample 1 cycle after apply, timeout 10000000 cycles
+    ## stim = a[15:8] b[7:0]   report = sum[8:0]
+    0304 007
+    ff01 100
+    ffff 1fe
+    <hwut-end>
+
+    Session.vector() returns the report as an int, or session.TIMEOUT on
+    outcome 02; TIMEOUT formats as 'timeout' under any format spec.
+    Outcome 03 raises. A recovery adds a '##' line where it happened and
+    leaves the rows unchanged. A read at the bus (100 and above) is
+    followed by 'r 19 1' and checked for fresh.
+
+==============================================================================
+19  THE TEST, AS THE WRITER WRITES IT
+==============================================================================
+
+    # @hwut { build = "make flash"  collision = [ test-max10-timing.py ] }
+    import sys
+    from hwut_runner import HwutRunner
+    from remote_execution.host import entry, session
+
+    VECTORS = [(0x03, 0x04), (0xff, 0x01), (0xff, 0xff)]
+
+    def note(text): print("##", text)
+
+    def adder():
+        bench = entry.get("max10")
+        image = int(open("TMP/image_id").read(), 16)
+        with session.open(bench, image_id=image, note=note,
+                          image="uut.sof") as s:
+            s.reset()
+            print(s.contract())
+            print("## stim = a[15:8] b[7:0]   report = sum[8:0]")
+            for x, y in VECTORS:
+                print(f"{x:02x}{y:02x} {s.vector((x << 8) | y):03x}")
+
+    HwutRunner(sys.argv, "Adder on MAX 10;", {"adder": adder}).run()
+
+    Nothing runs at import: '--hwut-info' needs no build and no board.
+    The session finds the bench reset by the entry's 'loader'. The writer
+    never sees a token, a CRC, a byte order or a recovery.
+
+==============================================================================
+20  A SESSION ON THE WIRE
+==============================================================================
+
+    host                                  agent           picture
+    ----                                  -----           -------
+    [build: make flash, done before the run]
+    open, '\n'
+    9 r 0 1a *6679 ---------------------->
+          <... noise ... discarded, counted
+       <-- 9 6877757401000000c1079a3f0202010080f0fa0280969800ff80 *8c51
+           magic, proto 1, image 3f9a07c1, stim 2,        ## agent: ...
+           report 2, mode 1, 0 lines discarded,           ## discarded ...
+           50 MHz, timeout 10000000, last ff, fresh
+    a w 3f 01 *e167 --------------------->  UUT reset
+       <-- a 00 *1ea6                       outcome 00, fresh 0
+                                                          contract: ...
+                                                          ## stim = ...
+    b x 0403 *2b95 ---------------------->  apply 0x0304
+       <-- b 010700 *8bff                                 0304 007
+    c x 01ff *29ff ---------------------->  apply 0xff01
+       <-- c 010001 *599d                                 ff01 100
+    d x ffff *671b ---------------------->  apply 0xffff
+       <-- d 01fe01 *7919                                 ffff 1fe
+    close                                                 <hwut-end>
+
+==============================================================================
+21  THE SIMULATION TWIN
+==============================================================================
+
+    test-max10.py                       test-sim.py
+    -------------                       -----------
+    build = "make flash"                build = "make sim"   (iverilog)
+    entry("max10"): serial, wall        entry("sim"): launch, virtual
+    label max10-connected               no label: runs everywhere
+              |                                   |
+              +---- from vectors import adder ----+   the shared code
+
+    Two applications, two GOODs; nothing in hwut chooses between them. The
+    agent and the UUT are the same Verilog; only the phy differs.
+
+==============================================================================
+22  SYSTEMS WITH THEIR OWN API: HIL, ROS 2, ECUS, INSTRUMENTS
+==============================================================================
+
+    A system with its own real-time target and host API -- dSPACE through
+    ASAM XIL, NI VeriStand -- with its own middleware -- ROS 2, SOME/IP
+    -- or with its own protocol -- an ECU through XCP or UDS, an
+    instrument through VISA and SCPI -- takes the
+    place of the agent, the line, the map and recovery (sections 4 to
+    10). The rest stays:
+
+    ours                               theirs
+    ----                               ------
+    build: deploy the model or system  the real-time target, its loop rate
+      definition; its checksum is the  the stimulus, executed on the target
+      image identity, printed as '##'  the capture, triggered and
+      and compared                       timestamped on the target
+    ownership: collision group, label  the host API and its errors
+    session: one choice = one run
+    picture: rows and '##'
+
+    THE SESSION, for every such system:
+
+        configure -> arm stimulus -> arm capture -> start -> wait until the
+        (load,       on the target    with a trigger         capture is
+        deploy)                       in model time          complete
+                                                               |
+        rows <-- capture.rows <-- fetch <-- stop <--------+
+
+    RULES
+      rows come only from captured, target-timestamped samples, at stated
+        model times; never from a read during the run
+      every value has a stated resolution and unit, or is matched by a
+        pype quantity
+      the system's own verdict (a sequence's return value) is a row
+      an error of the host API fails the choice; its text is a '##' line
+
+    ROS 2: the UUT is a node or a stack; the test application is a node
+    itself (rclpy). It publishes stimuli and subscribes to results,
+    recording each message with its header stamp.
+      simulation  Gazebo (or another simulator) publishes /clock;
+                  use_sim_time = true for every node; the bench entry has
+                  time = virtual; the simulator runs in lockstep, so the
+                  stamps are model time and the RULES above hold
+      real robot  stamps are wall time: rows hold final states and the
+                  stack's own verdicts only; every timed value is a '##'
+                  line
+      build       the colcon workspace; its image identity is the hash of
+                  the package sources and the ROS distribution
+      provenance  ROS distribution, RMW implementation, ROS_DOMAIN_ID as
+                  '##' lines; each test uses its own ROS_DOMAIN_ID
+
+    AUTOMOTIVE ECUS
+      XCP         measurement and calibration (pyxcp): DAQ lists bound to
+                  ECU events are the capture, their ECU timestamps the
+                  model time; the A2L file names the variables; the A2L's
+                  EPK is the image identity
+      UDS         diagnostics, ISO 14229 (udsoncan, over CAN ISO-TP or
+                  DoIP): each request and its positive or negative
+                  response is a row; the session (default, extended) and
+                  the security access level are part of the row's
+                  meaning, printed as rows; timing parameters are '##'
+      SOME/IP     Adaptive AUTOSAR services: the ROS 2 rules apply --
+                  rows from timestamped messages under simulated time,
+                  final states and verdicts on a real network
+      AUTOSAR Classic SWCs are reached through the C agent: the writer's
+      uut_run calls the component's RTE ports (Rte_Write, Rte_Call,
+      Rte_Read); on the host the same seam runs against RTE stubs.
+
+    INSTRUMENTS (SCPI): '*IDN?' is a '##' line; a session starts with
+    '*RST' and '*CLS'; a measurement is 'INIT', '*OPC?', 'FETC?'; the
+    error queue is read until '+0' after every measurement, and any other
+    entry fails the choice. The host never sleeps; it waits on '*OPC?'.
+
+    capture.rows(samples, times, fmt) -> [str]
+      samples  (t, v1, v2, ...) in model time, ascending
+      times    the model times to report
+      fmt      the row format, e.g. "t={:.3f} rpm={:.1f} torque={:.1f}"
+      each row holds the last sample at or before its time; a time before
+      the first or after the last sample raises
+
+    The bench README carries seven worked test applications: ASAM XIL
+    (dSPACE), VeriStand, ROS 2 with Gazebo, XCP, UDS, SOME/IP, SCPI
+    through pyvisa; and one uut_run over RTE ports.
+
+==============================================================================
+PART D -- DELIVERY
+==============================================================================
+
+==============================================================================
+23  PROTOTYPES
+==============================================================================
+
+    A prototype is a directory that runs end to end: a writer copies it,
+    replaces the UUT and fills in the bench entry. Together they take
+    every value of axes A to E, the two wait modes and the two seams.
+
+    proto           agent    time     transport  loader          reset
+    -----           -----    ----     ---------  ------          -----
+    iverilog        verilog  virtual  launch     none            reopen
+    de10-lite       verilog  wall     serial     quartus         reload
+    arty-a7         verilog  wall     serial     openfpgaloader  reload
+    nucleo-f4       c        wall     serial     openocd         probe
+    esp32-devkitc   c        wall     serial     esptool         line
+    qemu            c        virtual  launch     none            reopen
+    linux-ssh       python   wall     ssh        copy            reopen
+    can-nucleo      c        wall     can        openocd         probe
+    ros2-gazebo     --       virtual  --         none            --
+
+    proto           UUT                mode / seam
+    -----           ---                -----------
+    iverilog        adder              sample, LATENCY 1
+    de10-lite       divider            wait for done
+    arty-a7         adder              sample, LATENCY 1
+    nucleo-f4       C function         run seam
+    esp32-devkitc   C function         poll seam
+    qemu            nucleo-f4's code   run seam
+    linux-ssh       Python function    --
+    can-nucleo      C function         run seam (nucleo-f4 over CAN)
+    ros2-gazebo     a ROS 2 node       section 22: rclpy, /clock
+
+    Each holds: README.txt (board, wiring, host setup), the Makefile with
+    host/image_id.mk, the top level or port, the bench entry as a
+    hwut-root.conf snippet, the test application, its label. A GOOD is
+    recorded where the board stands; iverilog and qemu record theirs on
+    every host. tcp and power are entry variants, documented in the
+    de10-lite README.
+
+==============================================================================
+24  FILES
+==============================================================================
+
+    test_writing_support/remote_execution/     a package; the writer puts
+                                               test_writing_support on
+                                               PYTHONPATH
+      README.txt          sections 1, 2, 11 to 22
+      PROTOCOL.txt        sections 2, 3, 4, 6, 10
+      MAP.txt             sections 2, 5, 7, 8, 9
+
+      host/               Python, the host modules
+        session.py        open(entry, image_id=None, image=None, note=None,
+                            failures=3) -> Session: read, write, vector,
+                            reset, contract; TIMEOUT
+        link.py           open(entry) -> Link: read_line(deadline),
+                            write_line, close
+        entry.py          get(name) -> dict, validated (section 11)
+        capture.py        rows(samples, times, fmt) (section 22)
+        quartus.py        flash(entry, image, image_id),
+        openfpgaloader.py reset(entry, image=None) -- the same two in
+        openocd.py        every loader module; each also
+        esptool.py        'python3 -m remote_execution.host.<loader>
+        copy.py           flash | reset'
+        image_id.mk       the image-id rule (section 14)
+        TEST/test-frame.py    session and link against a fake link:
+                              corrupt, lost command, lost reply, late,
+                              echoed, stale, restarted, busy, silent, 'p'
+        TEST/test-capture.py  rows at, between and outside the samples
+
+      target/             one directory per agent implementation
+        verilog/          agent.v, phy_uart.v, phy_stdio.v (section 9);
+                          TEST/test-agent.py under iverilog: the 'x'
+                          oracle
+        c/                agent.c, agent.h; ports/<family>/ (section 9)
+        python/           agent.py, the C seam
+
+      proto/<name>/       section 23
+
+    A module function RETURNS what happened as one string and raises on
+    failure. No module prints. No module reads an entry the caller did not
+    name.
+
+==============================================================================
+25  DELIVERY ORDER
+==============================================================================
+
+    1  PROTOCOL.txt, MAP.txt; host/session.py and host/link.py against a
+       fake link (host/TEST/test-frame.py)
+    2  target/verilog/; target/verilog/TEST/test-agent.py under
+       iverilog: the agent proven on every host; its size on a 10M50
+       measured and stated in MAP.txt
+    3  host/entry.py, host/image_id.mk; proto/iverilog end to end;
+       Chapter 11's adder as the first writer
+    4  host/quartus.py; proto/de10-lite; the condition of
+       section 16 verified; the MAX 10 run on the author's bench, its GOOD
+       recorded there, label 'max10-connected'; a supply dip and a reset
+       injected deliberately, their '##' lines recorded
+    5  target/c/, target/python/; host/openocd.py, esptool.py, copy.py;
+       proto/qemu,
+       proto/nucleo-f4, proto/esp32-devkitc, proto/linux-ssh; the same
+       injections on the ESP32
+    6  the validator's 'bench { }'; hwut.sanitize.bench.defaults
+    7  host/capture.py and its test; README section 22 with
+       the three worked examples, each checked against the vendor's
+       current API documentation
+    8  host/openfpgaloader.py; proto/arty-a7
+    9  the can transport in host/link.py and target/c/ports; proto/
+       can-nucleo
+    10 proto/ros2-gazebo; README section 22's ROS 2 example, checked
+       against the current ROS 2 LTS
+    11 README section 22's XCP, UDS, SOME/IP and RTE examples, each
+       checked against the library's current documentation

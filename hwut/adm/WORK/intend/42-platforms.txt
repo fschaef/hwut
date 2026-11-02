@@ -1,0 +1,474 @@
+==============================================================================
+intend/42-platforms -- A BUBBLE THAT RUNS ELSEWHERE: A CONTAINER, A MACHINE
+                       WITH A BOARD, ANOTHER OPERATING SYSTEM
+==============================================================================
+
+COMPONENTS CONCERNED: engine/orchestrator (exploration: the walk into a
+                      bubble; run: handing a bubble to its platform),
+                      engine/protocol (the stream a far run sends back),
+                      engine/bookkeeper (which platform measured a verdict),
+                      engine/orchestrator/plan (the wish and its '-p'),
+                      services (the faces that run; 'hwut.dev.podman.*'),
+                      adm/container (the images),
+                      support/ (the first bubble to use it).
+SPEC:                 spec/42-platforms (the first release), plan/42-platforms;
+                      every fork is ruled (rulings 1-22).
+RAISED:               2026-11-01/02. The author's run of 'support/' on his
+                      machine: every demonstration whose toolchain was
+                      absent ended in a cascade of handler NOTEs, exit 127
+                      or 2 (services E-218). "Let's consider having a
+                      switch in the hwut-root.conf specifying that the
+                      bubble is to be executed by a container."
+
+SOME TESTS ARE TRUE ONLY ON A PLATFORM. The test writing support needs
+seventeen toolchains; a HIL test needs the PC its board is plugged into; a
+port to another operating system needs that system. Today a person either
+has the platform where hwut runs, or the run is red for it -- the
+platform's fault read as the software's (intend/25). E-218 lists what the
+support needs and builds an image that has it; nothing yet runs a part of
+the tree in that image without a person entering it by hand
+('hwut.dev.podman.enter', E-134).
+
+DONE CHANGES THIS: a bubble's 'hwut-root.conf' says WHERE the bubble runs.
+A run from anywhere above dives into it as E-200 rules, and the platform
+runs it there; its cases come back into the same report, its verdicts
+into the same book, marked with the platform that measured them. The
+tests inside know nothing of it.
+
+==============================================================================
+RULED (the author, 2026-11-02)
+==============================================================================
+ 1  A TEST IS NOT AWARE OF ITS PLATFORM. "Individual tests should not be
+    aware of the fact that they are run in a container. hwut-root.conf
+    should manage everything." No header key, no 'hwut.conf' word, no
+    variable a test must read: the same directory, the same files, the
+    same environment as a local run.
+
+ 2  THE WORD IS 'platform', AND IT IS GENERAL. "The attribute should maybe
+    be called 'platform' such that we have bubbles for container, for HIL
+    execution, and different operating systems."
+
+ 3  THE BUBBLE IS THE UNIT (E-200). A platform is said by a bubble's own
+    'hwut-root.conf'; the bubble is what it governs.
+
+    CONSEQUENCES READ OUT OF IT -- strike any that over-reads:
+    - A tree's top root may say 'platform' too: the whole tree then runs
+      there. Nothing makes the top root special.
+    - Inside the platform the switch is not obeyed again: the run there IS
+      the bubble's run.
+    - Platform dependence is said by the bubble's 'hwut-root.conf' (ruling
+      9), not by labels; intend/25 ruling 1 stays for what lives in no
+      platform bubble.
+    - The 'needs = [...]' of a directory, raised beside E-218, is
+      WITHDRAWN: intend/25 ruling 1 rejected its kin ('requires {
+      programs }'), and a platform answers the question it asked.
+
+ 4  ONE BLOCK WITH A KIND (o-1 (a), ruled 2026-11-02: "yes, that makes
+    sense"). 'platform { kind = "container" ... }' -- INTERNALLY TAGGED, the
+    convention of HOCON's own readers (pureconfig's 'type' field) and of
+    hwut's own 'build { framework = "make" ... }'. Two kinds cannot be
+    written at once; a key the named kind does not know is refused by
+    name. The tag is 'kind'.
+
+ 5  ONE START RUNS THE WHOLE BUBBLE (o-2 (a), ruled 2026-11-02). A platform
+    is reached once per hwut run that dives into the bubble, and runs every
+    case of it the wish selects; the bubble's book is written there by one
+    run. Not one start per test application.
+
+ 6  NO ABSOLUTE PATH IN WHAT A RUN RECORDS (o-3 (a), ruled 2026-11-02):
+    "absolute paths do not make any sense in a software that is
+    migrate-able." A nominal, a book, an OUT file and a coverage record
+    name places relative to the bubble; a platform of another system
+    ('tree = "C:/hwut"') then needs no mapping on the way back.
+    MEASURED 2026-11-02 on 08217f1 + bundles 31..34: 161 GOOD directories;
+    no nominal holds the path of the tree it was recorded in, no book an
+    absolute path. Six nominals print an absolute path as SUBJECT matter
+    (a keyed viewer's path patterns '/tmp/a/b', a she-bang's
+    '/usr/bin/env', a completion's example '/opt/hwut/bin') -- the
+    determinism law (O-30) already allows that; the ruling is about the
+    recording's place.
+    CONSEQUENCES -- strike any that over-reads:
+    - The rule is made checkable where it can be: a nominal or book that
+      holds the recording tree's own absolute path is a fault, found by
+      the census (the tree's path is known at record time).
+    - The coverage database and the traces are read for absolute paths
+      when the first 'host' or 'vm' platform is built, not before.
+
+ 7  WHAT COMES BACK IS WHAT A RUN WRITES, PRODUCED FILES INCLUDED (o-4 (a),
+    ruled 2026-11-02: "(a) but ... files which are produced by the test
+    runs, those too should be there and visible"). MEASURED with
+    'hwut.play shop.py report' (support/demo/python/TEST): a play leaves
+    OUT/ (the stdout candidate, the produced output file 'stock.csv' taken
+    as 'OUT/shop.py--report.stock.csv', the '.err' witness) and TMP/ (the
+    recording's freshness sidecar -- by whom, when --, scratch, session,
+    traces, wallflowers); a run adds 'GOOD/book.csv' and the coverage
+    record. Sources travel one way only.
+    CONSEQUENCES -- strike any that over-reads:
+    - Back comes EVERY file the far run made or changed in the bubble --
+      OUT/, TMP/, the book, the coverage record, and a file a test wrote
+      beside its sources that nothing declares (a wallflower, named in
+      'TMP/wallflowers.txt' as after a local run). A file that is a SOURCE
+      here is never overwritten: a test that rewrote one is named, as a
+      fault. (For kinds that sync back: ruling 22.)
+    - Faces that RUN a test ('hwut.run', 'hwut.play') dive to the
+      platform; faces that READ the recording ('hwut.accept', 'hwut.diff',
+      'hwut.merge') run here, on what came back -- so a nominal is written
+      here and never travels back.
+
+ 8  ONE BUBBLE, MORE THAN ONE PLATFORM (o-5, ruled 2026-11-02: "yes"). A
+    bubble may name several platforms; the same cases run on each. How
+    the platforms are named, which run and which can run: the forks of
+    'MORE THAN ONE PLATFORM' below.
+
+ 9  A PLATFORM IS NO LABEL: '-p <platform>' (ruled 2026-11-02: "platforms
+    are different in nature from labels ... totally different. They
+    should be specified by '-p <platform>'. run/play, etc may specify only
+    one. sanitize, more than one.").
+
+        LABELS      sets of runs, combined by expressions     -l <expr>
+        WISHLIST    a selection by place and history          <target> --fail ...
+        PLATFORMS   WHERE the selected runs run               -p <platform>
+
+    CONSEQUENCES -- strike any that over-reads:
+    - '-p' stands beside '-l' and beside wishlist words alike; it combines
+      no sets, so E-211's refusal is untouched.
+    - No 'p/' prefix, no label 'platform:<name>'.
+    - (SUPERSEDED by ruling 12: the limit is not on the '-p' words but on
+      the platforms a bubble meets, F(B).)
+
+10  EVERY 'hwut-root.conf' IS A DECISION POINT; NO PLATFORM MEANS THE LOCAL
+    ONE (ruled 2026-11-02: "no specified platform, that means: the local
+    machine handles it! platform specs are additive to that ... if there
+    is no platform specified, the required platform is the local
+    platform. If available it is run. If a platform is specified in the
+    hwut-root.conf, then the platform must be in the specified list, else
+    it is not run and a note is made. In the final tree report of
+    hwut.run there should be [PLATFORM not available]."). THE RULE, below,
+    is the formal statement; rulings 11 and 12 settle what 'additive'
+    means, ruling 13 how a bubble not run counts.
+
+11  A SPECIFIED SET REPLACES THE DEFAULT {local} -- ON BOTH SIDES (o-13 (b),
+    ruled 2026-11-02: "If the platform is specified it means that this is
+    the platform to run it. In the set of specified platforms it replaces
+    the default set {local}."). The platforms a command orders (COMMANDED)
+    and the platforms a bubble's conf names (PERMITTED) are each {local}
+    where nothing is specified, and exactly what is specified where
+    something is.
+    THE COMMAND HALF IS SUPERSEDED by ruling 12: '-p' adds to {local}. The
+    conf half stands: a configured list replaces {local}.
+    CONSEQUENCES -- strike any that over-reads:
+    - 'local' is a reserved platform name: no keys of its own, listable in
+      a conf ('platform = [ local, linux ]').
+    - Two markers in the report, one per reason -- renamed by ruling 12:
+      '[PLATFORM not available]' (S and Q(B) do not meet -- a fact of the
+      command and the tree) and '[PLATFORM not reachable]' (this machine
+      cannot, now -- a fact of the day).
+
+12  THREE STEPS: SPECIFIED, REQUIRED, FEASIBLE (ruled 2026-11-02: "(i)
+    define the 'specified platforms' (default, then -p defined) (ii)
+    define the 'required platforms' (default, then configured) (iii) check
+    for bubbles where the intersection holds ... we might have
+    '--exclude-local' which would exclude the local platform"; and, on
+    the fork it left, "(b) is maintainable. other runs may rely on hwut.stability or
+    multiple runs of hwut.").
+
+        (i)   SPECIFIED  S     {local}; each '-p p' ADDS p;
+                               '--exclude-local' takes 'local' out
+        (ii)  REQUIRED   Q(B)  {local}; a configured 'platform = [...]'
+                               REPLACES it
+        (iii) FEASIBLE   F(B)  = S ∩ Q(B)
+                               empty     B is not run: '[PLATFORM not available]'
+                               one       B runs there -- if reachable (ruling 14)
+                               more      REFUSED at the start, every face
+
+    CONSEQUENCES -- strike any that over-reads:
+    - 'hwut.run -p linux': S = {local, linux}. The tree's local bubbles run
+      here; 'support/' ('platform = [ linux ]') runs in the image -- one
+      run, one RESULTS.
+    - 'hwut.run --exclude-local -p linux': S = {linux}. Only the bubbles
+      requiring linux run; every other is '[PLATFORM not available]'.
+    - A bubble requiring '[ local, linux ]' is refused under 'hwut.run -p
+      linux' (F = both). The refusal names the bubble, F(B), and the
+      remedy: "narrow with '--exclude-local -p linux', or run without
+      '-p'". Both platforms are measured by two runs -- or by
+      'hwut.run.stability', which already runs a tree more than once (its
+      '-p' after the first release, spec/42).
+    - The refusal is decided before any test runs: S is the command's and
+      every Q(B) is read from the confs the walk meets; nothing is run to
+      learn it.
+    - One recording per bubble per run, so 'hwut.accept', 'hwut.diff' and
+      'hwut.merge' need nothing of their own: they read what the one
+      feasible platform wrote.
+    - 'hwut.sanitize' reads the tree and runs nothing ('hwut.report': no
+      '-p' at all, ruling 21): it is not bound by |F(B)| = 1 and may name
+      every platform of every conf.
+    - '-p local' says what no '-p' says; it is accepted, not needed.
+
+13  A NOT-RUN BUBBLE IS COUNTED APART (o-14 (a), ruled 2026-11-02;
+    AMENDED by ruling 21: nothing of it is counted). Its
+    cases stand in RESULTS as their own count --
+        RESULTS: 2189 ok, 0 fail, 432 not run (platform)
+    -- and do not change the exit status: no claim about the software was
+    made.
+    CONSEQUENCES -- strike any that over-reads:
+    - Both markers count so: '[PLATFORM not available]' and '[PLATFORM not
+      reachable]'.
+    - A plain 'hwut.run' on a machine without the image stays green for
+      'support/'; the report's line says what was not measured.
+    - (STRUCK by ruling 21: nothing of a bubble not run is counted.)
+    - The book records nothing for them: no verdict, no 'fail', no stale
+      'ok' refreshed; the last verdict a platform measured stays as it was.
+
+14  A 'platforms' HELPER ANSWERS, STARTS AND ENDS (o-11 (a), ruled
+    2026-11-02: "A 'platforms' helper shall provide basic services such as
+    'availability checks' and maybe even 'starter' and 'terminator'
+    functionality ... 'platforms.is_available(platform_name, dict)' where
+    'dict' may contain further specs such as 'container' or 'port_adr', or
+    'uart_vendor_name', or 'mac_adr', or whatsoever.").
+
+        platforms.is_available(name, spec)  -> (True, "") | (False, why)
+        platforms.start(name, spec)         REACH, made ready
+        platforms.stop(name, spec)          END, left as found
+
+    'spec' is the platform's entry in the conf, as read. hwut's schema
+    knows 'name' and 'kind' only; every other key is the kind's.
+    CONSEQUENCES -- strike any that over-reads:
+    - Availability is MEASURED, at the start of each run, and only for the
+      platforms some F(B) holds: a plain run asks nothing.
+    - R of THE RULE is { f : platforms.is_available(f, spec(f)) }; 'why'
+      is the NOTE of '[PLATFORM not reachable]'.
+    - A HIL entry's keys ('uart_vendor_name', 'mac_adr', 'port_adr') need
+      no change to the engine; the kind reads them.
+    - stop is called whatever the run's ending, a signal included (E-55).
+    - The helper sits beside the orchestrator, in the engine: running a
+      bubble on a platform is the engine's work, and it imports nothing
+      of the faces.
+
+15  A SET OF KINDS; A PLUGIN MECHANISM LATER, IF AT ALL (o-16, ruled
+    2026-11-02: "yes, there is a set of available kinds and maybe a plugin
+    mechanism; we are planning on HIL, but that is not an issue to be
+    resolved in the first release.").
+    CONSEQUENCES -- strike any that over-reads:
+    - The first release has built-in kinds only; a kind the helper does not
+      know is refused at the start, naming the known ones.
+    - How a tree adds a kind -- a program by path, a 'command' kind with
+      shell lines, or else -- is not decided; it is raised again with HIL.
+    - Ruling 14's keys-are-the-kind's stands, so a later kind needs no
+      change to the conf's shape.
+
+16  THE FIRST RELEASE: 'local' AND 'container' (o-17 (a), ruled 2026-11-02:
+    "local, of course and then 'container'. correct").
+    CONSEQUENCES -- strike any that over-reads:
+    - 'local' is the reserved platform of ruling 11: no entry, no keys,
+      always available; 'platforms.is_available("local", {})' is (True, "").
+    - 'host' and 'vm' stay in THE SHAPE as intent; a conf naming them is
+      refused at the start, as any unknown kind (ruling 15).
+
+17  AN IMAGE THAT DOES NOT STAND IS BUILT; A FAILED BUILD IS SAID (o-7 (a),
+    ruled 2026-11-02: "try to build, and if build fails, error message.").
+    CONSEQUENCES -- strike any that over-reads:
+    - 'is_available' asks: the engine on PATH, and the image there or a
+      'recipe' that stands. 'start' builds where the image is missing,
+      saying so once ("BUILDING: image 'hwut-support' from <recipe>").
+    - A failed build is an ERROR line naming the image, the recipe and the
+      build's last lines; the bubble is then '[PLATFORM not reachable]',
+      nothing of it counted (ruling 21), the rest of the tree runs on.
+    - No rebuild when the recipe changes: a stale image is the person's to
+      rebuild ('hwut.dev.podman.build'), as today.
+
+18  'support/' IS ONE BUBBLE ON 'linux' (o-9 (a), ruled 2026-11-02: "one
+    bubble"). 'support/hwut-root.conf' says 'platform = [ { name = "linux"
+    kind = "container" ... } ]', the image of E-218.
+    CONSEQUENCES -- strike any that over-reads:
+    - Its registry is its own: the support's entries move out of
+      'hwut-root-features.conf'; an outer '-l f/<id>' stops at 'support/'.
+    - A plain 'hwut.run' of the tree: 'support/' is '[PLATFORM not
+      available]', its marker line alone (ruling 21) -- the author's red demos of
+      2026-11-01 go quiet. 'hwut.run -p linux' measures them in the image.
+    - The engine's import of the Python port is untouched: a bubble bounds
+      runs, not imports (E-216).
+
+19  A BUBBLE DOES NOT HIDE ITS INNER BUBBLES (o-18 (a), ruled 2026-11-02:
+    "bubble does not hide its inner bubbles."). Every bubble is decided on
+    its own. A bubble not run leaves its inner bubbles to be decided here,
+    with the same S; a bubble handed to a platform has them decided over
+    there (ruling 3).
+    CONSEQUENCES -- strike any that over-reads:
+    - 'support/test_writing/python/TEST' gets a 'hwut-root.conf' with no
+      'platform': Q = {local}. A plain run measures hwut's reference port
+      here; '-p linux' measures it in the image, with the rest.
+    - Only bubbles are rescued: a directory with no conf of its own inside
+      a bubble not run is not run.
+    - The walk reads every conf below 'top', a bubble not run included, so
+      ruling 12's refusal ('|F(B)| > 1') covers inner bubbles too.
+
+20  THE PLATFORM'S PROXY WRITES INTO THE EVENT STREAM (o-10 (a), refined
+    and ruled 2026-11-02: "would it not make sense to have the platform's
+    proxy abstract that, such that it writes naturally into the event
+    messaging system?"). The helper of ruling 14 gains one service:
+
+        platforms.run(name, spec, bubble, wish, sink)
+            runs 'bubble' there; every event of the far run reaches 'sink'
+            as it happens, a local event's shape and a local event's
+            directory (relative to the near root)
+
+    CONSEQUENCES -- strike any that over-reads:
+    - The orchestrator hands a bubble to a platform as it runs one here:
+      into the same sink. Console, fold, exit status, book know no
+      difference.
+    - The transport is the kind's: 'container' reads the far 'hwut.run
+      --log /dev/stdout' line by line (engine/protocol/line.py, O-23) and
+      puts the bubble's path in front of each directory (ruling 6). A
+      later kind (HIL) may carry the events otherwise; the orchestrator is
+      not touched.
+    - THE CONTRACT's STREAM is this service; REACH and END stay 'start'
+      and 'stop'.
+
+21  A BUBBLE NOT RUN LEAVES NO TRACE; THE REPORT NEEDS NO PLATFORM (f-1 of
+    spec/42, ruled 2026-11-02: "A bubble that is not run does not produce
+    entries in the books or any other traces; hwut report goes through the
+    books and that does not need a platform"). AMENDS ruling 13: nothing of
+    a bubble not run is counted.
+    CONSEQUENCES -- strike any that over-reads:
+    - RESULTS is what ran: 'RESULTS: 2189 ok, 0 fail'; the bubble not run
+      stands only as its marker line in the final tree. No case count, so
+      nothing of it is explored or interviewed here.
+    - No book entry, no 'TMP/' file, no trace line, no coverage record for
+      it; the last verdicts a platform measured stay as they were.
+    - 'hwut.report' (and every face that reads the books) takes no '-p':
+      it reads what was recorded, wherever it was measured; the book's
+      'platform' column says where.
+
+22  A CONTAINER RUN IS A LOCAL RUN ON THE SAME DISK (f-2 of spec/42 (a),
+    ruled 2026-11-02). The tree is mounted at its own path; what a test
+    writes there it writes here, as a local run does. AMENDS ruling 7:
+    "a SOURCE here is never overwritten" binds the kinds that COPY the
+    tree and sync back ('host', 'vm'), not 'container'.
+    CONSEQUENCES -- strike any that over-reads:
+    - No fingerprint, no read-only mount: the container run guards a
+      source exactly as a local run does today (wallflowers; the
+      freshness digest at accept), no more.
+    - The day a syncing kind is built, ruling 7's guard is built with it.
+
+==============================================================================
+THE RULE (rulings 10 and 12, formally)
+==============================================================================
+
+    local         a reserved platform name: the machine a hwut runs on.
+                  Over there, a far run's own 'local' IS the platform it
+                  was handed to (it is started with S = {local}).
+
+    SPECIFIED  S      {local} + every '-p' word; minus 'local' where
+                      '--exclude-local' is given (ruling 12, step i).
+    REQUIRED   Q(B)   the platforms bubble B's own 'hwut-root.conf' names
+                      in 'platform = [ ... ]'; {local} where it names none
+                      (step ii). Each conf decides alone: a bubble inherits
+                      no outer list (ruling 10, "a decision point").
+    FEASIBLE   F(B)   S ∩ Q(B) (step iii).
+    REACHABLE  R      the platforms this machine reaches, measured at the
+                      start by 'platforms.is_available' (ruling 14);
+                      'local' always.
+
+    RUN(top, wish, S):
+        walk the confs at or below 'top' (E-200), read every Q(B)
+        refuse at the start, naming every such B, where any |F(B)| > 1
+        for each bubble B, outermost first, that lies in no bubble already
+        handed to a platform -- a bubble NOT run hides none (ruling 19):
+            if   F(B) == {}:
+                     NOTE  "<B>/: requires <Q(B)>, specified <S>"
+                     MARK  B  [PLATFORM not available]
+            else F(B) == {f}:
+                if   f not in R:
+                     NOTE  "<B>/: platform '<f>' not reachable: <why>"
+                     MARK  B  [PLATFORM not reachable]
+                elif f == local:
+                     run B's selected cases here, as today
+                else:
+                     platforms.run(f, spec(f), B, wish, sink) (ruling 20):
+                     the far hwut runs B with S = {local};
+                     B's inner bubbles decide again, the same way
+
+    THE REPORT. A MARKED bubble stands in the final tree as one line --
+    '<B>/  [PLATFORM not available]' or '[PLATFORM not reachable]' -- the
+    NOTE's reason beside it; nothing of it is counted, the exit status
+    unchanged (rulings 13, 21).
+
+==============================================================================
+THE SHAPE
+==============================================================================
+
+    a bubble's hwut-root.conf -- the platforms that may run it; the local
+    machine among them only where 'local' is listed (rulings 8, 10, 11):
+
+    platform = [
+        { name   = "linux"                          the toolchains (E-218)
+          kind   = "container"
+          engine = "podman"                         or "docker"
+          image  = "hwut-support"
+          recipe = "../adm/container/Containerfile" }
+        { name = "lab-3"                            another machine: the lab
+          kind = "host"                             PC with the board, or
+          ssh  = "lab-pc-3"                         one of another system
+          tree = "/srv/hwut"
+          sync = "rsync" }                          or "shared" (NFS, SMB)
+        { name  = "win11"                           a virtual machine,
+          kind  = "vm"                              started for the run
+          start = "virsh start win11-hwut"
+          ssh   = "win11-hwut"
+          tree  = "C:/hwut"
+          sync  = "rsync"
+          stop  = "virsh shutdown win11-hwut" }
+    ]
+
+    no 'platform': the local machine alone (ruling 10)
+
+THE FLOW
+
+    hwut.run (here)                          the platform
+    ------------------------------------     --------------------------------
+    walks the tree (E-200)
+    meets world/hwut-root.conf
+      platform { ... }
+    reaches the platform  ---- reach ---->   container started / ssh / vm up
+    makes the tree stand  ---- tree ----->   mounted at its own path, or
+                                             synced
+                                             hwut.run <the wish, as it
+                                               applies to world/>, the
+                                               switch not obeyed again
+                                             each test supervised under its
+                                               own caps, as today
+    shows the cases live  <--- stream ----   the engine protocol's events
+    counts them in RESULTS
+    takes the results     <--- tree ------   book, OUT, coverage: on the
+                                             shared disk, or synced back
+    marks each verdict with the platform
+    ends the platform     ---- end ------>   container gone / vm stopped
+
+THE CONTRACT every kind meets, and nothing beyond it:
+
+    REACH    run one command over there
+    TREE     the same tree over there, whole or the bubble at least
+    HWUT     the tree's own hwut over there -- both sides one version
+    STREAM   the far run's events, back while it runs
+    RESULTS  what a run writes, back where a local run writes it
+    END      leave the platform as it was found
+
+WHAT A PLATFORM GIVES BEYOND THE RUN
+
+    a word       '-p <platform>' says where a run runs (ruling 9); no
+                 '-p' is the local machine (ruling 10)
+    a verdict    the book says which platform measured it -- the other half
+    of record    of intend/25's 'a verdict travels from another machine'
+    one stated   a platform that cannot be reached refuses the bubble once,
+    precondition with its reason, not case by case
+
+HIL, AND THE BENCH. The bench design (project document
+'DESIGN-hwut-bench-2026-10-26': 'bench { <name> { link, loader } }') says
+how a test reaches a board. A platform says where that test runs. The two
+compose without knowing of each other: the lab PC is a 'host'; the bench
+entry is read there, as anywhere.
+
+==============================================================================
+OPEN
+==============================================================================
+      (none: every fork of this intend is ruled.)

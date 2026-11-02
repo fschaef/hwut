@@ -8158,3 +8158,34 @@ COST      A 'title', 'use', 'test', 'note' and 'requires' per entry of
           added there is offered without a line of code ('test-support.py
           faces' says so). The showcase is not in the package; that is
           decided later.
+
+E-218  WHAT THE TEST WRITING SUPPORT REQUIRES: THE LIST, AND AN IMAGE THAT
+       HOLDS IT                                                   (2026-11-01)
+------------------------------------------------------------------------------
+PROBLEM   On a machine without Erlang, Guile, SWI-Prolog, gfortran, Go, GHC,
+          a JDK 21, Rust or Verilator, every demonstration of those
+          languages ended in a cascade of handler NOTEs (exit 127 where the
+          interpreter was absent, 2 where 'make' failed) -- and nothing said
+          what to install.
+DECISION  'adm/requirement-list.txt' names the support's requirements in
+          rows of need 'support:<language>,...' ('all': every language but
+          Python), with two kinds more: 'perl' (a module) and 'header' (a C
+          header). 'adm/requirement-check.sh' says which languages go red
+          and exits 1. The versions are the ones measured 2026-11-01.
+          The readers of a USER's requirements ('services/lib/
+          requirements.py', the wheel, the Debian 'Depends') read 'census'
+          rows alone: the support's toolchains are no user's requirement.
+          'adm/container/Containerfile' installs every row, on UBUNTU 24.04
+          (where they were measured; bookworm's Go, node, JDK, GHC, GHDL
+          and Verilator are older), with Go, node, Rust and PowerShell from
+          their own releases; ruff is pinned to the version the
+          static-analysis GOOD was recorded with. No virtual machine: every
+          toolchain is a user-space program.
+OPEN      A directory whose toolchain is missing still says so case by case
+          (E-158: a handler's end is no verdict). One stated precondition
+          per directory -- 'needs = [...]' in 'hwut.conf' -- is the
+          author's ruling to make.
+COST      The recipe is written where no container engine runs; its first
+          'hwut.dev.podman.build --rebuild' is its test, and three of its
+          download hosts (go.dev, nodejs.org, static.rust-lang.org) could
+          not be reached from where it was written.

@@ -17,11 +17,18 @@ THE COLUMNS, separated by blanks; '#' opens a comment:
     kind      program   found on PATH
               python    a module Python imports
               library   a shared library the system's loader finds
+              perl      a module Perl loads ('perl -M<name>')
+              header    a C header the compiler finds ('#include <name>')
     name      what is looked for; for a 'python' row the module, and
               '>=<version>' the oldest version measured to work, as pip
               numbers it
     need      census    'bin/hwut.run' over the tree is red without it
               road      one road of hwut wants it; the census does not
+              support:<language>,...
+                        the test writing support of those languages and
+                        their demonstrations ('support/') are red without
+                        it -- the rest of the census is not; 'all' names
+                        every language but Python
     debian    the Debian/Ubuntu package; 'pip:<name>' where only pip has
               it. '>=<version>' the oldest version measured to work, as
               DEBIAN numbers it ('regex' 2022.10.31 is Debian's
@@ -82,3 +89,34 @@ program  svn             road    subversion             the same
 program  brz             road    breezy                 the same
 program  darcs           road    darcs                  the same
 program  fossil          road    fossil                 the same
+
+THE TEST WRITING SUPPORT AND ITS DEMONSTRATIONS ('support/', E-217). The
+versions are those MEASURED 2026-11-01 (Ubuntu 24.04; Go, node, Rust and
+PowerShell from their own releases): every port 47 ok, every demonstration
+27 ok. Older ones are not measured, and some are known not to do: Go below
+the 'go.mod's 1.24, node below 22.5 (no 'node:sqlite'), a JDK below 21 (no
+FFM preview). 'adm/container/Containerfile' installs exactly these.
+------------------------------------------------------------------------------
+kind     name            need                  debian                    for
+------------------------------------------------------------------------------
+program  make            support:all           make                      the ports' builds, the demonstrations' helpers
+program  cc              support:all           gcc                       the C port and every port standing on it
+program  g++             support:cpp,verilog   g++                       C++; a verilated model
+header   sqlite3.h       support:c,cpp,rust,verilog,vhdl,haskell,fortran  libsqlite3-dev  the shop demonstration, linked to SQLite
+library  sqlite3         support:perl,go,java,guile,powershell,prolog     libsqlite3-0    the shop demonstration, SQLite loaded at run time
+perl     FFI::Platypus   support:perl          libffi-platypus-perl>=2.08  Perl's libvterm and SQLite
+program  javac           support:java          openjdk-21-jdk-headless   Java 21 (the FFM preview)
+program  rustc           support:rust          -                         Rust 1.97, the release tarball (rustc, std)
+program  go              support:go            -                         Go 1.24.7, the release tarball (go.mod: 1.24)
+program  node            support:node          -                         node 22.23.4, the release tarball (node:sqlite)
+program  npm             support:node          -                         comes with node; fetches koffi for hwut_vterm
+program  verilator       support:verilog       verilator>=5.020          SystemVerilog
+program  ghdl            support:vhdl          ghdl>=4.1                 VHDL (the mcode back end)
+program  flock           support:bash          util-linux                bash's shop
+program  pwsh            support:powershell    -                         PowerShell 7.4.6, the release tarball
+program  escript         support:erlang        erlang-base>=1:25         Erlang/OTP 25
+program  erlc            support:erlang        erlang-base>=1:25         the same
+program  guile           support:guile         guile-3.0>=3.0.9          Scheme
+program  ghc             support:haskell       ghc>=9.4.7                Haskell (hsc2hs comes with it)
+program  swipl           support:prolog        swi-prolog-nox>=9.0.4     Prolog (SWI-Prolog.h with it)
+program  gfortran        support:fortran       gfortran>=13              Fortran 2018 (OpenMP's libgomp with it)

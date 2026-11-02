@@ -4,7 +4,7 @@ build.hs;parallel;true;ok;;9;1
 ;serial;true;ok;;9;0
 chamber.hs;cool;true;ok;;1;0
 ;heat;true;ok;;1;1
-delivery.json;;true;ok;;2
+delivery.json;;false;test-app-launch-failed;;2
 demo.hs;analogies;true;ok;;3;0
 ;clusters;true;ok;;3;1
 ;constraints;true;ok;;3;2
@@ -21,7 +21,7 @@ garage.hs;race-atomic;true;ok;;5;0
 ;random;true;ok;;5;2
 ;space;true;ok;;5;3
 protocol.sh;broken;true;ok;;6;0
-;clean;true;ok;;6;1
+;clean;false;unexpected-stderr;stderr-untolerated;6;1
 ;slow;true;ok;;6;2
 screen.hs;open;true;ok;;8;0
 ;scroll;true;ok;;8;1

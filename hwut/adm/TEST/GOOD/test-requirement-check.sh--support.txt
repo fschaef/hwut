@@ -1,0 +1,10 @@
+ok       program sh              support:all -                      a program that stands
+MISSING  program no-such-program-x support:erlang,prolog -                      a program that does not
+ok       perl    strict          support:perl -                      a Perl module that stands
+MISSING  perl    No::Such::Module support:perl -                      one that does not
+ok       header  stdio.h         support:c -                      a C header that stands
+MISSING  header  no_such_header_x.h support:c,fortran -                      one that does not
+
+the test writing support goes red for: c erlang fortran perl prolog (support/test_writing, support/demo)
+exit: 1
+<hwut-end>

@@ -1,0 +1,265 @@
+==============================================================================
+spec/42-platforms -- THE FIRST RELEASE: 'local' AND 'container', 'support/'
+                     THE FIRST BUBBLE TO USE IT
+==============================================================================
+
+VERSION: 1
+
+COMPONENTS: engine/orchestrator (exploration: the conf key, the walk;
+            plan: the wish's '-p'; run: handing a bubble over),
+            engine/platforms (NEW: the helper of ruling 14),
+            engine/protocol (two fields, one kind), engine/bookkeeper (the
+            book's column), engine/display (the marker, the count),
+            services (run, play; the faces that refuse '-p'),
+            support/ (its 'hwut-root.conf'), support/test_writing/python/TEST
+            (its own 'hwut-root.conf').
+SOURCE:     adm/WORK/intend/42-platforms.txt, rulings 1-22. A ruling is
+            cited, not restated.
+MEASURED:   on 08217f1 + bundles 31..35 (the dev tree w33), 2026-11-02.
+
+==============================================================================
+1  THE CONF (rulings 2, 4, 14, 15, 16)
+==============================================================================
+
+    A ROOT-ONLY key of 'hwut-root.conf': it joins 'ROOT_ONLY_KEY_SET'
+    (today 'same', 'interactive'); in a 'hwut.conf' it is the root-only
+    fault of today ('root_only_fault').
+
+    platform = [
+        { name   = "linux"                    required; unique in the list;
+                                              not "local"
+          kind   = "container"                required; the first release
+                                              knows "container" alone
+          image  = "hwut-dev"                 required
+          recipe = "../adm/container/Containerfile"
+                                              optional; relative to the conf's
+                                              directory; the build's context
+                                              is the directory holding 'hwut/'
+          engine = "podman" }                 optional; "podman" | "docker";
+                                              absent: the first on PATH, as
+                                              'hwut.dev.podman.*' finds it
+    ]
+
+    The list may name "local" as a bare string beside entries:
+        platform = [ "local", { name = "linux" ... } ]
+    "local" takes no keys (ruling 16).
+
+    FAULTS, each by name, at the start, nothing run (ruling 15):
+        a kind not known          "platform 'lab-3': kind 'host' is not
+                                   known -- known: container"
+        a key the kind not knows  "platform 'linux': key 'imgae' is not a
+                                   'container' key -- image, recipe, engine"
+        name missing, doubled, 'local' with keys, image missing.
+    hwut's schema reads 'name' and 'kind'; every other key is the kind's
+    (ruling 14), checked by the kind's own 'keys' table.
+
+==============================================================================
+2  THE COMMAND (rulings 9, 12)
+==============================================================================
+
+    -p <name>          repeatable; ADDS <name> to S
+    --exclude-local    takes 'local' out of S
+
+    Both are WISH words (engine/orchestrator/plan/wish.py): 'Wish' gains
+    'platform_tuple' (the '-p' names, in order, no doubles) and
+    'exclude_local_f'. Spelt back by 'Wish' as typed.
+
+    S = ({local} - ({local} if exclude_local_f else {})) | set(platform_tuple)
+
+    A '-p' name no conf of the walk names is a NOTE, not a refusal: "NOTE
+    -p lab-3: no bubble below requires it".
+    '--exclude-local' with no '-p': REFUSED, "'--exclude-local' leaves no
+    platform -- add '-p <name>'".
+
+    WHO TAKES THEM: 'hwut.run', 'hwut.play' -- the faces that run a test
+    (ruling 7). Every other face that reads the wish refuses them by name,
+    "'-p' is for the faces that run: hwut.run, hwut.play", with one
+    exception, 'hwut.sanitize', which takes them and runs nothing (ruling
+    12). 'hwut.run.stability' and 'hwut.cov.run': later; refused until then.
+
+==============================================================================
+3  THE DECISION (rulings 10, 12, 19; THE RULE)
+==============================================================================
+
+    Before the first event the walk reads the conf of every bubble at or
+    below the top (E-200), a bubble with F = {} included (ruling 19), and
+    computes per bubble B:
+
+        Q(B) = the names of B's 'platform' list; {local} where it has none
+        F(B) = S ∩ Q(B)
+
+    REFUSED at the start, every B named, where any |F(B)| > 1:
+        REFUSED: support/: requires local, linux; specified local, linux
+                 => narrow with '--exclude-local -p linux', or run without '-p'
+
+    Then per bubble, outermost first, a bubble handed over hiding its own
+    inner bubbles (they are decided over there), a bubble NOT run hiding
+    none:
+        F(B) == {}         NOT RUN, reason 'available'
+        F(B) == {local}    explored and run here, as today
+        F(B) == {f}        platforms.is_available(f, spec):
+                             (False, why)  NOT RUN, reason 'reachable'
+                             (True, "")    HANDED to f (section 5)
+
+    A bubble HANDED or NOT RUN is never explored here: nothing of it is
+    interviewed (R-44) or built here. Its TEST directories are found by the
+    walk alone (names, 'test_directory' of its confs).
+
+==============================================================================
+4  THE HELPER: engine/platforms/ (rulings 14, 15, 16, 17, 20)
+==============================================================================
+
+    engine/platforms/__init__.py     the four services, dispatched on 'kind'
+    engine/platforms/local.py        'local'
+    engine/platforms/container.py    'container'
+
+    is_available(name, spec)  -> (bool, str)
+        RETURN: (True, ""), the platform can run a bubble now.
+                (False, why), else -- 'why' one line, the NOTE's text.
+    start(name, spec, write)  -> (bool, str)
+        RETURN: (True, ""), the platform is ready.
+                (False, why), else.
+    run(name, spec, bubble, wish, sink) -> int
+        RETURN: int, the far run's exit status. Every far event reaches
+                'sink' as it happens (section 5).
+    stop(name, spec)          -> None
+        Called in a 'finally', a signal included (E-55).
+    keys(kind)                -> tuple[str]
+        RETURN: tuple[str], the keys the kind knows beside 'name', 'kind'.
+
+    LOCAL: is_available is (True, ""); start, stop do nothing; run is never
+    called (the orchestrator runs a local bubble itself).
+
+    CONTAINER:
+      is_available   the engine on PATH, and 'image inspect <image>' 0,
+                     or 'recipe' a file. Else, e.g.
+                       "no podman or docker on PATH"
+                       "image 'hwut-dev' absent and no recipe"
+      start          the image absent: the build (ruling 17), said once,
+                       BUILDING: image 'hwut-dev' from adm/container/Containerfile
+                     its output to the run's log, not the console; failed:
+                       ERROR: image 'hwut-dev' not built from <recipe>
+                              <the build's last 5 lines>
+                     -> (False, "image build failed"): NOT RUN, 'reachable'.
+      run            <engine> run --rm -i
+                         --userns=keep-id   (podman) | --user=<uid>:<gid>
+                         -v <root>:<root>   -w <root>/<bubble>
+                         -e HOME=/tmp       (as 'hwut.dev.podman.enter')
+                         <image> <root>/hwut/bin/hwut.run --silent
+                         --log /dev/stdout <the wish's words for B>
+                     no '-p': the far run starts with S = {local}. 'the
+                     wish's words for B': its targets re-rooted at B (a
+                     target outside B dropped), its labels and wishlist
+                     words as given.
+                     <root> the directory holding 'hwut/', mounted at its
+                     own path, as 'hwut.dev.podman.enter' does: the tree
+                     over there is the tree here (CONTRACT: TREE, HWUT,
+                     RESULTS -- what the far run writes lands where a
+                     local run writes it).
+      stop           nothing beyond '--rm'.
+
+    THE ENGINE IMPORTS NOTHING OF THE FACES: 'engine/platforms' imports
+    only the engine and the standard library. What 'hwut.dev.podman.*'
+    already knows (finding the engine, the root) moves from
+    services/lib/dev/podman/_common.py into engine/platforms/container.py;
+    the dev faces import it from there.
+
+==============================================================================
+5  THE STREAM (ruling 20)
+==============================================================================
+
+    'container.run' reads the far stdout line by line; per line
+    'event_of(line)' (engine/protocol/line.py), then:
+
+        tree-begun, tree-done          swallowed: the near run has its own
+        an event with 'directory'      'directory' = <bubble>/<directory>
+                                       ('.' becomes <bubble>)
+        every event                    'platform' = <name> added
+        a line 'event_of' cannot read  a 'fault' event, the line verbatim:
+                                       "<bubble>/: platform 'linux' said: ..."
+
+    and puts it on the orchestrator's queue, as a local event.
+    The far exit status: 0 or 1 is told by the events; any other is a
+    'fault' event, "<bubble>/: platform 'linux' ended with status <n>".
+
+    THE NEAR 'tree-begun' lists a handed bubble's TEST directories (found
+    by the walk, section 3), so a viewer knows them before they report.
+
+==============================================================================
+6  THE PROTOCOL, THE BOOK, THE REPORT (rulings 7, 13, 21)
+==============================================================================
+
+    VOCABULARY -- added only (its stability promise):
+        every kind     optional 'platform': str, absent for 'local'
+        'not-run'      NEW KIND:
+                         directory  str   the bubble
+                         platform   str   the first of F(B), or '' where
+                                          F(B) = {}
+                         reason     str   'available' | 'reachable'
+                         text       str   the NOTE's text
+
+    THE FOLD ('summary.fold') counts nothing of a 'not-run': not in
+    'fail_n', not in RESULTS, 'good' unchanged (rulings 13, 21).
+
+    THE BOOK ('GOOD/book.csv') gains a last column 'platform', empty for
+    'local'. A bubble not run writes nothing: no book entry, no 'TMP/'
+    file, no trace, no coverage record (ruling 21). Every
+    reader of the book is found by grep before the column lands (bin 5c).
+
+    THE CONSOLE:
+        support/  [PLATFORM not available]  requires linux; specified local
+        support/  [PLATFORM not reachable]  no podman or docker on PATH
+        RESULTS: 2189 ok, 0 fail
+    A verdict measured on a platform shows its name once per directory,
+    '(linux)', after the directory's line. The exit status: unchanged by
+    'not-run'.
+
+==============================================================================
+7  FOUND WHILE SPECIFYING -- both ruled
+==============================================================================
+ f-1 (ruled: ruling 21 -- nothing of a bubble not run is counted.)
+ f-2 (ruled: ruling 22 -- a container run is a local run on the same
+     disk; no guard beyond a local run's.)
+
+==============================================================================
+8  'support/' (rulings 18, 19)
+==============================================================================
+
+    support/hwut-root.conf                 NEW
+        platform = [ { name = "linux", kind = "container",
+                       image = "hwut-dev",
+                       recipe = "../adm/container/Containerfile" } ]
+        its features: the support's entries of 'hwut-root-features.conf'
+        moved here (its own registry, E-200).
+    support/test_writing/python/TEST/hwut-root.conf      NEW, no 'platform'
+
+    THE CENSUS from the top: 'support/' is NOT RUN ('available'), its
+    its marker line alone; python/TEST runs here (ruling 19). With
+    '-p linux': 'support/' in 'hwut-dev', python/TEST over there too.
+
+==============================================================================
+9  PROOF
+==============================================================================
+
+    engine/platforms/TEST/      the four services of 'container' with the
+                                engine replaced by a fake on PATH (no
+                                container needed): available, absent
+                                engine, absent image with and without
+                                recipe, build failed, the run's argv, the
+                                stream's translation (prefix, platform,
+                                swallowed kinds, an unreadable line, a far
+                                status 2).
+    engine/orchestrator/TEST/   the decision of section 3 on a fixture tree:
+                                S x Q(B) for {local}, -p, --exclude-local;
+                                |F| > 1 refused; a not-run bubble hiding
+                                no inner bubble; nothing interviewed in a
+                                handed or not-run bubble.
+    engine/protocol/TEST/       'not-run' and 'platform' round-trip
+                                (line_of / event_of).
+    services/TEST/              hwut.run's console for both markers and the
+                                RESULTS line; '-p' refused by the other
+                                faces.
+    A REAL CONTAINER RUN cannot be proven here (no daemon; the image's
+    toolchains are blocked by policy). Label 'needs-container' (spec/24,
+    ruling 8): 'hwut.run -p linux' over 'support/', on the author's
+    machine.

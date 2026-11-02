@@ -4,7 +4,7 @@ build.js;parallel;true;ok;;1;1
 ;serial;true;ok;;1;0
 chamber.js;cool;true;ok;;4;1
 ;heat;true;ok;;4;0
-delivery.json;;true;ok;;5
+delivery.json;;false;terminated-without-hwut-end;;5
 demo.js;analogies;true;ok;;2;6
 ;clusters;true;ok;;2;4
 ;constraints;true;ok;;2;2
@@ -23,7 +23,7 @@ garage.js;race-atomic;true;ok;;7;0
 protocol.sh;broken;true;ok;;0;2
 ;clean;true;ok;;0;1
 ;slow;true;ok;;0;0
-screen.js;open;true;ok;;8;0
-;scroll;true;ok;;8;1
-shop.js;report;true;ok;;3;1
-;sell;true;ok;;3;0
+screen.js;open;false;terminated-without-hwut-end;;8;0
+;scroll;false;terminated-without-hwut-end;;8;1
+shop.js;report;false;output-file-not-found;;3;1
+;sell;false;terminated-without-hwut-end;;3;0

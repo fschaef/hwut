@@ -4,7 +4,7 @@ build.java;parallel;true;ok;;6;0
 ;serial;true;ok;;6;1
 chamber.java;cool;true;ok;;1;1
 ;heat;true;ok;;1;0
-delivery.json;;true;ok;;7
+delivery.json;;false;test-app-launch-failed;;7
 demo.java;analogies;true;ok;;0;3
 ;clusters;true;ok;;0;8
 ;constraints;true;ok;;0;2

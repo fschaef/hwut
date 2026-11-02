@@ -4,7 +4,7 @@ build.pl;parallel;true;ok;;0;0
 ;serial;true;ok;;0;1
 chamber.pl;cool;true;ok;;1;0
 ;heat;true;ok;;1;1
-delivery.json;;true;ok;;2
+delivery.json;;false;terminated-without-hwut-end;;2
 demo.pl;analogies;true;ok;;3;0
 ;clusters;true;ok;;3;1
 ;constraints;true;ok;;3;2
@@ -23,7 +23,7 @@ garage.pl;race-atomic;true;ok;;5;0
 protocol.sh;broken;true;ok;;6;0
 ;clean;true;ok;;6;1
 ;slow;true;ok;;6;2
-screen.pl;open;true;ok;;8;0
-;scroll;true;ok;;8;1
-shop.pl;report;true;ok;;7;1
-;sell;true;ok;;7;0
+screen.pl;open;false;unexpected-stderr;stderr-untolerated;8;0
+;scroll;false;unexpected-stderr;stderr-untolerated;8;1
+shop.pl;report;false;output-file-not-found;;7;1
+;sell;false;terminated-without-hwut-end;;7;0

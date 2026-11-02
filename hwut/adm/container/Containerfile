@@ -15,20 +15,22 @@
 #
 # WHAT STANDS IN IT, and why:
 #     python 3.13            the interpreter the tree is written for
-#                            ('match' statements: 3.10 at least)
+#                            ('match' statements: 3.10 at least); from the
+#                            deadsnakes package source, in a venv whose
+#                            'python3' is first on PATH
 #     bidict rapidfuzz regex typeguard pyrsistent prompt_toolkit psutil pint
 #                            the packages the tree imports
 #     coverage               coverage.py: 'hwut.cov.run' over python
-#     ruff                   'adm/TEST/test-static-analysis.sh'
+#     ruff 0.16.8            'adm/TEST/test-static-analysis.sh'; PINNED: a
+#                            newer ruff counts other findings, and that
+#                            suite's GOOD is a count
 #     gcc, g++, make         gcov, the C road of 'hwut.cov.run'; a
 #                            verilated model is C++ built by make
 #     lcov, gcovr            the lcov tracefile road
 #     verilator              'verilator --coverage': coverage D-12 is
 #                            probed against the tool itself here
 #     ghdl                   the PSL coverage road
-#     golang-go              'go test -coverprofile'
 #     lua5.4, luarocks, luacov
-#     default-jdk-headless   the JaCoCo road's virtual machine
 #     git, mercurial, subversion, breezy, darcs, fossil
 #                            'adm/bundle.sh', 'hwut.affected'; and the
 #                            repositories 'hwut.sanitize root' offers as
@@ -43,48 +45,95 @@
 #     texlive-latex-base, texlive-latex-recommended, latexmk
 #                            'hwut.cov.conv.to_pdf' (geometry, xcolor,
 #                            colortbl, longtable, array)
+#     zsh, pwsh              'services/TEST/test-complete.py'
+#     THE TEST WRITING SUPPORT ('support/', E-217), every row
+#     'support:<language>' of the list, at the versions MEASURED 2026-11-01:
+#                            openjdk-21 (FFM preview), verilator 5.020,
+#                            ghdl 4.1, erlang 25, guile-3.0, ghc 9.4.7,
+#                            swi-prolog 9.0.4, gfortran 13,
+#                            libffi-platypus-perl, libsqlite3-dev; and from
+#                            their own releases, which Ubuntu packages
+#                            too old: Go 1.24.7 (go.mod), node 22.23.4
+#                            (node:sqlite), Rust 1.97.0, PowerShell 7.4.6
 #     COLUMNS=300, no colour  the pages are recorded at one width
 #
-# NOT IN IT: jujutsu and pijul -- bookworm packages neither; their
-# marker directories are still recognised. The coverage readers stay
-# tested on WITNESSED artefacts ('readers/TEST/REAL_PARSING_INPUT'): the
-# census calls no tool of the list above but gcc, git and ruff.
+# THE BASE IS UBUNTU 24.04, where the support was measured: Debian
+# bookworm packages Go 1.19, node 18, no JDK 21, GHC 9.0, GHDL 3 and
+# Verilator 5.006 -- each older than what was measured, several known not
+# to do. x86_64 only: the release tarballs are named for it.
 #
-# WRITTEN 2026-10-09 WHERE NO CONTAINER ENGINE STANDS: this recipe was
-# NOT BUILT by its author. The first 'hwut.dev.podman.build --rebuild'
-# is its test; a package name bookworm does not know fails it by name.
+# NOT IN IT: jujutsu and pijul -- no Ubuntu package; their marker
+# directories are still recognised. The coverage readers stay tested on
+# WITNESSED artefacts ('readers/TEST/REAL_PARSING_INPUT').
+#
+# WRITTEN 2026-11-01 WHERE NO CONTAINER ENGINE STANDS: this recipe was
+# NOT BUILT by its author; each package and version in it was measured
+# on an Ubuntu 24.04 machine, where every port gave 47 ok and every
+# demonstration 27 ok. The first 'hwut.dev.podman.build --rebuild' is its
+# test; then 'hwut.dev.podman.enter sh hwut/adm/requirement-check.sh'.
 #
 # NOTHING OF THE TREE IS IN THE IMAGE: the tree is the host's, mounted
 # by 'hwut.dev.podman.enter'; the image holds the requirements alone.
 
-FROM docker.io/library/python:3.13-slim-bookworm
+FROM docker.io/library/ubuntu:24.04
+
+ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update \
- && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+ && apt-get install -y --no-install-recommends software-properties-common gpg-agent \
+ && add-apt-repository -y ppa:deadsnakes/ppa \
+ && apt-get update \
+ && apt-get install -y --no-install-recommends \
+        python3.13 python3.13-venv python3.13-dev \
         gcc g++ libc6-dev make lcov gcovr \
-        verilator ghdl golang-go \
-        lua5.4 luarocks default-jdk-headless \
-        git mercurial subversion breezy darcs fossil zsh \
-        curl ca-certificates \
+        verilator ghdl \
+        lua5.4 luarocks \
+        git mercurial subversion brz darcs fossil zsh \
+        curl ca-certificates xz-utils \
         libvterm0 libvterm-dev \
         texlive-latex-base texlive-latex-recommended latexmk \
+        openjdk-21-jdk-headless \
+        erlang-base erlang-dev \
+        guile-3.0 \
+        ghc \
+        swi-prolog-nox \
+        gfortran \
+        libffi-platypus-perl \
+        libsqlite3-0 libsqlite3-dev \
+        util-linux \
  && rm -rf /var/lib/apt/lists/*
 
 RUN luarocks install luacov
 
-#  PowerShell is no Debian package: Microsoft's release tarball.
+#  Go, node, Rust and PowerShell: their own releases, at the measured
+#  versions (the list's 'support:' rows say why each).
+RUN curl -sSL https://go.dev/dl/go1.24.7.linux-amd64.tar.gz \
+    | tar -xz -C /usr/local \
+ && ln -s /usr/local/go/bin/go /usr/local/go/bin/gofmt /usr/local/bin/
+RUN mkdir -p /opt/node \
+ && curl -sSL https://nodejs.org/dist/v22.23.4/node-v22.23.4-linux-x64.tar.xz \
+    | tar -xJ -C /opt/node --strip-components=1 \
+ && ln -s /opt/node/bin/node /opt/node/bin/npm /opt/node/bin/npx /usr/local/bin/
+RUN curl -sSL https://static.rust-lang.org/dist/rust-1.97.0-x86_64-unknown-linux-gnu.tar.xz \
+    | tar -xJ -C /tmp \
+ && /tmp/rust-1.97.0-x86_64-unknown-linux-gnu/install.sh --components=rustc,rust-std-x86_64-unknown-linux-gnu \
+ && rm -rf /tmp/rust-1.97.0-x86_64-unknown-linux-gnu
+#  PowerShell is no Ubuntu package: Microsoft's release tarball.
 RUN mkdir -p /opt/pwsh \
  && curl -sSL https://github.com/PowerShell/PowerShell/releases/download/v7.4.6/powershell-7.4.6-linux-x64.tar.gz \
     | tar -xz -C /opt/pwsh \
  && chmod +x /opt/pwsh/pwsh && ln -s /opt/pwsh/pwsh /usr/local/bin/pwsh
 
-RUN pip install --no-cache-dir \
+RUN python3.13 -m venv /opt/hwut-venv \
+ && /opt/hwut-venv/bin/pip install --no-cache-dir \
         bidict rapidfuzz regex typeguard pyrsistent prompt_toolkit psutil pint \
-        coverage ruff
+        coverage ruff==0.16.8
 
-ENV COLUMNS=300 \
+ENV PATH=/opt/hwut-venv/bin:$PATH \
+    COLUMNS=300 \
     NO_COLOR=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
+    PYTHONUNBUFFERED=1 \
+    POWERSHELL_TELEMETRY_OPTOUT=1
 
 CMD ["bash"]

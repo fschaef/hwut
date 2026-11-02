@@ -2,9 +2,9 @@
 # SPDX-License: MIT; Project HWUT; (C) Frank-Rene Schaefer
 #
 # @hwut {
-#     title    = "adm/requirement-check.sh: ok, MISSING, OLD; exit 1 for the census"
+#     title    = "adm/requirement-check.sh: ok, MISSING, OLD; exit 1 for the census and the test writing support"
 #     features = ["requirement-check"]
-#     choices  = ["census", "road"]
+#     choices  = ["census", "road", "support"]
 # }
 #
 # ---------------------------------------------------------------------------
@@ -19,13 +19,17 @@
 #            every python row read MISSING -- the probe ran
 #            'import bidict>=0.22.1', a syntax error.
 #   road     the same rows needed by a road only: said, exit 0.
+#   support  rows of the test writing support ('support:<language>,...',
+#            E-217), with the kinds 'perl' (a module: 'strict' stands) and
+#            'header' ('stdio.h' stands): the missing ones name the
+#            languages that go red, exit 1.
 # ---------------------------------------------------------------------------
 HERE=$(cd "$(dirname "$0")" && pwd)
 
 case "$1" in
     --hwut-info)
         echo "adm/requirement-check.sh: ok, MISSING, OLD; exit 1 for the census;"
-        echo "CHOICES: census, road;"
+        echo "CHOICES: census, road, support;"
         exit 0 ;;
 esac
 
@@ -37,6 +41,16 @@ cp "$HERE/../requirement-check.sh" "$WORK/"
 #  the suite runs (the census installs through it); its version is far
 #  below 999 and far above 0.1.
 need=$1
+if [ "$need" = support ]; then
+cat > "$WORK/requirement-list.txt" <<EOF
+program  sh                    support:all            -   a program that stands
+program  no-such-program-x     support:erlang,prolog  -   a program that does not
+perl     strict                support:perl           -   a Perl module that stands
+perl     No::Such::Module      support:perl           -   one that does not
+header   stdio.h               support:c              -   a C header that stands
+header   no_such_header_x.h    support:c,fortran      -   one that does not
+EOF
+else
 cat > "$WORK/requirement-list.txt" <<EOF
 prose line: neither of the list's own vocabulary, read past
 program  sh                    $need  -   a program that stands
@@ -46,6 +60,7 @@ python   pip>=0.1              $need  -   new enough
 python   pip>=999              $need  -   below the oldest measured
 python   no_such_module_x>=1.0 $need  -   absent
 EOF
+fi
 
 bash "$WORK/requirement-check.sh" | sed 's/  *$//'
 echo "exit: ${PIPESTATUS[0]}"

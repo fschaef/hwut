@@ -1,0 +1,249 @@
+==============================================================================
+intend/26-hwut-bench -- A UNIT UNDER TEST BEHIND A LINK: THE BENCH
+==============================================================================
+
+COMPONENTS CONCERNED: test_writing_support (a new package remote_execution/:
+                      host modules, the agent's device halves, the protocol),
+                      engine/orchestrator/exploration (a block 'bench { }' in
+                      hwut-root.conf: shape validation, nothing more),
+                      services (a face hwut.sanitize.bench.defaults),
+                      the book (Chapter 11, "Tests on Real Hardware").
+SPEC:                 adm/WORK/spec/26-hwut-bench.txt
+RAISED:               2026-10-25, the book writers' PROPOSAL-hardware-in-the-
+                      loop-hub, on the author's idea: "ein kleines python-hub
+                      programm, das von hwut angesprochen wird, das auf
+                      choices reagiert und das im hintergrund hardware in the
+                      loop ausfuehrt, basierend auf test_support modulen, die
+                      ueber die protokolle kommunizieren". Grounded by the
+                      literature review of 2026-10-26
+                      (claude/ANALYSIS-hil-protocols-2026-10-26.md).
+
+A TEST APPLICATION DRIVES A BOARD TODAY THE WAY IT DRIVES ANYTHING: it
+prints, hwut compares. What it lacks is not a face of hwut but the small
+things every such application re-solves alone: reaching the target over a
+link, loading and activating an image through the vendor's tool, telling a
+corrupt line from a UUT's answer, and keeping all of it out of the picture.
+
+THE AUTHOR'S EXAMPLE (2026-10-25): an FPGA is flashed via USB-Blaster; a
+tiny send/receive stimulator/report agent is installed on the device; the
+test communicates with it and prints the results; the test carries a label
+such as 'max10-connected'. Read off that example, what is wanted:
+
+    0 presence      jtagconfig: cable and device            -> a probe
+    1 provision   quartus_pgm -o pv;uut_agent.sof   -> a loader, verifying
+    2 connect     the kit's UART                    -> a link
+    3 reset       the UUT in a defined state        -> an agent register
+    4 stimulate   set / apply / report, per vector  -> the agent, a protocol
+    5 picture     one line per vector, fixed width  -> the writer's prints
+    6 end           <hwut-end>                              -> HwutRunner
+
+DONE CHANGES THIS: a writer imports the modules that fit his board, writes
+the five lines of a session and prints rows; the agent is proven on every
+host under iverilog before it ever meets a board; nothing a link does
+(retransmission, discarded noise, timing, identity) reaches a GOOD file
+except as '##' lines; and hwut learns nothing of it beyond one block of
+configuration.
+
+______________________________________________________________________________
+
+WHAT IT IS NOT
+
+- Not a hub daemon, not a bench description interpreted by hwut, not an
+  adapter catalogue, not reservations and locks of hwut's own: the writers'
+  elaboration of 2026-10-25, struck. One owner per board is 'collision'
+  (R-32); a board's presence is a label (intend 25).
+- Not one test switched between benches: a hardware test is written for
+  its target; the simulation test is its own application that may share
+  code with it. '--variant' benches: struck 2026-10-25.
+- Not a framework: a library. The sequence of a session stands in the test
+  application, top to bottom, and is thereby documented.
+- hwut 2.0 reads configurations. It learns nothing from a running
+  application: the interview is the migration path (R-44), nothing else.
+  Struck 2026-10-26: a 'BENCH:' info line, a plan-time probe, an exclusion
+  derived from a shared bench, values handed over in the environment.
+
+______________________________________________________________________________
+
+THE SHAPE
+
+    HOST                                         TARGET
+    test application ── uses ──▶ host modules ══ link ══▶ agent ─ UUT
+                                 remote_execution/        remote_execution/
+                                 host/: session, link,    target/<impl>/
+                                 entry, <loader>, capture
+    Makefile ── flash ──▶ host/<loader>.py ── vendor tool ──▶ image on target
+
+    hwut-root.conf: bench { max10 { serial ... loader ... } }, read by name:
+    entry.get("max10"), 'flash max10'. The picture and the names stand in
+    the spec, section 1.
+
+What the code decides: the tool chain and the board -- the tool module
+the Makefile calls and the entry's name. What the entry decides: device
+path, cable, baud -- the device table. What hwut decides: nothing; it
+validates the block and lays down defaults.
+
+ONE LAW, ONE PLACE: the protocol is one page (PROTOCOL.txt), the agent's
+registers one page (MAP.txt), both in remote_execution/; the agent
+implementations and the host modules implement them and nothing else.
+
+______________________________________________________________________________
+
+WHY A REGISTER MAP (o-10, 2026-10-26)
+
+The surveyed systems are not distinguished by their verbs -- 'g'/'m',
+'SET_MTA'/'UPLOAD', 'shift:' are interchangeable -- but by how they answer
+five questions beneath the verbs: who proves the target is the one just
+loaded; what a receiver does with a byte it did not expect; how a late
+reply is told from the next one; who owns the clock; who may hold the
+board. A control-and-status register map answers the first with a register
+(image id) and leaves the agent's parser with no semantics at all:
+identity, reset, apply, capabilities, timeout, a FIFO, a load window are
+addresses. Every later feature is an address, never a verb.
+
+______________________________________________________________________________
+
+WHY THE PROTOCOL IS WHAT IT IS -- the review's rules, each with a precedent
+
+    a CRC, width by length   Maxino & Koopman: a CRC, never XOR or a
+                             sum; an 8-bit CRC keeps HD=4 only to 14
+                             data bytes
+    a token in every reply   GDB's documented hole: a late reply reads
+                             as the next one; CMSIS-DAP, esptool echo
+    idempotent read-back     Lampson, Candea & Fox, XCP SYNCH: a
+                             protocol whose state can be re-read never
+                             needs a retransmission counter
+    bounded, counted discard RFC 1662: "silently discard" still counts;
+                             Twister's RunID: the first valid frame
+                             carries an identity, or a stale agent passes
+    the target owns time     dSPACE, XCP DAQ: the agent waits on the
+                             UUT, bounded; the host never sleeps (R&S:
+                             a fixed pause is a defect)
+    out of band, existing    labgrid, LAVA, Twister: load through the
+      tools                  vendor tool, consume its exit status,
+                             verify, then activate
+
+______________________________________________________________________________
+
+WHAT HWUT LEARNS: ONE BLOCK
+
+    bench { <name> { <key> = <scalar> ... } }        in hwut-root.conf
+
+validated as a map of maps of scalars; D-56 applies (a root's benches are
+its own). 'hwut.sanitize.bench.defaults' lays the standard entries down for
+a tree that has none.
+
+==============================================================================
+RULED  (chat, 2026-10-25/26; RATIONALE entries are written with the build)
+==============================================================================
+ o-1   (a) remote_execution ships the agent and the host side AND the
+           protocol
+           between them.
+ o-2   (a) one stimulus register, one report register, widths
+           parameterised. SUPERSEDED by o-10: both are addresses of the map.
+ o-3   (b) a CRC on every line, both directions; a corrupt or lost reply is
+           recovered through an idempotent read and reconciliation, never a
+           blind resend of a command that acts. Width: o-6.
+ o-4   withdrawn: the UUT clock plays no role in the protocol; it exists as
+           the agent's timeout while waiting on the UUT.
+ o-6   (a) CRC-16, polynomial 0x1021, four hex digits; line <= 80 bytes.
+ o-7   'bench { }' lands in hwut-root.conf.
+ o-8   hwut.sanitize.bench.defaults prepares default benches.
+ o-9   (b) hwut knows 'bench { }' as configuration and nothing else; the
+           code names its bench.
+ o-10  (a) one flat map: agent control at the bottom, stimulus, report,
+           pass-through above 100; verbs r, w, p (+x). Offsets: o-13.
+       Location: test_writing_support/remote_execution/ (o-21).
+       Library, not framework: modules the writer imports; the sequence
+       stands in the test.
+ o-5   (a) no load window in the first delivery; caps bit 'xfer' and an
+           address range reserved.
+ o-11  (a) the token is one hex digit; the host counts mod 16; every reply
+           echoes it; 'last' holds the token of the last command that acted.
+ o-12  (a) no abort byte: the agent never blocks on the host nor on the UUT
+           beyond its timeout register; an empty line flushes; a hung agent
+           is recovered by the bench's reset.
+ o-13  (b) the space is LINEAR AND BYTE-ADDRESSED (reconsidered 2026-10-26,
+           replacing the 32-bit word): a register is a run of bytes, the wire
+           carries bytes in address order, multi-byte values are little-
+           endian; lengths, not widths. Verbs r <addr> <len>, w <addr>
+           <bytes>, p <addr> <mask> <value>.
+ o-14  (a) 'x <bytes>' = write stimulus, apply, wait done, read report: one
+           round trip per vector (a USB-serial bridge holds bytes up to 16 ms
+           per round trip).
+ o-15  (a) the ladder: lost or corrupt reply -> '## reply lost' -> read
+           'last' -> acted: read the state; not acted: resend under a new
+           token; '! crc' -> resend; three consecutive failures fail the
+           choice, 'agent silent', the next choice resets the bench first.
+           A state re-read, never a re-application, never a test re-run.
+ o-16  (a) checking and flashing the board is the test application's
+           BUILD: 'build = "make flash"'; make decides what is stale; a
+           loader module ('python3 -m remote_execution.host.quartus
+           flash max10 ...')
+           asks the agent's image register and flashes only on a
+           difference; the image id is a hash of the inputs. A board that
+           cannot be flashed is a build failure, not a red picture.
+
+ o-17  (a) the reviews of 2026-10-26 taken as decided by the bench
+           engineer (claude/EXPERT-REVIEW-3-proposals-2026-10-26.md), with
+           the axes review's F1-F11 (claude/MATH-AXES-REVIEW-...):
+           - every reply is the content of a read; 'x' replies status and
+             report; '! timeout' and caps.exact go (status 02/03 instead);
+           - the agent answers only lines whose CRC holds: 'z' and '! crc'
+             go (refines o-15);
+           - release goes; ctrl is one reset address;
+           - 'p' is reserved, answered '! unknown' (o-10, o-13: deferred,
+             not deleted);
+           - a 'fresh' bit and three-way reconciliation detect a restarted
+             agent;
+           - staleness is the hash alone; LATENCY selects the done mode;
+           - o-5's 'xfer' stays reserved, at 10000 and above;
+           - a session is one choice; the wait contract is printed as a
+             row; the design is stated along orthogonal axes.
+
+ o-18  The C and Python halves offer two seams: 'uut_run' (blocking,
+           the default, shown in the prototypes) and 'uut_start' /
+           'uut_done' (poll, for UUTs that need '! busy' and an enforced
+           timeout); the agent reports its seam in the hello. A remote
+           bench ('via', loaders over ssh to a lab host) is deferred until
+           a remote bench exists.
+
+ o-19  Real-time HIL systems (dSPACE through ASAM XIL, NI VeriStand) and
+           SCPI instruments are used through their own APIs: no agent, no
+           protocol of ours. The design states how a test with them is built
+           (the session shape, rows from target-timestamped captures at
+           model times), adds one helper, capture.rows, and the bench
+           README carries three worked examples.
+
+ o-20  Seven prototypes, each a directory that runs end to end: iverilog,
+           de10-lite, arty-a7, nucleo-f4, esp32-devkitc, qemu, linux-ssh;
+           together they take every value of the agent half, time domain,
+           transport, loader and bench reset, both wait modes and both
+           seams. Xilinx is reached through one new loader, openFPGALoader,
+           which also programs other vendors' FPGAs. The image-id rule is
+           one shared Makefile fragment, host/image_id.mk.
+
+ o-21  The package is test_writing_support/remote_execution/: host/ holds
+           the host modules, all Python, without a 'hwut_' prefix (session,
+           link, entry, one module per loader, capture); target/ holds one
+           directory per agent implementation (verilog, c, python); proto/
+           the prototypes. The spec opens with the two sides, their names,
+           and a sequence diagram of what the user does; the protocol stays
+           hidden from the user.
+
+ o-22  Robotics: ROS 2 is a system with its own API (section 22): the test
+           application is an rclpy node; deterministic rows need simulated
+           time (Gazebo, /clock, time = virtual); on a real robot only final
+           states and verdicts are rows. Prototype proto/ros2-gazebo. CAN
+           becomes a fifth transport (ISO-TP through python-can) for agents
+           reachable only over CAN; prototype proto/can-nucleo.
+
+ o-23  Automotive: XCP, UDS and SOME/IP are systems with their own API
+           (section 22), each with a worked example; AUTOSAR Classic
+           components are reached through the C agent, uut_run calling the
+           RTE ports. An ARXML-to-seam generator is deferred until a first
+           AUTOSAR user brings real tool output.
+
+==============================================================================
+OPEN
+==============================================================================
+ none.

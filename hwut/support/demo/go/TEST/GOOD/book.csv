@@ -4,7 +4,7 @@ build.go;parallel;true;ok;;2;1
 ;serial;true;ok;;2;0
 chamber.go;cool;true;ok;;3;0
 ;heat;true;ok;;3;1
-delivery.json;;true;ok;;1
+delivery.json;;false;test-app-launch-failed;;1
 demo.go;analogies;true;ok;;4;8
 ;clusters;true;ok;;4;7
 ;constraints;true;ok;;4;6
@@ -21,7 +21,7 @@ garage.go;race-atomic;true;ok;;7;0
 ;random;true;ok;;7;2
 ;space;true;ok;;7;3
 protocol.sh;broken;true;ok;;0;1
-;clean;true;ok;;0;2
+;clean;false;unexpected-stderr;stderr-untolerated;0;2
 ;slow;true;ok;;0;0
 screen.go;open;true;ok;;8;0
 ;scroll;true;ok;;8;1

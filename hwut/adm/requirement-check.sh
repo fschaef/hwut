@@ -8,7 +8,9 @@
 # One line per requirement: 'ok', 'MISSING' or 'OLD' (older than the list's
 # '>=<version>'), what it is for, and the
 # package that brings it. EXIT 1 where a requirement the CENSUS needs is
-# missing; a missing ROAD requirement is said and does not fail.
+# missing, or one of the test writing support ('support:<language>,...':
+# the languages whose support and demonstration go red are named); a
+# missing ROAD requirement is said and does not fail.
 # ---------------------------------------------------------------------------
 LIST="$(cd "$(dirname "$0")" && pwd)/requirement-list.txt"
 
@@ -30,15 +32,19 @@ EOF
         library) python3 -c "
 import ctypes.util, sys
 sys.exit(0 if ctypes.util.find_library('$2') else 1)" > /dev/null 2>&1 ;;
+        perl)    perl -M"$2" -e 1 > /dev/null 2>&1 || return 1 ;;
+        header)  printf '#include <%s>\n' "$2" \
+                     | cc -E -x c - > /dev/null 2>&1 ;;
     esac
 }
 
 missing_n=0
+red_list=""             #  the languages of a missing 'support:' row
 while read -r kind name need package rest; do
     #  AN ENTRY IS A LINE WHOSE FIRST AND THIRD WORDS ARE OF THE LIST'S
     #  OWN VOCABULARY; everything else is the list's prose.
-    case "$kind" in program|python|library) ;; *) continue ;; esac
-    case "$need" in census|road)            ;; *) continue ;; esac
+    case "$kind" in program|python|library|perl|header) ;; *) continue ;; esac
+    case "$need" in census|road|support:*)              ;; *) continue ;; esac
     found "$kind" "$name"
     case $? in
         0) state="ok     " ;;
@@ -47,13 +53,21 @@ while read -r kind name need package rest; do
     esac
     [ "$state" != "ok     " ] && [ "$need" = census ] \
         && missing_n=$((missing_n + 1))
+    case "$state:$need" in
+        "ok     :"*) ;;
+        *:support:*) red_list="$red_list,${need#support:}" ;;
+    esac
     printf '%s  %-7s %-15s %-6s %-22s %s\n' \
            "$state" "$kind" "$name" "$need" "$package" "$rest"
 done < "$LIST"
 
 echo
+red=$(printf '%s' "$red_list" | tr ',' '\n' | sed '/^$/d' | sort -u | tr '\n' ' ')
+case " $red " in *" all "*) red="every language but python " ;; esac
+[ -n "$red" ] && echo "the test writing support goes red for: ${red}(support/test_writing, support/demo)"
 if [ "$missing_n" -gt 0 ]; then
     echo "$missing_n requirement(s) of the census missing or too old: its rows that want them are red."
     exit 1
 fi
+[ -n "$red" ] && exit 1
 echo "every requirement of the census stands."
