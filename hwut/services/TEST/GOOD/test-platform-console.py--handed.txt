@@ -1,0 +1,10 @@
+$ hwut.run --exclude-local -p linux   [exit 0]
+    DIRECTORIES  (counts: 3 ok, 0 fail)
+       +--- ./  [PLATFORM not available]  requires local; specified linux
+       +--- both/TEST (linux) . . . . . . . . . . . . . . . . .      [OK]      1/1
+       +---. linux
+       |   +--- TEST (linux) . . . . . . . . . . . . . . . . .       [OK]      1/1
+       |   '--- inner/TEST (linux) . . . . . . . . . . . . . .       [OK]      1/1
+       '--- none/  [PLATFORM not available]  requires local; specified linux
+    RESULTS: 3 ok, 0 fail
+<hwut-end>

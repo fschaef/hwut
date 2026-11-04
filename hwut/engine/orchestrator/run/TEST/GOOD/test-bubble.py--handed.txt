@@ -1,0 +1,13 @@
+$ --exclude-local -p linux
+    not-run  .              ''         available ./: requires local; specified linux
+    not-run  none           ''         available none/: requires local; specified linux
+    handed   both           linux      far: hwut.run --as-platform=linux
+    handed   linux          linux      far: hwut.run --as-platform=linux
+    PLANNED: 
+    EXPLORED TEST               0
+    EXPLORED none/TEST          0
+    EXPLORED linux/TEST         0
+    EXPLORED linux/inner/TEST   0
+    EXPLORED both/TEST          0
+SUCCESS: handed; the inner bubble decided over there.
+<hwut-end>

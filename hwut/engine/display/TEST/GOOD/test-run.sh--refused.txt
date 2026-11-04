@@ -12,7 +12,7 @@ STDOUT {
                     [-v|--verbose|--plain|--quiet|--silent] [--colour|--no-colour]
                     [--show-timing] [--show-jobs] [--show-details]
                     [--no-failure-summary] [--brief] [--log <file>]
-                    [--directory=<path>]
+                    [-p <platform>]... [--exclude-local] [--directory=<path>]
 }
 == an option nobody knows ==
 STATUS: 2

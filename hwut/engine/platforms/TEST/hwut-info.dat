@@ -1,0 +1,6 @@
+Platforms -- where a bubble runs: 'local' and 'container'
+-----------------------------------------------------------
+
+coverage run --omit ./*.py -a *.py
+
+--not config.py

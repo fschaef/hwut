@@ -1,0 +1,19 @@
+TEST              test;choice;verdict;report;stain;test_id;choice_id;platform | test-top.sh;;true;ok;;0
+none/TEST         test;choice;verdict;report;stain;test_id;choice_id;platform | test-a.sh;;true;ok;;0
+linux/TEST        test;choice;verdict;report;stain;test_id;choice_id;platform | test-b.sh;;true;ok;;0;;linux
+linux/inner/TEST  test;choice;verdict;report;stain;test_id;choice_id;platform | test-c.sh;;true;ok;;0;;linux
+both/TEST         test;choice;verdict;report;stain;test_id;choice_id;platform | test-d.sh;;true;ok;;0;;linux
+$ hwut.report
+            test-top.sh ....................................................[OK]
+            test-d.sh (linux) ..............................................[OK]
+            test-b.sh (linux) ..............................................[OK]
+            test-c.sh (linux) ..............................................[OK]
+            test-a.sh ......................................................[OK]
+$ hwut.report --format=json   ('platform' per case)
+    TEST              test-top.sh -
+    both/TEST         test-d.sh  linux
+    linux/TEST        test-b.sh  linux
+    linux/inner/TEST  test-c.sh  linux
+    none/TEST         test-a.sh  -
+SUCCESS: the book says where; the report reads it.
+<hwut-end>

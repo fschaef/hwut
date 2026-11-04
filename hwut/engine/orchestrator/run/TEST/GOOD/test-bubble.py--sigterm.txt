@@ -1,0 +1,4 @@
+near run ended by SIGTERM: exit 143
+far process gone: True
+SUCCESS: a signal at the near run ends the far run with it.
+<hwut-end>

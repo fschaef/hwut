@@ -1,0 +1,9 @@
+near  [exit 0] RESULTS: 3 ok, 0 fail
+    both/TEST test-d.sh ok linux
+    linux/TEST test-b.sh ok linux
+    linux/inner/TEST test-c.sh ok linux
+local [exit 0] RESULTS: 2 ok, 0 fail   (in linux/)
+    linux/TEST test-b.sh ok -
+    linux/inner/TEST test-c.sh ok -
+SUCCESS: the bubble run there is the bubble run here, but for 'platform'.
+<hwut-end>

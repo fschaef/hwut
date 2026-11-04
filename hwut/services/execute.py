@@ -53,8 +53,16 @@ from   hwut.engine.orchestrator.exploration.task_list_query \
 from   hwut.engine.orchestrator.exploration.tree_explorer \
                                             import (explore_tree_stream,
                                                     ascended_spec,
-                                                    inherited_spec)
-from ..engine.orchestrator.plan.wish import NO_BOUNDARY_RETIRED_TEXT
+                                                    inherited_spec,
+                                                    root_conf_directory,
+                                                    RootConfMissing)
+from ..engine.orchestrator.plan.wish import WishError, parse_wish
+
+#  THE WISH WORDS THIS FACE TAKES, read by the wish's own reader: a face
+#  whose SUBJECT is directories takes the walk's words, and a person who
+#  learnt '--dir' on 'hwut.run' has learnt it here (disc-10, E-202).
+_WISH_TAKE_TUPLE = ("--dir", "--exclude-dir", "--no-bubbles",
+                    "--no-boundary")
 from ..auxiliary.no_entry import entered
 from ._exit import E_ExitCode
 from ..engine.procsitter.api import spawn
@@ -146,6 +154,23 @@ def main(argv=None, write=None):
     arguments = _read_command_line(argv, write)
     if arguments is None:          return E_ExitCode.REFUSED
     if arguments == "help":        return E_ExitCode.OK
+    #  A DIRECTORY THAT IS NOT IS REFUSED, as 'hwut.run' refuses it; and
+    #  '-c', which walks the TEST directories as 'hwut.run' walks them,
+    #  needs the tree's boundary as 'hwut.run' does. A target needs none:
+    #  it is bound by a directory's own 'hwut.conf'. MEASURED before: '-c'
+    #  died in a traceback (FileNotFoundError, RootConfMissing out of the
+    #  walk); a target in a directory that is not was answered "no
+    #  directory below 'nowhere' binds any target".
+    if not os.path.isdir(arguments["directory"]):
+        write("REFUSED: the directory '%s' does not exist"
+              % arguments["directory"])
+        return E_ExitCode.REFUSED
+    if arguments["command"] is not None:
+        try:
+            root_conf_directory(arguments["directory"])
+        except RootConfMissing as error:
+            write("REFUSED: %s" % error)
+            return E_ExitCode.REFUSED
 
     if arguments["command"] is not None:
         plan = _test_directory_plan(arguments)
@@ -179,11 +204,26 @@ def _read_command_line(argv, write):
     Everything before the first bare token is this service's
     vocabulary; the bare token is the target; everything after it is
     passed through untouched.
+
+    THE WISH'S WORDS ARE THE WISH'S: '--dir', '--exclude-dir' and
+    '--no-bubbles' are read by 'parse_wish', before the target only
+    ('operand_ends_f') -- everything after the target belongs to the
+    SCRIPT, argv-style and untouched, this face's oldest law. The two
+    dir words are decided in command-line order by grep's rule
+    (services E-15). Every other wish word is left to this reader,
+    which refuses it as it refuses any word it does not know.
     """
+    try:
+        wish, argv = parse_wish(argv, take_tuple=_WISH_TAKE_TUPLE,
+                                operand_ends_f=True)
+    except WishError as error:
+        write("REFUSED: %s" % error); write(USAGE)
+        return None
     result = {"target": None, "pass_through": [], "ignore_f": False,
               "default": None, "quiet_f": False, "plus_x_f": False,
-              "directory": ".", "dir_tuple": (), "dir_rule_tuple": (),
-              "command": None, "boundary_f": False}
+              "directory": ".", "dir_tuple": wish.dir_tuple,
+              "dir_rule_tuple": wish.dir_rule_tuple,
+              "command": None, "boundary_f": wish.no_bubbles_f}
     i = 0
     while i < len(argv):
         argument = argv[i]
@@ -193,42 +233,11 @@ def _read_command_line(argv, write):
             return "help"
         elif argument in ("-i", "--ignore"):  result["ignore_f"] = True
         elif argument in ("-q", "--quiet"):   result["quiet_f"]  = True
-        #  THE WISH'S OWN WORD (RQ-9, E-202): stay out of inner bubbles.
-        elif argument == "--no-bubbles":      result["boundary_f"] = True
-        elif argument == "--no-boundary":
-            write("REFUSED: %s" % NO_BOUNDARY_RETIRED_TEXT); write(USAGE)
-            return None
         elif argument == "+x":                result["plus_x_f"] = True
         elif argument.startswith("--default="):
             result["default"] = argument[len("--default="):]
         elif argument.startswith("--directory="):
             result["directory"] = argument[len("--directory="):]
-        elif argument in ("--dir", "--exclude-dir") \
-             or argument.startswith(("--dir=", "--exclude-dir=")):
-            #  THE WISH'S OWN WORD (disc-10). A face whose SUBJECT is
-            #  directories reads the same option every other face
-            #  reads as a filter -- one selection language, and a
-            #  person who learnt '--dir' on 'hwut.run' has learnt it
-            #  here.
-            #
-            #  IT MUST STAND BEFORE THE TARGET NAME. Everything after
-            #  the target belongs to the SCRIPT, argv-style and
-            #  untouched -- that is this face's oldest law, and
-            #  '--dir' does not get to break it.
-            #  '--exclude-dir' is its opposite, and the two are decided
-            #  in command-line order by grep's rule (services E-15).
-            word, _eq, text = argument.partition("=")
-            if not _eq:
-                i += 1
-                if i >= len(argv):
-                    write("REFUSED: '%s' stands without a glob" % word)
-                    write(USAGE)
-                    return None
-                text = argv[i]
-            kind = "+" if word == "--dir" else "-"
-            if kind == "+": result["dir_tuple"] = result["dir_tuple"] + (text,)
-            result["dir_rule_tuple"] = result["dir_rule_tuple"] \
-                                       + ((kind, text),)
         elif argument == "-c":
             i += 1
             if i >= len(argv):

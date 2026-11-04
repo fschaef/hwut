@@ -1,0 +1,10 @@
+$ -p linux
+    REFUSED: both/: requires local, linux; specified local, linux
+         => narrow with '--exclude-local -p linux', or run without '-p'
+    EXPLORED: nothing
+$ -p linux -p win11
+    REFUSED: both/: requires local, linux; specified local, linux, win11
+         => narrow with '--exclude-local -p linux', or run without '-p'
+    EXPLORED: nothing
+SUCCESS: refused at the call, every such bubble named.
+<hwut-end>

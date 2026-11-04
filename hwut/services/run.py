@@ -97,6 +97,8 @@ from   hwut.engine.orchestrator.exploration.tree_explorer \
 from .lib.labels import view_at
 from .lib.labels._file import LabelFileError
 from ..engine.orchestrator.plan.wish import (HELP as WISH_HELP,
+                                                             PLATFORM_HELP,
+                                                             PLATFORM_USAGE_TOKEN_TUPLE,
                                                              WishError,
                                                              parse_wish,
                                                              with_targets,
@@ -124,7 +126,8 @@ PARSER = face_parser("hwut.run", "The tree run, rendered live.",
                      word_help="a test, a test and a choice, a file glob "
                                "and a choice glob",
                      word_metavar="[<file-glob> [choice-glob]...]",
-                     shared_token_tuple=RENDERING_TOKEN_TUPLE)
+                     shared_token_tuple=RENDERING_TOKEN_TUPLE
+                                        + PLATFORM_USAGE_TOKEN_TUPLE)
 PARSER.add_argument("--no-store", action="store_true")
 PARSER.add_argument("--timing", action="store_true")
 PARSER.add_argument("--jobs", default=None, metavar="n")
@@ -135,6 +138,10 @@ PARSER.add_argument("--directory", default=None)
 PARSER.add_argument("--force-run", action="store_true", help=argparse.SUPPRESS)
 PARSER.add_argument("--variant", default="", help=argparse.SUPPRESS)
 PARSER.add_argument("--dbd", "--directory-by-directory", action="store_true",
+                    help=argparse.SUPPRESS)
+#  A WORD FOR A HWUT THAT READS ANOTHER (spec/42 section 5): the stream's
+#  events, one line each ('engine/protocol/line.py'), not for a person.
+PARSER.add_argument("--events", default=None, metavar="file",
                     help=argparse.SUPPRESS)
 ARG_DB = {"--directory": True}
 USAGE  = usage_of(PARSER, ARG_DB)
@@ -147,6 +154,8 @@ HELP = """hwut.run -- the tree run, rendered live
 
 """ + WISH_HELP + """
 
+""" + PLATFORM_HELP + """
+
 EXECUTION
     --directory=<path>  the root to run below; the current one else
     --no-store          the store knob: no subject is recorded under
@@ -158,6 +167,11 @@ EXECUTION
     --jobs=<n>          the host-global bound on work standing at
                         once, across every directory; the number of
                         CPUs where absent
+    --events <file>     ALSO write the report stream to that file, one
+                        line per event, '<t>:<kind>:<content>' (the
+                        event line, engine/protocol/line.py) -- what a
+                        hwut that hands a bubble to a platform reads
+                        back (spec/42); not for a person
     --strategy=<words>  a comma list answering TWO questions. The
                         words may stand in either order and each has a
                         short spelling; an unnamed question keeps its
@@ -315,6 +329,43 @@ def _abort(write, message: str) -> E_ExitCode:
 
 
 @contextmanager
+def optional_event_writer(event_path, event_sink, write_error):
+    """
+    RETURN: (context manager) callable or None -- 'event_sink' where no
+            '--events' file is named; else a sink that writes each event
+            as its line into that file, flushed at once, the time
+            counted from the stream's 'tree-begun', and passes it on to
+            'event_sink' where one stands. A file that cannot be opened
+            is a FAULT said once; the run goes on without it.
+    """
+    if not event_path:
+        yield event_sink
+        return
+    from ..engine.protocol.line import line_of
+    try:
+        handle = open(event_path, "w", encoding="utf-8")
+    except OSError as error:
+        write_error("FAULT: the event file '%s' cannot be written (%s); "
+                    "the run goes on without it" % (event_path, error))
+        yield event_sink
+        return
+    origin = {}
+
+    def sink(item):
+        """RETURN: None. 'item' written as one line, then passed on."""
+        if isinstance(item, dict) and "kind" in item:
+            if item["kind"] == "tree-begun": origin["when"] = item["when"]
+            print(line_of(item, origin.get("when", item.get("when"))),
+                  file=handle, flush=True)
+        if event_sink is not None: event_sink(item)
+
+    try:
+        yield sink
+    finally:
+        handle.close()
+
+
+@contextmanager
 def optional_log_writer(log_path: str, write_error):
     """THE LOG IS THE FACE'S FILE (O-24), opened and closed reliably.
     A log that cannot be opened is a fault about the log, not a reason
@@ -348,7 +399,10 @@ async def _drive(root, request: Request, flow, event_sink=None,
                              variant_tuple   = name_tuple_of(exec_conf.variant_text),
                              timing_f        = exec_conf.timing_f,
                              despite_stain_f = exec_conf.despite_stain_f,
-                             force_run_f     = exec_conf.force_run_f),
+                             force_run_f     = exec_conf.force_run_f,
+                             #  A FAR RUN MEASURES ON ITS PLATFORM: the
+                             #  book says which (spec/42 section 6).
+                             platform        = request.wish.as_platform),
                          worker_max_n = exec_conf.worker_max_n,
                          strategy        = strategy_of(exec_conf.strategy),
                          selection_order = exec_conf.selection_order,
@@ -492,7 +546,7 @@ def _main(argv, write, write_error, captured_f, event_sink=None,
         return E_ExitCode.OK
 
     try:
-        wish, rest_list = parse_wish(argv)
+        wish, rest_list = parse_wish(argv, platform_f=True)
     except WishError as error:
         return _abort(write, str(error))
 
@@ -563,7 +617,9 @@ def _main(argv, write, write_error, captured_f, event_sink=None,
     #  worth. Tier, ink and width are decided there, once.
     tty_f = (not captured_f) and sys.stdout.isatty()
 
-    with optional_log_writer(rendering_wish.log_path, write_error) as write_log:
+    with optional_log_writer(rendering_wish.log_path, write_error) as write_log, \
+         optional_event_writer(arguments.events, event_sink,
+                               write_error) as event_sink:
         flow = console_view(rendering_wish, write, write_error,
                             os.environ, tty_f, write_log=write_log,
                             color_of=preferences.load().color,
@@ -601,8 +657,8 @@ def _registry_hint(directory):
         from ..engine.orchestrator.exploration.feature_detector \
                                          import unregistered_list
         from ..engine.orchestrator.exploration.tree_explorer \
-                                         import root_conf_directory
-        root  = root_conf_directory(directory)
+                                         import registry_top
+        root  = registry_top(directory)
         below = os.path.relpath(os.path.abspath(directory), root)
         found = unregistered_list(root, below.replace(os.sep, "/"))
     except Exception:                                   # noqa: BLE001

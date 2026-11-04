@@ -69,6 +69,11 @@ from ....engine.orchestrator.exploration import selection
 from ....engine.orchestrator.exploration.task_list import SelectionError
 from ....engine.orchestrator.plan.wish import parse_wish
 
+#  THE WISH WORDS THIS FACE TAKES: none -- it proposes over the tree, or
+#  over the one directory '--directory' names. The wish's reader still
+#  reads its command line, as every selecting face's.
+WISH_TAKE_TUPLE = ()
+
 
 def application_home_db(found):
     """
@@ -148,6 +153,7 @@ def main(argv=None, write=None):
         write(man_page("hwut.remove.propose", __doc__.strip()))
         return E_ExitCode.OK
 
+    wish, argv = parse_wish(argv, take_tuple=WISH_TAKE_TUPLE)
     file_name, directory = None, None
     skip_f = False
     for index, argument in enumerate(argv):
@@ -172,7 +178,6 @@ def main(argv=None, write=None):
         return E_ExitCode.REFUSED
 
     #  ONE FACE, BOTH DOORS: the tree by default, one directory named.
-    wish, _ = parse_wish([])
     try:
         if directory is not None:
             found = selection.of_directory(directory, wish, None, base_f=True)

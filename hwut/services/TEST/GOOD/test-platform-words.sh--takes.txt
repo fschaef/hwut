@@ -1,0 +1,24 @@
+$ run --plain
+    STATUS: 0
+    RESULTS: 1 ok, 0 fail
+$ run -p linux --plain
+    STATUS: 0
+    NOTE  -p linux: no bubble below requires it
+    RESULTS: 1 ok, 0 fail
+$ run -p local --plain
+    STATUS: 0
+    RESULTS: 1 ok, 0 fail
+$ run --exclude-local -p linux --plain
+    STATUS: 3
+    NOTE  -p linux: no bubble below requires it
+$ run --exclude-local --plain
+    STATUS: 2
+    REFUSED: '--exclude-local' leaves no platform -- add '-p <name>'
+$ lib.run.play -p linux test-a.sh
+    STATUS: 0
+    NOTE  -p linux: no bubble below requires it
+    RECORDED: test-a.sh.txt (digest)
+$ lib.sanitize.propose -p linux -p local -o proposal.txt
+    STATUS: 0
+SUCCESS: the faces that run take them.
+<hwut-end>

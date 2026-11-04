@@ -52,7 +52,20 @@ KIND_DB = {
                     "fail_db": dict}, {}),
     "tree-done":  ({"good": bool, "fail_n": int}, {"meta_n": int,
                                                      "skip_n": int}),
+    #  A BUBBLE NOT RUN HERE (spec/42 section 6, rulings 13, 21): no
+    #  platform both specified and required ('available'), or the one
+    #  that is cannot be reached ('reachable'). Nothing of it is counted.
+    "not-run":    ({"directory": str, "platform": str, "reason": str,
+                    "text": str}, {}),
 }
+
+#  WHERE A VERDICT WAS MEASURED (spec/42 section 6): every kind may
+#  carry 'platform', absent for 'local'. It is the LAST optional field of
+#  each kind, so a line codec writes it last and only where it stands --
+#  a local event's line is the line it always was.
+PLATFORM_FIELD = "platform"
+for _required_db, _optional_db in KIND_DB.values():
+    if PLATFORM_FIELD not in _required_db: _optional_db[PLATFORM_FIELD] = str
 
 _FIELD_TEXT_DB = {
     "when":           "ISO-8601 UTC instant of the event",
@@ -82,7 +95,8 @@ _FIELD_TEXT_DB = {
                       "is known",
     "text":           "one line, verbatim; on 'refused': WHY the node "
                       "named was not run (E-41); on 'warning': a "
-                      "finding about the wish that decides nothing",
+                      "finding about the wish that decides nothing; on "
+                      "'not-run': the NOTE that says why",
     "fail_db":        "node name -> terminal state, the failures "
                       "alone",
     "fail_n":         "how many nodes failed, tree-wide",
@@ -92,6 +106,12 @@ _FIELD_TEXT_DB = {
     "meta_n":         "how many cases the standard label 'meta' hid from "
                       "a wish that named no label -- excluded, not run, "
                       "not refused; stated once in the closing numbers",
+    "platform":       "the platform that measured it (spec/42); absent "
+                      "for 'local'; on 'not-run': the platform both "
+                      "specified and required, '' where none is",
+    "reason":         "why a bubble is not run: 'available' -- no "
+                      "platform both specified and required; "
+                      "'reachable' -- the one that is cannot be reached",
 }
 
 

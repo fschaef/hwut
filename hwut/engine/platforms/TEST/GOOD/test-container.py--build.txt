@@ -1,0 +1,27 @@
+image stands
+    -> (True, ''); 0 line(s) to the log
+    $ podman image inspect hwut-dev
+image absent, built
+    | BUILDING: image 'hwut-dev' from adm/container/Containerfile
+    -> (True, ''); 2 line(s) to the log
+    $ podman image inspect hwut-dev
+    $ podman build -t hwut-dev -f <root>/hwut/adm/container/Containerfile .
+the build fails
+    | BUILDING: image 'hwut-dev' from adm/container/Containerfile
+    | ERROR: image 'hwut-dev' not built from adm/container/Containerfile
+    |        step 4
+    |        step 5
+    |        step 6
+    |        step 7
+    |        Error: no such file
+    -> (False, 'image build failed'); 8 line(s) to the log
+    $ podman image inspect hwut-dev
+    $ podman build -t hwut-dev -f <root>/hwut/adm/container/Containerfile .
+  OK  : an image that stands is not built, nothing said
+  OK  : an absent image is built, said once, the recipe as the tree names it
+  OK  : the build: tagged with the image, the root its context
+  OK  : the build's output goes to the log, not the console
+  OK  : a failed build: the ERROR line, the last five lines, 'image build failed'
+  OK  : the failed build's whole output in the log
+SUCCESS: an absent image built; a failed build said.
+<hwut-end>

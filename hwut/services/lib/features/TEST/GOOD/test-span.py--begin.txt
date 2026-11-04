@@ -1,0 +1,15 @@
+>>> hwut.features.init inside 'inner/'
+    'hwut-root-features.conf' written -- 1 directory id(s), 1 feature(s), unplaced
+    => move the leaf lines into aggregates of 'tree'
+    exit 0
+    inner: directory_map { "Iiiiiii1" = "x" }
+>>> hwut.features.register at the top
+    NOT AS IT SHOULD STAND -- read, then heal by hand or by the lines after '=>':
+        dir-gone  Bbbbbbb2   'inner/x' stands no more
+                      => # unpaired Bbbbbbb2 inner/x (candidates: none)
+    HINTS
+        3 leaf(s) in no aggregate => hwut.features.tree
+    NOTE  inner/: own root, not walked => do it inside it
+    NOTE  own/: own root, not walked => do it inside it
+    exit 1
+<hwut-end>

@@ -1,0 +1,5 @@
+hwut-root.conf:  hwut { platform = [ "linux" ] }
+    TEST         platform_tuple=None
+                 runs not: 1 conf fault(s)
+    FAULT hwut-root.conf:2:18: VOCABULARY: platform 'linux': a bare name is "local" alone -- any other platform is { name = ... kind = ... }
+<hwut-end>

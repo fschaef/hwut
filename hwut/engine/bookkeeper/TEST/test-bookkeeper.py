@@ -13,6 +13,7 @@
 #         setup_delta { features = [] }
 #         one_act     { features = ["one-locked-act", "healed-through-the-door"] }
 #         stain       { features = ["stain-cell"] }
+#         platform    { features = ["platform-cell"] }
 #     }
 #     tolerance { eq_pattern = ["SUCCESS.*",
 #                              "'( and no __dict__ for setting new attributes)?$"] }
@@ -338,10 +339,11 @@ def test_reproduce():
          "the entry is the decision and nothing else"),
         (table.splitlines()[0]
          == "test;choice;verdict;report;"
-            "stain;test_id;choice_id",
+            "stain;test_id;choice_id;platform",
          "THE BOOK IS A TABLE (B-7): one row per choice, ';' between, "
          "every column a decision -- and since B-13 the REGISTER'S two "
-         "id columns, last so that every older column keeps its place. "
+         "id columns, then (spec/42) WHERE it was measured, each last "
+         "so that every older column keeps its place. "
          "The MARKS are not columns: a row can be removed, and a mark "
          "that went with it would let the scope reissue an id (B-2)"),
         ("caps" not in table and "canonicaliser" not in table
@@ -603,6 +605,67 @@ def test_stain():
     _verdict(ok, "the stain is one cell of keywords.")
 
 
+def test_platform():
+    """RETURN: None. WHERE A VERDICT WAS MEASURED (spec/42 section 6): the
+    last column, the platform's name, empty for 'local'."""
+    directory = _place("print('value 100.4')\n")
+    configuration = _configured(directory,
+                                choice_db={"basic": TestChoiceConfiguration()})
+
+    def row_line():
+        """RETURN: str, the book's header and its one row."""
+        with open(Bookkeeper(directory).book_path, encoding="utf-8") as fh:
+            line_list = [l for l in fh.read().splitlines()
+                         if not l.startswith("#")]
+        return " | ".join(line_list)
+
+    Bookkeeper(directory, platform="linux").record(
+        _ran(configuration, "basic"), configuration, E_Goal.VERDICT, "basic")
+    on_linux, on_linux_result = row_line(), Bookkeeper(directory).result(
+                                                "demo", "basic")
+    Bookkeeper(directory).note_accept("demo", "basic")
+    accepted = row_line()
+    Bookkeeper(directory).record(
+        _ran(configuration, "basic"), configuration, E_Goal.VERDICT, "basic")
+    here, here_result = row_line(), Bookkeeper(directory).result(
+                                        "demo", "basic")
+    #  AN OLDER BOOK: this one without the header's 'platform' -- all the
+    #  column ever adds to a book whose rows were measured here.
+    book = Bookkeeper(directory)
+    with open(book.book_path, encoding="utf-8") as fh: text = fh.read()
+    os.chmod(book.book_path, 0o644)
+    with open(book.book_path, "w", encoding="utf-8") as fh:
+        fh.write(text.replace(";choice_id;platform\n", ";choice_id\n", 1))
+    older_result = Bookkeeper(directory).result("demo", "basic")
+    Bookkeeper(directory).note_accept("demo", "basic")
+    rewritten = row_line()
+    shutil.rmtree(directory)
+
+    for title, line in (("measured on linux", on_linux),
+                        ("accepted here after", accepted),
+                        ("measured here again", here),
+                        ("an older book, rewritten", rewritten)):
+        print("%-26s %s" % (title, line))
+    print("result on linux            %s" % sorted(on_linux_result.items()))
+    print("result here                %s" % sorted(here_result.items()))
+    print("result of the older book   %s" % sorted(older_result.items()))
+    ok = _check([
+        (on_linux.endswith(";linux") and on_linux_result["platform"] == "linux",
+         "a verdict measured on a platform: the last cell, and 'result' says it"),
+        (accepted.endswith(";linux"),
+         "an acceptance here leaves it: it measured nothing"),
+        (not here.endswith(";linux") and "platform" not in here_result,
+         "measured here again: the cell empty, the row as it ever was (B-9)"),
+        ("platform" not in older_result,
+         "an older book reads as measured here"),
+        (rewritten.startswith("test;choice;verdict;report;stain;test_id;"
+                              "choice_id;platform |")
+         and rewritten.split(" | ")[1:] == here.split(" | ")[1:],
+         "its first write adds the header's word alone"),
+    ])
+    print("%s: the book says where." % ("SUCCESS" if ok else "FAILURE"))
+
+
 if __name__ == "__main__":
     HwutRunner(
         argv       = sys.argv,
@@ -618,6 +681,7 @@ if __name__ == "__main__":
             "setup_delta": test_setup_delta,
             "one_act":     test_one_act,
             "stain":       test_stain,
+            "platform":    test_platform,
         },
         happy      = "SUCCESS.*",
     ).run()

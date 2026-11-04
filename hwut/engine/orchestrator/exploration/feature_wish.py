@@ -273,12 +273,13 @@ def case_set_of(root, wish):
     # the globs are read once, so a broken one is refused at the door
     for glob in wish.feature_tuple + wish.feature_ext_tuple:
         brace_alternative_tuple(glob)
-    from .tree_explorer import inner_root_tuple
-    #  EVERY BUBBLE ANSWERS FOR ITS OWN RUNS (RQ-9, services E-200): a
+    from .tree_explorer import registry_inner_tuple
+    #  EVERY REGISTRY ANSWERS FOR ITS OWN RUNS (RQ-9, services E-200): a
     #  bubble's feature file names its runs, as when hwut is called inside
-    #  it. A refusal stands where EVERY bubble refuses -- an id no bubble
-    #  knows; a bubble that does not know it simply offers none.
-    top_tuple  = (root,) + inner_root_tuple(root)
+    #  it; a bubble with no registry of its own is its registry's above.
+    #  A refusal stands where EVERY registry refuses -- an id none
+    #  knows; a registry that does not know it simply offers none.
+    top_tuple  = (root,) + registry_inner_tuple(root)
     case_set   = frozenset()
     error_list = []
     for top in top_tuple:
@@ -319,9 +320,9 @@ def feature_label_case_set(root, name, strict_f=True):
     #  that ONE feature (the grammar admits no '/', ':' or glob).
     wish    = Wish(feature_tuple=(feature,))
     from .feature_view  import view_of, ViewRefused
-    from .tree_explorer import RootConfMissing, inner_root_tuple
+    from .tree_explorer import RootConfMissing, registry_inner_tuple
     case_set, known_f, error = frozenset(), False, None
-    for top in (root,) + inner_root_tuple(root):
+    for top in (root,) + registry_inner_tuple(root):
         try:
             view = view_of(top)
         except (ViewRefused, RootConfMissing) as refusal:

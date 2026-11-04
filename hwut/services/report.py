@@ -156,11 +156,14 @@ class CRow:
     #  the originals, so a record built for a caller holds no engine.
     __slots__ = ("directory", "source_file", "choice", "verdict",
                  "report", "when", "stain", "title",
-                 "verdict_name", "passed_f", "stain_repeat_n")
+                 "verdict_name", "passed_f", "stain_repeat_n", "platform")
 
     def __init__(self, directory, source_file, choice, verdict, report,
-                 when, stain, title=""):
+                 when, stain, title="", platform=""):
         self.title       = title or ""
+        #  WHERE THE VERDICT WAS MEASURED (spec/42 section 6): the book's
+        #  'platform', '' for 'local'.
+        self.platform    = platform or ""
         self.directory   = directory
         self.source_file = source_file
         self.choice      = choice
@@ -493,7 +496,8 @@ def entry_stream_of(root, wish, silent_db=None, reach=None):
                 when        = _observed_instant(bookkeeper, case),
                 stain       = bookkeeper.stain(test, case.choice),
                 title       = getattr(app_db.get(case.source_file),
-                                      "title", "") or ""))
+                                      "title", "") or "",
+                platform    = run.get("platform") or ""))
         #  WHAT THE RUN FAILS BEFORE ANYTHING RUNS (E-128): a header
         #  that does not parse, a test or choice the book records and
         #  the directory no longer declares. The run counts each as a
@@ -697,6 +701,9 @@ def traditional_line_tuple(entry_list, width, color_f=False):
             #  name, whether a choice stands or not.
             left = (shown if row.choice is None
                     else "%s %s" % (shown, row.choice)) + " "
+            #  MEASURED ON A PLATFORM (spec/42 section 6): said beside the
+            #  name, so the verdicts keep their one column.
+            if row.platform: left += "(%s) " % row.platform
             text, shown = verdict_of(row.good_f,
                                      None if row.good_f
                                      else reason_word_of(row))
@@ -895,7 +902,11 @@ def json_text_of(entry_list):
                            "message": None if row.good_f
                                       else said_of(row)[2],
                            "stained": row.stain is not None,
-                           "when":    row.when or None}
+                           "when":    row.when or None,
+                           #  A CASE MEASURED ON A PLATFORM says where;
+                           #  one measured here carries no such key.
+                           **({"platform": row.platform}
+                              if getattr(row, "platform", "") else {})}
                           for row in row_list]})
     document["test_n"] = sum(len(r) for _, _, r in entry_list)
     document["fail_n"] = sum(1 for _, _, r in entry_list
@@ -938,6 +949,7 @@ class Row:
     when:          int | None
     stain_repeat_n:int | None
     title:         str = ""
+    platform:      str = ""         # where measured; '' for 'local'
 
 
 @dataclass(frozen=True)
@@ -978,7 +990,7 @@ def _row_of(crow):
                choice=crow.choice, verdict_name=crow.verdict_name,
                passed_f=crow.passed_f, report=crow.report or "",
                when=crow.when, stain_repeat_n=crow.stain_repeat_n,
-               title=crow.title or "")
+               title=crow.title or "", platform=crow.platform)
 
 
 def wish_of(request):
@@ -1002,7 +1014,8 @@ def _crow_of(row):
             else {"repeat_n": row.stain_repeat_n}
     return CRow(directory=row.directory, source_file=row.source_file,
                 choice=row.choice, verdict=verdict, report=row.report,
-                when=row.when, stain=stain, title=row.title)
+                when=row.when, stain=stain, title=row.title,
+                platform=row.platform)
 
 
 class _Verdict:

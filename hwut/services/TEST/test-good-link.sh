@@ -11,6 +11,7 @@
 #         remove       { features = ["good-link-remove"] }
 #         move         { features = ["good-link-move"] }
 #         sanitize     { features = ["good-link-sanitize"] }
+#         inward       { features = ["good-link-inward"] }
 #     }
 # }
 #
@@ -30,7 +31,8 @@
 # faces         directory to directory; again, every standing GOOD listed
 #               and kept (exit 1); '--force' replaces; the refusals: a
 #               link as source, a link onto its own case, a target whose
-#               test does not stand, a target in another root.
+#               test does not stand, a link in a bubble naming a text
+#               outside it (a way out).
 #               'hwut.good.link.show' for a text, a link, a directory.
 # isolate       'hwut.good.isolate' of a link, of a text (every link of it);
 #               'hwut.good.rebase' points the links of one text at another,
@@ -40,9 +42,15 @@
 #               link and leaves the text.
 # move          'hwut.move' of a linked case writes its link anew from the
 #               new place; of a linked text, every link follows it; into
-#               another root, refused before anything moves.
+#               a bubble below, the link following it inward (ruled
+#               2026-11-03, plan/42 P-8: no way out, every way in).
 # sanitize      '--links': a link naming nothing, a link beside its case's
 #               own '.txt'; 'unlink' heals both, and refuses a sound link.
+# inward        a link INTO a bubble below its own (ruled 2026-11-03, plan/42
+#               P-8): 'c/TEST' links to 'e/TEST' in the bubble 'e/'; the
+#               run passes; 'hwut.good.link.show' of the text inside names
+#               the link outside; 'hwut.remove' of it (in 'e/TEST') is
+#               refused, naming that link; the way back out stays refused.
 # ---------------------------------------------------------------------------
 HERE=$(cd "$(dirname "$0")" && pwd)
 ROOT=$(cd "$HERE/../../.." && pwd)
@@ -54,7 +62,7 @@ unset NO_COLOR CI COLUMNS
 case "$1" in
     --hwut-info)
         echo "Linked nominals (bookkeeper B-32);"
-        echo "CHOICES: read-through, writers, faces, isolate, remove, move, sanitize;"
+        echo "CHOICES: read-through, writers, faces, isolate, remove, move, sanitize, inward;"
         exit 0 ;;
 esac
 
@@ -124,7 +132,7 @@ case "$1" in
         echo "== no test stands"
         mkdir -p d/TEST
         said hwut.good.link a/TEST/GOOD/test-a.sh--x.txt d/TEST
-        echo "== into a bubble"
+        echo "== out of a bubble"
         app e; printf "$CONF" > e/hwut-root.conf
         said hwut.good.link a/TEST/GOOD/test-a.sh--x.txt e/TEST
         echo "== hwut.good.link.show a/TEST/GOOD/test-a.sh--x.txt"
@@ -164,9 +172,21 @@ case "$1" in
         mv a/TEST/test-a.sh b2/TEST/
         echo "== the link reads"; cat d/TEST/GOOD/test-a.sh--x.link
         echo "== hwut.run in d/TEST (y has no GOOD)"; run_of d
-        echo "== into a bubble"
+        echo "== into a bubble: the link follows inward"
         mkdir -p e/TEST; printf "$CONF" > e/hwut-root.conf
-        said hwut.move b2/TEST/test-a.sh e/TEST/ --dont-ask | grep -E "REFUSED|NOTE|exit" ;;
+        said hwut.move b2/TEST/test-a.sh e/TEST/ --dont-ask | grep -E "REFUSED|NOTE|link|exit" ;;
+    inward)
+        app e; printf "$CONF" > e/hwut-root.conf; accepted e
+        echo "== hwut.good.link e/TEST/GOOD/test-a.sh--x.txt c/TEST"
+        said hwut.good.link e/TEST/GOOD/test-a.sh--x.txt c/TEST
+        echo "== the link reads"; cat c/TEST/GOOD/test-a.sh--x.link
+        echo "== hwut.run in c/TEST (y has no GOOD)"; run_of c
+        echo "== hwut.good.link.show e/TEST/GOOD/test-a.sh--x.txt"
+        said hwut.good.link.show e/TEST/GOOD/test-a.sh--x.txt
+        echo "== hwut.remove test-a.sh x (in e/TEST)"
+        ( cd e/TEST && said hwut.remove test-a.sh x --dont-ask ) | grep -E "REFUSED|link|exit"
+        echo "== the way back out"
+        said hwut.good.link a/TEST/GOOD/test-a.sh--y.txt e/TEST ;;
     sanitize)
         hwut.good.link a/TEST c/TEST > /dev/null
         cp a/TEST/GOOD/test-a.sh--x.txt c/TEST/GOOD/test-a.sh--x.txt

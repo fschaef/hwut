@@ -212,6 +212,28 @@ FEATURE_USAGE_TOKEN_TUPLE = ("[-F|--feature <id-glob>]...",
                              "[-e|--feature-ext <id>]...",
                              "[-k|--keys <expr>]")
 
+#  THE PLATFORM WORDS (spec/42 section 2): WHERE the selected runs run.
+#  Read by the faces that run a test -- 'hwut.run', 'hwut.play' -- and by
+#  'hwut.sanitize.propose', which names every platform and runs nothing
+#  (intend/42 ruling 12); every other face that reads the wish refuses
+#  them by name ('PLATFORM_FACE_TEXT'). Shown only by the faces that take
+#  them: their usage carries 'PLATFORM_USAGE_TOKEN_TUPLE', their help
+#  'PLATFORM_HELP'.
+LOCAL_PLATFORM            = "local"
+PLATFORM_FACE_TEXT        = "hwut.run, hwut.play"
+PLATFORM_WORD_TUPLE       = ("-p", "--exclude-local")
+PLATFORM_USAGE_TOKEN_TUPLE = ("[-p <platform>]...", "[--exclude-local]")
+PLATFORM_HELP = """PLATFORM -- where the selected runs run
+    -p <platform>       ADDS the platform to those specified; 'local',
+                        this machine, is specified without it. A bubble
+                        whose 'hwut-root.conf' says 'platform = [...]'
+                        requires those platforms; one with none requires
+                        'local'. A bubble runs where the two meet; where
+                        they do not, it is not run. May stand several
+                        times; a platform no bubble requires is a NOTE
+    --exclude-local     takes 'local' out of those specified: only the
+                        bubbles requiring a '-p' platform run"""
+
 HELP = """SELECTION -- the wish; an absent keyword asks nothing
     --fail              the last recorded run's verdict was negative
     --pass              the last recorded run's verdict was positive
@@ -329,6 +351,70 @@ class Wish:
     #  '(<literal target>, <tag>)', the target as the list's line
     #  expanded. Read by 'hwut.accept' alone; every other face refuses.
     digest_tuple:      tuple = ()
+    #  WHERE THE RUNS RUN (spec/42 section 2): the '-p' names in order,
+    #  each once, and '--exclude-local'. Words about WHERE: they state
+    #  nothing of what is wanted, as '--no-bubbles' states nothing.
+    platform_tuple:    tuple = ()
+    exclude_local_f:   bool  = False
+    #  THE PLATFORM THIS RUN IS (spec/42, THE RULE: "over there, a far
+    #  run's own 'local' IS the platform it was handed to"): written by the
+    #  near hand-over alone ('far_argv'), never by a person.
+    as_platform:       str | None = None
+
+    def far_argv(self, bubble, platform):
+        """
+        RETURN: list of str, the words a far 'hwut.run' takes to run what
+                this wish wants of the bubble at 'bubble' (relative to
+                the near root, '.' the root itself) -- spec/42 section 4:
+                its targets and directory rules RE-ROOTED at the bubble,
+                one outside it dropped, every other word as given, no
+                '-p' (over there, S = {local}), and '--as-platform=' naming
+                'platform': its 'local' IS that platform -- if the wish
+                wants anything there.
+                None, else: targets or '--dir' rules stood and none of
+                them reaches into the bubble.
+        """
+        target_list = [t for t in (_rerooted(g, bubble)
+                                   for g in self.glob_tuple) if t is not None]
+        if self.glob_tuple and not target_list: return None
+        rule_list, wanted_f = [], not any(sign == "+" for sign, _
+                                          in self.dir_rule_tuple)
+        for sign, glob_text in self.dir_rule_tuple:
+            if glob_text.rstrip("/") in _ancestor_tuple(bubble):
+                wanted_f = wanted_f or sign == "+"
+                continue
+            rerooted = _rerooted(glob_text, bubble)
+            if rerooted is None: continue
+            rule_list.append((sign, rerooted))
+            wanted_f = wanted_f or sign == "+"
+        if not wanted_f: return None
+        argv = ["--as-platform=%s" % platform]
+        if self.fail_f:       argv.append("--fail")
+        if self.pass_f:       argv.append("--pass")
+        if self.unaccepted_f: argv.append("--unaccepted")
+        if self.no_bubbles_f: argv.append("--no-bubbles")
+        if self.since_spec is not None: argv.append("--since=" + self.since_spec)
+        if self.until_spec is not None: argv.append("--until=" + self.until_spec)
+        for target in target_list:  argv += ["--glob", target]
+        for target in (_rerooted(e, bubble) for e in self.exclude_tuple):
+            if target is not None: argv += ["--exclude", target]
+        for sign, glob_text in rule_list:
+            argv += ["--dir" if sign == "+" else "--exclude-dir", glob_text]
+        if self.label_spec is not None: argv += ["--label", self.label_spec]
+        argv += ["--language=" + name for name in self.language_tuple]
+        if self.faster_than_ms is not None:
+            argv.append("--faster-than=%g" % (self.faster_than_ms / 1000.0))
+        return argv
+
+    def specified_platform_set(self):
+        """
+        RETURN: frozenset of str, S of spec/42 section 2 -- 'local',
+                unless '--exclude-local' took it out, and every '-p'
+                name.
+        """
+        local = frozenset() if self.exclude_local_f \
+                else frozenset((LOCAL_PLATFORM,))
+        return local | frozenset(self.platform_tuple)
 
     def states_nothing_f(self):
         """
@@ -394,7 +480,9 @@ class Wish:
         RETURN: str, the wish as the command line states it; '(all)'
                 where it states nothing.
         """
-        if self.states_nothing_f(): return "(all)"
+        if self.states_nothing_f() and not self.platform_tuple \
+           and not self.exclude_local_f and self.as_platform is None:
+            return "(all)"
         part_list = []
         if self.fail_f:                 part_list.append("--fail")
         if self.unaccepted_f:           part_list.append("--unaccepted")
@@ -425,10 +513,15 @@ class Wish:
                          for text in self.feature_ext_tuple)
         if self.keys_spec is not None:
             part_list.append('--keys "%s"' % self.keys_spec)
+        if self.as_platform is not None:
+            part_list.append("--as-platform=%s" % self.as_platform)
+        if self.exclude_local_f:        part_list.append("--exclude-local")
+        part_list.extend("-p %s" % name for name in self.platform_tuple)
         return " ".join(part_list)
 
 
-def parse_wish(argv, digest_f=False, feature_f=False):
+def parse_wish(argv, digest_f=False, feature_f=False, take_tuple=None,
+               operand_ends_f=False, platform_f=False):
     """
     RETURN: [0] Wish, what the selection keywords of 'argv' state.
             [1] list[str], the arguments that are none of them, in
@@ -437,6 +530,20 @@ def parse_wish(argv, digest_f=False, feature_f=False):
     'feature_f' is the feature world's face ('hwut.report.features'): it
     alone reads '-F', '-e', '-k'; any other face is refused them by name
     and pointed at 'f/<id>' (intend/three-worlds).
+
+    'platform_f' is a face that RUNS (spec/42 section 2): it alone reads
+    '-p <platform>' and '--exclude-local'; any other face that reads the
+    whole wish is refused them by name. '--exclude-local' with no '-p'
+    is refused: it leaves no platform.
+
+    THE ONE READER OF EVERY FACE THAT SELECTS. 'take_tuple' names the
+    wish words the face takes, by their long spelling ('--dir',
+    '--no-bubbles'); None takes every one. A wish word the face does
+    not take is NOT READ: it lands in [1] as typed, and the face's own
+    reader refuses it by name, as it refuses any word it does not know.
+    'operand_ends_f': the first bare word ends the reading -- it and
+    every word after it land in [1] untouched (a face whose words after
+    its operand belong to someone else: 'hwut.execute's script).
 
     '-l' STANDS ALONE: beside any other word of the wish it is refused
     by name ('label_mix_text'); bare targets join later, and
@@ -471,6 +578,9 @@ def parse_wish(argv, digest_f=False, feature_f=False):
     feature_list     = []
     feature_ext_list = []
     keys_spec        = None
+    platform_list    = []
+    exclude_local_f  = False
+    as_platform      = None
     rest_list        = []
     #  THE FIRST WORD OF THE WISHLIST FAMILY, as typed: '-l' beside it
     #  is refused, naming it (R-b).
@@ -480,6 +590,12 @@ def parse_wish(argv, digest_f=False, feature_f=False):
     while index < len(argv):
         argument = argv[index]
         index   += 1
+        if operand_ends_f and not argument.startswith(("-", "+")):
+            rest_list.extend(argv[index - 1:])
+            break
+        if take_tuple is not None and _long_word_of(argument) not in take_tuple:
+            rest_list.append(argument)
+            continue
         if family_word is None and _family_word_f(argument):
             family_word = argument
         if   argument == "--fail":  fail_f = True
@@ -489,6 +605,32 @@ def parse_wish(argv, digest_f=False, feature_f=False):
             #  RETIRED (RQ-9, E-202): it asked what every walk now does.
             raise WishError(NO_BOUNDARY_RETIRED_TEXT)
         elif argument == "--pass":  pass_f = True
+        elif argument.startswith("--as-platform="):
+            #  THE HAND-OVER'S OWN WORD (spec/42, THE RULE): not shown in
+            #  any usage; a face that does not run is refused it.
+            if not platform_f:
+                raise WishError("'--as-platform' is for the faces that run: "
+                                "%s" % PLATFORM_FACE_TEXT)
+            as_platform = argument[len("--as-platform="):].strip() or None
+        elif argument in PLATFORM_WORD_TUPLE or argument.startswith("-p="):
+            word = argument.split("=", 1)[0]
+            if not platform_f:
+                raise WishError("'%s' is for the faces that run: %s"
+                                % (word, PLATFORM_FACE_TEXT))
+            if argument == "--exclude-local":
+                exclude_local_f = True
+                continue
+            if argument == "-p":
+                if index >= len(argv):
+                    raise WishError("'-p' stands without a platform")
+                name   = argv[index]
+                index += 1
+            else:
+                name = argument[len("-p="):]
+            if not name.strip():
+                raise WishError("'-p' names no platform")
+            if name.strip() not in platform_list:
+                platform_list.append(name.strip())
         elif argument.startswith("--since="):
             since_spec = _validated(argument[len("--since="):], argument)
         elif argument.startswith("--until="):
@@ -506,7 +648,9 @@ def parse_wish(argv, digest_f=False, feature_f=False):
             glob_list.append(argument[len("--glob="):])
         elif argument in ("--exclude", "--exclude-dir"):
             if index >= len(argv):
-                raise WishError("'%s' stands without a target" % argument)
+                raise WishError("'%s' stands without a %s"
+                                % (argument, "target" if argument == "--exclude"
+                                             else "glob"))
             if argument == "--exclude": exclude_list.append(argv[index])
             else:
                 exclude_dir_list.append(argv[index])
@@ -662,6 +806,9 @@ def parse_wish(argv, digest_f=False, feature_f=False):
         else:
             rest_list.append(argument)
 
+    if exclude_local_f and not platform_list:
+        raise WishError("'--exclude-local' leaves no platform -- add "
+                        "'-p <name>'")
     if label_spec is not None and family_word is not None:
         raise WishError(label_mix_text(label_spec, family_word))
     if fail_f and pass_f:
@@ -682,8 +829,62 @@ def parse_wish(argv, digest_f=False, feature_f=False):
                  faster_than_ms, unaccepted_f, tuple(dir_rule_list),
                  tuple(feature_list), keys_spec, tuple(feature_ext_list),
                  digest_tuple=tuple(digest_list),
-                 no_bubbles_f=no_bubbles_f),
+                 no_bubbles_f=no_bubbles_f,
+                 platform_tuple=tuple(platform_list),
+                 exclude_local_f=exclude_local_f,
+                 as_platform=as_platform),
             rest_list)
+
+
+def _rerooted(text, bubble):
+    """
+    RETURN: str, a target or directory glob of the near root as the far
+            run under 'bubble' reads it: a bare name (no '/' in its file
+            part) unchanged; a path below 'bubble' with that prefix
+            taken off; a path whose first component is a glob unchanged
+            -- it may reach in anywhere -- if it applies there.
+            None, else: a path that lies outside the bubble.
+    """
+    file_part, blank, rest = text.partition(" ")
+    if "/" not in file_part or bubble in (".", ""): return text
+    prefix = bubble.rstrip("/") + "/"
+    if file_part.startswith(prefix):
+        return file_part[len(prefix):] + blank + rest
+    if any(mark in file_part.split("/")[0] for mark in _GLOB_MARK_TUPLE):
+        return text
+    return None
+
+
+def _ancestor_tuple(bubble):
+    """
+    RETURN: tuple of str, 'bubble' and every directory above it, as the
+            near root names them: 'a/b' -> ('a/b', 'a').
+    """
+    part_list = [p for p in bubble.split("/") if p not in ("", ".")]
+    return tuple("/".join(part_list[:n])
+                 for n in range(len(part_list), 0, -1))
+
+
+def unrequired_platform_note_tuple(wish, required_iterable):
+    """
+    RETURN: tuple of str, one NOTE per '-p' name that no bubble requires
+            -- 'NOTE  -p lab-3: no bubble below requires it' (spec/42
+            section 2) -- in the order the names were typed; empty where
+            every one is required by some bubble, or no '-p' stands.
+
+    'required_iterable' yields, per test directory walked, its bubble's
+    'platform' list as read ('DirectorySpec.platform_tuple': (name,
+    spec) pairs), None where the bubble says none -- it requires
+    'local' alone (ruling 10).
+    """
+    if not wish.platform_tuple: return ()
+    required_set = set()
+    for platform_tuple in required_iterable:
+        if platform_tuple is None: required_set.add(LOCAL_PLATFORM)
+        else: required_set.update(name for name, _ in platform_tuple)
+    return tuple("NOTE  -p %s: no bubble below requires it" % name
+                 for name in wish.platform_tuple
+                 if name not in required_set)
 
 
 #  A WISHLIST LINE MAY END IN ONE '--digest=<tag>' (E-168).
@@ -703,6 +904,24 @@ _FAMILY_WORD_TUPLE  = ("--fail", "--pass", "--unaccepted", "--glob",
                        "--since", "--until", "--language", "--faster-than")
 FEATURE_WORD_TUPLE  = ("--feature", "-F", "--feature-ext", "-e",
                        "--keys", "-k")
+
+
+#  THE SHORT SPELLINGS OF THE WISH, each to its long one: a face's
+#  'take_tuple' names the long one, and takes both.
+_LONG_OF_SHORT_DB = {"-l": "--label", "-F": "--feature",
+                     "-e": "--feature-ext", "-k": "--keys"}
+
+
+def _long_word_of(argument):
+    """
+    RETURN: str, the option word of 'argument' by its long spelling --
+            '--glob' for '--glob=x', '--label' for '-l' and '-l=x' -- if
+            it is an option.
+            None, else: a bare word, which no 'take_tuple' names.
+    """
+    if not argument.startswith("-"): return None
+    word = argument.split("=", 1)[0]
+    return _LONG_OF_SHORT_DB.get(word, word)
 
 
 def _family_word_f(argument):

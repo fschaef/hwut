@@ -11,7 +11,7 @@ import os
 import sys
 
 from hwut.engine.orchestrator.exploration.tree_explorer \
-                                     import RootConfMissing, root_conf_directory
+                                     import RootConfMissing, registry_top, root_conf_directory
 from hwut.engine.orchestrator.exploration.finder import REGISTRY_FILE_NAME
 from ..._exit                        import E_ExitCode
 
@@ -47,12 +47,15 @@ def opened(name, argv, write, help_text):
     return write, directory, rest
 
 
-def root_of(directory, write):
-    """RETURN: str, the absolute directory holding 'hwut-root.conf' above
-    'directory'. Raises Refused (REFUSED) where none stands; the reason is
-    written."""
+def root_of(directory, write, nearest_f=False):
+    """RETURN: str, the absolute directory whose features registry governs
+    'directory' ('tree_explorer.registry_top': a bubble without one is the
+    registry's above) -- or, 'nearest_f', the nearest bubble's, where a
+    registry is to be begun ('hwut.features.init'). Raises Refused
+    (REFUSED) where no 'hwut-root.conf' stands; the reason is written."""
     try:
-        return root_conf_directory(directory)
+        return root_conf_directory(directory) if nearest_f \
+               else registry_top(directory)
     except RootConfMissing as error:
         write("REFUSED: %s" % error)
         raise Refused(E_ExitCode.REFUSED) from None

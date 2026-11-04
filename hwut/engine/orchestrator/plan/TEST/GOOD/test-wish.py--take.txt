@@ -1,0 +1,31 @@
+
+--- takes none (hwut.play): --fail -l x --glob=y test-a.py one --raw ---
+    take : -
+    wish : (all)
+    rest : --fail, -l, x, --glob=y, test-a.py, one, --raw
+
+--- takes '--label': both spellings: -l mine --fail ---
+    take : --label
+    wish : --label "mine"
+    rest : --fail
+
+--- takes '--label': both spellings, '=' forms: -l=mine --glob=z ---
+    take : --label
+    wish : --label "mine"
+    rest : --glob=z
+
+--- the walk's words, an operand ending (hwut.execute): -i --dir a --exclude-dir=a/b --no-bubbles build --dir z -q ---
+    take : --dir, --exclude-dir, --no-bubbles, --no-boundary   operand ends
+    wish : --no-bubbles --dir "a" --exclude-dir "a/b"
+    rest : -i, build, --dir, z, -q
+
+--- an operand ending: a value is no operand: --dir build -c ls -l --dir a ---
+    take : --dir, --exclude-dir, --no-bubbles, --no-boundary   operand ends
+    wish : --dir "build"
+    rest : -c, ls -l, --dir, a
+
+--- an operand ending: '+x' is no operand: +x --dir a build ---
+    take : --dir, --exclude-dir, --no-bubbles, --no-boundary   operand ends
+    wish : --dir "a"
+    rest : +x, build
+<hwut-end>

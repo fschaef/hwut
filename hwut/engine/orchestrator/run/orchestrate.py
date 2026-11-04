@@ -25,11 +25,16 @@ ______________________________________________________________________________
 """
 import asyncio
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime    import datetime, timezone
 
 from ...bookkeeper.api       import Bookkeeper
-from ..exploration.tree_explorer   import explore_tree
+from ..exploration.tree_explorer   import (explore_tree, GATE_RUN,
+                                           test_directory_name_tuple)
+from ..plan.bubble                 import (HANDED, NOT_RUN,
+                                           decision_tuple)
+from ...                           import platforms
+from ..plan.wish                   import unrequired_platform_note_tuple
 from ..plan.form                   import E_NodeKind
 from ..plan.confinement            import uncapped_refusal_f
 from ..plan.determine              import EMPTY_SELECTION_STR
@@ -332,8 +337,17 @@ class CTreeScheduler:
 
         #  THE WHOLE PLAN'S SIZE, counted exactly as each 'dir-begun'
         #  counts its own: what a progress display divides by.
+        #  A BUBBLE HANDED TO A PLATFORM names its TEST directories here,
+        #  found by the walk alone, so a viewer knows them before they
+        #  report (spec/42 section 5).
+        far_directory_list = [
+            os.path.normpath(os.path.join(decision.name, directory))
+                   .replace(os.sep, "/")
+            for decision, _ in tree_plan.handed_tuple
+            for directory in test_directory_name_tuple(decision.path)]
         emit("tree-begun",
-             directory_list=[entry.directory for entry in tree_plan],
+             directory_list=[entry.directory for entry in tree_plan]
+                            + far_directory_list,
              node_n=sum(len(entry.plan)
                         + len(no_good_file_tuple(entry.refused_tuple))
                         + len(unstood_tuple(
@@ -349,6 +363,12 @@ class CTreeScheduler:
         #  each, before the first run.
         for text in tree_plan.warning_tuple:
             emit("warning", text=text)
+        #  A BUBBLE NOT RUN HERE stands in the stream once, before the
+        #  first run (spec/42 section 3); the fold counts nothing of it.
+        for decision in tree_plan.not_run_tuple:
+            emit("not-run", directory=decision.name,
+                 platform=decision.platform, reason=decision.reason,
+                 text=decision.text)
 
         budget    = CBudget(self.worker_max_n)
         unit_list = [CDirectoryWork(tree_plan.root, entry,
@@ -365,6 +385,14 @@ class CTreeScheduler:
         good_f = not tree_plan.fault_tuple \
                  and all(done.good_f for done in done_list)
         fail_n = sum(done.fail_n for done in done_list)
+        #  THE BUBBLES HANDED TO A PLATFORM run there, one after another,
+        #  into the same stream; their verdicts count as local ones do.
+        for decision, far_argv in tree_plan.handed_tuple:
+            far_good_f, far_fail_n = await self._handed(
+                                         decision, far_argv, tree_plan.root,
+                                         emit, queue)
+            good_f  = good_f and far_good_f
+            fail_n += far_fail_n
         #  'meta_n' AND 'skip_n' ARE OPTIONAL AND ABSENT WHEN ZERO: a receiver that
         #  does not know the field never meets it unless the run had
         #  something to say.
@@ -373,6 +401,58 @@ class CTreeScheduler:
         if tree_plan.wish_skipped_n: extra["skip_n"] = tree_plan.wish_skipped_n
         emit("tree-done", good=good_f, fail_n=fail_n, **extra)
         queue.put_nowait(None)
+
+    async def _handed(self, decision, far_argv, root, emit, queue):
+        """
+        RETURN: (bool, int), whether the bubble of 'decision' stood on its
+                platform -- every far verdict good, no fault, the far run
+                ended 0 -- and how many far nodes failed.
+
+        THE HAND-OVER (spec/42 sections 4, 5; rulings 14, 17, 20): the
+        platform made ready ('start': an image built where it does not
+        stand, said once); the bubble run there, its events into the
+        stream as they come; 'stop' in a 'finally', a signal included
+        (E-55). A start that fails is the bubble NOT RUN, 'reachable',
+        counted nowhere (ruling 21).
+        """
+        name, spec = decision.platform, decision.spec
+        ready_f, why = platforms.start(name, spec,
+                                       lambda line: emit("warning",
+                                                         text=line))
+        if not ready_f:
+            emit("not-run", directory=decision.name, platform=name,
+                 reason="reachable",
+                 text="%s/: platform '%s' not reachable: %s"
+                      % (decision.name, name, why))
+            return True, 0
+        loop  = asyncio.get_running_loop()
+        tally = {"good_f": True, "fail_n": 0}
+
+        def sink(item):
+            """RETURN: None. One far event, counted, into the queue --
+            from the reading thread, the loop's own way."""
+            kind = item.get("kind")
+            if kind == "run-ended" and not item.get("good"):
+                tally["fail_n"] += 1
+                tally["good_f"]  = False
+            elif kind == "fault" or (kind == "dir-done"
+                                     and not item.get("good")):
+                tally["good_f"] = False
+            loop.call_soon_threadsafe(queue.put_nowait, item)
+
+        try:
+            status = await asyncio.to_thread(platforms.run, name, spec,
+                                             decision.name, far_argv, sink,
+                                             root=root)
+        except Exception as error:                      # noqa: BLE001
+            emit("fault", directory=decision.name, platform=name,
+                 text="%s/: platform '%s' failed: %s"
+                      % (decision.name, name, error))
+            return False, tally["fail_n"]
+        finally:
+            platforms.stop(name, spec)
+        await asyncio.sleep(0)          # the last far events into the queue
+        return tally["good_f"] and status == 0, tally["fail_n"]
 
     def _ordered(self, unit_list, root):
         """
@@ -569,16 +649,48 @@ def orchestrate(root, wish, build_interview=None, label_view=None):
     engine never opens 'hwut-root.labels' -- a face builds it
     ('services/lib/labels.view_at') and hands it in, and 'None' means no
     label knowledge reaches the selection (disc-8).
+
+    WHICH BUBBLE RUNS WHERE is decided first, from the confs alone
+    ('plan/bubble.py', spec/42 section 3): a command meeting more than one
+    platform a bubble requires raises PlatformRefused HERE; a bubble not
+    run here is not walked for tests -- nothing of it interviewed, nothing
+    written -- and stands in the plan's 'not_run_tuple'.
     """
-    tree = explore_tree(root, boundary_f=wish.no_bubbles_f)
+    decision_db = {decision.path: decision
+                   for decision in decision_tuple(root, wish)}
+
+    def gate(path):
+        """RETURN: str, the walk's word for the bubble rooted at 'path'
+        -- its decision's state; GATE_RUN for one not decided here."""
+        decision = decision_db.get(os.path.abspath(path))
+        return GATE_RUN if decision is None else decision.state
+
+    tree = explore_tree(root, boundary_f=wish.no_bubbles_f,
+                        bubble_gate=gate)
     factory = None
     if wish.asks_base_f():
         def factory(directory):
             return Bookkeeper(os.path.normpath(os.path.join(root, directory)))
-    return determine_tree(tree, wish,
-                          bookkeeper_factory = factory,
-                          build_interview    = build_interview,
-                          label_view         = label_view)
+    tree_plan = determine_tree(tree, wish,
+                               bookkeeper_factory = factory,
+                               build_interview    = build_interview,
+                               label_view         = label_view)
+    #  A '-p' NO BUBBLE REQUIRES (spec/42 section 2): one NOTE each, asked
+    #  of every bubble decided -- a bubble not walked requires all the same.
+    note_tuple = unrequired_platform_note_tuple(
+                     wish, (d.platform_tuple for d in decision_db.values()))
+    #  A BUBBLE HANDED carries the far run's words: the wish re-rooted at
+    #  it ('Wish.far_argv'); one the wish wants nothing of is not handed.
+    handed_list = []
+    for decision in decision_db.values():
+        if decision.state != HANDED: continue
+        far_argv = wish.far_argv(decision.name, decision.platform)
+        if far_argv is not None: handed_list.append((decision, far_argv))
+    return replace(tree_plan,
+                   warning_tuple = tree_plan.warning_tuple + note_tuple,
+                   not_run_tuple = tuple(d for d in decision_db.values()
+                                         if d.state == NOT_RUN),
+                   handed_tuple  = tuple(handed_list))
 
 
 def orchestrator(root, wish, dispatcher_factory, worker_max_n=None,

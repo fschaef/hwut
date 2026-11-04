@@ -1,9 +1,9 @@
 INSPECT: entry           = {'verdict': <E_TestVerdict.PASS: 'true'>, 'report': 'ok'}
-         table header    = test;choice;verdict;report;stain;test_id;choice_id
+         table header    = test;choice;verdict;report;stain;test_id;choice_id;platform
          rows            = 1
          any 'caps' word = False
   OK  : the entry is the decision and nothing else
-  OK  : THE BOOK IS A TABLE (B-7): one row per choice, ';' between, every column a decision -- and since B-13 the REGISTER'S two id columns, last so that every older column keeps its place. The MARKS are not columns: a row can be removed, and a mark that went with it would let the scope reissue an id (B-2)
+  OK  : THE BOOK IS A TABLE (B-7): one row per choice, ';' between, every column a decision -- and since B-13 the REGISTER'S two id columns, then (spec/42) WHERE it was measured, each last so that every older column keeps its place. The MARKS are not columns: a row can be removed, and a mark that went with it would let the scope reissue an id (B-2)
   OK  : no configuration word reaches the oracle directory
   OK  : the accessors that read the copy back are gone with it
 SUCCESS: the book holds what was DECIDED; what was CONFIGURED is git's, beside it.

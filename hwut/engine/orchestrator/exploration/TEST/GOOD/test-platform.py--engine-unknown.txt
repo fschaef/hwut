@@ -1,0 +1,5 @@
+hwut-root.conf:  hwut { platform = [ { name = "linux", kind = "container", image = "x", engine = "lxc" } ] }
+    TEST         platform_tuple=None
+                 runs not: 1 conf fault(s)
+    FAULT hwut-root.conf:2:69: VOCABULARY: platform 'linux': engine 'lxc' is not known -- podman, docker
+<hwut-end>

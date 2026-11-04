@@ -54,7 +54,7 @@ class TestRunDispatcher(I_Dispatcher):
 
     def __init__(self, directory, entry, record=None, variant_tuple=(),
                  timing_f=False,
-                 despite_stain_f=False, force_run_f=False):
+                 despite_stain_f=False, force_run_f=False, platform=None):
         """
         RETURN: TestRunDispatcher holding 'directory': its Bookkeeper
                 and Store made here, the directory LOCK taken here and
@@ -77,6 +77,10 @@ class TestRunDispatcher(I_Dispatcher):
                    ('--timing'): per-line delta times kept beside the
                    candidate, for an analyst and for 'hwut.run.stability'.
 
+        'platform' the platform this run measures on, None for 'local'
+                   (spec/42 section 6): the book says it beside each
+                   verdict.
+
         Raises DirectoryBusy where another live process holds the
         directory -- refused at the door, never queued.
         """
@@ -87,7 +91,8 @@ class TestRunDispatcher(I_Dispatcher):
         #  the naming law names the applications that state it. There
         #  was a second bookkeeper per such application, made here and
         #  nowhere else; every other face named a nominal per choice.
-        self.bookkeeper = Bookkeeper(directory, naming_of(entry.app_set))
+        self.bookkeeper = Bookkeeper(directory, naming_of(entry.app_set),
+                                     platform=platform)
         self.store      = Store(self.bookkeeper)
         #  THE DIRECTORY IS HELD THROUGH THE BOOKKEEPER (B-9): it is
         #  the locking proxy; every write it makes inside the session
@@ -343,7 +348,7 @@ class TestRunDispatcher(I_Dispatcher):
 def test_run_dispatcher_factory(record=None, variant_tuple=(),
                                 timing_f=False,
                                 despite_stain_f=False,
-                                force_run_f=False):
+                                force_run_f=False, platform=None):
     """
     RETURN: callable(directory, entry) -> TestRunDispatcher -- the
             factory 'orchestrator()' consumes, the store knob, the
@@ -354,4 +359,5 @@ def test_run_dispatcher_factory(record=None, variant_tuple=(),
                                         variant_tuple=variant_tuple,
                                         timing_f=timing_f,
                                         despite_stain_f=despite_stain_f,
-                                        force_run_f=force_run_f)
+                                        force_run_f=force_run_f,
+                                        platform=platform)

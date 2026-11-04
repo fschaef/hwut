@@ -313,7 +313,14 @@ class DirectorySpec:
     alternative's name -> Variant. ONE NAMESPACE for every alternative
     of every group, so '--variant=gcov' needs no qualification and two
     groups may not share an alternative name. Two alternatives of ONE
-    group named together are refused: they configure one subspace."""
+    group named together are refused: they configure one subspace.
+
+    'platform_tuple' holds the PLATFORMS THE BUBBLE REQUIRES, its
+    'hwut-root.conf' 'platform = [ ... ]' as read (intend/42): one
+    (name, spec) pair per entry, 'spec' the entry's keys ('{}' for the
+    bare "local"). None where the conf says nothing: the local machine
+    alone (ruling 10). The root's alone; it flows to the bubble's
+    directories and stops at an inner bubble, which decides on its own."""
     title:           str | None = None   # the directory's own (X-INFO-DAT)
     on_entry:        str | None = None
     on_exit:         str | None = None
@@ -334,6 +341,7 @@ class DirectorySpec:
     procsitter_db:   dict       = None   # platform -> frozenset of caps
                                          #  acknowledged unenforceable (R-48)
     free_disk_min_mb: int       = None   # every disk's free-space floor
+    platform_tuple:  tuple      = None   # of (name, spec): intend/42
     position:        Position   = None
 
 

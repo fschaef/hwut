@@ -1,0 +1,63 @@
+
+--- a face that runs: -p linux ---
+    wish : -p linux
+    S    : linux, local
+    rest : -
+
+--- several, each once, in order: -p linux -p=win11 -p linux --fail ---
+    wish : --fail -p linux -p win11
+    S    : linux, local, win11
+    rest : -
+
+--- '--exclude-local' with '-p': --exclude-local -p linux ---
+    wish : --exclude-local -p linux
+    S    : linux
+    rest : -
+
+--- '-p local': what no '-p' says: -p local ---
+    wish : -p local
+    S    : local
+    rest : -
+
+--- beside '--no-bubbles': --no-bubbles -p linux ---
+    wish : --no-bubbles -p linux
+    S    : linux, local
+    rest : -
+
+--- a face taking the platform words alone (hwut.play): -p linux --fail test-a.py one ---
+    wish : -p linux
+    S    : linux, local
+    rest : --fail, test-a.py, one
+
+--- a face taking some wish words, not these (hwut.execute): -p linux --dir a ---
+    wish : --dir "a"
+    S    : local
+    rest : -p, linux
+
+--- a face that does not run: -p linux ---
+    REFUSED: '-p' is for the faces that run: hwut.run, hwut.play
+
+--- a face that does not run: --exclude-local ---
+    REFUSED: '--exclude-local' is for the faces that run: hwut.run, hwut.play
+
+--- '--exclude-local' alone: --exclude-local ---
+    REFUSED: '--exclude-local' leaves no platform -- add '-p <name>'
+
+--- '-p' without a name: -p ---
+    REFUSED: '-p' stands without a platform
+
+--- '-p=' naming nothing: -p= ---
+    REFUSED: '-p' names no platform
+
+--- the NOTE: a '-p' no bubble requires ---
+    a bubble with no 'platform', one with linux:
+        NOTE  -p lab-3: no bubble below requires it
+    linux alone:
+        NOTE  -p lab-3: no bubble below requires it
+        NOTE  -p local: no bubble below requires it
+    no test directory walked:
+        NOTE  -p lab-3: no bubble below requires it
+        NOTE  -p linux: no bubble below requires it
+        NOTE  -p local: no bubble below requires it
+    no '-p': ()
+<hwut-end>

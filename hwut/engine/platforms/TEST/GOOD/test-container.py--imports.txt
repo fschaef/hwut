@@ -1,0 +1,10 @@
+  read: engine/platforms/__init__.py
+  read: engine/platforms/container.py
+  read: engine/platforms/local.py
+  planted, named: planted.py:2: hwut.services.lib
+  planted, named: planted.py:3: hwut.services
+  OK  : the helper's modules were read
+  OK  : no module imports beyond the engine and the standard library
+  OK  : a planted face import is named, relative and absolute alike
+SUCCESS: the engine imports nothing of the faces.
+<hwut-end>

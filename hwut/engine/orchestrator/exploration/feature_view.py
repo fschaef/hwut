@@ -46,7 +46,7 @@ from .feature_registry import (read_registry, CLeaf, CAggregate,
                                retired_internal_set)
 from .feature_relation import (relation_of_tree, read_feature_file,
                                CRun, TEST_NAME)
-from .tree_explorer    import root_conf_directory
+from .tree_explorer    import registry_top
 from .finder           import REGISTRY_FILE_NAME
 
 
@@ -146,7 +146,7 @@ def view_of(directory):
             states a fault -- the text names the file and the remedy.
     """
     asked    = os.path.abspath(directory)
-    top      = root_conf_directory(asked)
+    top      = registry_top(asked)
     registry = read_registry(top)
     if registry is None:
         raise ViewRefused("no '%s' stands at '%s' => hwut.features.init"

@@ -1,0 +1,41 @@
+
+--- -   ---
+    far: --as-platform=linux
+
+--- --fail -p linux  support/demo/c/TEST/test.c one ---
+    far: --as-platform=linux --fail --glob demo/c/TEST/test.c one
+
+--- -  test-*.py ---
+    far: --as-platform=linux --glob test-*.py
+
+--- -  other/x.py ---
+    far: None -- not handed: nothing wanted there
+
+--- -  **/test-x.py ---
+    far: --as-platform=linux --glob **/test-x.py
+
+--- --dir support   ---
+    far: --as-platform=linux
+
+--- --dir other/a   ---
+    far: None -- not handed: nothing wanted there
+
+--- --dir demo   ---
+    far: --as-platform=linux --dir demo
+
+--- --dir support/demo --exclude-dir support/demo/go   ---
+    far: --as-platform=linux --dir demo --exclude-dir demo/go
+
+--- --exclude support/a/b.py --exclude z/q.py   ---
+    far: --as-platform=linux --exclude a/b.py
+
+--- -l f/display --no-bubbles   ---
+    far: --as-platform=linux --no-bubbles --label f/display
+
+--- --language=c --since=2h --faster-than=2.5 --unaccepted   ---
+    far: --as-platform=linux --unaccepted --since=2h --language=c --faster-than=2.5
+
+--- '--as-platform' read, spelt back; refused where nothing runs ---
+    wish: --as-platform=linux   as_platform='linux'
+    REFUSED: '--as-platform' is for the faces that run: hwut.run, hwut.play
+<hwut-end>

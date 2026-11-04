@@ -2,7 +2,7 @@
 plan/42-platforms -- THE FIRST RELEASE, IN ORDERED CUTS
 ==============================================================================
 
-VERSION: 1
+VERSION: 10
 
 COMPONENTS: engine/platforms (new), engine/orchestrator, engine/protocol,
             engine/bookkeeper, engine/display, services, support/, adm.
@@ -19,12 +19,95 @@ ______________________________________________________________________________
 
 STATE
 
-    next step:      P-1
-    done:           (none)
+    next step:      P-9 (the author's)
+    done:           P-1 (2026-11-02): engine/platforms with 'local' and
+                    'container'; 'hwut.dev.podman.*' take 'engine',
+                    'root_of', 'CONTAINERFILE' from it; adm/LAYERING.txt
+                    permits 'engine/platforms -> engine/protocol'.
+                    P-2 (2026-11-02): ROOT_CONF_ONLY_FIELD_TUPLE merged into
+                    ROOT_CONF_ONLY_REASON_DB; 'platform' read into
+                    'DirectorySpec.platform_tuple' (inheritable within the
+                    bubble, reset at an inner one); 'platforms.check'
+                    (the kind's own keys); LAYERING permits
+                    'engine/orchestrator -> engine/platforms'.
+                    E-219 (2026-11-03, ruled: "hwut.play must use
+                    parse_wish()"): every face that selects reads its
+                    command line through 'parse_wish'; 'take_tuple' and
+                    'operand_ends_f'; hwut.play, hwut.execute,
+                    hwut.remove.propose homogenized, their answers
+                    unchanged word for word.
+                    P-3 (2026-11-03): 'Wish.platform_tuple',
+                    'exclude_local_f', 'specified_platform_set()';
+                    'platform_f' (run, play, sanitize.propose take; the
+                    other twelve faces that read the whole wish refuse);
+                    the NOTE through the tree plan's and the selection's
+                    'warning_tuple'; spec VERSION 3.
+                    P-4 (2026-11-03): 'engine/orchestrator/plan/bubble.py'
+                    (the decision, the refusal); the walk's 'bubble_gate';
+                    'not-run' and the optional 'platform' in the protocol;
+                    the plain flow's NOTE line; the '-p' NOTE asked of the
+                    decisions; spec VERSION 4. A relative 'recipe' is made
+                    absolute by the decision (PL-1 settled).
+                    P-5 (2026-11-03; the fork ruled (a)): 'hwut.run
+                    --events <file>'; 'container.run' over two mounts with
+                    '--as-platform=', the far time kept, 'stop' ending a
+                    live far run; 'Wish.far_argv'; the hand-over in the
+                    scheduler (start, run in a thread, stop in 'finally',
+                    far failures counted); the near 'tree-begun' names the
+                    handed TEST directories; spec VERSION 5. Proven with
+                    a 'podman' that is this machine (no daemon here); the
+                    real image is P-9's.
+                    Beside it: 'hwut.execute' refuses a '--directory' that
+                    is not, and '-c' outside a root (both died in a
+                    traceback); services/TEST test-execute.sh 'boundary'.
+                    'hwut.play' decided as 'hwut.run' (2026-11-03, ruled
+                    "yes to play"): 'bubble.governing_decision',
+                    'platforms.relay'; spec VERSION 6.
+                    P-6 (2026-11-03): the book's 'platform' column; spec
+                    VERSION 7. Moved: three GOODs that print a book's
+                    header (the header's word alone); every committed
+                    'GOOD/book.csv' gains the word at its next write.
+                    P-7 (2026-11-03): the final tree's marker lines (a
+                    bubble not run stands where the walk meets it, '<B>/'
+                    with its marker and the NOTE's reason, no count) and
+                    '(linux)' once per directory, after its name in the
+                    tree; a directory announced in a bubble not run and
+                    never run is left out. 'CPlainFlow' alone draws the
+                    final tree -- the TUI and keyed viewers draw a
+                    comparison, not a run -- so 'plain, TUI and keyed
+                    alike' is the plain flow under every ink and tier.
+                    services/TEST test-platform-console.py. Moved: one
+                    GOOD (test-bubble.py untouched, '(no directory ran)'
+                    gone where the markers stand).
+                    E-220 (2026-11-03, ruled against 'hwut.features.
+                    split'): a bubble without a registry of its own belongs
+                    to the nearest one above; the registry walks enter it.
+                    Moved: one GOOD (test-book-defects-5.sh bubble-note,
+                    'register' now spans 'editor/').
+                    B-32 amended (2026-11-03, ruled "(b)"): a GOOD link
+                    may reach into a bubble below its own, never out --
+                    the eight ports' links into python/TEST. Moved: two
+                    GOODs (test-good-link.sh faces: a label; move: a text
+                    moved into a bubble, its links follow).
+                    P-8 (2026-11-03): support/hwut-root.conf ('linux'; and,
+                    ruled "explicit beats implicit", 'ignore', its 17
+                    languages, 'app_defaults' said again -- all 1497
+                    choices read as before); python/TEST's root conf; the
+                    features stay in the top's registry (E-220); spec
+                    VERSION 8. support/demo/showcase/, a bubble of its own
+                    requiring nothing, runs here as python/TEST does.
     measured:       2026-11-02 on the dev tree (08217f1 + bundles 31..35):
                     17 non-test readers of the book (engine 10, services
                     6, adm 2 -- the list under P-6); 27 files import the
                     wish (engine/orchestrator/plan/wish.py, 'parse_wish').
+                    CORRECTED at P-1: the central law IS declared and
+                    checked -- adm/LAYERING.txt, read by 'adm/import_
+                    graph.py --check' -- but adm/TEST's 'hwut' choice
+                    tolerates a violated layering (4 edges stand on the
+                    base: adm -> engine/bookkeeper, adm/packaging ->
+                    services, services/lib, support/demo -> support/
+                    test_writing), so nothing goes red on a new edge.
+                    P-1's own 'imports' choice is the biting check.
 
 ______________________________________________________________________________
 
@@ -76,7 +159,9 @@ P-1  engine/platforms -- THE HELPER (spec section 4)
 
 P-2  THE CONF KEY (spec section 1)
 ------------------------------------------------------------------------------
-    engine/orchestrator/exploration: 'platform' joins ROOT_ONLY_KEY_SET;
+    engine/orchestrator/exploration: 'platform' joins
+    ROOT_CONF_ONLY_REASON_DB (spec VERSION 2), which first replaces
+    ROOT_CONF_ONLY_FIELD_TUPLE (the same four fields, ruled 2026-11-02);
     its reader turns the list into a tuple of (name, spec) -- "local" a
     bare string, every entry's keys checked against
     'platforms.keys(kind)'. The faults of spec section 1, by name.

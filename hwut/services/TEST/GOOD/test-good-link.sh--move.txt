@@ -13,8 +13,9 @@
 ../../../b2/TEST/GOOD/test-a.sh--x.txt
 == hwut.run in d/TEST (y has no GOOD)
 RESULTS: 1 ok, 1 fail, <t> [sec], <t> [sec] total
-== into a bubble
-REFUSED: 'd/TEST/GOOD/test-a.sh--x.link' -> 'e/TEST/GOOD/test-a.sh--x.txt': the target stands beyond the link's root 'hwut-root.conf' => 'hwut.good.isolate d/TEST/GOOD/test-a.sh--x.link' first
-NOTE: nothing was renamed
-   exit 2
+== into a bubble: the link follows inward
+      link d/TEST/GOOD/test-a.sh--x.link follows: names e/TEST/GOOD/test-a.sh--x.txt
+NOTE  application 'test-a.sh' stands under the OLD name -- git mv b2/TEST/test-a.sh e/TEST/test-a.sh (E-16)
+    link: d/TEST/GOOD/test-a.sh--x.link names e/TEST/GOOD/test-a.sh--x.txt
+   exit 0
 <hwut-end>

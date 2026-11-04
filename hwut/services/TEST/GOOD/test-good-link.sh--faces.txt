@@ -22,7 +22,7 @@ NOTE: nothing was linked
 REFUSED: 'd/TEST/GOOD/test-a.sh--x.link': no test 'test-a.sh' stands in 'd/TEST'
 NOTE: nothing was linked
    exit 2
-== into a bubble
+== out of a bubble
 REFUSED: 'e/TEST/GOOD/test-a.sh--x.link' -> 'a/TEST/GOOD/test-a.sh--x.txt': the target stands beyond the link's root 'e/hwut-root.conf'
 NOTE: nothing was linked
    exit 2

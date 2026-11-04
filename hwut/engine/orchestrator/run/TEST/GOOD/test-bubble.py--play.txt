@@ -1,0 +1,18 @@
+$ (linux/TEST) hwut.play test-b.sh   [exit 3]
+    NOTE  ../: requires linux; specified local
+    nothing played: the bubble is not run here
+    OUT here: -
+$ (linux/TEST) hwut.play --exclude-local -p linux test-b.sh   [exit 0]
+         1 | test-b.sh
+    RECORDED: test-b.sh.txt (digest)
+    OUT here: ['test-b.sh.txt']
+$ (both/TEST) hwut.play -p linux test-d.sh   [exit 2]
+    REFUSED: ../: requires local, linux; specified local, linux
+             => narrow with '--exclude-local -p linux', or run without '-p'
+    OUT here: -
+$ (none/TEST) hwut.play test-a.sh   [exit 0]
+         1 | test-a.sh
+    RECORDED: test-a.sh.txt (digest)
+    OUT here: ['test-a.sh.txt']
+SUCCESS: play decided as the run is.
+<hwut-end>

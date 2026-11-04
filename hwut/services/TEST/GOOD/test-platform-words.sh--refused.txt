@@ -1,0 +1,37 @@
+$ report -p linux
+    STATUS: 2
+    REFUSED: '-p' is for the faces that run: hwut.run, hwut.play
+$ lib.report.list -p linux
+    STATUS: 2
+    REFUSED: '-p' is for the faces that run: hwut.run, hwut.play
+$ accept -p linux
+    STATUS: 2
+    REFUSED: '-p' is for the faces that run: hwut.run, hwut.play
+$ lib.run.diff -p linux
+    STATUS: 2
+    REFUSED: '-p' is for the faces that run: hwut.run, hwut.play
+$ lib.accept.interactive -p linux
+    STATUS: 2
+    REFUSED: '-p' is for the faces that run: hwut.run, hwut.play
+$ plan -p linux
+    STATUS: 2
+    REFUSED: '-p' is for the faces that run: hwut.run, hwut.play
+$ lib.run.stability -p linux
+    STATUS: 2
+    REFUSED: '-p' is for the faces that run: hwut.run, hwut.play
+$ lib.cov.run -p linux
+    STATUS: 2
+    REFUSED: '-p' is for the faces that run: hwut.run, hwut.play
+$ lib.labels.create -p linux
+    STATUS: 2
+    REFUSED: '-p' is for the faces that run: hwut.run, hwut.play
+$ lib.report.list --exclude-local -p linux
+    STATUS: 2
+    REFUSED: '--exclude-local' is for the faces that run: hwut.run, hwut.play
+$ help -p linux
+    REFUSED: '-p' is for the faces that run: hwut.run, hwut.play
+$ execute -p linux build
+    STATUS: 2
+    REFUSED: unknown option '-p'
+SUCCESS: refused by name where the face does not run.
+<hwut-end>

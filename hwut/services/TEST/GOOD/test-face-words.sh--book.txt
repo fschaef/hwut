@@ -1,6 +1,6 @@
 == the book
 # vut-register 5 generation:4 apps:2 marks:0=2,1=0
-test;choice;verdict;report;stain;test_id;choice_id
+test;choice;verdict;report;stain;test_id;choice_id;platform
 a:b.sh;one;true;ok;;0;0
 ;two;true;ok;;0;1
 t.sh;;true;ok;;1
@@ -15,7 +15,7 @@ t.sh;;true;ok;tok
         t.sh .........................................[OK]
 == hwut.run writes: the name and the column
 book.csv
-test;choice;verdict;report;stain;test_id;choice_id
+test;choice;verdict;report;stain;test_id;choice_id;platform
 a:b.sh;one;true;ok;;0;0
 ;two;true;ok;;0;1
 t.sh;;true;ok;;1

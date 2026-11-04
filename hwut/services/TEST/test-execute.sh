@@ -17,6 +17,7 @@
 #         help              { features = ["face-help-page"] }
 #         command           { features = ["execute-command", "execute-exit-codes-inform"] }
 #         "command-refused" { features = ["execute-command", "face-refusal-by-name"] }
+#         boundary          { features = ["face-refusal-by-name"] }
 #     }
 # }
 #
@@ -47,6 +48,13 @@
 #                narrows; an exit 7 decides nothing; no tests is EMPTY.
 # command-refused '-c' without commands; a word after them; '+x' and
 #                '--default' beside it; neither a target nor '-c'.
+# boundary       '--directory=' naming no directory: refused, for a target
+#                and for '-c'; '-c' where no 'hwut-root.conf' stands
+#                above: refused -- it walks the test directories as
+#                'hwut.run' does. A target needs no root. MEASURED
+#                2026-11-03 before: '-c' died in a traceback each time
+#                (FileNotFoundError, RootConfMissing); the target was
+#                answered "no directory below 'nowhere' binds any target".
 # ---------------------------------------------------------------------------
 HERE=$(cd "$(dirname "$0")" && pwd)
 ROOT=$(cd "$HERE/../../.." && pwd)
@@ -57,7 +65,7 @@ unset NO_COLOR CI COLUMNS
 case "$1" in
     --hwut-info)
         echo "hwut.execute: a target over the tree, or shell commands in every test directory.;"
-        echo "CHOICES: run, absence, default, reasons, lock, passthrough, quiet, vocabulary, refused, help, command, command-refused;"
+        echo "CHOICES: run, absence, default, reasons, lock, passthrough, quiet, vocabulary, refused, help, command, command-refused, boundary;"
         exit 0 ;;
 esac
 
@@ -191,6 +199,14 @@ command-refused)
     cface +x -c ls
     cface --default=x.sh -c ls
     cface
+    ;;
+boundary)
+    #  THE CLIMB'S OWN WORDS END AT ' -- ': what follows says where the
+    #  climb stopped, a fact of where this scratch directory lies.
+    mkdir -p bare; cd bare
+    cface --directory=nowhere clean
+    cface --directory=nowhere -c ls
+    $FACE -c ls 2>&1 | sed 's/ -- .*//'; echo "STATUS: ${PIPESTATUS[0]}"
     ;;
 esac
 echo "<hwut-end>"

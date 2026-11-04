@@ -1,4 +1,4 @@
-# vut-register 5 generation:128 apps:19 marks:0=5,1=9,2=2,3=6,4=7,5=4,6=7,7=3,8=6,9=9,10=4,11=0,12=4,13=8,16=2,17=8,18=4
+# vut-register 5 generation:144 apps:20 marks:0=5,1=9,2=2,3=6,4=7,5=4,6=7,7=3,8=6,9=9,10=4,11=0,12=4,13=8,16=2,17=8,18=4,19=15
 test;choice;verdict;report;stain;test_id;choice_id
 test-amend.py;conf;true;ok;;12;0
 ;languages;true;ok;;12;1
@@ -56,6 +56,21 @@ test-output.sh;cycle;true;ok;;5;0
 ;declare;true;ok;;5;1
 ;forgotten;true;ok;;5;2
 ;refuse;true;ok;;5;3
+test-platform.py;bare-name;true;ok;;19;5
+;bubble;true;ok;;19;1
+;empty;true;ok;;19;4
+;engine-unknown;true;ok;;19;13
+;image-missing;true;ok;;19;12
+;key-unknown;true;ok;;19;11
+;kind-missing;true;ok;;19;9
+;kind-unknown;true;ok;;19;10
+;local-keys;true;ok;;19;8
+;name-doubled;true;ok;;19;7
+;name-missing;true;ok;;19;6
+;not-list;true;ok;;19;3
+;reads;true;ok;;19;0
+;root-only;true;ok;;19;2
+;value-no-string;true;ok;;19;14
 test-printer.py;directory;true;ok;;6;0
 ;faults;true;ok;;6;1
 ;file;true;ok;;6;2

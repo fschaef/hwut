@@ -47,6 +47,7 @@ from   .tree_explorer    import (explore_tree, explore_tree_stream,
 from   .task_list       import CTestTaskListAll
 from   .task_list_query  import CTestTaskListQuery
 from   ..plan.label      import swallowed_warning_tuple
+from   ..plan.wish       import unrequired_platform_note_tuple
 from   ...bookkeeper.api import Bookkeeper, NamingConfig
 
 
@@ -142,7 +143,11 @@ def of_directory(directory, wish, label_view=None, inherited=None,
                       fault_tuple   = tuple(ascent_fault_list)
                                       + tuple(result.fault_list),
                       warning_tuple = _warning_tuple(query, wish,
-                                                     result.app_set),
+                                                     result.app_set)
+                                      + unrequired_platform_note_tuple(
+                                            wish, (result.app_set
+                                                   .directory_spec
+                                                   .platform_tuple,)),
                       result_db     = {".": result},
                       bookkeeper_db = {".": bookkeeper},
                       query_db      = {".": query},
@@ -193,7 +198,11 @@ def of_tree(root, wish, label_view=None, base_f=None):
         #  THE INNER ROOTS THE WALK STOPPED AT (RQ-1) decide nothing:
         #  said where the selection's other findings are said.
         warning_tuple = tuple(exploration.note_tuple)
-                        + swallowed_warning_tuple(met_set, visible_set),
+                        + swallowed_warning_tuple(met_set, visible_set)
+                        + unrequired_platform_note_tuple(
+                              wish, (result.app_set.directory_spec
+                                           .platform_tuple
+                                     for result in result_db.values())),
         result_db     = result_db,
         bookkeeper_db = bookkeeper_db,
         query_db      = query_db,

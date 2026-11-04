@@ -2683,7 +2683,7 @@ DECISION  RULED (Frank-Rene, 2026-10-19): "both caps", and "disk safety
           scratch ground and the files it created (procsitter MANUAL 4) --
           stands beside 'memory_mb' and inherits as every cap does.
           'hwut { free_disk_min_mb = <n> }' is a DIRECTORY key of
-          'hwut-root.conf' alone (ROOT_CONF_ONLY_FIELD_TUPLE): the
+          'hwut-root.conf' alone (ROOT_CONF_ONLY_REASON_DB): the
           floor is a property of the disk, one value applied to every
           disk a case runs on, and a directory has no word on it. The
           scheduler's disk guard reads both (scheduler S-5).

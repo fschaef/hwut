@@ -22,7 +22,7 @@ fields a NEWER stream adds are dropped before the call, which is how
 named parameters survive growth.
 ______________________________________________________________________________
 """
-from .vocabulary import KIND_DB
+from .vocabulary import KIND_DB, PLATFORM_FIELD
 
 
 class CRunReportReceiver:
@@ -72,8 +72,11 @@ class CRunReportReceiver:
         argument_db = {"when": field_db["when"]}
         argument_db.update({name: field_db[name]
                             for name in required_db})
+        #  'platform' RIDES ON EVERY KIND (vocabulary) and is no handler's
+        #  parameter: a viewer that shows it reads it in 'on_any'.
         argument_db.update({name: field_db.get(name)
-                            for name in optional_db})
+                            for name in optional_db
+                            if name != PLATFORM_FIELD})
         handler(**argument_db)
 
     # -- the catch-alls, '**fields' ------------------------------------
@@ -140,6 +143,11 @@ class CRunReportReceiver:
 
     def on_dir_done(self, when, directory, good, fail_db):
         """RETURN: None. One directory's run ended."""
+
+    def on_not_run(self, when, directory, platform, reason, text):
+        """RETURN: None. A bubble not run here (spec/42): 'reason'
+        'available' or 'reachable', 'text' the NOTE's. Nothing of it is
+        counted (ruling 21)."""
 
     def on_tree_done(self, when, good, fail_n, meta_n=0, skip_n=0):
         """RETURN: None. The run ended; 'None' follows on the

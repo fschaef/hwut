@@ -91,6 +91,12 @@ class CTreePlan:
     entry_tuple:   tuple
     fault_tuple:   tuple         # the WALK's own faults
     warning_tuple: tuple = ()    # findings that decide nothing
+    #  THE BUBBLES NOT RUN HERE (spec/42 section 3): CBubbleDecision, one
+    #  'not-run' event each, before the first run; nothing of them counted.
+    not_run_tuple: tuple = ()
+    #  THE BUBBLES HANDED TO A PLATFORM (spec/42 sections 4, 5): pairs
+    #  (CBubbleDecision, the far 'hwut.run's words), each run there.
+    handed_tuple:  tuple = ()
 
     def __iter__(self):
         """YIELD: [0] CTreePlanEntry  one directory's entry, walk

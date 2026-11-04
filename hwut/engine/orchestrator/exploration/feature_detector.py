@@ -73,6 +73,7 @@ from   dataclasses import dataclass
 
 from .finder           import FEATURE_FILE_NAME, MAP_FILE_NAME
 from .feature_relation import read_feature_file, TEST_NAME
+from .tree_explorer    import registry_owner_f
 from .feature_registry import (read_registry, leaf_list,
                                retired_internal_set)
 
@@ -144,9 +145,10 @@ def fact_db_of_tree(root, below="."):
         name_list[:] = sorted(each for each in name_list
                               if not each.startswith(".")
                               and each not in PRUNE_NAME_TUPLE
-                              #  A PROJECT OF ITS OWN (RQ-1).
-                              and not os.path.isfile(os.path.join(
-                                  directory, each, "hwut-root.conf")))
+                              #  A REGISTRY OF ITS OWN (RQ-1; a bubble
+                              #  without one is the registry's above).
+                              and not registry_owner_f(os.path.join(
+                                  directory, each)))
         relative = os.path.relpath(directory, root).replace(os.sep, "/")
         test_f   = os.path.basename(directory) == TEST_NAME
         if FEATURE_FILE_NAME in file_list:

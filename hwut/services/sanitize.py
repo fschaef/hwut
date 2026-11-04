@@ -658,10 +658,18 @@ def registry_issue_list(root):
                 could not pair (with the candidates), a retired name defined
                 again, files of the past, the root's own TEST directory;
                 where no central file stands and features are defined,
-                that one is wanted.
+                that one is wanted; where the registry above governs
+                this bubble (it has none of its own), only that.
     """
     from ..engine.orchestrator.exploration import feature_detector as fd
     from ..engine.orchestrator.exploration.finder import REGISTRY_FILE_NAME
+    from ..engine.orchestrator.exploration.tree_explorer import registry_top
+    top = registry_top(root)
+    if os.path.normpath(top) != os.path.normpath(os.path.abspath(root)):
+        return [], ["features: the '%s' at '%s' governs this bubble "
+                    "=> sanitize there"
+                    % (REGISTRY_FILE_NAME,
+                       os.path.relpath(top, os.path.abspath(root)))]
     kind_db = {"register": "registry-new", "redirect": "registry-moved",
                "repoint": "registry-renamed", "fold": "registry-twin"}
     issue_list, note_list, seen = [], [], set()

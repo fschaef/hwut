@@ -14,10 +14,15 @@ THE RULES, each refused by name where broken:
 
     a link names a '.txt'       never another '.link' -- no chains, no
                                 circles, one step from a case to its text
-    a link stays inside ONE ROOT
+    a link never leaves its ROOT
                                 the 'hwut-root.conf' that bounds the link
-                                bounds its target too: a bubble is closed
-                                (E-200), and a link may not reach out of it
+                                bounds its target, or the target lies in a
+                                bubble below it: a bubble is closed
+                                (E-200) -- no way out, every way in -- so a
+                                link may reach into an inner bubble and
+                                never out of its own (ruled 2026-11-03,
+                                plan/42 P-8: the ports' links into the
+                                reference port, a bubble of its own)
     a case has ONE nominal      a '.txt' and a '.link' of one key never
                                 stand together
     only stdout links           the '.txt' subject; every other subject
@@ -36,7 +41,8 @@ ______________________________________________________________________________
 import os
 from   pathlib import Path
 
-from ...auxiliary.no_entry import OUT_DIRECTORY_NAME
+from ...auxiliary.no_entry import (OUT_DIRECTORY_NAME, TRANSIENT_DIRECTORY_NAME,
+                                   own_ground_f)
 
 ROOT_CONF_NAME = "hwut-root.conf"
 LINK_SUFFIX    = "link"
@@ -149,14 +155,18 @@ def link_target(link_path):
 def boundary_fault(link_directory, target_directory):
     """
     RETURN: str, why a link in 'link_directory' may not name a file in
-                 'target_directory': no root bounds one of them, or two
-                 different roots do.
-            None, where one root bounds both.
+                 'target_directory': no root bounds the link, or the
+                 target lies outside the link's root -- in no bubble, or
+                 in one that is not the link's own nor below it.
+            None, where the link's root bounds the target: its own
+                 bubble, or one inside it (a way in, never a way out).
     """
     link_root, target_root = root_of(link_directory), root_of(target_directory)
     if link_root is None:
         return "no '%s' bounds the link" % ROOT_CONF_NAME
-    if target_root != link_root:
+    if target_root is None \
+       or (target_root != link_root
+           and not target_root.startswith(link_root.rstrip(os.sep) + os.sep)):
         return "the target stands beyond the link's root '%s'" \
                % os.path.normpath(os.path.join(os.path.relpath(link_root),
                                                ROOT_CONF_NAME))
@@ -205,19 +215,43 @@ def write_link(link_path, target):
     link.write_text(link_text(link.parent, target), encoding="utf-8")
 
 
-def link_tuple(root):
+def _outermost_root_of(directory):
+    """
+    RETURN: str, the absolute directory of the OUTERMOST 'hwut-root.conf'
+                 at or above 'directory' -- every bubble whose links may
+                 reach it lies below. The climb ENDS at a test directory's
+                 'TMP/' (E-24): a fixture built there is no bubble of the
+                 enclosing project.
+            None, where none stands.
+    """
+    found = root_of(directory)
+    while found is not None:
+        here = os.path.dirname(found)
+        while here != os.path.dirname(here) \
+              and not os.path.isfile(os.path.join(here, ROOT_CONF_NAME)):
+            if own_ground_f(here, (TRANSIENT_DIRECTORY_NAME,)): return found
+            here = os.path.dirname(here)
+        if not os.path.isfile(os.path.join(here, ROOT_CONF_NAME)) \
+           or own_ground_f(here, (TRANSIENT_DIRECTORY_NAME,)):
+            return found
+        found = here
+    return found
+
+
+def link_tuple(root, inner_f=False):
     """
     RETURN: tuple[Path], every 'GOOD/*.link' under 'root', sorted -- the
-            walk stops at an inner 'hwut-root.conf', since no link crosses
-            a root, and never enters 'OUT/', 'TMP/' or '.git/'.
+            walk stops at an inner 'hwut-root.conf' (a link of a bubble
+            below is that bubble's) unless 'inner_f', and never enters
+            'OUT/', 'TMP/' or '.git/'.
     """
     found_list = []
     root = os.path.abspath(str(root))
     for here, dir_list, file_list in os.walk(root):
         dir_list[:] = sorted(d for d in dir_list
                              if d not in _SKIP_DIRECTORY_SET
-                             and not os.path.isfile(
-                                 os.path.join(here, d, ROOT_CONF_NAME)))
+                             and (inner_f or not os.path.isfile(
+                                 os.path.join(here, d, ROOT_CONF_NAME))))
         if os.path.basename(here) != "GOOD": continue
         found_list.extend(Path(here) / name for name in sorted(file_list)
                           if name.endswith("." + LINK_SUFFIX))
@@ -226,15 +260,17 @@ def link_tuple(root):
 
 def links_to(target, root=None):
     """
-    RETURN: tuple[Path], every '.link' within the root of 'target' (or
-            'root', where given) that names 'target'. A link that cannot
-            be followed names nothing and is left out.
+    RETURN: tuple[Path], every '.link' that names 'target': within the
+            OUTERMOST root above 'target' (or 'root', where given), inner
+            bubbles entered -- a link may reach into a bubble below its
+            own, so one naming 'target' may stand in any bubble above it.
+            A link that cannot be followed names nothing and is left out.
     """
     target = Path(os.path.normpath(os.path.abspath(str(target))))
-    root   = root if root is not None else root_of(target.parent)
+    root   = root if root is not None else _outermost_root_of(target.parent)
     if root is None: return ()
     hit_list = []
-    for link in link_tuple(root):
+    for link in link_tuple(root, inner_f=True):
         try:
             followed = link_target(link)
         except LinkFault:

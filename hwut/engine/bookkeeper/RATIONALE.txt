@@ -860,3 +860,16 @@ COST      A reader that opened 'nominal_path' directly reads nothing for a
           'details', sanitize's constraints, 'of_disk', '_cases') and reads
           through 'nominal_resolved' now. Faces: services E-209. Regression:
           'services/TEST/test-good-link.sh' (seven choices).
+AMENDED   2026-11-03 (plan/42 P-8, ruled "(b)"): a link may reach INTO a
+          bubble below its own, never out of its own -- E-200's "no way
+          out, every way in". MEASURED: with 'support/test_writing/python/
+          TEST' a bubble of its own (spec/42 section 8), the links of eight
+          ports into that reference port were refused ("the target stands
+          beyond the link's root"), 302 of their cases 'no GOOD file'.
+          'boundary_fault' admits a target whose root is the link's or
+          lies below it; 'links_to' searches from the OUTERMOST root above
+          the target, inner bubbles entered (the climb ends at a test
+          directory's 'TMP/', E-24), since a link naming it may stand in
+          any bubble above. 'link_tuple' walks one bubble unless told
+          'inner_f'. Regression: test-good-link.sh 'inward'; 'move' (a
+          linked text moved into a bubble: its links follow).

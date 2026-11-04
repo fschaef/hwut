@@ -1,0 +1,14 @@
+measured on linux          test;choice;verdict;report;stain;test_id;choice_id;platform | demo;basic;true;ok;;;;linux
+accepted here after        test;choice;verdict;report;stain;test_id;choice_id;platform | demo;basic;true;ok;;0;0;linux
+measured here again        test;choice;verdict;report;stain;test_id;choice_id;platform | demo;basic;true;ok;;0;0
+an older book, rewritten   test;choice;verdict;report;stain;test_id;choice_id;platform | demo;basic;true;ok;;0;0
+result on linux            [('platform', 'linux'), ('report', 'ok'), ('verdict', <E_TestVerdict.PASS: 'true'>)]
+result here                [('report', 'ok'), ('verdict', <E_TestVerdict.PASS: 'true'>)]
+result of the older book   [('report', 'ok'), ('verdict', <E_TestVerdict.PASS: 'true'>)]
+  OK  : a verdict measured on a platform: the last cell, and 'result' says it
+  OK  : an acceptance here leaves it: it measured nothing
+  OK  : measured here again: the cell empty, the row as it ever was (B-9)
+  OK  : an older book reads as measured here
+  OK  : its first write adds the header's word alone
+SUCCESS: the book says where.
+<hwut-end>

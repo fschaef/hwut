@@ -1,0 +1,35 @@
+============================================================================
+ENGINE/PLATFORMS -- RATIONALE
+============================================================================
+
+The rulings of adm/WORK/intend/42-platforms.txt (1-22) enter here with
+the build's last cut (plan/42, P-9). Until then the intend is the record.
+
+PL-1  A RELATIVE 'recipe' IS MADE ABSOLUTE BY THE DECISION, NOT HERE
+      (P-1, amended P-2, 2026-11-02; PROVISIONAL, put to the author)
+
+PROBLEM   spec/42 section 1: 'recipe' is relative to the conf's
+          directory. 'is_available(name, spec)' and 'start(name, spec,
+          write)' are given no directory; neither is the conf's reader,
+          which knows the conf only by the name it shows.
+
+DECISION  The reader keeps 'recipe' as written. The decision that
+          decides a bubble ('engine/orchestrator/plan/bubble.py', P-4)
+          knows the bubble's directory and hands the helper a 'recipe'
+          that opens from anywhere. The helper takes
+          the path as given; what it SAYS is the path as the tree names
+          it ('adm/container/Containerfile', relative to the tree's
+          top).
+
+PL-2  THE KIND CHECKS ITS OWN KEYS: 'check(name, spec)'
+      (P-2, 2026-11-02)
+
+PROBLEM   Ruling 14: hwut's schema reads 'name' and 'kind', every other
+          key is the kind's. 'keys(kind)' answers which keys a kind
+          knows, but not which it needs ('image') nor which values it
+          takes ('engine').
+
+DECISION  Each kind answers 'check(name, spec)': (key, text) per fault
+          of its own keys. The conf's reader asks it after 'name' and
+          'kind' read, and places each fault at its key. A later kind
+          (HIL) brings its own 'check'; the reader is not touched.

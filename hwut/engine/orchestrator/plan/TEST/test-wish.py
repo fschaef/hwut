@@ -8,6 +8,10 @@
 #         globs   { features = ["cases-by-glob"] }
 #         parsing { features = ["wish-keywords"] }
 #         refused { features = ["wish-refused"] }
+#         take    { features = ["wish-taken-by-face"] }
+#         one-reader { features = ["wish-one-reader"] }
+#         platform { features = ["wish-platform-words"] }
+#         far      { features = ["wish-far-argv"] }
 #     }
 #     interactive = true
 # }
@@ -18,7 +22,8 @@ ______________________________________________________________________________
 PURPOSE: THE WISH -- the selection keywords read off a command line, and
          the cases they select out of a directory.
 
-CHOICES: parsing, anchors, refused, globs, base;
+CHOICES: parsing, anchors, refused, globs, base, take, one-reader,
+         platform, far;
 
 DESCRIPTION:
 
@@ -41,12 +46,40 @@ refused  a point that cannot be read, a keyword standing without its
 globs    globs over both members of the target form; several globs hold
          one question and are OR'ed; an empty match is legal.
 
+take     a face says which wish words it takes ('take_tuple'): the
+         others are not read and come back as typed, in order, for the
+         face's own reader to refuse; a short spelling taken by its long
+         one; 'operand_ends_f' -- the first bare word ends the reading,
+         and the words after it are not read, wish words included.
+
+one-reader
+         EVERY 'Wish(...)' A FACE BUILDS, listed (services/, read with
+         'ast'): a face reads its command line through 'parse_wish', so
+         a face that builds its own wish again moves this list. Standing
+         2026-11-03: one, the comparison of 'hwut.report.features'.
+
+platform '-p <platform>' and '--exclude-local' (spec/42 section 2): read
+         where the face runs ('platform_f'), spelt back, each name once,
+         in order; S, the platforms specified; refused by name on a face
+         that does not run, '--exclude-local' with no '-p', '-p' without
+         a name; a face taking only the platform words ('hwut.play');
+         the NOTE for a '-p' no bubble requires -- 'local' required
+         where a bubble says no 'platform'.
+
+far      the words a far 'hwut.run' takes for a bubble handed to a
+         platform ('Wish.far_argv', spec/42 section 4): targets and
+         directory rules re-rooted at the bubble, one outside it dropped,
+         a bare name kept; nothing wanted there, None; every other word
+         as given; no '-p'; '--as-platform=' first. '--as-platform' on a
+         face that does not run: refused.
+
 base     the base questions answered out of a book: '--fail', '--pass',
          '--since=' shunning the never-run, '--until=' wanting them --
          the stale wish -- and the questions AND'ed. Asking the base
          without a Bookkeeper is refused.
 ______________________________________________________________________________
 """
+import ast
 import os
 import shutil
 import sys
@@ -60,7 +93,9 @@ from hwut.engine.orchestrator.exploration.task_list_query import \
                                                          CTestTaskListQuery
 from hwut.engine.orchestrator.plan.wish import (Wish, WishError,
                                                cutoff_instant, parse_wish,
-                                               with_targets)
+                                               with_targets,
+                                               PLATFORM_WORD_TUPLE,
+                                               unrequired_platform_note_tuple)
 
 
 NOW = datetime(2026, 5, 14, 15, 30, 0, tzinfo=timezone.utc)   # a Thursday
@@ -317,6 +352,159 @@ def test_base():
         shutil.rmtree(directory, ignore_errors=True)
 
 
+def test_take():
+    """RETURN: None. A face's own share of the wish's words."""
+    execute = ("--dir", "--exclude-dir", "--no-bubbles", "--no-boundary")
+    for title, argv, take_tuple, operand_ends_f in (
+        ("takes none (hwut.play)",
+         ["--fail", "-l", "x", "--glob=y", "test-a.py", "one", "--raw"],
+         (), False),
+        ("takes '--label': both spellings",
+         ["-l", "mine", "--fail"], ("--label",), False),
+        ("takes '--label': both spellings, '=' forms",
+         ["-l=mine", "--glob=z"], ("--label",), False),
+        ("the walk's words, an operand ending (hwut.execute)",
+         ["-i", "--dir", "a", "--exclude-dir=a/b", "--no-bubbles",
+          "build", "--dir", "z", "-q"], execute, True),
+        ("an operand ending: a value is no operand",
+         ["--dir", "build", "-c", "ls -l", "--dir", "a"], execute, True),
+        ("an operand ending: '+x' is no operand",
+         ["+x", "--dir", "a", "build"], execute, True)):
+        wish, rest = parse_wish(argv, take_tuple=take_tuple,
+                                operand_ends_f=operand_ends_f)
+        banner("%s: %s" % (title, " ".join(argv)))
+        print("    take : %s%s" % (", ".join(take_tuple) or "-",
+                                   "   operand ends" if operand_ends_f
+                                   else ""))
+        print("    wish : %s%s" % (wish, "   --no-bubbles"
+                                   if wish.no_bubbles_f
+                                   and wish.states_nothing_f() else ""))
+        print("    rest : %s" % (", ".join(rest) or "-"))
+
+
+def test_platform():
+    """RETURN: None. The platform words: read, spelt back, refused."""
+    for title, argv, keyword_db in (
+        ("a face that runs", ["-p", "linux"], {"platform_f": True}),
+        ("several, each once, in order",
+         ["-p", "linux", "-p=win11", "-p", "linux", "--fail"],
+         {"platform_f": True}),
+        ("'--exclude-local' with '-p'",
+         ["--exclude-local", "-p", "linux"], {"platform_f": True}),
+        ("'-p local': what no '-p' says", ["-p", "local"],
+         {"platform_f": True}),
+        ("beside '--no-bubbles'", ["--no-bubbles", "-p", "linux"],
+         {"platform_f": True}),
+        ("a face taking the platform words alone (hwut.play)",
+         ["-p", "linux", "--fail", "test-a.py", "one"],
+         {"platform_f": True, "take_tuple": PLATFORM_WORD_TUPLE}),
+        ("a face taking some wish words, not these (hwut.execute)",
+         ["-p", "linux", "--dir", "a"],
+         {"take_tuple": ("--dir",)}),
+        ("a face that does not run", ["-p", "linux"], {}),
+        ("a face that does not run", ["--exclude-local"], {}),
+        ("'--exclude-local' alone", ["--exclude-local"],
+         {"platform_f": True}),
+        ("'-p' without a name", ["-p"], {"platform_f": True}),
+        ("'-p=' naming nothing", ["-p="], {"platform_f": True})):
+        banner("%s: %s" % (title, " ".join(argv)))
+        try:
+            wish, rest = parse_wish(argv, **keyword_db)
+        except WishError as error:
+            print("    REFUSED: %s" % error)
+            continue
+        print("    wish : %s" % wish)
+        print("    S    : %s" % ", ".join(sorted(wish.specified_platform_set())))
+        print("    rest : %s" % (", ".join(rest) or "-"))
+
+    banner("the NOTE: a '-p' no bubble requires")
+    wish, _ = parse_wish(["-p", "lab-3", "-p", "linux", "-p", "local"],
+                         platform_f=True)
+    linux = (("linux", {"name": "linux", "kind": "container",
+                        "image": "hwut-dev"}),)
+    for title, required in (("a bubble with no 'platform', one with linux",
+                             (None, linux)),
+                            ("linux alone", (linux,)),
+                            ("no test directory walked", ())):
+        print("    %s:" % title)
+        for line in unrequired_platform_note_tuple(wish, required):
+            print("        %s" % line)
+    wish, _ = parse_wish([], platform_f=True)
+    print("    no '-p': %r" % (unrequired_platform_note_tuple(wish, ()),))
+
+
+def test_far():
+    """RETURN: None. A wish as a far run's words, per bubble."""
+    for argv, word_list in (
+            ([], []),
+            (["--fail", "-p", "linux"], ["support/demo/c/TEST/test.c", "one"]),
+            ([], ["test-*.py"]),
+            ([], ["other/x.py"]),
+            ([], ["**/test-x.py"]),
+            (["--dir", "support"], []),
+            (["--dir", "other/a"], []),
+            (["--dir", "demo"], []),
+            (["--dir", "support/demo", "--exclude-dir", "support/demo/go"], []),
+            (["--exclude", "support/a/b.py", "--exclude", "z/q.py"], []),
+            (["-l", "f/display", "--no-bubbles"], []),
+            (["--language=c", "--since=2h", "--faster-than=2.5",
+              "--unaccepted"], [])):
+        wish, _ = parse_wish(argv, platform_f=True)
+        if word_list: wish = with_targets(wish, word_list)
+        banner("%s  %s" % (" ".join(argv) or "-", " ".join(word_list)))
+        far = wish.far_argv("support", "linux")
+        print("    far: %s" % ("None -- not handed: nothing wanted there"
+                               if far is None else " ".join(far)))
+    banner("'--as-platform' read, spelt back; refused where nothing runs")
+    wish, _ = parse_wish(["--as-platform=linux"], platform_f=True)
+    print("    wish: %s   as_platform=%r" % (wish, wish.as_platform))
+    try:
+        parse_wish(["--as-platform=linux"])
+    except WishError as error:
+        print("    REFUSED: %s" % error)
+
+
+def wish_build_list(top):
+    """
+    RETURN: list of str, '<path>:<line>' for every call 'Wish(...)' in
+            the Python modules below 'top' (test pages, 'TEST' and
+            '__pycache__' left out), paths relative to 'top', sorted.
+    """
+    found = []
+    for here, name_list, file_list in os.walk(top):
+        name_list[:] = sorted(n for n in name_list
+                              if n not in ("TEST", "__pycache__"))
+        for name in sorted(file_list):
+            if not name.endswith(".py") or name.startswith("test-"):
+                continue
+            path = os.path.join(here, name)
+            with open(path, encoding="utf-8") as fh:
+                tree = ast.parse(fh.read(), path)
+            for node in ast.walk(tree):
+                if isinstance(node, ast.Call) \
+                   and isinstance(node.func, ast.Name) \
+                   and node.func.id == "Wish":
+                    found.append("%s:%i" % (os.path.relpath(path, top),
+                                            node.lineno))
+    return sorted(found)
+
+
+def test_one_reader():
+    """RETURN: None. Every wish a face builds, listed."""
+    import config
+    top = os.path.join(config.HWUT_DIRECTORY, "services")
+    banner("Wish(...) built in services/, not read by 'parse_wish'")
+    for line in wish_build_list(top):
+        print("    %s" % line.split(":")[0])
+    planted_dir = tempfile.mkdtemp(prefix="hwut_wish_planted_")
+    with open(os.path.join(planted_dir, "face.py"), "w") as fh:
+        fh.write("from x import Wish\nwish = Wish()\n")
+    banner("a planted face that builds its own: named")
+    for line in wish_build_list(planted_dir):
+        print("    %s" % line)
+    shutil.rmtree(planted_dir)
+
+
 if __name__ == "__main__":
     HwutRunner(sys.argv,
                "Wish: keywords read, cases selected;", {
@@ -325,4 +513,8 @@ if __name__ == "__main__":
         "refused": test_refused,
         "globs":   test_globs,
         "base":    test_base,
+        "take":    test_take,
+        "one-reader": test_one_reader,
+        "platform": test_platform,
+        "far":      test_far,
     }).run()

@@ -1,0 +1,24 @@
+far status 1 -> run returned 1
+    {"directory": "support/TEST", "kind": "dir-begun", "node_n": 1, "platform": "linux", "when": "2026-11-03T10:00:00+00:00"}
+    {"directory": "support/TEST", "kind": "run-begun", "node": "test-a.sh", "node_kind": "TEST", "platform": "linux", "when": "2026-11-03T10:00:00.010000+00:00"}
+    {"directory": "support/TEST", "good": false, "kind": "run-ended", "node": "test-a.sh", "node_kind": "TEST", "platform": "linux", "verdict": "test-failed", "when": "2026-11-03T10:00:00.200000+00:00"}
+    {"directory": "support/TEST", "kind": "report", "platform": "linux", "text": "a note of the far run", "when": "2026-11-03T10:00:00.210000+00:00"}
+    {"directory": "support", "kind": "fault", "platform": "linux", "text": "support/: platform 'linux' said: the far run said something that is no event", "when": "<now>"}
+    {"directory": "support/TEST", "fail_db": {"test-a.sh": "ENDED_BAD"}, "good": false, "kind": "dir-done", "platform": "linux", "when": "2026-11-03T10:00:00.220000+00:00"}
+far status 2 -> run returned 2
+    {"directory": "support/TEST", "kind": "dir-begun", "node_n": 1, "platform": "linux", "when": "2026-11-03T10:00:00+00:00"}
+    {"directory": "support/TEST", "kind": "run-begun", "node": "test-a.sh", "node_kind": "TEST", "platform": "linux", "when": "2026-11-03T10:00:00.010000+00:00"}
+    {"directory": "support/TEST", "good": false, "kind": "run-ended", "node": "test-a.sh", "node_kind": "TEST", "platform": "linux", "verdict": "test-failed", "when": "2026-11-03T10:00:00.200000+00:00"}
+    {"directory": "support/TEST", "kind": "report", "platform": "linux", "text": "a note of the far run", "when": "2026-11-03T10:00:00.210000+00:00"}
+    {"directory": "support", "kind": "fault", "platform": "linux", "text": "support/: platform 'linux' said: the far run said something that is no event", "when": "<now>"}
+    {"directory": "support/TEST", "fail_db": {"test-a.sh": "ENDED_BAD"}, "good": false, "kind": "dir-done", "platform": "linux", "when": "2026-11-03T10:00:00.220000+00:00"}
+    {"directory": "support", "kind": "fault", "platform": "linux", "text": "support/: platform 'linux' ended with status 2", "when": "<now>"}
+  OK  : the far tree-begun and tree-done are dropped
+  OK  : each directory below the bubble
+  OK  : every event carries 'platform'
+  OK  : the time kept, reckoned from the far tree-begun
+  OK  : a line no event: a fault, the line verbatim
+  OK  : status 1: told by the events, no fault
+  OK  : status 2: a fault naming it
+SUCCESS: the far stream, translated.
+<hwut-end>

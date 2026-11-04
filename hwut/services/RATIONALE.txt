@@ -8189,3 +8189,78 @@ COST      The recipe is written where no container engine runs; its first
           'hwut.dev.podman.build --rebuild' is its test, and three of its
           download hosts (go.dev, nodejs.org, static.rust-lang.org) could
           not be reached from where it was written.
+
+E-219  ONE READER OF THE WISH: EVERY FACE THAT SELECTS READS ITS COMMAND
+       LINE THROUGH 'parse_wish'                                  (2026-11-03)
+------------------------------------------------------------------------------
+PROBLEM   Ruled by the author, 2026-11-03: "hwut.play must use
+          parse_wish()". MEASURED before: three faces read wish words
+          with their own code. 'hwut.play' built 'Wish()' in four places
+          and refused every wish word through its own parser;
+          'hwut.execute' re-read '--dir', '--exclude-dir' and
+          '--no-bubbles' in a loop of its own, the retired-'--no-boundary'
+          text copied in; 'hwut.remove.propose' read its argv alone and
+          built the empty wish with 'parse_wish([])'. A wish word added to
+          the reader (plan/42's '-p') would have had to be taught to each.
+DECISION  'parse_wish(argv, take_tuple=None, operand_ends_f=False)'.
+          'take_tuple' names the wish words a face takes, by the long
+          spelling; None takes every one (the thirteen faces that already
+          read it, unchanged). A wish word not taken is NOT READ: it comes
+          back in the rest as typed, in order, and the face's own reader
+          refuses it as it refuses any word it does not know -- so every
+          refusal stands as it stood, word for word. 'operand_ends_f': the
+          first bare word ends the reading, and what follows it is not
+          read -- 'hwut.execute's script keeps its arguments, wish words
+          included.
+              hwut.play            takes ()        (P-3 adds '-p',
+                                                    '--exclude-local')
+              hwut.execute         takes '--dir', '--exclude-dir',
+                                   '--no-bubbles', '--no-boundary';
+                                   the operand ends the reading
+              hwut.remove.propose  takes ()
+          '--exclude-dir' without its glob now says "without a glob", as
+          'hwut.execute' said; the wish said "without a target", the
+          noun of '--exclude'.
+          Not wish readers, by design: the faces that name ONE artefact by
+          identity ('hwut.remove', 'hwut.rename', 'hwut.move',
+          'hwut.config.show'); the engine's own derived wishes
+          ('feature_wish', a feature label's).
+CHECKED   engine/orchestrator/plan/TEST test-wish.py: 'take' (the
+          reader's two words), 'one-reader' (every 'Wish(...)' under
+          services/, read with 'ast'; standing: the comparison of
+          'hwut.report.features' alone). The answers of the three faces
+          to 25 command lines, before and after: identical.
+
+
+E-220  ONE FEATURES REGISTRY SPANS THE BUBBLES THAT HAVE NONE OF THEIR OWN
+       (plan/42 P-8, ruled 2026-11-03)                             (2026-11-03)
+------------------------------------------------------------------------------
+PROBLEM   P-8 makes 'support/' a bubble. MEASURED on a copy: with
+          'support/hwut-root.conf' alone, 'hwut.features.register' at
+          the top named all 34 support directories 'dir-gone ... stands
+          no more' (every walk that reads or maintains the registry
+          stopped at an inner 'hwut-root.conf', E-200), and inside
+          'support/' it refused: no registry stands. No face moves
+          entries from one registry into another, ids kept.
+DECISION  Ruled, against a 'hwut.features.split' face (the choice that
+          presumes several registries, intend/feature-id-space o-13 still
+          open): a bubble without a 'hwut-root-features.conf' belongs to
+          the NEAREST REGISTRY ABOVE it; only a bubble WITH one is a
+          registry of its own ('tree_explorer.registry_top', '.registry_
+          owner_f', '.registry_gate_of'). The walks of the registry --
+          the detector, the relation behind the features view, '-F' and
+          'f/<id>', 'hwut.features.*' but 'init', the unregistered hint
+          of 'hwut.run' and 'hwut.help' -- enter the first kind, its
+          configuration its own, and stop at the second with E-200's
+          NOTE. 'hwut.features.init' begins a registry at the NEAREST
+          bubble, as ever. 'hwut.sanitize' inside a bubble the registry
+          above governs proposes nothing of it: a NOTE names where.
+          Nothing else of E-200 moves: runs, labels and confs keep their
+          bubble.
+CONSEQUENCE  A registry begun inside a spanned bubble ('init' there)
+          leaves the one above naming that bubble's directories gone --
+          that is what a split face would heal; whether one is wanted
+          follows o-13.
+CHECKED   services/lib/features/TEST test-span.py: 'register', 'view',
+          'begin'. On the tree with 'support/hwut-root.conf' added: the
+          features report from the top identical to the one without it.

@@ -12,7 +12,8 @@ STDERR {
                                  [--output=<path>] [--target <name>]...
                                  [--session] [--lock] [--out] [--orphans]
                                  [--books] [--constraints] [--links] [--relations]
-                                 [--transient] [--directory=<path>]
+                                 [--transient] [-p <platform>]...
+                                 [--exclude-local] [--directory=<path>]
 }
 STATUS: 2
 STDOUT {
@@ -28,7 +29,8 @@ STDERR {
                                  [--output=<path>] [--target <name>]...
                                  [--session] [--lock] [--out] [--orphans]
                                  [--books] [--constraints] [--links] [--relations]
-                                 [--transient] [--directory=<path>]
+                                 [--transient] [-p <platform>]...
+                                 [--exclude-local] [--directory=<path>]
 }
 STATUS: 2
 STDOUT {
@@ -44,7 +46,8 @@ STDERR {
                                  [--output=<path>] [--target <name>]...
                                  [--session] [--lock] [--out] [--orphans]
                                  [--books] [--constraints] [--links] [--relations]
-                                 [--transient] [--directory=<path>]
+                                 [--transient] [-p <platform>]...
+                                 [--exclude-local] [--directory=<path>]
 }
 STATUS: 2
 STDOUT {

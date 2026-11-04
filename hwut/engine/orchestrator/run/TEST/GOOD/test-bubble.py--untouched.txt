@@ -1,0 +1,17 @@
+$ hwut.run (no -p)   [exit 0]
+    NOTE  linux/: requires linux; specified local
+    NOTE  REGISTERED test-top.sh: a nominal stands and the register had no entry -- accepted outside the book (E-41)
+    NOTE  REGISTERED test-d.sh: a nominal stands and the register had no entry -- accepted outside the book (E-41)
+    NOTE  REGISTERED test-c.sh: a nominal stands and the register had no entry -- accepted outside the book (E-41)
+    NOTE  REGISTERED test-a.sh: a nominal stands and the register had no entry -- accepted outside the book (E-41)
+    RESULTS: 4 ok, 0 fail
+    below linux: 3 file(s) before, 3 after
+$ hwut.run --exclude-local -p linux   [exit 3]
+    NOTE  ./: requires local; specified linux
+    NOTE  both/: platform 'linux' not reachable: image 'hwut-dev' absent and recipe '<root>/both/Containerfile' not found
+    NOTE  linux/: platform 'linux' not reachable: image 'hwut-dev' absent and recipe '<root>/linux/Containerfile' not found
+    NOTE  linux/inner/: requires local; specified linux
+    NOTE  none/: requires local; specified linux
+    below TEST, none, linux, both: 26 file(s) before, 26 after
+SUCCESS: a bubble not run leaves no trace.
+<hwut-end>

@@ -346,6 +346,10 @@ class CPlainFlow(CRunReportReceiver):
                                      # (E-41): not run, said at the end
                                      # in arrival order
         self.dir_good_db = {}        # directory -> dir-done's 'good'
+        self.not_run_db  = {}        # bubble -> (marker, reason): a
+                                     # bubble not run here (spec/42)
+        self.platform_db = {}        # directory -> the platform that
+                                     # measured it; absent: 'local'
         self.good_f      = None
         self.fail_n      = None
         self.event_f     = False
@@ -531,6 +535,12 @@ class CPlainFlow(CRunReportReceiver):
         """RETURN: None. Bookkeeping every event shares: the first and
         the last 'when'."""
         self.event_f = True
+        #  WHERE A DIRECTORY WAS MEASURED rides on its events, never on a
+        #  handler's parameter (spec/42 section 6); a 'not-run' names the
+        #  platform a bubble did NOT run on.
+        if kind != "not-run" and fields.get("platform") \
+           and fields.get("directory") is not None:
+            self.platform_db[fields["directory"]] = fields["platform"]
         when = fields.get("when")
         if when is None: return
         if self.when_first is None: self.when_first = when
@@ -989,6 +999,15 @@ class CPlainFlow(CRunReportReceiver):
         if self.tier is E_Tier.SILENT: return
         self._flow(text, text)
 
+    def on_not_run(self, when, directory, platform, reason, text):
+        """RETURN: None. A bubble not run here (spec/42): its NOTE,
+        verbatim, in every tier but SILENT, before any run -- where a
+        warning stands -- and its marker line in the final tree."""
+        self.not_run_db[directory] = _not_run_marker(directory, platform,
+                                                     reason, text)
+        if self.tier is E_Tier.SILENT: return
+        self._flow("NOTE  %s" % text, "NOTE  %s" % text)
+
     def on_refused(self, when, directory, node, text):
         """RETURN: None. Not run, by name and reason: a line IN THE FLOW
         where it happened, and the closing REFUSED block which names
@@ -1105,30 +1124,76 @@ class CPlainFlow(CRunReportReceiver):
                       in self.verdict_db.get(directory, {}).items()
                       if verdict != "ok")
 
+    def _shown_directory_list(self):
+        """
+        RETURN: list of str, the directories of 'self.dir_order' the
+                final tree names -- all, but one that lies in a bubble
+                NOT RUN and saw nothing: a bubble whose hand-over failed
+                at its start leaves its directories announced and unrun,
+                and its marker line says why (spec/42 section 6).
+        """
+        def unrun_bubble_f(directory):
+            return any(bubble == "." or directory == bubble
+                       or str(directory).startswith(bubble + "/")
+                       for bubble in self.not_run_db)
+        return [directory for directory in self.dir_order
+                if directory in self.verdict_db
+                or directory in self.dir_good_db
+                or not unrun_bubble_f(directory)]
+
     def _directory_tree(self):
         """
         RETURN: dict, the root of a tree built from every path in
-                'self.dir_order', one node per '/'-separated segment.
-                A node that is itself one of the run's directories
-                carries 'directory' (the full path); a node that is
-                only a path segment on the way to one does not.
+                '_shown_directory_list()' and every bubble not run, one
+                node per '/'-separated segment. A node that is itself
+                one of the run's directories carries 'directory' (the
+                full path); a bubble not run carries 'not_run' (its
+                marker and reason); a node that is only a path segment
+                on the way to one carries neither.
 
         '.' (the walk's own root) becomes a single node named '.'; a
         path never splits into zero segments.
         """
-        root = {"children": {}, "order": [], "directory": None}
-        for directory in self.dir_order:
-            part_list = [p for p in str(directory).split("/") if p] \
-                        or ["."]
+        root = {"children": {}, "order": [], "directory": None,
+                "not_run": None}
+
+        def node_of(path):
+            part_list = [p for p in str(path).split("/") if p] or ["."]
             node = root
             for part in part_list:
                 if part not in node["children"]:
                     node["children"][part] = {"children": {}, "order": [],
-                                              "directory": None}
+                                              "directory": None,
+                                              "not_run": None}
                     node["order"].append(part)
                 node = node["children"][part]
-            node["directory"] = directory
+            return node
+
+        shown_set = set(self._shown_directory_list())
+        for path in self._tree_path_list():
+            node = node_of(path)
+            if path in self.not_run_db: node["not_run"] = self.not_run_db[path]
+            if path in shown_set:       node["directory"] = path
         return root
+
+    def _tree_path_list(self):
+        """
+        RETURN: list of str, what the final tree names, in the order it
+                is met: the shown directories in walk order, each bubble
+                not run placed before the first of them it precedes in
+                path order -- where none follows, last.
+        """
+        #  A BUBBLE NOT RUN STANDS WHERE THE WALK WOULD HAVE MET IT:
+        #  before the first directory that sorts after it, component by
+        #  component, as the walk descends.
+        result = list(self._shown_directory_list())
+        for bubble in sorted(self.not_run_db,
+                             key=lambda path: str(path).split("/")):
+            key = str(bubble).split("/")
+            at  = next((i for i, path in enumerate(result)
+                        if str(path).split("/") > key), len(result))
+            result.insert(at, bubble)
+        return result
 
     def _named(self, directory):
         """RETURN: str, the directory as it is SAID: '.' by its path
@@ -1184,7 +1249,8 @@ class CPlainFlow(CRunReportReceiver):
                         run of its own.
                     [1] dict, the node the label ends at.
             """
-            while node["directory"] is None and len(node["order"]) == 1:
+            while node["directory"] is None and node["not_run"] is None \
+                  and len(node["order"]) == 1:
                 only = node["order"][0]
                 part = "%s/%s" % (part, only)
                 node = node["children"][only]
@@ -1208,14 +1274,15 @@ class CPlainFlow(CRunReportReceiver):
                 label, child = collapse(part, node["children"][part])
                 last_f    = (i == child_n - 1)
                 directory = child["directory"]
+                not_run   = child["not_run"]
                 branch_f  = bool(child["order"])
                 #  THE CONNECTOR: a JUNCTION ends in a dot; a LEAF ends
                 #  in one blank; a place that ALSO branches keeps two,
                 #  so that the indent of what hangs below it -- four
                 #  per level -- is unmoved. A leaf hangs nothing, so
                 #  its width need not match.
-                if directory is None:   end = ". "
-                elif branch_f:          end = "  "
+                if directory is None and not_run is None: end = ". "
+                elif branch_f:                            end = "  "
                 else:                   end = " "
                 connector = ("'---%s" if last_f else "+---%s") % end
                 left      = "%s%s%s%s" % (TREE_INDENT, indent,
@@ -1229,7 +1296,18 @@ class CPlainFlow(CRunReportReceiver):
                                                             connector))
                 label_ink = leaf_label(label) if directory is not None \
                             else self.ink.directory(label)
+                if directory is not None and directory in self.platform_db:
+                    label     += self._where(directory)
+                    label_ink += self.ink.dim(self._where(directory))
+                    left       = "%s%s" % (left, self._where(directory))
                 left_ink  = "%s%s" % (tree_ink, label_ink)
+                if not_run is not None:
+                    #  A BUBBLE NOT RUN: its marker, the reason beside it;
+                    #  a directory of its own that ran below it keeps
+                    #  its line, here and in the branch beneath.
+                    write(self._marker_line(
+                        "%s%s" % (tree_ink, self.ink.directory(label + "/")),
+                        not_run))
                 if directory is not None:
                     good   = self.dir_good_db.get(directory)
                     tag    = self.vocabulary.directory_tag(
@@ -1242,27 +1320,58 @@ class CPlainFlow(CRunReportReceiver):
                     dots = _dot_space_fill(fill)
                     write("%s %s %s" % (left_ink, self.ink.dim(dots),
                                         right_ink))
-                else:
+                elif not_run is None:
                     write(left_ink)
                 recurse(child, indent + ("    " if last_f else "|   "))
         #  ONE DIRECTORY IS NOT A TREE. A connector says "this branches
         #  from something"; with nothing to branch from, the name
         #  stands alone at the indent, and the right side as usual.
-        if len(self.dir_order) == 1:
-            directory = self.dir_order[0]
+        path_list = self._tree_path_list()
+        if len(path_list) == 1 and path_list[0] in self.not_run_db:
+            write(self._marker_line(
+                "%s%s" % (TREE_INDENT,
+                          self.ink.directory(self._named(path_list[0]) + "/")),
+                self.not_run_db[path_list[0]]))
+            return
+        if len(path_list) == 1:
+            directory = path_list[0]
             good      = self.dir_good_db.get(directory)
             tag       = self.vocabulary.directory_tag(
                             good, *self._count(directory))
             counts    = "%d/%d" % self._count(directory)
-            left      = "%s%s" % (TREE_INDENT, self._named(directory))
+            where     = self._where(directory)
+            left      = "%s%s%s" % (TREE_INDENT, self._named(directory), where)
             right, right_ink = _tag_and_count(
                 tag, counts, good, self.ink,
                 self.vocabulary.tag_width(TAG_WIDTH))
             fill = max(w - len(left) - len(right) - 2, 1)
-            write("%s %s %s" % (left, self.ink.dim(_dot_space_fill(fill)),
-                                right_ink))
+            write("%s%s %s %s" % (left[:len(left) - len(where)],
+                                  self.ink.dim(where),
+                                  self.ink.dim(_dot_space_fill(fill)),
+                                  right_ink))
             return
         recurse(self._directory_tree(), "")
+
+    def _where(self, directory):
+        """
+        RETURN: str, ' (<platform>)' -- the platform that measured
+                'directory', said once per directory (spec/42 section 6).
+                '', where this machine measured it.
+        """
+        platform = self.platform_db.get(directory)
+        return " (%s)" % platform if platform else ""
+
+    def _marker_line(self, left_ink, not_run):
+        """
+        RETURN: str, a bubble NOT RUN in the final tree: 'left_ink' -- the
+                tree's part and the bubble's name, painted -- then its
+                marker, '[PLATFORM not available]' or '[PLATFORM not
+                reachable]', and the NOTE's reason beside it. No count:
+                the fold counts nothing of it (ruling 21).
+        """
+        marker, reason = not_run
+        return "%s  %s  %s" % (left_ink, self.ink.bold(marker),
+                               self.ink.dim(reason))
 
     def _hint_key_list(self, directory):
         """
@@ -1313,7 +1422,7 @@ class CPlainFlow(CRunReportReceiver):
                                            self._elapsed())
         write("DIRECTORIES%*s" % (w - len("DIRECTORIES"), head_right))
         write("-" * w)
-        if not self.dir_order:
+        if not self._tree_path_list():
             write("    (no directory ran)")
         else:
             self._write_directory_tree(write, w)
@@ -1528,6 +1637,23 @@ class CPlainFlow(CRunReportReceiver):
            and any(REMEDY_MARK in reason for reason in group_db):
             write("")
             write(self.vocabulary.help_hint)
+
+
+def _not_run_marker(directory, platform, reason, text):
+    """
+    RETURN: (str, str), a bubble not run as the final tree says it: the
+            marker -- '[PLATFORM not available]' for reason 'available',
+            '[PLATFORM not reachable]' else -- and the reason beside it:
+            the NOTE's 'text' without what the line already says, the
+            bubble's '<directory>/: ' and, where not reachable,
+            "platform '<platform>' not reachable: ".
+    """
+    marker = "[PLATFORM not available]" if reason == "available" \
+             else "[PLATFORM not reachable]"
+    for prefix in ("%s/: " % directory,
+                   "platform '%s' not reachable: " % platform):
+        if text.startswith(prefix): text = text[len(prefix):]
+    return marker, text
 
 
 def hint_line_list(item_list, vocabulary, fail_ink=str, directory_ink=str):

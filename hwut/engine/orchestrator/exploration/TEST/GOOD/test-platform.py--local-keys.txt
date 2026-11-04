@@ -1,0 +1,5 @@
+hwut-root.conf:  hwut { platform = [ { name = "local", kind = "container" } ] }
+    TEST         platform_tuple=None
+                 runs not: 1 conf fault(s)
+    FAULT hwut-root.conf:2:19: VOCABULARY: platform 'local' takes no keys -- write the bare name "local" (intend/42 ruling 16)
+<hwut-end>

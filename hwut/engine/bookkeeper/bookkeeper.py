@@ -107,8 +107,12 @@ GOOD_OWNED_FILE_TUPLE = (BOOK_FILE_NAME,) + LEGACY_BOOK_FILE_TUPLE \
 #  NO STDERR COLUMN (B-29): what stderr leaves in the book is a STAIN,
 #  and a stain needs no column of its own. An older book's 'stderr'
 #  column is ignored like any unknown one, and gone at its next write.
+#  WHERE THE VERDICT WAS MEASURED (spec/42 section 6): the platform's
+#  name, EMPTY FOR 'local' -- the LAST column, so a row measured here
+#  ends where it always ended (B-9) and an older book reads as measured
+#  here; only its header line moves, at its next write.
 _COLUMN_TUPLE  = ("test", "choice", "verdict", "report", "stain",
-                  "test_id", "choice_id")
+                  "test_id", "choice_id", "platform")
 
 NO_CHOICE_KEY       = "<none>"
 
@@ -214,7 +218,8 @@ def _rows_of_model(content):
                    #  are not here -- they bound a SCOPE, and a row can
                    #  be removed (B-2).
                    "test_id":        book.get("test_id") or "",
-                   "choice_id":      book.get("choice_id") or ""}
+                   "choice_id":      book.get("choice_id") or "",
+                   "platform":       book.get("platform") or ""}
             last_test = test
 
 
@@ -246,7 +251,7 @@ def _model_of_rows(row_iterable):
         if row.get("verdict"):
             book["verdict"] = E_TestVerdict.of_text(row["verdict"])
             book["report"]  = row.get("report") or ""
-        for name in ("test_id", "choice_id"):
+        for name in ("test_id", "choice_id", "platform"):
             if row.get(name): book[name] = row[name]
         stain = stain_of_text(row.get("stain") or "")
         if stain is not None: book["stain"] = stain
@@ -584,9 +589,14 @@ class Bookkeeper:
     service. Nothing below makes its own.
     """
 
-    def __init__(self, directory, naming=None):
+    def __init__(self, directory, naming=None, platform=None):
         """
         RETURN: Bookkeeper over 'directory'.
+
+        'platform' names the platform a run that RECORDS through this
+        bookkeeper measures on (spec/42 section 6): written beside each
+        verdict 'record()' writes; None for 'local', the cell left empty.
+        Nothing else this bookkeeper writes touches it.
 
         'naming' is the NamingConfig in force -- which tests of the
         directory share one nominal across their choices (B-30); None
@@ -598,6 +608,7 @@ class Bookkeeper:
         """
         self.directory = Path(directory)
         self.naming    = naming if naming is not None else NamingConfig()
+        self.platform  = platform
 
     # -- THE LOCK: the bookkeeper is the locking proxy (B-9) -----------
     @contextmanager
@@ -1230,6 +1241,10 @@ class Bookkeeper:
         #  of a decision.
         choice_book["verdict"] = entry["verdict"]
         choice_book["report"]  = entry["report"]
+        #  WHERE IT WAS MEASURED, of this verdict alone: a case measured
+        #  here after a platform reads as measured here again.
+        if self.platform: choice_book["platform"] = self.platform
+        else:             choice_book.pop("platform", None)
         self._write_book(content)
         return entry
 
@@ -1626,13 +1641,15 @@ class Bookkeeper:
     def result(self, test, choice):
         """
         RETURN: dict, the choice's decision as last recorded --
-                'verdict' and 'report'.
+                'verdict' and 'report', and 'platform' where a platform
+                measured it (spec/42 section 6).
                 None, no such choice was ever recorded.
         """
         key   = NO_CHOICE_KEY if choice is None else choice
         book  = self.book().get(test, {}).get("choices", {}).get(key)
         if book is None or "verdict" not in book: return None
-        return {name: book[name] for name in ("verdict", "report")
+        return {name: book[name] for name in ("verdict", "report",
+                                              "platform")
                 if name in book}
 
 

@@ -1,0 +1,10 @@
+kind_tuple()       = ('container',)
+keys('container')  = ('image', 'recipe', 'engine')
+keys('host')       = None
+keys('local')      = None
+  OK  : the first release knows 'container' alone
+  OK  : 'container' knows image, recipe, engine
+  OK  : an unknown kind has no keys
+  OK  : 'local' is a reserved name, no kind
+SUCCESS: kinds and their keys.
+<hwut-end>

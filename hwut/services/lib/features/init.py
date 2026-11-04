@@ -57,7 +57,7 @@ def main(argv=None, write=None, id_list=None):
                   % (NAME, ", ".join(rest)))
             write(USAGE)
             return E_ExitCode.REFUSED
-        root = _common.root_of(directory, write)
+        root = _common.root_of(directory, write, nearest_f=True)
     except _common.Refused as refusal:
         return refusal.exit_code
     path = _common.registry_path(root)

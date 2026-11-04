@@ -1,0 +1,5 @@
+hwut-root.conf:  hwut { platform = [ { name = "lab-3", kind = "host", ssh = "lab-pc-3" } ] }
+    TEST         platform_tuple=None
+                 runs not: 1 conf fault(s)
+    FAULT hwut-root.conf:2:36: VOCABULARY: platform 'lab-3': kind 'host' is not known -- known: container
+<hwut-end>

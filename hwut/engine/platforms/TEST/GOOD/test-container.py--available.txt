@@ -1,0 +1,20 @@
+local                                -> (True, '')
+no engine on PATH                    -> (False, 'no podman or docker on PATH')
+engine 'docker' asked, podman stands -> (False, 'no docker on PATH')
+image stands                         -> (True, '')
+    $ podman image inspect hwut-dev
+image absent, recipe                 -> (True, '')
+    $ podman image inspect hwut-dev
+image absent, no recipe              -> (False, "image 'hwut-dev' absent and no recipe")
+    $ podman image inspect hwut-dev
+image absent, recipe no file         -> (False, "image 'hwut-dev' absent and recipe '<root>/hwut/adm/container/Containerfile.gone' not found")
+    $ podman image inspect hwut-dev
+  OK  : 'local' is always available
+  OK  : no engine: named, both of them
+  OK  : an engine asked for and absent: named, the other not taken
+  OK  : the image stands: available
+  OK  : the image absent, a recipe: available
+  OK  : the image absent, no recipe: named
+  OK  : a recipe that is no file: named
+SUCCESS: availability, measured and named.
+<hwut-end>

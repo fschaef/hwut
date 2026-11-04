@@ -138,12 +138,15 @@ from hwut.engine.orchestrator.exploration.tree_explorer \
                                               import (explore_tree,
                                                       RootConfMissing)
 from ....engine.orchestrator.plan.wish import (HELP as WISH_HELP,
+                                                      PLATFORM_HELP,
+                                                      PLATFORM_USAGE_TOKEN_TUPLE,
                                                       WishError, parse_wish)
 
 #  THE STANDARD READER (E-84).
 PARSER = face_parser("hwut.sanitize.propose",
                      "Write -- and never do -- the commands that would "
-                     "sanitize a tree.")
+                     "sanitize a tree.",
+                     shared_token_tuple=PLATFORM_USAGE_TOKEN_TUPLE)
 PARSER.add_argument("-o", "--output", default=None, metavar="file")
 PARSER.add_argument("--target", action="append", default=[], metavar="name")
 for _aspect in sanitize.ASPECT_TUPLE + sanitize.EXPLICIT_ASPECT_TUPLE:
@@ -152,7 +155,8 @@ PARSER.add_argument("--directory", default=None)
 ARG_DB = {"--directory": True, "--output": True}
 USAGE  = usage_of(PARSER, ARG_DB)
 
-HELP = __doc__.strip() + "\n\n" + WISH_HELP + "\n" + USAGE
+HELP = __doc__.strip() + "\n\n" + WISH_HELP + "\n\n" + PLATFORM_HELP \
+       + "\n" + USAGE
 
 
 def proposal_text(issue_list, base, head_list):
@@ -214,7 +218,8 @@ def main(argv=None, write=None, err=None):
         return E_ExitCode.OK
 
     try:
-        wish, rest_list = parse_wish(argv)
+        #  IT NAMES EVERY PLATFORM AND RUNS NOTHING (intend/42 ruling 12).
+        wish, rest_list = parse_wish(argv, platform_f=True)
     except WishError as error:
         write_refusal(err, "REFUSED: %s" % error, USAGE)
         return E_ExitCode.REFUSED

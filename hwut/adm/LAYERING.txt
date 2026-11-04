@@ -128,6 +128,14 @@ engine/orchestrator -> engine/procsitter
 engine/display      -> engine/protocol
 engine/orchestrator -> engine/protocol
 
+#  THE PLATFORMS HELPER (spec/42 section 4). A far run's events are read
+#  through the protocol's line grammar and handed on as local events.
+engine/platforms    -> engine/protocol
+
+#  THE CONF'S READER asks the helper which kinds and keys stand
+#  (spec/42 section 1; ruling 14: the keys are the kind's).
+engine/orchestrator -> engine/platforms
+
 #  THE FACES rest on everything, and nothing rests on them.
 services*           -> adm
 services*           -> auxiliary

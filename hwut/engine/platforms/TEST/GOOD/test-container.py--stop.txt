@@ -1,0 +1,6 @@
+far run started; stop called; the reader returned: True
+  OK  : the far process is gone
+  OK  : the reading returned, not after the far run's minute
+  OK  : its status says it was ended
+SUCCESS: stop ends a far run that outlives its reader.
+<hwut-end>

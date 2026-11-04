@@ -1,0 +1,12 @@
+$ podman run --rm -i --userns=keep-id -v /home/u/work:/home/u/work -w /home/u/work/hwut/support -e HOME=/tmp hwut-dev /home/u/work/hwut/bin/hwut.run --silent --events /dev/stdout --as-platform=linux --glob demo/c/TEST/test.c
+$ docker run --rm -i --user=1000:1000 -v /home/u/work:/home/u/work -w /home/u/work/hwut/support -e HOME=/tmp hwut-dev /home/u/work/hwut/bin/hwut.run --silent --events /dev/stdout --as-platform=linux --glob demo/c/TEST/test.c
+$ podman run --rm -i --userns=keep-id -v /home/u/work:/home/u/work -v /home/u/project/board:/home/u/project/board -w /home/u/project/board -e HOME=/tmp hwut-dev /home/u/work/hwut/bin/hwut.run --silent --events /dev/stdout --as-platform=linux --glob demo/c/TEST/test.c
+  OK  : podman keeps the user by '--userns=keep-id'
+  OK  : docker keeps the user by '--user'
+  OK  : a bubble inside the hwut: one mount, at its own path
+  OK  : a bubble apart: the hwut and the bubble, each at its own path
+  OK  : the bubble is the working directory
+  OK  : HOME=/tmp
+  OK  : the hwut that runs here, silent, its events on stdout, the words after
+SUCCESS: the bubble's run, one engine call.
+<hwut-end>

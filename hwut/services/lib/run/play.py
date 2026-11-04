@@ -107,7 +107,10 @@ from   hwut.engine.orchestrator.exploration.task_list \
                                                    import SelectionError
 from   hwut.engine.orchestrator.exploration.task_list_query \
                                                    import CTestTaskListQuery
-from ....engine.orchestrator.plan.wish import (Wish,
+from ....engine.orchestrator.plan.wish import (PLATFORM_HELP,
+                                                           PLATFORM_USAGE_TOKEN_TUPLE,
+                                                           PLATFORM_WORD_TUPLE,
+                                                           WishError, parse_wish,
                                                            with_targets)
 from ....auxiliary.directory_mutex import (DirectoryBusy,
                                                            MkdirMutex)
@@ -120,11 +123,18 @@ from ....engine.orchestrator.exploration import printer
 from ...report import (painted, color_wanted_f,
                                    ANSI_TITLE)
 
-#  THE STANDARD READER (E-84). Play takes no wish: ONE test, one choice.
+#  THE STANDARD READER (E-84), AFTER THE WISH'S. Play reads its command
+#  line through 'parse_wish' as every face that selects does; of the
+#  wish's words it takes the platform's alone ('WISH_TAKE_TUPLE', spec/42
+#  section 2: play RUNS a test); every other is refused here by name as
+#  any word this face does not know. Its selection is its words: ONE
+#  test, one choice -- or, with '--all', the short form.
+WISH_TAKE_TUPLE = PLATFORM_WORD_TUPLE + ("--as-platform",)
 PARSER = face_parser("hwut.play", "Run one choice now and show it.",
                      wish_f=False,
                      word_help="the test application, and a choice",
-                     word_metavar="<test-app> [<choice>]")
+                     word_metavar="<test-app> [<choice>]",
+                     shared_token_tuple=PLATFORM_USAGE_TOKEN_TUPLE)
 for _name in ("--raw", "--pyped", "--stderr", "--plain", "--all"):
     PARSER.add_argument(_name, action="store_true")
 PARSER.add_argument("--directory", default=None)
@@ -154,7 +164,7 @@ def banner(name, color_f=False):
     return painted(line, ANSI_TITLE, color_f)
 
 HELP = __doc__.split("\n", 2)[2].rsplit("_" * 10, 1)[0].rstrip() \
-       + "\n" + USAGE
+       + "\n\n" + PLATFORM_HELP + "\n" + USAGE
 
 STDOUT = "stdout"
 STDERR = "stderr"
@@ -175,6 +185,13 @@ def main(argv=None, write=None):
         write(man_page("hwut.play", HELP))
         return E_ExitCode.OK
 
+    try:
+        wish, argv = parse_wish(argv, take_tuple=WISH_TAKE_TUPLE,
+                                platform_f=True)
+    except WishError as error:
+        write("REFUSED: %s" % error)
+        write(USAGE)
+        return E_ExitCode.REFUSED
     arguments, completion_f = parse_or_refuse(PARSER, argv, write, ARG_DB)
     if completion_f:      return E_ExitCode.OK
     if arguments is None:
@@ -192,9 +209,14 @@ def main(argv=None, write=None):
     found = entered(word_list, directory, write, USAGE)
     if found is None: return E_ExitCode.REFUSED
     directory, word_list = found
+    #  WHERE THE PLAY RUNS (spec/42; ruled 2026-11-03: "yes to play"): the
+    #  bubble governing the directory is decided as 'hwut.run' decides it.
+    elsewhere = _decided_elsewhere(directory, wish, arguments, word_list,
+                                   write)
+    if elsewhere is not None: return elsewhere
     if all_f:
-        return _play_all(directory, word_list, plain_f, stderr_f, raw_f,
-                         pyped_f, write)
+        return _play_all(directory, wish, word_list, plain_f, stderr_f,
+                         raw_f, pyped_f, write)
     if not word_list or len(word_list) > 2:
         write("REFUSED: 'hwut.play' plays ONE test, and one choice of "
               "it: <test-app> [<choice>]")
@@ -209,16 +231,17 @@ def main(argv=None, write=None):
         #  to decide against the candidate path, and to write the
         #  recording (E-165).
         found  = selection.of_directory(os.path.abspath(directory),
-                                        Wish(), base_f=True)
+                                        wish, base_f=True)
     except RootConfMissing as error:
         write("REFUSED: %s" % error)
         return E_ExitCode.REFUSED
+    for line in found.warning_tuple: write(line)
     result = found.result_db["."]
     if not _faults_spare(found.fault_tuple, result.app_set, (source_file,),
                          write):
         return E_ExitCode.FAULT
 
-    case = _settled_case(result.app_set, source_file, choice_name,
+    case = _settled_case(result.app_set, wish, source_file, choice_name,
                          directory, write)
     if case is _REFUSED: return E_ExitCode.REFUSED
     choice_name   = case.choice
@@ -251,6 +274,51 @@ def main(argv=None, write=None):
     except DirectoryBusy as error:
         write("REFUSED: %s" % error)
         return E_ExitCode.REFUSED
+
+
+def _decided_elsewhere(directory, wish, arguments, word_list, write):
+    """
+    RETURN: E_ExitCode where the play is not played HERE -- REFUSED where
+            the bubble meets more than one specified platform, EMPTY where
+            it is not run (its NOTE said), the far play's own status where
+            it is handed to its platform (its lines relayed).
+            None, else: the bubble runs here, as ever.
+    """
+    from ....engine import platforms
+    from ....engine.orchestrator.plan.bubble import (HANDED, NOT_RUN,
+                                                     PlatformRefused,
+                                                     governing_decision)
+    try:
+        decision = governing_decision(directory, wish)
+    except PlatformRefused as error:
+        write("REFUSED: %s" % error)
+        return E_ExitCode.REFUSED
+    except RootConfMissing:
+        return None                     # said where the play reads its tree
+    if decision.state == NOT_RUN:
+        write("NOTE  %s" % decision.text)
+        write("nothing played: the bubble is not run here")
+        return E_ExitCode.EMPTY
+    if decision.state != HANDED: return None
+    name, spec = decision.platform, decision.spec
+    ready_f, why = platforms.start(name, spec, write)
+    if not ready_f:
+        write("NOTE  %s/: platform '%s' not reachable: %s"
+              % (decision.name, name, why))
+        write("nothing played: the bubble is not run here")
+        return E_ExitCode.EMPTY
+    far_argv = ["hwut.play", "--as-platform=%s" % name] + list(word_list)
+    for flag in ("raw", "pyped", "stderr", "plain", "all"):
+        if getattr(arguments, flag): far_argv.append("--" + flag)
+    try:
+        status = platforms.relay(name, spec, decision.path,
+                                 os.path.abspath(directory), far_argv, write)
+    finally:
+        platforms.stop(name, spec)
+    try:
+        return E_ExitCode(status)
+    except ValueError:
+        return E_ExitCode.FAULT
 
 
 def _faults_spare(fault_tuple, app_set, wanted_tuple, write):
@@ -286,8 +354,8 @@ def _faults_spare(fault_tuple, app_set, wanted_tuple, write):
     return True
 
 
-def _play_all(directory, word_list, plain_f, stderr_f, raw_f, pyped_f,
-              write):
+def _play_all(directory, wish, word_list, plain_f, stderr_f, raw_f,
+              pyped_f, write):
     """
     RETURN: E_ExitCode, the worst of the cases played: OK where every
             case the words select was played and recorded; FAULT where
@@ -304,17 +372,18 @@ def _play_all(directory, word_list, plain_f, stderr_f, raw_f, pyped_f,
     """
     try:
         found = selection.of_directory(os.path.abspath(directory),
-                                       Wish(), base_f=True)
+                                       wish, base_f=True)
     except RootConfMissing as error:
         write("REFUSED: %s" % error)
         return E_ExitCode.REFUSED
+    for line in found.warning_tuple: write(line)
     result = found.result_db["."]
     if not _faults_spare(found.fault_tuple, result.app_set, (), write):
         return E_ExitCode.FAULT
     #  WHAT COULD NOT BE READ IS NOT PLAYED, AND THE ENDING SAYS SO (Q2):
     #  the readable cases are played all the same.
     unreadable_f = bool(found.fault_tuple)
-    wish  = with_targets(Wish(), word_list) if word_list else Wish()
+    wish  = with_targets(wish, word_list)
     query = CTestTaskListQuery(wish, directory=".",
                                root=os.path.abspath(directory))
     try:
@@ -389,7 +458,7 @@ def _play_each(case_tuple, result, found, directory,
 _REFUSED = object()
 
 
-def _settled_case(app_set, source_file, choice_name, directory,
+def _settled_case(app_set, wish, source_file, choice_name, directory,
                   write):
     """
     RETURN: CTestCase, the ONE run the words name.
@@ -414,7 +483,7 @@ def _settled_case(app_set, source_file, choice_name, directory,
     """
     word_list = [source_file] if choice_name is None \
                 else [source_file, choice_name]
-    wish  = with_targets(Wish(), word_list)
+    wish  = with_targets(wish, word_list)
     query = CTestTaskListQuery(wish, directory=".",
                                root=os.path.abspath(directory))
     try:

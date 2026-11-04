@@ -1,5 +1,5 @@
-# vut-register 5 generation:493 apps:55 marks:0=7,1=8,2=13,3=5,4=8,5=7,6=12,7=5,8=9,9=2,10=2,11=5,12=6,13=6,14=8,15=5,16=6,17=10,18=3,19=5,20=7,21=13,22=4,23=15,24=8,25=11,26=5,27=12,28=10,29=3,30=8,31=4,32=1,33=4,34=3,35=4,36=8,37=18,38=13,39=3,40=2,41=12,42=9,44=3,45=12,46=3,47=5,48=5,49=5,50=7,51=19,52=20,53=30,54=7
-test;choice;verdict;report;stain;test_id;choice_id
+# vut-register 5 generation:502 apps:57 marks:0=7,1=8,2=13,3=5,4=8,5=7,6=12,7=5,8=9,9=2,10=2,11=5,12=6,13=6,14=8,15=5,16=6,17=10,18=3,19=5,20=7,21=13,22=4,23=15,24=8,25=11,26=5,27=13,28=10,29=3,30=8,31=4,32=1,33=4,34=3,35=4,36=8,37=18,38=13,39=3,40=2,41=12,42=9,44=3,45=12,46=3,47=5,48=5,49=5,50=7,51=19,52=20,53=30,54=8,55=2,56=3
+test;choice;verdict;report;stain;test_id;choice_id;platform
 test-about.sh;page;true;ok;;39;0
 ;refused;true;ok;;39;1
 ;version;true;ok;;39;2
@@ -192,6 +192,7 @@ test-diff.sh;differing;true;ok;;8;0
 test-enter.sh;enter;true;ok;;9;0
 ;refused;true;ok;;9;1
 test-execute.sh;absence;true;ok;;27;0
+;boundary;true;ok;;27;12
 ;command;true;ok;;27;1
 ;command-refused;true;ok;;27;2
 ;default;true;ok;;27;3
@@ -239,6 +240,7 @@ test-gate.py;backup_shaped;true;ok;;11;0
 ;plan_agrees;true;ok;;11;3
 ;registered;true;ok;;11;4
 test-good-link.sh;faces;true;ok;;54;0
+;inward;true;ok;;54;7
 ;isolate;true;ok;;54;1
 ;move;true;ok;;54;2
 ;read-through;true;ok;;54;3
@@ -285,6 +287,11 @@ test-plan.py;faults;true;ok;;12;0
 ;refused;true;ok;;12;3
 ;short-form;true;ok;;12;4
 ;wish;true;ok;;12;5
+test-platform-console.py;available;true;ok;;56;0
+;handed;true;ok;;56;1
+;reachable;true;ok;;56;2
+test-platform-words.sh;refused;true;ok;;55;0
+;takes;true;ok;;55;1
 test-play.py;accept_hints;true;ok;;13;5
 ;entrance;true;ok;;13;1
 ;records;true;ok;;13;4

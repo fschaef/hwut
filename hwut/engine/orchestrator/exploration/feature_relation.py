@@ -58,7 +58,7 @@ from ...bookkeeper.api import Bookkeeper
 from .                 import unwrapper
 from .fault            import Fault, E_FaultKind, Position
 from .finder           import FEATURE_FILE_NAME
-from .tree_explorer    import explore_tree_stream
+from .tree_explorer    import explore_tree_stream, registry_gate_of
 
 
 #  WHAT THE BOOK SAYS OF A LINKED RUN, as the relation spells it.
@@ -460,12 +460,16 @@ def test_directory_of(directory, path, app_set):
 def relation_of_tree(root, interview_runner=None, fault_list=None):
     """
     RETURN: CRelation, every TEST directory below 'root' with its
-            features and their linked runs.
+            features and their linked runs -- a bubble below with no
+            registry of its own entered (its configuration its own), one
+            with a registry of its own not ('registry_gate_of').
 
     Raises RootConfMissing where no 'hwut-root.conf' bounds the tree.
     """
     return relation_of_exploration(
-        root, explore_tree_stream(root, interview_runner, fault_list))
+        root, explore_tree_stream(root, interview_runner, fault_list,
+                                  boundary_f=False,
+                                  bubble_gate=registry_gate_of(root)))
 
 
 def relation_of_exploration(root, pair_iterable):

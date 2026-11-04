@@ -15,10 +15,12 @@ a consumer may zero-pad one into an integer.
 tree-begun
     directory_list   list   every test directory of the tree, walk order
     node_n           int    (optional) how many nodes the directory's plan holds -- on 'tree-begun', the whole tree's
+    platform         str    (optional) the platform that measured it (spec/42); absent for 'local'; on 'not-run': the platform both specified and required, '' where none is
 
 dir-begun
     directory        str    the test directory, RELATIVE to the root, '/'-separated
     node_n           int    how many nodes the directory's plan holds -- on 'tree-begun', the whole tree's
+    platform         str    (optional) the platform that measured it (spec/42); absent for 'local'; on 'not-run': the platform both specified and required, '' where none is
 
 frame
     directory        str    the test directory, RELATIVE to the root, '/'-separated
@@ -26,11 +28,13 @@ frame
     good             bool   true where the thing stood
     command          str    (optional) the frame script's command as written -- where it did not end well
     exit             str    (optional) how the frame script ended where it did not end well: 'exited <n>', 'ended: <how>'
+    platform         str    (optional) the platform that measured it (spec/42); absent for 'local'; on 'not-run': the platform both specified and required, '' where none is
 
 run-begun
     directory        str    the test directory, RELATIVE to the root, '/'-separated
     node             str    the plan node's name, e.g. 'test-a.py one', 'build[make test-a.py]'
     node_kind        str    'TEST', 'BUILD' or 'SESSION'
+    platform         str    (optional) the platform that measured it (spec/42); absent for 'local'; on 'not-run': the platform both specified and required, '' where none is
 
 run-ended
     directory        str    the test directory, RELATIVE to the root, '/'-separated
@@ -41,36 +45,50 @@ run-ended
     cause            str    (optional) the node whose breaking failed this one; absent else
     report           str    (optional) the operation's own word for WHY (open list, e.g. 'pype-failed', 'test-app-stalled'); absent where nothing finer than the verdict is known
     detail           str    (optional) the report's numbers, where it has them: which cap, the cap, the peak (O-19); absent else
+    platform         str    (optional) the platform that measured it (spec/42); absent for 'local'; on 'not-run': the platform both specified and required, '' where none is
 
 fault
     directory        str    the test directory, RELATIVE to the root, '/'-separated
-    text             str    one line, verbatim; on 'refused': WHY the node named was not run (E-41); on 'warning': a finding about the wish that decides nothing
+    text             str    one line, verbatim; on 'refused': WHY the node named was not run (E-41); on 'warning': a finding about the wish that decides nothing; on 'not-run': the NOTE that says why
+    platform         str    (optional) the platform that measured it (spec/42); absent for 'local'; on 'not-run': the platform both specified and required, '' where none is
 
 warning
-    text             str    one line, verbatim; on 'refused': WHY the node named was not run (E-41); on 'warning': a finding about the wish that decides nothing
+    text             str    one line, verbatim; on 'refused': WHY the node named was not run (E-41); on 'warning': a finding about the wish that decides nothing; on 'not-run': the NOTE that says why
+    platform         str    (optional) the platform that measured it (spec/42); absent for 'local'; on 'not-run': the platform both specified and required, '' where none is
 
 report
     directory        str    the test directory, RELATIVE to the root, '/'-separated
-    text             str    one line, verbatim; on 'refused': WHY the node named was not run (E-41); on 'warning': a finding about the wish that decides nothing
+    text             str    one line, verbatim; on 'refused': WHY the node named was not run (E-41); on 'warning': a finding about the wish that decides nothing; on 'not-run': the NOTE that says why
+    platform         str    (optional) the platform that measured it (spec/42); absent for 'local'; on 'not-run': the platform both specified and required, '' where none is
 
 refused
     directory        str    the test directory, RELATIVE to the root, '/'-separated
     node             str    the plan node's name, e.g. 'test-a.py one', 'build[make test-a.py]'
-    text             str    one line, verbatim; on 'refused': WHY the node named was not run (E-41); on 'warning': a finding about the wish that decides nothing
+    text             str    one line, verbatim; on 'refused': WHY the node named was not run (E-41); on 'warning': a finding about the wish that decides nothing; on 'not-run': the NOTE that says why
+    platform         str    (optional) the platform that measured it (spec/42); absent for 'local'; on 'not-run': the platform both specified and required, '' where none is
 
 silent
     directory        str    the test directory, RELATIVE to the root, '/'-separated
     node             str    the plan node's name, e.g. 'test-a.py one', 'build[make test-a.py]'
+    platform         str    (optional) the platform that measured it (spec/42); absent for 'local'; on 'not-run': the platform both specified and required, '' where none is
 
 dir-done
     directory        str    the test directory, RELATIVE to the root, '/'-separated
     good             bool   true where the thing stood
     fail_db          dict   node name -> terminal state, the failures alone
+    platform         str    (optional) the platform that measured it (spec/42); absent for 'local'; on 'not-run': the platform both specified and required, '' where none is
 
 tree-done
     good             bool   true where the thing stood
     fail_n           int    how many nodes failed, tree-wide
     meta_n           int    (optional) how many cases the standard label 'meta' hid from a wish that named no label -- excluded, not run, not refused; stated once in the closing numbers
     skip_n           int    (optional) how many cases the wish did not want -- present in the tree, not selected, not run; the SKIPPED of the closing bar
+    platform         str    (optional) the platform that measured it (spec/42); absent for 'local'; on 'not-run': the platform both specified and required, '' where none is
+
+not-run
+    directory        str    the test directory, RELATIVE to the root, '/'-separated
+    platform         str    the platform that measured it (spec/42); absent for 'local'; on 'not-run': the platform both specified and required, '' where none is
+    reason           str    why a bubble is not run: 'available' -- no platform both specified and required; 'reachable' -- the one that is cannot be reached
+    text             str    one line, verbatim; on 'refused': WHY the node named was not run (E-41); on 'warning': a finding about the wish that decides nothing; on 'not-run': the NOTE that says why
 
 <hwut-end>

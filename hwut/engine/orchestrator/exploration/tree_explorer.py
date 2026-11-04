@@ -82,27 +82,26 @@ INHERITABLE_FIELD_TUPLE = ("app_defaults", "language_setup", "ignore",
                            "admit",
                            "test_directory", "variant_db",
                            "procsitter_db", "free_disk_min_mb",
-                           "script_caps")
+                           "script_caps", "platform_tuple")
 LOCAL_FIELD_TUPLE       = ("on_entry", "on_exit", "on_before_test",
                            "on_after_test", "collision",
                            "dependency", "target_db")
 
-#  THE ROOT CONF'S ALONE. A VARIANT GROUP IS A DIMENSION and
-#  '--variant=gcov,slow' is ONE selection made once, on the command
-#  line, for the whole run. Declared per directory, the same name
-#  would mean one thing here and another there, or be unknown in half
-#  the tree -- and the refusal that names what IS declared would have
-#  nothing single to name. So the groups are declared once, at the
-#  root, where the boundary is.
+#  THE ROOT CONF'S ALONE: field -> WHY it is the root's alone, for the
+#  fault that names it. The keys ARE the list -- every check loops over
+#  this table, so a field cannot be checked without a reason to give,
+#  nor given a reason and left unchecked.
 #
+#  A VARIANT GROUP IS A DIMENSION and '--variant=gcov,slow' is ONE
+#  selection made once, on the command line, for the whole run.
+#  Declared per directory, the same name would mean one thing here and
+#  another there, or be unknown in half the tree -- and the refusal
+#  that names what IS declared would have nothing single to name. So
+#  the groups are declared once, at the root, where the boundary is.
 #  It was in NEITHER list before: stated at a tree level it drew no
 #  fault, because it is not local, and reached nothing, because it does
 #  not flow. It was swallowed in silence, which is the worst of the
 #  three answers.
-ROOT_CONF_ONLY_FIELD_TUPLE = ("variant_db", "language_setup",
-                              "procsitter_db", "free_disk_min_mb")
-
-#  Field -> WHY it is the root's alone, for the fault that names it.
 ROOT_CONF_ONLY_REASON_DB = {
     "variant_db":     "a variant group is a DIMENSION and the selection "
                       "is made once for the whole run, so the groups are "
@@ -116,6 +115,9 @@ ROOT_CONF_ONLY_REASON_DB = {
                       "(R-48)",
     "free_disk_min_mb": "the floor is a property of the DISK, not of a "
                       "directory: every case on it shares one (D-24)",
+    "platform_tuple": "a bubble's platforms are said by its own root, "
+                      "and each bubble decides alone (intend/42, rulings "
+                      "3, 10)",
 }
 
 
@@ -134,7 +136,8 @@ def root_only_fault(name, conf_name, position):
 KEY_OF_FIELD = {"variant_db":     "variant_group",
                 "target_db":      "target",
                 "language_setup": "language-setup",
-                "procsitter_db":  "procsitter"}
+                "procsitter_db":  "procsitter",
+                "platform_tuple": "platform"}
 
 #  THE BOUNDARY OF THE ASCENT, and the most dominant configuration
 #  there is. It plays BOTH ROLES: it is READ like any other conf --
@@ -230,8 +233,96 @@ def inner_root_note_tuple(directory):
                  for path in found)
 
 
+#  THE FEATURES' REGISTRY SPANS BUBBLES THAT HAVE NONE OF THEIR OWN
+#  (2026-11-03, ruled for plan/42 P-8 against 'hwut.features.split'): a
+#  bubble without a 'hwut-root-features.conf' belongs to the nearest
+#  registry above it; only a bubble WITH one is a registry of its own.
+#  The walks that read or maintain the registry enter the first kind and
+#  stop at the second -- with their NOTE.
+
+
+def registry_owner_f(path):
+    """
+    RETURN: bool, True where the directory 'path' is a bubble ('hwut-
+            root.conf') holding a features registry of its own
+            ('hwut-root-features.conf') -- where a registry walk from
+            above stops.
+    """
+    return inner_root_f(path) \
+           and os.path.isfile(os.path.join(path, finder.REGISTRY_FILE_NAME))
+
+
+def registry_top(start):
+    """
+    RETURN: str, the ABSOLUTE directory whose features registry governs
+            the tree 'start' stands in: climbing bubble by bubble from
+            the nearest 'hwut-root.conf', the first that holds a
+            'hwut-root-features.conf'; the nearest bubble's directory
+            where none above holds one (its faces then say that none
+            stands).
+
+    Raises RootConfMissing where no 'hwut-root.conf' bounds 'start'.
+    """
+    nearest = here = root_conf_directory(start)
+    while not os.path.isfile(os.path.join(here, finder.REGISTRY_FILE_NAME)):
+        parent = os.path.dirname(here)
+        if parent == here: return nearest
+        try:
+            here = root_conf_directory(parent)
+        except RootConfMissing:
+            return nearest
+    return here
+
+
+def registry_gate_of(root):
+    """
+    RETURN: function, the bubble gate of a registry walk from 'root': the
+            bubble 'root' stands in, GATE_RUN; an inner bubble, GATE_HANDED
+            -- not walked here -- where it holds a registry of its own,
+            GATE_RUN, entered, else.
+
+    Raises RootConfMissing where no 'hwut-root.conf' bounds 'root'.
+    """
+    own = os.path.normpath(root_conf_directory(root))
+    return lambda path: GATE_RUN \
+           if os.path.normpath(path) == own or not registry_owner_f(path) \
+           else GATE_HANDED
+
+
+def registry_inner_tuple(directory):
+    """
+    RETURN: tuple[str], the ABSOLUTE bubbles below 'directory' holding a
+            features registry of their own, walk order; a bubble without
+            one is part of the registry above it.
+    """
+    return tuple(path for path in inner_root_tuple(directory)
+                 if registry_owner_f(path))
+
+
+def registry_note_tuple(directory):
+    """
+    RETURN: tuple[str], 'inner_root_note_tuple' for the registry walks:
+            one NOTE per OUTERMOST bubble below 'directory' that holds a
+            registry of its own; empty where there is none.
+    """
+    top = os.path.abspath(directory)
+    found = []
+    for path in registry_inner_tuple(top):
+        if any(path.startswith(outer + os.sep) for outer in found): continue
+        found.append(path)
+    return tuple(inner_root_note(os.path.relpath(path, top).replace(os.sep, "/"))
+                 for path in found)
+
+
+#  WHAT A BUBBLE GATE ANSWERS for a bubble's root directory (spec/42
+#  section 3; 'plan/bubble.py' decides): explored here, not run here --
+#  its inner bubbles still sought (ruling 19) -- or handed to a platform,
+#  its whole subtree left to it (ruling 3).
+GATE_RUN, GATE_NOT_RUN, GATE_HANDED = "run", "not-run", "handed"
+
+
 def explore_tree_stream(root, interview_runner=None, fault_list=None,
-                        note_list=None, boundary_f=True):
+                        note_list=None, boundary_f=True, bubble_gate=None):
     """
     YIELD: [0] str                one test directory, RELATIVE to
                                   'root', in walk order.
@@ -259,11 +350,22 @@ def explore_tree_stream(root, interview_runner=None, fault_list=None,
     'boundary_f' False (a selecting walk) the walk enters, and at the
     inner root the configuration is RESET from that file alone: nothing
     above it reaches below it, root-only keys included.
+
+    'bubble_gate' takes a bubble's root directory (absolute) and answers
+    GATE_RUN, GATE_NOT_RUN or GATE_HANDED; None runs every bubble. A
+    bubble not run is walked for its inner bubbles and nothing of it is
+    explored -- no application interviewed, no book opened (ruling 21);
+    a bubble handed is not entered at all.
     """
     if fault_list is None: fault_list = []
     if note_list  is None: note_list  = []
     inherited, ascent_fault_list = ascended_spec(root)
-    fault_list.extend(ascent_fault_list)
+    #  A BUBBLE NOT RUN COUNTS NOTHING, its confs' faults neither (ruling
+    #  21): they are read -- the walk seeks its inner bubbles -- and kept
+    #  out of the walk's faults.
+    state = GATE_RUN if bubble_gate is None \
+            else bubble_gate(root_conf_directory(root))
+    if state == GATE_RUN: fault_list.extend(ascent_fault_list)
     #  ASKED INSIDE A DIRECTORY NO WALK ENTERS -- a coverage output, a
     #  marked directory, 'TMP', 'OUT': nothing there is a test (R-85).
     if below_no_entry_f(root, lambda here: os.path.isfile(
@@ -273,13 +375,39 @@ def explore_tree_stream(root, interview_runner=None, fault_list=None,
     #  read -- the root's 'hwut-root.conf' and every 'hwut.conf' on the
     #  way down to here.
     above_tuple = tuple(f for f in ascent_fault_list if conf_fault_f(f))
+    if state == GATE_HANDED: return
     if test_directory_f(root, inherited):
-        yield (".", governed(explore(root, interview_runner=interview_runner,
-                                     inherited=inherited), above_tuple))
+        if state == GATE_RUN:
+            yield (".", governed(explore(root,
+                                         interview_runner=interview_runner,
+                                         inherited=inherited), above_tuple))
     else:
         yield from _walk_stream(root, ".", inherited, interview_runner,
                                 fault_list, note_list, boundary_f,
-                                above_tuple=above_tuple)
+                                above_tuple=above_tuple,
+                                explore_f=(state == GATE_RUN),
+                                bubble_gate=bubble_gate)
+
+
+def test_directory_name_tuple(bubble_path):
+    """
+    RETURN: tuple of str, every test directory of the bubble at
+            'bubble_path' and of its inner bubbles, relative to it, walk
+            order -- found by the walk alone (names, 'test_directory' of
+            the confs): nothing explored, nothing interviewed, no file
+            written (spec/42 section 5: the near 'tree-begun' of a bubble
+            handed to a platform).
+    """
+    inherited, _ = ascended_spec(bubble_path)
+    if test_directory_f(bubble_path, inherited): return (".",)
+    passed_list = []
+    for _ in _walk_stream(bubble_path, ".", inherited, None, [], [],
+                          boundary_f=False, folded_f=True,
+                          explore_f=False,
+                          bubble_gate=lambda path: GATE_NOT_RUN,
+                          passed_list=passed_list):
+        pass
+    return tuple(passed_list)
 
 
 def test_directory_f(directory, inherited):
@@ -300,7 +428,8 @@ def test_directory_f(directory, inherited):
     return os.path.basename(os.path.abspath(directory)) == marker
 
 
-def explore_tree(root, interview_runner=None, boundary_f=True):
+def explore_tree(root, interview_runner=None, boundary_f=True,
+                 bubble_gate=None):
     """
     RETURN: CTreeExploration -- every test directory below 'root',
             explored under the configuration tree, in walk order.
@@ -317,7 +446,7 @@ def explore_tree(root, interview_runner=None, boundary_f=True):
     note_list   = []
     result_list = list(explore_tree_stream(root, interview_runner,
                                            fault_list, note_list,
-                                           boundary_f))
+                                           boundary_f, bubble_gate))
     return CTreeExploration(root         = root,
                             result_tuple = tuple(result_list),
                             fault_tuple  = tuple(fault_list),
@@ -326,7 +455,8 @@ def explore_tree(root, interview_runner=None, boundary_f=True):
 
 def _walk_stream(root, relative, effective, interview_runner, fault_list,
                  note_list=None, boundary_f=True, folded_f=False,
-                 above_tuple=()):
+                 above_tuple=(), explore_f=True, bubble_gate=None,
+                 passed_list=None):
     """
     YIELD: [0] str                one test directory, relative to root.
            [1] ExplorationResult  what it offers.
@@ -336,16 +466,20 @@ def _walk_stream(root, relative, effective, interview_runner, fault_list,
     sub-directories in sorted order, exploring those whose name is the
     effective test directory name. 'above_tuple' holds the faults of the
     configuration files above this level; this level's own join them
-    for everything below (ND7).
+    for everything below (ND7). 'explore_f' False: this level lies in a
+    bubble not run -- its test directories are passed over, its inner
+    bubbles still sought and asked of 'bubble_gate'; each test directory
+    passed over is appended to 'passed_list', where one is given.
     """
     directory = os.path.normpath(os.path.join(root, relative))
     #  'folded_f': the level's own confs are in 'effective' already --
     #  an inner root entered, whose reset read them.
     if not folded_f:
-        before_n  = len(fault_list)
-        effective = _folded(directory, relative, effective, fault_list)
+        level_fault_list = fault_list if explore_f else []
+        before_n  = len(level_fault_list)
+        effective = _folded(directory, relative, effective, level_fault_list)
         above_tuple = tuple(above_tuple) \
-                      + tuple(f for f in fault_list[before_n:]
+                      + tuple(f for f in level_fault_list[before_n:]
                               if conf_fault_f(f))
     marker    = effective.test_directory or FALLBACK_TEST_DIRECTORY
     if note_list is None: note_list = []
@@ -357,6 +491,7 @@ def _walk_stream(root, relative, effective, interview_runner, fault_list,
         if no_entry_f(path):                              continue
         child_relative = _joined(relative, name)
         child_effective, child_folded_f = effective, False
+        child_explore_f = explore_f
         if inner_root_f(path):
             #  A PROJECT OF ITS OWN (RQ-1): not entered, and said; or,
             #  where entered, entered with the configuration
@@ -365,9 +500,12 @@ def _walk_stream(root, relative, effective, interview_runner, fault_list,
             if boundary_f:
                 note_list.append(inner_root_note(child_relative))
                 continue
+            state = GATE_RUN if bubble_gate is None else bubble_gate(path)
+            if state == GATE_HANDED: continue
+            child_explore_f = state == GATE_RUN
             child_effective, reset_fault_list = ascended_spec(
                 path, root_shown="%s/%s" % (child_relative, ROOT_CONF_NAME))
-            fault_list.extend(reset_fault_list)
+            if child_explore_f: fault_list.extend(reset_fault_list)
             child_folded_f = True
             #  NOTHING ABOVE REACHES BELOW an inner root -- its faults
             #  neither (RQ-1).
@@ -378,6 +516,9 @@ def _walk_stream(root, relative, effective, interview_runner, fault_list,
         if name == (child_effective.test_directory
                     or FALLBACK_TEST_DIRECTORY) \
            and (child_folded_f or name == marker):
+            if not child_explore_f:
+                if passed_list is not None: passed_list.append(child_relative)
+                continue
             yield (child_relative,
                    governed(explore(path, interview_runner=interview_runner,
                                     inherited=child_effective),
@@ -387,7 +528,10 @@ def _walk_stream(root, relative, effective, interview_runner, fault_list,
                                     interview_runner, fault_list,
                                     note_list, boundary_f,
                                     folded_f=child_folded_f,
-                                    above_tuple=child_above)
+                                    above_tuple=child_above,
+                                    explore_f=child_explore_f,
+                                    bubble_gate=bubble_gate,
+                                    passed_list=passed_list)
 
 
 def inherited_spec(parent, child):
@@ -574,7 +718,7 @@ def ascended_spec(start, root_shown=ROOT_CONF_NAME):
                     "matters and belongs in a test directory's own "
                     "'hwut.conf'" % KEY_OF_FIELD.get(name, name)))
         if not root_f:
-            for name in ROOT_CONF_ONLY_FIELD_TUPLE:
+            for name in ROOT_CONF_ONLY_REASON_DB:
                 if getattr(spec, name):
                     fault_list.append(root_only_fault(name, shown,
                                                       spec.position))
@@ -607,7 +751,7 @@ def _folded(directory, relative, effective, fault_list):
                 "'%s' at a tree level: it names local matters and "
                 "belongs in a test directory's own 'hwut.conf'"
                 % KEY_OF_FIELD.get(name, name)))
-    for name in ROOT_CONF_ONLY_FIELD_TUPLE:
+    for name in ROOT_CONF_ONLY_REASON_DB:
         if getattr(spec, name):
             fault_list.append(root_only_fault(name, conf_name,
                                               spec.position))

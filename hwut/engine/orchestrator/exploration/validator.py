@@ -25,6 +25,7 @@ from ....support.test_writing.python.hwut_hocon import (ScalarNode,
                                                       ObjectNode)
 from ...bookkeeper.api import BOOK_FORBIDDEN_IN_NAME
 from ...compare.api import constraint_fault_of
+from ...              import platforms
 from .configuration_tree import (TestParameters, TestAppSpec, DirectorySpec,
                             LanguageSetup, Build, Caps, Tolerance, DiffDisplayParameters, Target, E_Origin,
                             KEY_TO_FIELD, ROOT_ONLY_KEY_SET, Variant,
@@ -45,7 +46,8 @@ _CONF_KEY_SET       = ("on_entry", "on_exit", "on_before_test",
                        "on_after_test", "script_caps",
                        "ignore", "admit", "collision",
                        "dependency", "app_defaults", "language-setup",
-                       "apps", "procsitter", "free_disk_min_mb")
+                       "apps", "procsitter", "free_disk_min_mb",
+                       "platform")
 
 
 #  THE BOOK'S NAME LAW (bookkeeper B-7, B-8), ASKED FOR AND NOT COPIED.
@@ -206,6 +208,10 @@ def validate_conf(hwut_node, file):
                     "'free_disk_min_mb' must be greater than zero"))
             elif value is not None:
                 field_db["free_disk_min_mb"] = int(value)
+        elif entry.key == "platform":
+            #  WHERE THE BUBBLE RUNS (intend/42): the root's alone.
+            value = _platform(entry, file, fault_list)
+            if value is not None: field_db["platform_tuple"] = value
         elif entry.key == "variant_group":
             value = _variant_group(entry, file, fault_list)
             if value is not None: field_db["variant_db"] = value
@@ -930,6 +936,104 @@ def _target_map(entry, file, fault_list):
 #  'procsitter { <platform> { } }' share.
 _CAP_NAME_SET = tuple(sorted(tuple(_CAP_POSITIVE_SET)
                              + ("network", "write_directory_list")))
+
+
+def _platform(entry, file, fault_list):
+    """
+    RETURN: tuple of (str, dict), the platforms of 'platform = [ ... ]'
+            in their order -- (name, spec) per entry, 'spec' the entry's
+            keys as written ('{}' for the bare "local") -- if the list
+            reads (spec/42 section 1).
+            None, else: every fault recorded by name, nothing run.
+
+    hwut reads 'name' and 'kind'; every other key is the kind's, and the
+    kind checks it ('platforms.check', ruling 14).
+    """
+    if not isinstance(entry.node, ListNode):
+        fault_list.append(Fault(
+            E_FaultKind.TYPE, file, _position_of(entry.node, entry),
+            "'platform' is a list: [ \"local\", { name = ... kind = ... } ]"))
+        return None
+    if not entry.node.item_list:
+        fault_list.append(Fault(
+            E_FaultKind.VOCABULARY, file, _position_of(entry.node, entry),
+            "'platform' names no platform -- leave it out for the local "
+            "machine alone"))
+        return None
+    result, ok_f = [], True
+    for item in entry.node.item_list:
+        pair = _platform_entry(item, file, fault_list)
+        if pair is None:
+            ok_f = False
+        elif pair[0] in (name for name, _ in result):
+            fault_list.append(Fault(
+                E_FaultKind.VOCABULARY, file, item.position,
+                "platform '%s' named twice" % pair[0]))
+            ok_f = False
+        else:
+            result.append(pair)
+    return tuple(result) if ok_f else None
+
+
+def _platform_entry(item, file, fault_list):
+    """
+    RETURN: (str, dict), one platform of the list -- the bare "local"
+            as ('local', {}), an object as (its name, its keys) -- if it
+            reads.
+            None, else: its faults recorded.
+    """
+    if isinstance(item, ScalarNode) and isinstance(item.value, str):
+        if item.value == platforms.LOCAL: return (platforms.LOCAL, {})
+        fault_list.append(Fault(
+            E_FaultKind.VOCABULARY, file, item.position,
+            "platform '%s': a bare name is \"local\" alone -- any other "
+            "platform is { name = ... kind = ... }" % item.value))
+        return None
+    if not isinstance(item, ObjectNode):
+        fault_list.append(Fault(
+            E_FaultKind.TYPE, file, item.position,
+            "a 'platform' entry is \"local\" or { name = ... kind = ... }"))
+        return None
+    spec, position_db, ok_f = {}, {}, True
+    for inner in item.entry_list:
+        position_db[inner.key] = inner.key_position
+        if isinstance(inner.node, ScalarNode) and inner.node.value is not None:
+            spec[inner.key] = inner.node.value
+            continue
+        fault_list.append(Fault(
+            E_FaultKind.TYPE, file, inner.key_position,
+            "a 'platform' entry's key '%s' wants a value" % inner.key))
+        ok_f = False
+    name = spec.get("name")
+    if not isinstance(name, str) or not name:
+        fault_list.append(Fault(
+            E_FaultKind.VOCABULARY, file, item.position,
+            "a 'platform' entry without 'name'"))
+        return None
+    if name == platforms.LOCAL:
+        fault_list.append(Fault(
+            E_FaultKind.VOCABULARY, file, item.position,
+            "platform 'local' takes no keys -- write the bare name "
+            "\"local\" (intend/42 ruling 16)"))
+        return None
+    kind = spec.get("kind")
+    if kind is None:
+        fault_list.append(Fault(
+            E_FaultKind.VOCABULARY, file, item.position,
+            "platform '%s': 'kind' missing -- known: %s"
+            % (name, ", ".join(platforms.kind_tuple()))))
+        return None
+    if kind not in platforms.kind_tuple():
+        fault_list.append(Fault(
+            E_FaultKind.VOCABULARY, file, position_db["kind"],
+            "platform '%s': kind '%s' is not known -- known: %s"
+            % (name, kind, ", ".join(platforms.kind_tuple()))))
+        return None
+    for key, text in platforms.check(name, spec):
+        fault_list.append(Fault(E_FaultKind.VOCABULARY, file,
+                                position_db.get(key, item.position), text))
+        ok_f = False
+    return (name, spec) if ok_f else None
 
 
 def _procsitter(entry, file, fault_list):

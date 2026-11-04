@@ -119,9 +119,9 @@ def explore(directory, interview_runner=None, inherited=None):
         #  the refusal has to stand here too, or the one place the key
         #  is most tempting to write is the one place nobody checks.
         if directory_spec is not None:
-            from .tree_explorer import (ROOT_CONF_ONLY_FIELD_TUPLE,
+            from .tree_explorer import (ROOT_CONF_ONLY_REASON_DB,
                                         root_only_fault)
-            for name in ROOT_CONF_ONLY_FIELD_TUPLE:
+            for name in ROOT_CONF_ONLY_REASON_DB:
                 if getattr(directory_spec, name):
                     fault_list.append(root_only_fault(
                         name, finder.CONF_NAME, directory_spec.position))

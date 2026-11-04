@@ -15,35 +15,14 @@ PURPOSE: WHAT 'hwut.dev.podman.build' AND 'hwut.dev.podman.enter' SHARE --
 ______________________________________________________________________________
 """
 import os
-import shutil
 
-IMAGE      = "hwut-dev"
-CONTAINERFILE = os.path.join("hwut", "adm", "container", "Containerfile")
+#  THE ENGINE AND THE ROOT ARE THE ENGINE'S (spec/42 section 4): a
+#  platform of kind 'container' finds them the same way, and the engine
+#  imports nothing of the faces.
+from .....engine.platforms.container import (CONTAINERFILE,      # noqa F401
+                                            engine, root_of)
 
-
-def engine():
-    """RETURN: str, 'podman' or 'docker', whichever stands first on PATH.
-    None, where neither does."""
-    for name in ("podman", "docker"):
-        if shutil.which(name): return name
-    return None
-
-
-def root_of(directory=None):
-    """
-    RETURN: str, the absolute path of the directory holding 'hwut/', found
-            by ascending from 'directory' (the working directory where
-            none is given).
-            None, where no ancestor holds one.
-    """
-    here = os.path.abspath(directory or os.getcwd())
-    while True:
-        if os.path.isdir(os.path.join(here, "hwut")) \
-           and os.path.isfile(os.path.join(here, CONTAINERFILE)):
-            return here
-        parent = os.path.dirname(here)
-        if parent == here: return None
-        here = parent
+IMAGE = "hwut-dev"
 
 
 def hand_over(argv, write, run=None):

@@ -3,7 +3,7 @@ spec/42-platforms -- THE FIRST RELEASE: 'local' AND 'container', 'support/'
                      THE FIRST BUBBLE TO USE IT
 ==============================================================================
 
-VERSION: 1
+VERSION: 8
 
 COMPONENTS: engine/orchestrator (exploration: the conf key, the walk;
             plan: the wish's '-p'; run: handing a bubble over),
@@ -21,9 +21,13 @@ MEASURED:   on 08217f1 + bundles 31..35 (the dev tree w33), 2026-11-02.
 1  THE CONF (rulings 2, 4, 14, 15, 16)
 ==============================================================================
 
-    A ROOT-ONLY key of 'hwut-root.conf': it joins 'ROOT_ONLY_KEY_SET'
-    (today 'same', 'interactive'); in a 'hwut.conf' it is the root-only
-    fault of today ('root_only_fault').
+    A ROOT-ONLY key of 'hwut-root.conf': the field 'platform_tuple' of
+    'DirectorySpec' joins 'ROOT_CONF_ONLY_REASON_DB' (exploration/
+    tree_explorer.py; today variant_group, language-setup, procsitter,
+    free_disk_min_mb), which is also the list every check loops over;
+    in a 'hwut.conf' it is the root-only fault of today
+    ('root_only_fault'). [VERSION 2, ruled 2026-11-02: VERSION 1 named
+    'ROOT_ONLY_KEY_SET', the HEADER's keys refused inside a choice.]
 
     platform = [
         { name   = "linux"                    required; unique in the list;
@@ -35,6 +39,12 @@ MEASURED:   on 08217f1 + bundles 31..35 (the dev tree w33), 2026-11-02.
                                               optional; relative to the conf's
                                               directory; the build's context
                                               is the directory holding 'hwut/'
+                                              [VERSION 2: kept as written by
+                                              the reader; the walk, which
+                                              knows the bubble's directory,
+                                              hands the helper an absolute
+                                              path (P-4; engine/platforms
+                                              PL-1)]
           engine = "podman" }                 optional; "podman" | "docker";
                                               absent: the first on PATH, as
                                               'hwut.dev.podman.*' finds it
@@ -50,6 +60,10 @@ MEASURED:   on 08217f1 + bundles 31..35 (the dev tree w33), 2026-11-02.
         a key the kind not knows  "platform 'linux': key 'imgae' is not a
                                    'container' key -- image, recipe, engine"
         name missing, doubled, 'local' with keys, image missing.
+        [VERSION 2, built at P-2, put to the author:] not a list; an
+        empty list ("names no platform -- leave it out for the local
+        machine alone"); a bare name other than "local"; 'kind' missing;
+        an 'engine' other than podman, docker; a value that is no string.
     hwut's schema reads 'name' and 'kind'; every other key is the kind's
     (ruling 14), checked by the kind's own 'keys' table.
 
@@ -76,6 +90,14 @@ MEASURED:   on 08217f1 + bundles 31..35 (the dev tree w33), 2026-11-02.
     "'-p' is for the faces that run: hwut.run, hwut.play", with one
     exception, 'hwut.sanitize', which takes them and runs nothing (ruling
     12). 'hwut.run.stability' and 'hwut.cov.run': later; refused until then.
+    [VERSION 3, built at P-3:] 'hwut.sanitize' is 'hwut.sanitize.propose'
+    (the face of the family that reads the wish). A face that takes only
+    SOME wish words ('parse_wish(take_tuple=...)', services E-219:
+    'hwut.execute', 'hwut.remove.propose') does not know '-p' at all, and
+    refuses it as any word it does not know. The words are SHOWN only by
+    the faces that take them: their usage ('PLATFORM_USAGE_TOKEN_TUPLE')
+    and help ('PLATFORM_HELP'), not the wish's own help -- which every
+    face that refuses them prints.
 
 ==============================================================================
 3  THE DECISION (rulings 10, 12, 19; THE RULE)
@@ -105,6 +127,24 @@ MEASURED:   on 08217f1 + bundles 31..35 (the dev tree w33), 2026-11-02.
     interviewed (R-44) or built here. Its TEST directories are found by the
     walk alone (names, 'test_directory' of its confs).
 
+    [VERSION 4, built at P-4:]
+    - THE BUBBLES are the walk's: the one governing the top (the nearest
+      'hwut-root.conf' at or above it), then every inner one in walk order,
+      none where '--no-bubbles' stands. A bubble is named by its path from
+      the top: '.' its own, '..' one above it.
+    - THE REFUSAL is a 'SelectionError' raised at the orchestrator's call;
+      'hwut.run' says "REFUSED: ..." as for any refused selection. Several
+      bubbles: one pair of lines each. Two '-p' platforms both required:
+      "=> narrow to one: '-p linux' or '-p win11'".
+    - A bubble NOT RUN is walked for its inner bubbles only. Its confs are
+      read and THEIR FAULTS ARE NOT THE RUN'S (ruling 21).
+    - The '-p' NOTE of section 2 is asked of every bubble decided, walked
+      or not.
+    - HANDED until P-5: a 'not-run' event, reason 'handed', text
+      "<B>/: platform '<f>': handing over: P-5".
+    - The exit status where nothing ran is EMPTY (3), as for any run that
+      runs nothing: 'not-run' changes it no more than that.
+
 ==============================================================================
 4  THE HELPER: engine/platforms/ (rulings 14, 15, 16, 17, 20)
 ==============================================================================
@@ -126,6 +166,9 @@ MEASURED:   on 08217f1 + bundles 31..35 (the dev tree w33), 2026-11-02.
         Called in a 'finally', a signal included (E-55).
     keys(kind)                -> tuple[str]
         RETURN: tuple[str], the keys the kind knows beside 'name', 'kind'.
+    check(name, spec)         -> tuple[(str, str)]       [VERSION 2, P-2]
+        RETURN: tuple of (key, text), the faults of the entry's own keys,
+                found by the kind (ruling 14); empty where it reads.
 
     LOCAL: is_available is (True, ""); start, stop do nothing; run is never
     called (the orchestrator runs a local bubble itself).
@@ -158,6 +201,33 @@ MEASURED:   on 08217f1 + bundles 31..35 (the dev tree w33), 2026-11-02.
                      local run writes it).
       stop           nothing beyond '--rm'.
 
+    [VERSION 5, ruled 2026-11-03 -- the fork of P-5, (a): "continue"; built
+    at P-5:]
+      run            <engine> run --rm -i  <user as above>
+                         -v <home>:<home>   [-v <bubble>:<bubble>]
+                         -w <bubble> -e HOME=/tmp <image>
+                         <home>/hwut/bin/hwut.run --silent
+                         --events /dev/stdout --as-platform=<name> <words>
+                     <home> the directory holding the hwut that runs here
+                     ('hwut/'): both sides one version (CONTRACT: HWUT);
+                     <bubble> the bubble's directory, mounted where it lies
+                     outside <home> -- its own 'hwut-root.conf' bounds the
+                     far climb. THE STREAM: 'hwut.run --events <file>'
+                     writes each event as its line ('line_of'), the time
+                     from 'tree-begun', flushed at once -- a word for a
+                     hwut that reads another, not shown in the usage.
+                     '--as-platform=<name>' (THE RULE: over there 'local'
+                     IS the platform): the far decision reads a bubble
+                     requiring <name> as requiring 'local' -- the switch is
+                     not obeyed again (ruling 3).
+                     <words>: 'Wish.far_argv' -- targets and directory
+                     rules re-rooted at the bubble, one outside dropped, a
+                     bare name kept, every other word as given. A wish
+                     wanting nothing of the bubble (targets or '--dir'
+                     rules, none reaching in): the bubble is not handed.
+      stop           also terminates a far run still standing -- a signal
+                     at the near run (E-55) leaves none behind.
+
     THE ENGINE IMPORTS NOTHING OF THE FACES: 'engine/platforms' imports
     only the engine and the standard library. What 'hwut.dev.podman.*'
     already knows (finding the engine, the root) moves from
@@ -182,15 +252,34 @@ MEASURED:   on 08217f1 + bundles 31..35 (the dev tree w33), 2026-11-02.
     The far exit status: 0 or 1 is told by the events; any other is a
     'fault' event, "<bubble>/: platform 'linux' ended with status <n>".
 
+    'hwut.play' [VERSION 6, ruled 2026-11-03: "yes to play"]: the bubble
+    governing its directory is decided as for 'hwut.run'
+    ('bubble.governing_decision'): refused; not run -- its NOTE, "nothing
+    played: the bubble is not run here", EMPTY (3); handed -- the far
+    'hwut.play --as-platform=<f> <words>' run there in the same directory,
+    its lines relayed ('platforms.relay', a fifth service: what play shows
+    is text, not events), its recording on the same disk, its status the
+    face's; here, as ever.
+
     THE NEAR 'tree-begun' lists a handed bubble's TEST directories (found
     by the walk, section 3), so a viewer knows them before they report.
+    [VERSION 5:] The handed bubbles run after the local directories, one
+    after another; their failures count into the near 'tree-done'. A
+    'start' that fails (the image's build) is the bubble NOT RUN,
+    'reachable'. 'run' reads the far stream in a worker thread; 'stop'
+    runs in a 'finally'.
 
 ==============================================================================
 6  THE PROTOCOL, THE BOOK, THE REPORT (rulings 7, 13, 21)
 ==============================================================================
 
     VOCABULARY -- added only (its stability promise):
-        every kind     optional 'platform': str, absent for 'local'
+        every kind     optional 'platform': str, absent for 'local' --
+                       [VERSION 4] the LAST optional field, written by the
+                       line codec last and only where it stands: a local
+                       event's line is the line it always was. Not a
+                       handler's parameter: a receiver reads it in
+                       'on_any'.
         'not-run'      NEW KIND:
                          directory  str   the bubble
                          platform   str   the first of F(B), or '' where
@@ -202,7 +291,14 @@ MEASURED:   on 08217f1 + bundles 31..35 (the dev tree w33), 2026-11-02.
     'fail_n', not in RESULTS, 'good' unchanged (rulings 13, 21).
 
     THE BOOK ('GOOD/book.csv') gains a last column 'platform', empty for
-    'local'. A bubble not run writes nothing: no book entry, no 'TMP/'
+    'local'. [VERSION 7, built at P-6:] Written by 'record()' alone -- a
+    run measures; the far run writes it over there (its Bookkeeper told
+    by '--as-platform', through the dispatcher); a run here clears it;
+    an acceptance leaves it. B-9 keeps a local row as it was: only the
+    header's word moves, at each book's next write. 'Bookkeeper.result'
+    carries it where it stands. 'hwut.report' says '(linux)' beside the
+    case's name -- the verdicts keep their one column -- and in JSON a
+    'platform' key on that case alone. A bubble not run writes nothing: no book entry, no 'TMP/'
     file, no trace, no coverage record (ruling 21). Every
     reader of the book is found by grep before the column lands (bin 5c).
 
@@ -229,13 +325,25 @@ MEASURED:   on 08217f1 + bundles 31..35 (the dev tree w33), 2026-11-02.
         platform = [ { name = "linux", kind = "container",
                        image = "hwut-dev",
                        recipe = "../adm/container/Containerfile" } ]
-        its features: the support's entries of 'hwut-root-features.conf'
-        moved here (its own registry, E-200).
-    support/test_writing/python/TEST/hwut-root.conf      NEW, no 'platform'
+        [VERSION 8, ruled 2026-11-03:] its features STAY in the registry
+        above: a bubble without a registry of its own belongs to the
+        nearest one (services E-220; 'hwut.features.split' not built,
+        intend/feature-id-space o-13 open). What it needs of the top's
+        'hwut-root.conf' -- 'ignore', the languages of its tests,
+        'app_defaults' -- it SAYS AGAIN ("explicit beats implicit"):
+        nothing is inherited into a root conf (E-200). Measured: every
+        one of the support's 1497 choices reads the same parameters as
+        before.
+    support/test_writing/python/TEST/hwut-root.conf      NEW, no 'platform';
+        'ignore', 'python', 'app_defaults' said again. [VERSION 8] The
+        other ports' GOOD links into it reach into a bubble below their
+        own: admitted (bookkeeper B-32 amended, ruled 2026-11-03).
 
     THE CENSUS from the top: 'support/' is NOT RUN ('available'), its
-    its marker line alone; python/TEST runs here (ruling 19). With
-    '-p linux': 'support/' in 'hwut-dev', python/TEST over there too.
+    marker line alone; python/TEST runs here (ruling 19) -- [VERSION 8]
+    and so does 'support/demo/showcase/', a bubble of its own before this
+    plan that requires no platform (ruling 19 again). With '-p linux':
+    'support/' in 'hwut-dev', both inner bubbles over there too.
 
 ==============================================================================
 9  PROOF

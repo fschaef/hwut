@@ -1,0 +1,9 @@
+# vut-register 5 generation:8 apps:1 marks:0=7
+test;choice;verdict;report;stain;test_id;choice_id
+test-container.py;argv;true;ok;;0;2
+;available;true;ok;;0;0
+;build;true;ok;;0;1
+;imports;true;ok;;0;4
+;keys;true;ok;;0;3
+;stop;true;ok;;0;6
+;stream;true;ok;;0;5

@@ -1,0 +1,5 @@
+hwut-root.conf:  hwut { platform = [ { name = "linux", kind = "container", image = 7 } ] }
+    TEST         platform_tuple=None
+                 runs not: 1 conf fault(s)
+    FAULT hwut-root.conf:2:56: VOCABULARY: platform 'linux': key 'image' wants a string
+<hwut-end>

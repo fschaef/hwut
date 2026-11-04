@@ -34,7 +34,7 @@ import csv
 import io
 import json
 from   datetime   import datetime, timezone, timedelta
-from  .vocabulary import KIND_DB, FORMAT
+from  .vocabulary import KIND_DB, FORMAT, PLATFORM_FIELD
 
 #  THE LOG LANGUAGE DEFINITION: kind -> (form, key fields for STRING).
 #  A kind absent here (a newer vocabulary) is written as JSON.
@@ -52,9 +52,15 @@ CONTENT_DB = {
     "silent":     ("csv",    None),
     "dir-done":   ("json",   None),
     "tree-done":  ("csv",    None),
+    "not-run":    ("string", ("directory", "platform", "reason")),
 }
 #  THE FREE TEXT of a STRING kind.
-TEXT_FIELD_DB = {"fault": "text", "report": "text", "refused": "text"}
+TEXT_FIELD_DB = {"fault": "text", "report": "text", "refused": "text",
+                 "not-run": "text"}
+
+#  'platform' RIDES LAST AND ONLY WHERE IT STANDS (vocabulary): a STRING
+#  kind carries it as one key more after its own, a CSV kind as one cell
+#  more after its own, a JSON kind as any field.
 
 
 class LineError(ValueError):
@@ -79,12 +85,27 @@ def seconds_since(origin_when, when):
         return 0.0
 
 
-def _field_names(kind):
+def _field_names(kind, event=None):
     """RETURN: list[str], the kind's fields in the table's order,
-    required before optional; tree-begun carries 'when' first."""
+    required before optional; tree-begun carries 'when' first. Where
+    'event' is given and carries no 'platform', the optional 'platform'
+    -- the last field -- is left out: the cell is written only where it
+    stands."""
     required_db, optional_db = KIND_DB.get(kind, ({}, {}))
     names = list(required_db) + list(optional_db)
+    if event is not None and PLATFORM_FIELD in optional_db \
+       and PLATFORM_FIELD not in event:
+        names.remove(PLATFORM_FIELD)
     return (["when"] + names) if kind == "tree-begun" else names
+
+
+def _key_tuple_of(kind, key_tuple, event):
+    """RETURN: tuple of str, a STRING kind's key fields for 'event' --
+    its own, then 'platform' where the event carries it and the kind's
+    own keys do not name it."""
+    if PLATFORM_FIELD in event and PLATFORM_FIELD not in key_tuple:
+        return tuple(key_tuple) + (PLATFORM_FIELD,)
+    return tuple(key_tuple)
 
 
 def _cell(value):
@@ -113,13 +134,14 @@ def line_of(event, origin_when=None):
     form, key_tuple = CONTENT_DB.get(kind, ("json", None))
     if form == "string":
         text_field = TEXT_FIELD_DB.get(kind)
+        key_tuple  = _key_tuple_of(kind, key_tuple, event)
         head = " ".join(_quoted(str(event.get(k, ""))) for k in key_tuple)
         text = str(event.get(text_field, "")).replace("\n", " ")
         content = "%s: %s" % (head, text)
     elif form == "csv":
         out = io.StringIO()
         csv.writer(out, lineterminator="").writerow(
-            [_cell(event.get(name)) for name in _field_names(kind)])
+            [_cell(event.get(name)) for name in _field_names(kind, event)])
         content = out.getvalue()
     else:
         content = json.dumps({name: event[name] for name in _field_names(kind)
@@ -154,6 +176,9 @@ def event_of(line, origin_when=None):
             raise LineError("a STRING content wants '<keys>: <text>': %r" % line)
         head, text = content.split(": ", 1)
         keys = next(csv.reader([head], delimiter=" ", quotechar='"'))
+        if len(keys) == len(key_tuple) + 1 \
+           and PLATFORM_FIELD not in key_tuple:
+            key_tuple = key_tuple + (PLATFORM_FIELD,)
         if len(keys) != len(key_tuple):
             raise LineError("%d key field(s) wanted, %d found: %r"
                             % (len(key_tuple), len(keys), line))
@@ -162,6 +187,8 @@ def event_of(line, origin_when=None):
     elif form == "csv":
         cells = next(csv.reader([content]))
         names = _field_names(kind)
+        if names[-1] == PLATFORM_FIELD and len(cells) != len(names):
+            names = names[:-1]          # a local line: no 'platform' cell
         if len(cells) != len(names):
             raise LineError("%d cell(s) wanted, %d found: %r"
                             % (len(names), len(cells), line))

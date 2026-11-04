@@ -1,0 +1,5 @@
+hwut-root.conf:  hwut { platform = [ { name = "linux", kind = "container" } ] }
+    TEST         platform_tuple=None
+                 runs not: 1 conf fault(s)
+    FAULT hwut-root.conf:2:36: VOCABULARY: platform 'linux': key 'image' missing -- a 'container' runs in an image
+<hwut-end>

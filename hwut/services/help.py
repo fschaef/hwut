@@ -382,9 +382,9 @@ def unregistered_of(directory):
                                         import unregistered_list
     from hwut.engine.orchestrator.exploration.tree_explorer \
                                         import RootConfMissing, \
-                                               root_conf_directory
+                                               registry_top
     try:
-        root = root_conf_directory(directory)
+        root = registry_top(directory)
     except RootConfMissing:
         return []
     below = os.path.relpath(os.path.abspath(directory), root)

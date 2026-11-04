@@ -39,7 +39,7 @@ from hwut.engine.orchestrator.exploration.feature_registry_act \
                                          import (register, ActRefused,
                                                  ActFault)
 from hwut.engine.orchestrator.exploration.finder import REGISTRY_FILE_NAME
-from hwut.engine.orchestrator.exploration.tree_explorer import inner_root_note_tuple
+from hwut.engine.orchestrator.exploration.tree_explorer import registry_note_tuple
 from ..._core                            import usage_line
 from ..._exit                            import E_ExitCode
 from .                                   import _common
@@ -111,9 +111,9 @@ def main(argv=None, write=None, token=None):
                   % (unplaced_n, "hwut.features.tree"))
     if not (left or directory_list or leaf_list):
         write("nothing to register below '%s'" % below)
-    #  A BUBBLE BELOW IS ITS OWN REGISTRY (E-200): named, not passed in
-    #  silence (book D-76).
-    for note in inner_root_note_tuple(os.path.join(root, below)):
+    #  A BUBBLE BELOW WITH A REGISTRY OF ITS OWN (E-200): named, not
+    #  passed in silence (book D-76); one without is this registry's.
+    for note in registry_note_tuple(os.path.join(root, below)):
         write(note)
     return E_ExitCode.FAULT if left else E_ExitCode.OK
 

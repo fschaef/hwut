@@ -1,6 +1,7 @@
 == hwut.features.register
+HINTS
+    1 leaf(s) in no aggregate => hwut.features.tree
 nothing to register below '.'
-NOTE  editor/: own root, not walked => do it inside it
 == hwut.sanitize.propose
 NOTE  editor/: own root, not walked => do it inside it
 == hwut.renovate

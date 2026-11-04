@@ -565,6 +565,9 @@ EOF2
         #  files names each inner bubble it does not enter (E-200).
         #  MEASURED before: 'nothing to register below '.'' and an empty
         #  proposal, 'editor/' unnamed.
+        #  SINCE E-220 (2026-11-03): 'editor/' has no registry of its own,
+        #  so the features registry spans it -- 'init' and 'register' walk
+        #  it, no NOTE; the other faces still name it.
         mkdir -p "$WORK/editor/TEST"
         cp "$WORK/hwut-root.conf" "$WORK/editor/hwut-root.conf"
         page "$WORK/editor/TEST/test-e.sh" 'features = ["empty"] choices = ["x"]' 'echo "$1"'

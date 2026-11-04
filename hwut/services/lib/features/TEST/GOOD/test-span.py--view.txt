@@ -1,0 +1,14 @@
+--- from the top ------------------------------------------------
+    top        <root>
+    TEST       gw/can/TEST, inner/x/TEST
+    leaf       gw.can.decode  Aaaaaaa1:decode      gw/can/TEST
+    leaf       gw.can.encode  Aaaaaaa1:encode      gw/can/TEST
+    leaf       inner.x.read   Bbbbbbb2:read        inner/x/TEST
+--- from inside 'inner/' ----------------------------------------
+    top        <root>
+    TEST       x/TEST
+    leaf       inner.x.read   Bbbbbbb2:read        x/TEST
+--- hwut.sanitize inside 'inner/' -------------------------------
+    issues 0
+    features: the 'hwut-root-features.conf' at '..' governs this bubble => sanitize there
+<hwut-end>
