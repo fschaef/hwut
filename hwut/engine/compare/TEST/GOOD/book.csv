@@ -1,5 +1,5 @@
 # vut-register 5 generation:95 apps:18 marks:0=3,1=4,2=2,3=3,4=6,5=5,6=4,7=5,8=5,9=3,10=7,11=7,12=3,13=2,14=6,15=5,16=4,17=3
-test;choice;verdict;report;stain;test_id;choice_id
+test;choice;verdict;report;stain;test_id;choice_id;platform
 regression-1.py;amnesia;true;ok;;0;0
 ;pruning_analogy;true;ok;;0;1
 ;pruning_trans;true;ok;;0;2

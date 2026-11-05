@@ -1,5 +1,5 @@
 # vut-register 5 generation:9 apps:2 marks:0=4,1=3
-test;choice;verdict;report;stain;test_id;choice_id
+test;choice;verdict;report;stain;test_id;choice_id;platform
 test-csp_backtracking_mrv.py;backtracking;true;ok;;0;0
 ;lane-trap;true;ok;;0;1
 ;massive-pipe;true;ok;;0;2

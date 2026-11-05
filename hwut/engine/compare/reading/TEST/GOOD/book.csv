@@ -1,5 +1,5 @@
 # vut-register 5 generation:16 apps:3 marks:0=3,1=5,2=5
-test;choice;verdict;report;stain;test_id;choice_id
+test;choice;verdict;report;stain;test_id;choice_id;platform
 test-chunk_pipe.py;comment;true;ok;;0;0
 ;normal;true;ok;;0;1
 ;special;true;ok;;0;2

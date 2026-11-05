@@ -1,5 +1,5 @@
 # vut-register 5 generation:19 apps:3 marks:0=9,1=4,2=3
-test;choice;verdict;report;stain;test_id;choice_id
+test;choice;verdict;report;stain;test_id;choice_id;platform
 test-disk_guard.py;refused;true;ok;;2;0
 ;room;true;ok;;2;1
 ;wait;true;ok;;2;2

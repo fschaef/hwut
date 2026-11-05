@@ -25,6 +25,10 @@ THE ENGINE IMPORTS NOTHING OF THE FACES: this package imports only the
 engine and the standard library (spec/42 section 4).
 ______________________________________________________________________________
 """
+#  RE-EXPORTED for the orchestrator, which asks the helper and never a
+#  kind: the status a far 'hwut.run' answers where its wish selected
+#  nothing ('_status.py').
+from ._status import FAR_EMPTY_STATUS       # noqa: F401
 from . import container
 from . import local
 
@@ -94,7 +98,9 @@ def start(name, spec, write, log=None):
 
 def run(name, spec, bubble, wish, sink, root=None):
     """
-    RETURN: int, the far run's exit status. Every far event reached
+    RETURN: int, the far run's exit status -- 0 where every far case
+            stood, 'FAR_EMPTY_STATUS' where the far wish selected
+            nothing (no fault: '_status.py'). Every far event reached
             'sink' as it happened, a local event's shape, its
             'directory' relative to the near root (ruling 20).
 

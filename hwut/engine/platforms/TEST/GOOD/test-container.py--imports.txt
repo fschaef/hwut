@@ -1,4 +1,5 @@
   read: engine/platforms/__init__.py
+  read: engine/platforms/_status.py
   read: engine/platforms/container.py
   read: engine/platforms/local.py
   planted, named: planted.py:2: hwut.services.lib

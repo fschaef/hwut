@@ -322,7 +322,8 @@ GATE_RUN, GATE_NOT_RUN, GATE_HANDED = "run", "not-run", "handed"
 
 
 def explore_tree_stream(root, interview_runner=None, fault_list=None,
-                        note_list=None, boundary_f=True, bubble_gate=None):
+                        note_list=None, boundary_f=True, bubble_gate=None,
+                        wanted_f=None):
     """
     YIELD: [0] str                one test directory, RELATIVE to
                                   'root', in walk order.
@@ -356,6 +357,15 @@ def explore_tree_stream(root, interview_runner=None, fault_list=None,
     bubble not run is walked for its inner bubbles and nothing of it is
     explored -- no application interviewed, no book opened (ruling 21);
     a bubble handed is not entered at all.
+
+    'wanted_f' takes a test directory RELATIVE to 'root' and answers
+    whether the WISH asked about it ('task_list_query.dir_wanted_f');
+    None asks about every one. A directory it refuses is NOT EXPLORED
+    and NOT YIELDED -- the walk descends past it (a wanted directory may
+    lie below) and nothing of it is interviewed, read or reported
+    (2026-11-04). MEASURED before: '--dir' filtered the CASES alone, so
+    a run narrowed to one directory still interviewed all 129 and said
+    'the selection is empty' of 128 of them.
     """
     if fault_list is None: fault_list = []
     if note_list  is None: note_list  = []
@@ -377,7 +387,7 @@ def explore_tree_stream(root, interview_runner=None, fault_list=None,
     above_tuple = tuple(f for f in ascent_fault_list if conf_fault_f(f))
     if state == GATE_HANDED: return
     if test_directory_f(root, inherited):
-        if state == GATE_RUN:
+        if state == GATE_RUN and (wanted_f is None or wanted_f(".")):
             yield (".", governed(explore(root,
                                          interview_runner=interview_runner,
                                          inherited=inherited), above_tuple))
@@ -386,7 +396,8 @@ def explore_tree_stream(root, interview_runner=None, fault_list=None,
                                 fault_list, note_list, boundary_f,
                                 above_tuple=above_tuple,
                                 explore_f=(state == GATE_RUN),
-                                bubble_gate=bubble_gate)
+                                bubble_gate=bubble_gate,
+                                wanted_f=wanted_f)
 
 
 def test_directory_name_tuple(bubble_path):
@@ -429,7 +440,7 @@ def test_directory_f(directory, inherited):
 
 
 def explore_tree(root, interview_runner=None, boundary_f=True,
-                 bubble_gate=None):
+                 bubble_gate=None, wanted_f=None):
     """
     RETURN: CTreeExploration -- every test directory below 'root',
             explored under the configuration tree, in walk order.
@@ -440,13 +451,16 @@ def explore_tree(root, interview_runner=None, boundary_f=True,
 
     THE SNAPSHOT FORM of 'explore_tree_stream': the same walk, run to
     the end, so 'fault_tuple' is whole. A face that wants to show a
-    directory as it is found asks the generator instead.
+    directory as it is found asks the generator instead. 'wanted_f' is
+    the generator's -- a test directory the wish never asked about is
+    neither explored nor listed.
     """
     fault_list  = []
     note_list   = []
     result_list = list(explore_tree_stream(root, interview_runner,
                                            fault_list, note_list,
-                                           boundary_f, bubble_gate))
+                                           boundary_f, bubble_gate,
+                                           wanted_f=wanted_f))
     return CTreeExploration(root         = root,
                             result_tuple = tuple(result_list),
                             fault_tuple  = tuple(fault_list),
@@ -456,7 +470,7 @@ def explore_tree(root, interview_runner=None, boundary_f=True,
 def _walk_stream(root, relative, effective, interview_runner, fault_list,
                  note_list=None, boundary_f=True, folded_f=False,
                  above_tuple=(), explore_f=True, bubble_gate=None,
-                 passed_list=None):
+                 passed_list=None, wanted_f=None):
     """
     YIELD: [0] str                one test directory, relative to root.
            [1] ExplorationResult  what it offers.
@@ -470,6 +484,9 @@ def _walk_stream(root, relative, effective, interview_runner, fault_list,
     bubble not run -- its test directories are passed over, its inner
     bubbles still sought and asked of 'bubble_gate'; each test directory
     passed over is appended to 'passed_list', where one is given.
+    'wanted_f' ('explore_tree_stream') keeps a test directory the wish
+    never asked about out of the walk: not explored, not yielded, and
+    not counted among those passed over.
     """
     directory = os.path.normpath(os.path.join(root, relative))
     #  'folded_f': the level's own confs are in 'effective' already --
@@ -519,6 +536,8 @@ def _walk_stream(root, relative, effective, interview_runner, fault_list,
             if not child_explore_f:
                 if passed_list is not None: passed_list.append(child_relative)
                 continue
+            if wanted_f is not None and not wanted_f(child_relative):
+                continue
             yield (child_relative,
                    governed(explore(path, interview_runner=interview_runner,
                                     inherited=child_effective),
@@ -531,7 +550,8 @@ def _walk_stream(root, relative, effective, interview_runner, fault_list,
                                     above_tuple=child_above,
                                     explore_f=child_explore_f,
                                     bubble_gate=bubble_gate,
-                                    passed_list=passed_list)
+                                    passed_list=passed_list,
+                                    wanted_f=wanted_f)
 
 
 def inherited_spec(parent, child):

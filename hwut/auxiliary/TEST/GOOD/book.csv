@@ -1,5 +1,5 @@
 # vut-register 5 generation:9 apps:1 marks:0=8
-test;choice;verdict;report;stain;test_id;choice_id
+test;choice;verdict;report;stain;test_id;choice_id;platform
 test-directory-mutex.py;age;true;ok;;0;0
 ;dead;true;ok;;0;1
 ;foreign;true;ok;;0;2

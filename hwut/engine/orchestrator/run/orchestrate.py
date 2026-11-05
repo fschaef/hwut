@@ -29,6 +29,7 @@ from dataclasses import dataclass, replace
 from datetime    import datetime, timezone
 
 from ...bookkeeper.api       import Bookkeeper
+from ..exploration.task_list_query import dir_wanted_f
 from ..exploration.tree_explorer   import (explore_tree, GATE_RUN,
                                            test_directory_name_tuple)
 from ..plan.bubble                 import (HANDED, NOT_RUN,
@@ -406,7 +407,8 @@ class CTreeScheduler:
         """
         RETURN: (bool, int), whether the bubble of 'decision' stood on its
                 platform -- every far verdict good, no fault, the far run
-                ended 0 -- and how many far nodes failed.
+                ended 0 or EMPTY (a far wish that selected nothing is no
+                failure) -- and how many far nodes failed.
 
         THE HAND-OVER (spec/42 sections 4, 5; rulings 14, 17, 20): the
         platform made ready ('start': an image built where it does not
@@ -452,7 +454,12 @@ class CTreeScheduler:
         finally:
             platforms.stop(name, spec)
         await asyncio.sleep(0)          # the last far events into the queue
-        return tally["good_f"] and status == 0, tally["fail_n"]
+        #  A FAR WISH THAT SELECTED NOTHING IS NOT A FAILURE (2026-11-04,
+        #  the author's run): EMPTY over there is what EMPTY is here --
+        #  nothing ran, nothing failed ('platforms._status').
+        return (tally["good_f"]
+                and status in (0, platforms.FAR_EMPTY_STATUS),
+                tally["fail_n"])
 
     def _ordered(self, unit_list, root):
         """
@@ -665,8 +672,15 @@ def orchestrate(root, wish, build_interview=None, label_view=None):
         decision = decision_db.get(os.path.abspath(path))
         return GATE_RUN if decision is None else decision.state
 
+    #  WHAT THE WISH NEVER ASKED ABOUT IS NOT WALKED (2026-11-04): the
+    #  directory rules ('--dir', '--exclude-dir') reach the WALK, as they
+    #  do in 'hwut.execute' -- a directory they rule out is not explored,
+    #  no application of it interviewed, and it reports nothing. MEASURED
+    #  before: 'hwut.run --dir <one>' explored all 129 directories and
+    #  said 'the selection is empty' of the other 128.
     tree = explore_tree(root, boundary_f=wish.no_bubbles_f,
-                        bubble_gate=gate)
+                        bubble_gate=gate,
+                        wanted_f=dir_wanted_f(wish, root))
     factory = None
     if wish.asks_base_f():
         def factory(directory):

@@ -58,9 +58,17 @@ def directory_hit_f(where, glob_text):
     inside one level, '**' any number -- 'auxiliary/path_glob', E-206); a
     BARE NAME against every path COMPONENT -- so everything below what it
     names goes too.
+
+    A TRAILING '/' IS PUNCTUATION, NOT A LEVEL (2026-11-04): the shell's
+    completion writes '--dir a/TEST/', and the empty level behind the
+    slash matched no directory -- the whole selection came back empty.
+    'a/TEST/' is 'a/TEST', and 'TEST/' is the bare name 'TEST'.
     """
     where = where.replace(os.sep, "/").strip("/")
+    glob_text = glob_text.strip()
     if glob_text.startswith("./"): glob_text = glob_text[2:]
+    glob_text = glob_text.rstrip("/")
+    if not glob_text: return False
     if "/" in glob_text:
         part_list = where.split("/")
         return any(path_glob_f(glob_text, "/".join(part_list[:end]))
@@ -85,6 +93,53 @@ def dir_ruled_out_f(where, rule_tuple):
         if directory_hit_f(where, text.strip()): last = kind
     if last is not None: return last == "-"
     return rule_tuple[0][0] == "+"
+
+
+def rooted_dir_glob(glob_text, root):
+    """
+    RETURN: str, 'glob_text' as a path relative to the run's 'root', '/'
+            between -- where a wishlist made it ABSOLUTE by its './'
+            (E-202); a glob naming nothing below the root becomes one no
+            directory matches ('/\0'). Any other glob as it stands, and
+            any glob where 'root' is None.
+    """
+    if not os.path.isabs(glob_text) or root is None:
+        return glob_text
+    root = os.path.abspath(root).replace(os.sep, "/").rstrip("/")
+    if glob_text == root:          return "*"     # the whole tree
+    if glob_text.startswith(root + "/"):
+        return glob_text[len(root) + 1:]
+    return "/\0"                  # outside the tree: matches nothing
+
+
+def dir_rule_tuple_of(wish):
+    """
+    RETURN: tuple of (str, str), the wish's directory rules in
+            command-line order -- ('+', glob) for '--dir', ('-', glob)
+            for '--exclude-dir'. Its own ordered rules where it carries
+            them, else every include before every exclude (so an
+            exclusion still wins). Empty where the wish names no
+            directory.
+    """
+    return wish.dir_rule_tuple \
+           or tuple(("+", text) for text in wish.dir_tuple) \
+            + tuple(("-", text) for text in wish.exclude_dir_tuple)
+
+
+def dir_wanted_f(wish, root):
+    """
+    RETURN: callable, taking a directory RELATIVE to 'root' and
+            answering whether the wish's directory rules want it -- to
+            be handed to the walk, which then neither explores nor
+            yields what the wish never asked about (2026-11-04).
+            None, where the wish names no directory: every directory is
+            wanted, and the walk needs no predicate at all.
+    """
+    rule_tuple = dir_rule_tuple_of(wish)
+    if not rule_tuple: return None
+    rooted = tuple((sign, rooted_dir_glob(glob_text, root))
+                   for sign, glob_text in rule_tuple)
+    return lambda relative: not dir_ruled_out_f(relative, rooted)
 
 
 class CTestTaskListQuery(CTestTaskList):
@@ -497,10 +552,7 @@ class CTestTaskListQuery(CTestTaskList):
         against every path COMPONENT -- so an '--exclude-dir' takes
         everything below what it names.
         """
-        rule_tuple = self.wish.dir_rule_tuple \
-                     or tuple(("+", text) for text in self.wish.dir_tuple) \
-                      + tuple(("-", text)
-                              for text in self.wish.exclude_dir_tuple)
+        rule_tuple = dir_rule_tuple_of(self.wish)
         if not rule_tuple or self.directory is None: return False
         return dir_ruled_out_f(self.directory,
                                tuple((sign, self._rooted(glob_text))
@@ -513,13 +565,7 @@ class CTestTaskListQuery(CTestTaskList):
                 (E-202); a glob naming nothing below the root becomes one
                 no directory matches. Any other glob as it stands.
         """
-        if not os.path.isabs(glob_text) or self.root is None:
-            return glob_text
-        root = os.path.abspath(self.root).replace(os.sep, "/").rstrip("/")
-        if glob_text == root:          return "*"     # the whole tree
-        if glob_text.startswith(root + "/"):
-            return glob_text[len(root) + 1:]
-        return "/\0"                  # outside the tree: matches nothing
+        return rooted_dir_glob(glob_text, self.root)
 
     def _excluded_f(self, case):
         """

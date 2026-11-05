@@ -1,0 +1,18 @@
+== --dir a/TEST
+    RESULTS: 1 ok, 0 fail
+    exit 0
+== --dir a/TEST/  (the shell's completion)
+    RESULTS: 1 ok, 0 fail
+    exit 0
+== --dir TEST/    (a bare name)
+    RESULTS: 2 ok, 0 fail
+    exit 0
+== --exclude-dir b
+    RESULTS: 1 ok, 0 fail
+    exit 0
+== --exclude-dir b/
+    RESULTS: 1 ok, 0 fail
+    exit 0
+== --dir a/TEST/ --exclude-dir a/
+    exit 3
+<hwut-end>

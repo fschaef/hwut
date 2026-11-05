@@ -1,0 +1,8 @@
+== hwut.run --plain: the hint stands on stdout
+    1 feature(s) not registered => hwut.features.register
+== hwut.run --silent: stdout, line by line
+    (that is all of it)
+== hwut.run --silent --events: stdout, line by line
+    (that is all of it)
+== the events were written: 6 line(s)
+<hwut-end>

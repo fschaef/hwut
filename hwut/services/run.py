@@ -90,6 +90,7 @@ from ..engine.display.console import (HELP as RENDERING_HELP,
                                                              parse_rendering)
 from ..engine.display.console import USAGE_TOKEN_TUPLE \
                                                              as RENDERING_TOKEN_TUPLE
+from ..engine.display.plain import E_Tier
 from ..engine.orchestrator.exploration.task_list import SelectionError
 from   hwut.engine.orchestrator.exploration.tree_explorer \
                                                     import (RootConfMissing,
@@ -633,11 +634,19 @@ def _main(argv, write, write_error, captured_f, event_sink=None,
             return error.code
         flow.tail()
 
-    if tally.empty_f:
-        hint = _label_hint(directory, wish, word_list)
+    #  A SILENT RUN'S STDOUT CARRIES EVENTS AND NOTHING ELSE (D-5,
+    #  2026-11-04): a HINT is no fault, and under '--silent' it is not
+    #  written at all. MEASURED before: the far 'hwut.run --silent
+    #  --events /dev/stdout' of a handed bubble wrote the registry hint
+    #  onto the event channel, and the near run read it as 'platform
+    #  said: 2 feature(s) not registered' -- a fault of the platform's
+    #  (engine/platforms RATIONALE PL-3).
+    if flow.tier is not E_Tier.SILENT:
+        if tally.empty_f:
+            hint = _label_hint(directory, wish, word_list)
+            if hint is not None: write(hint)
+        hint = _registry_hint(directory)
         if hint is not None: write(hint)
-    hint = _registry_hint(directory)
-    if hint is not None: write(hint)
 
     return exit_code_of(tally)
 

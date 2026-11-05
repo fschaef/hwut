@@ -1,0 +1,7 @@
+$ hwut.run --exclude-local -p linux --dir linux/nowhere
+    near exit 3 (3 is EMPTY)
+    (no RESULTS)
+    fault(s): none
+    verdict(s): 0
+SUCCESS: a far run that selects nothing is EMPTY, not a fault.
+<hwut-end>

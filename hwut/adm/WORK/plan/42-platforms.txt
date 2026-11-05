@@ -2,7 +2,7 @@
 plan/42-platforms -- THE FIRST RELEASE, IN ORDERED CUTS
 ==============================================================================
 
-VERSION: 10
+VERSION: 11
 
 COMPONENTS: engine/platforms (new), engine/orchestrator, engine/protocol,
             engine/bookkeeper, engine/display, services, support/, adm.
@@ -96,6 +96,18 @@ STATE
                     features stay in the top's registry (E-220); spec
                     VERSION 8. support/demo/showcase/, a bubble of its own
                     requiring nothing, runs here as python/TEST does.
+                    THE AUTHOR'S FIRST P-9 RUN (2026-11-04): the image
+                    built once 'darcs' left the Containerfile (deleted
+                    from Ubuntu 24.04); the hand-over worked, every
+                    support directory '(linux)'. Four findings of one
+                    command line, all fixed (services E-221): a trailing
+                    '/' on '--dir' matched nothing; '--dir' filtered the
+                    cases and not the walk (129 directories explored,
+                    128 'selection is empty'); the registry hint reached
+                    the far event channel under '--silent'; a far EMPTY
+                    was a fault twice over. OPEN: whether a conf fault
+                    below a directory nothing was wanted in should
+                    colour the run.
     measured:       2026-11-02 on the dev tree (08217f1 + bundles 31..35):
                     17 non-test readers of the book (engine 10, services
                     6, adm 2 -- the list under P-6); 27 files import the

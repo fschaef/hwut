@@ -36,6 +36,7 @@ import shutil
 import subprocess
 from   datetime import datetime, timezone
 
+from ._status              import FAR_EMPTY_STATUS
 from ..protocol.line       import LineError, event_of
 from ..protocol.vocabulary import event
 
@@ -226,8 +227,10 @@ def run(name, spec, bubble, wish, sink, root=None):
             'sink' as it came, translated: tree-begun and tree-done
             dropped, 'directory' put below 'bubble', 'platform' added,
             the time reckoned from the far 'tree-begun'; an unreadable
-            line and a status other than 0 or 1 each a 'fault' event
-            (ruling 20).
+            line and a status other than 0, 1 and 3 each a 'fault'
+            event (ruling 20); 3 is EMPTY -- the far wish selected
+            nothing, which is no more a fault over there than it is
+            here (2026-11-04).
 
     'bubble' is the bubble's directory relative to 'root', the near
     run's root (the working directory where None); 'wish' the far
@@ -255,7 +258,7 @@ def run(name, spec, bubble, wish, sink, root=None):
         status = process.wait()
     finally:
         _live_db[name].discard(process)
-    if status not in (0, 1):
+    if status not in (0, 1, FAR_EMPTY_STATUS):
         sink(_fault(bubble, "platform '%s' ended with status %i"
                             % (name, status), name))
     return status

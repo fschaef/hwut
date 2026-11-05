@@ -12,6 +12,7 @@
 #         sigterm   { features = ["bubble-handed-ended"] }
 #         play      { features = ["bubble-play-decided"] }
 #         book      { features = ["bubble-book-says-where"] }
+#         far-empty { features = ["bubble-far-empty-no-fault"] }
 #     }
 #     tolerance { eq_pattern = ["SUCCESS.*"] }
 # }
@@ -62,6 +63,12 @@ play       'hwut.play' decides its directory's bubble as 'hwut.run' does
            handed -- the far play's lines relayed, its recording on this
            disk; in both/TEST with '-p linux', refused; in none/TEST, as
            ever.
+far-empty  a wish that selects NOTHING over there (the author's run,
+           2026-11-04): 'hwut.run --exclude-local -p linux --dir
+           linux/nowhere' -- the far run ends EMPTY (3), and that is no
+           fault of the platform's: no 'fault' event, nothing counted,
+           the near run EMPTY as well. MEASURED before: 'ERROR linux/:
+           platform 'linux' ended with status 3'.
 book       after 'hwut.run' and 'hwut.run --exclude-local -p linux': each
            book's rows -- the platform's name last where linux measured
            the verdict, nothing where this machine did -- and
@@ -448,6 +455,30 @@ def test_play():
     print("SUCCESS: play decided as the run is.")
 
 
+def test_far_empty():
+    """RETURN: None. A far run whose wish selects nothing is no fault."""
+    root, bin_dir = tree(), here_podman_bin()
+    environment = dict(os.environ, PATH=first_on_path(bin_dir),
+                       PYTHONPATH=os.path.dirname(config.HWUT_DIRECTORY))
+    try:
+        code, event_list, results = run_with_events(
+            root, ["--exclude-local", "-p", "linux", "--dir",
+                   "linux/nowhere"], environment)
+    finally:
+        shutil.rmtree(root); shutil.rmtree(bin_dir)
+    fault_list = [item["text"] for item in event_list
+                  if item["kind"] == "fault"]
+    verdict_n = sum(1 for item in event_list if item["kind"] == "run-ended")
+    print("$ hwut.run --exclude-local -p linux --dir linux/nowhere")
+    print("    near exit %i (3 is EMPTY)" % code)
+    print("    %s" % results)
+    print("    fault(s): %s" % (fault_list or "none"))
+    print("    verdict(s): %i" % verdict_n)
+    ok_f = code == 3 and not fault_list and verdict_n == 0
+    print("%s: a far run that selects nothing is EMPTY, not a fault."
+          % ("SUCCESS" if ok_f else "FAILURE"))
+
+
 def test_book():
     """RETURN: None. The books and the report after a run here and one
     handed to linux."""
@@ -498,4 +529,5 @@ if __name__ == "__main__":
         "sigterm":   test_sigterm,
         "play":      test_play,
         "book":      test_book,
+        "far-empty": test_far_empty,
     }).run()

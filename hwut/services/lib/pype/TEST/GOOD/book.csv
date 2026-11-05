@@ -1,5 +1,5 @@
 # vut-register 5 generation:22 apps:2 marks:0=17,1=3
-test;choice;verdict;report;stain;test_id;choice_id
+test;choice;verdict;report;stain;test_id;choice_id;platform
 test-pype.py;anchors_repeat;true;ok;;0;0
 ;boundaries_stack;true;ok;;0;1
 ;compat;true;ok;;0;2

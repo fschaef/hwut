@@ -31,7 +31,7 @@
 #                            probed against the tool itself here
 #     ghdl                   the PSL coverage road
 #     lua5.4, luarocks, luacov
-#     git, mercurial, subversion, breezy, darcs, fossil
+#     git, mercurial, subversion, breezy, fossil
 #                            'adm/bundle.sh', 'hwut.affected'; and the
 #                            repositories 'hwut.sanitize root' offers as
 #                            a boundary ('services/_boundary.py
@@ -62,9 +62,15 @@
 # Verilator 5.006 -- each older than what was measured, several known not
 # to do. x86_64 only: the release tarballs are named for it.
 #
-# NOT IN IT: jujutsu and pijul -- no Ubuntu package; their marker
-# directories are still recognised. The coverage readers stay tested on
-# WITNESSED artefacts ('readers/TEST/REAL_PARSING_INPUT').
+# NOT IN IT: jujutsu, pijul and darcs -- no Ubuntu package; their marker
+# directories are still recognised. MEASURED 2026-11-04, the first build:
+# 'darcs' HAS NO INSTALLATION CANDIDATE on 24.04 -- it stood in noble
+# universe as 2.16.5-1 and was deleted there, so the build broke on it.
+# Nothing is run to find a repository ('_darcs' is the mark, services
+# E-25), and 'darcs' is a ROAD requirement, which
+# 'adm/requirement-check.sh' says and does not fail on.
+# The coverage readers stay tested on WITNESSED artefacts
+# ('readers/TEST/REAL_PARSING_INPUT').
 #
 # WRITTEN 2026-11-01 WHERE NO CONTAINER ENGINE STANDS: this recipe was
 # NOT BUILT by its author; each package and version in it was measured
@@ -88,7 +94,7 @@ RUN apt-get update \
         gcc g++ libc6-dev make lcov gcovr \
         verilator ghdl \
         lua5.4 luarocks \
-        git mercurial subversion brz darcs fossil zsh \
+        git mercurial subversion brz fossil zsh \
         curl ca-certificates xz-utils \
         libvterm0 libvterm-dev \
         texlive-latex-base texlive-latex-recommended latexmk \

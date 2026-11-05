@@ -1,5 +1,5 @@
 # vut-register 5 generation:21 apps:5 marks:0=2,1=5,2=4,3=3,4=2
-test;choice;verdict;report;stain;test_id;choice_id
+test;choice;verdict;report;stain;test_id;choice_id;platform
 test-line-2.py;transpose;true;ok;;0;0
 ;visible-nothing;true;ok;;0;1
 test-line-permutation.py;different;true;ok;;1;0

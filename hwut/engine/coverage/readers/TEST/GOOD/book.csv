@@ -1,5 +1,5 @@
 # vut-register 5 generation:26 apps:2 marks:0=21,1=3
-test;choice;verdict;report;stain;test_id;choice_id
+test;choice;verdict;report;stain;test_id;choice_id;platform
 test-readers.py;absent;true;ok;;0;0
 ;agreement;true;ok;;0;1
 ;aliases;true;ok;;0;2

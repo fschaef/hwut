@@ -1,0 +1,18 @@
+== hwut.run (the whole tree): 'b/' is read, and fails its case
+    ERROR b/hwut.conf:2:5: VOCABULARY: 'caps' at the root of b/hwut.conf: the root carries directory keys only; a test parameter belongs in 'app_defaults' (every application of the directory) or an 'apps' entry
+    SKIP  test-t.sh  x .......................................... spec [FAIL]
+       '--- b/TEST . . . . . . . . . . . . . . . . . . . . . .     [FAIL]      0/1
+    RESULTS: 1 ok, 1 fail
+    exit 1
+== hwut.run --dir a/TEST: nothing of 'b/' is explored
+    ERROR b/hwut.conf:2:5: VOCABULARY: 'caps' at the root of b/hwut.conf: the root carries directory keys only; a test parameter belongs in 'app_defaults' (every application of the directory) or an 'apps' entry
+    RESULTS: 1 ok, 0 fail
+    exit 1
+== hwut.run --dir nowhere/TEST: nothing is explored
+    ERROR b/hwut.conf:2:5: VOCABULARY: 'caps' at the root of b/hwut.conf: the root carries directory keys only; a test parameter belongs in 'app_defaults' (every application of the directory) or an 'apps' entry
+        (no directory ran)
+    exit 1
+== hwut.run --dir nowhere/TEST, the conf mended: EMPTY
+        (no directory ran)
+    exit 3
+<hwut-end>

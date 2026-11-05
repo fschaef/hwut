@@ -8264,3 +8264,66 @@ CONSEQUENCE  A registry begun inside a spanned bubble ('init' there)
 CHECKED   services/lib/features/TEST test-span.py: 'register', 'view',
           'begin'. On the tree with 'support/hwut-root.conf' added: the
           features report from the top identical to the one without it.
+
+
+E-221  THE AUTHOR'S RUN OF 2026-11-04: '--dir' REACHES THE WALK, AND A
+       SILENT RUN'S STDOUT CARRIES EVENTS ALONE                    (2026-11-04)
+------------------------------------------------------------------------------
+PROBLEM   MEASURED by the author on his own machine, the first run of
+          plan/42 P-9: 'hwut -p linux --dir support/test_writing/bash/
+          TEST/' ran nothing, printed 'the selection is empty' for 128
+          directories it was never asked about, and ended with two
+          errors of the platform's. Four findings in one command line:
+            1 A TRAILING '/' MATCHED NOTHING. 'directory_hit_f' stripped
+              the slashes of the PATH and not of the GLOB, so the empty
+              level behind 'a/TEST/' matched no directory -- and the
+              shell's completion writes that slash. Measured here: '--dir
+              engine/platforms/TEST' 7 ok, '--dir engine/platforms/TEST/'
+              0 ok, 1499 skipped.
+            2 '--dir' FILTERED THE CASES, NOT THE WALK. Measured: with
+              '--dir <one>' all 129 directories were explored -- every
+              application interviewed, every book opened -- and 128 of
+              them reported an empty selection.
+            3 THE REGISTRY HINT REACHED THE EVENT CHANNEL. A handed
+              bubble is run as 'hwut.run --silent --events /dev/stdout';
+              the hint was written to stdout whatever the tier, so the
+              near run read it as 'platform said: 2 feature(s) not
+              registered' -- a fault.
+            4 A FAR EMPTY WAS A FAULT, TWICE. 'container.run' faulted on
+              any status but 0 and 1, and '_handed' called the bubble
+              good only at 0: a far wish selecting nothing made the near
+              run red.
+DECISION  1 A TRAILING '/' IS PUNCTUATION, NOT A LEVEL: 'directory_hit_f'
+            strips it from the glob, so 'a/TEST/' is 'a/TEST' and 'TEST/'
+            is the bare name 'TEST'. One place, so every face that names
+            a directory ('--dir', '--exclude-dir', wishlist lines,
+            'hwut.execute') is mended at once.
+          2 THE DIRECTORY RULES REACH THE WALK:
+            'task_list_query.dir_wanted_f(wish, root)' answers for a
+            directory, and 'explore_tree[_stream]' takes it as
+            'wanted_f' -- a directory it refuses is neither explored nor
+            yielded, so nothing of it is interviewed and it reports
+            nothing. 'hwut.execute' pruned its own walk this way already
+            (E-15); now 'hwut.run', 'hwut.plan' and every face that
+            selects do. The rooting of a wishlist's absolute glob is one
+            function too ('rooted_dir_glob'), shared by the walk and the
+            case filter, so near and far agree.
+            A CONF THAT CANNOT BE READ STAYS THE TREE'S FAULT: the
+            descent folds every level it passes, so a broken
+            'b/hwut.conf' is named and the run ends 1 whatever the wish
+            asked for. Left as it stands, and OPEN: whether a fault
+            below a directory nothing was wanted in should colour the
+            run at all.
+          3 UNDER '--silent' NOTHING BUT EVENTS REACHES STDOUT (display
+            D-5): the registry hint and the label hint are not written.
+            They are hints, not faults, and a fault has its own road
+            ('write_error').
+          4 EMPTY IS NOT A FAULT, NEAR OR FAR: 'platforms._status.
+            FAR_EMPTY_STATUS' is the one definition, and both the kind
+            (no 'fault' event) and the orchestrator (the bubble still
+            good) read it. The near run then answers EMPTY itself, as it
+            does for a wish of its own that selects nothing.
+CHECKED   services/TEST test-book-defects-6.sh: 'dir-slash',
+          'dir-walked', 'silent-events'; engine/orchestrator/run/TEST
+          test-bubble.py 'far-empty'. Moved: the GOOD files of the suites
+          whose pages counted the directories a wish passed over.

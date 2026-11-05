@@ -45,7 +45,7 @@ from   .explorer         import explore
 from   .tree_explorer    import (explore_tree, explore_tree_stream,
                                  ascended_spec)
 from   .task_list       import CTestTaskListAll
-from   .task_list_query  import CTestTaskListQuery
+from   .task_list_query  import CTestTaskListQuery, dir_wanted_f
 from   ..plan.label      import swallowed_warning_tuple
 from   ..plan.wish       import unrequired_platform_note_tuple
 from   ...bookkeeper.api import Bookkeeper, NamingConfig
@@ -166,7 +166,10 @@ def of_tree(root, wish, label_view=None, base_f=None):
     Raises SelectionError and RootConfMissing out of the walk,
     unchanged.
     """
-    exploration = explore_tree(root, boundary_f=wish.no_bubbles_f)
+    #  WHAT THE WISH NEVER ASKED ABOUT IS NOT WALKED (2026-11-04): the
+    #  directory rules reach the WALK, not the cases alone.
+    exploration = explore_tree(root, boundary_f=wish.no_bubbles_f,
+                               wanted_f=dir_wanted_f(wish, root))
     case_list     = []
     result_db     = {}
     bookkeeper_db = {}
@@ -258,7 +261,8 @@ def of_tree_stream(root, wish, label_view=None, base_f=None,
     for directory, result in explore_tree_stream(
                                  root, fault_list=fault_list,
                                  note_list=note_list,
-                                 boundary_f=wish.no_bubbles_f):
+                                 boundary_f=wish.no_bubbles_f,
+                                 wanted_f=dir_wanted_f(wish, root)):
         bookkeeper = Bookkeeper(os.path.join(root, directory),
                                 naming_of(result.app_set)) \
                      if want_f else None
