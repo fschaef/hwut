@@ -2,10 +2,14 @@
 intend/26-hwut-bench -- A UNIT UNDER TEST BEHIND A LINK: THE BENCH
 ==============================================================================
 
-COMPONENTS CONCERNED: test_writing_support (a new package remote_execution/:
-                      host modules, the agent's device halves, the protocol),
+COMPONENTS CONCERNED: support/remote (new: the package hwut_remote over the
+                      host layers, the agent's device halves, the protocol;
+                      o-28, o-29),
                       engine/orchestrator/exploration (a block 'bench { }' in
                       hwut-root.conf: shape validation, nothing more),
+                      engine/platforms (a definition's 'provides'; the
+                      probe of a provided bench: o-26, o-27, TRANSFERRED to
+                      intend/42),
                       services (a face hwut.sanitize.bench.defaults),
                       the book (Chapter 11, "Tests on Real Hardware").
 SPEC:                 adm/WORK/spec/26-hwut-bench.txt
@@ -67,23 +71,30 @@ ______________________________________________________________________________
 THE SHAPE
 
     HOST                                         TARGET
-    test application ── uses ──▶ host modules ══ link ══▶ agent ─ UUT
-                                 remote_execution/        remote_execution/
-                                 host/: session, link,    target/<impl>/
-                                 entry, <loader>, capture
-    Makefile ── flash ──▶ host/<loader>.py ── vendor tool ──▶ image on target
+    test application ─ create_hub ─▶ hwut_remote ══ link ══▶ agent ─ UUT
+                                     support/remote/host/   target/<impl>/
+                                     link, line, session,
+                                     entry, <loader>, capture
+    Makefile ── flash ──▶ hwut_remote.<loader> ── vendor tool ──▶ image
 
-    hwut-root.conf: bench { max10 { serial ... loader ... } }, read by name:
-    entry.get("max10"), 'flash max10'. The picture and the names stand in
-    the spec, section 1.
+    hwut-root.conf:
+        bench    { max10 { serial ... loader ... } }     what the code names
+        platform = [ { name = "local", provides = [ "max10" ] } ]
+                                                         where it is attached
+    A bubble specifies 'max10'; the platform that provides it runs the
+    bubble, once present (o-26). The test opens create_hub("max10") and
+    knows nothing of the platform (intend/42, ruling 1). The picture and
+    the names stand in the spec, section 1.
 
 What the code decides: the tool chain and the board -- the tool module
 the Makefile calls and the entry's name. What the entry decides: device
-path, cable, baud -- the device table. What hwut decides: nothing; it
-validates the block and lays down defaults.
+path, cable, baud -- the device table. What a platform definition
+decides: where a board is attached ('provides'). What hwut decides:
+nothing; it validates the block, lays down defaults, and runs a board's
+bubble where its bench is provided and its device is present.
 
 ONE LAW, ONE PLACE: the protocol is one page (PROTOCOL.txt), the agent's
-registers one page (MAP.txt), both in remote_execution/; the agent
+registers one page (MAP.txt), both in support/remote/; the agent
 implementations and the host modules implement them and nothing else.
 
 ______________________________________________________________________________
@@ -130,7 +141,8 @@ WHAT HWUT LEARNS: ONE BLOCK
 
 validated as a map of maps of scalars; D-56 applies (a root's benches are
 its own). 'hwut.sanitize.bench.defaults' lays the standard entries down for
-a tree that has none.
+a tree that has none. Beside it, platform definitions name the benches
+they provide (o-26); nothing else.
 
 ==============================================================================
 RULED  (chat, 2026-10-25/26; RATIONALE entries are written with the build)
@@ -243,7 +255,100 @@ RULED  (chat, 2026-10-25/26; RATIONALE entries are written with the build)
            RTE ports. An ARXML-to-seam generator is deferred until a first
            AUTOSAR user brings real tool output.
 
+ o-24  (resolved through o-26, o-27, ruled 2026-11-04) The bench stays its
+           own block, the device table the code names. A board is reached
+           as a platform that PROVIDES its bench's name; no platform kind
+           'bench' or 'hil-hub' (struck: the code would name its platform,
+           against intend/42 ruling 1; one platform per run would forbid
+           two boards in one test). A platform used under a provided bench
+           name is available only while the bench's device is present: its
+           'is_available' looks for the entry's device (a serial path, a
+           CAN interface) and never opens the link -- hwut never talks to
+           a board; a miss is '[PLATFORM not reachable]', the bubble not
+           run. The label
+           'max10-connected' (intend 25) is no longer needed for it.
+
+ o-25  (a) The writer imports one module, hwut_remote (o-29), a facade
+           over the host layers, which stay testable each alone (link:
+           bytes; line: token, CRC-16, the 80-byte line; session: the
+           ladder, reset, vector, contract; entry; loaders; capture):
+               create_hub(name, note=...) -> Hub
+               add_plugin(name, producer)
+               producer(entry: dict, note) -> Hub
+           The built-in hubs register through add_plugin themselves; the
+           entry's transport key names the producer. A base 'LinkHub'
+           takes open/send/recv/close and supplies line, CRC and recovery:
+           a new byte pipe is a few lines. A hub that speaks another's
+           protocol (XCP, SCPI, a vendor API) implements Hub whole. UDP is
+           a transport; the coupling 'tokens need an ordered transport'
+           becomes 'one outstanding command'. A doubled datagram: the
+           agent takes a 'w' or 'x' carrying the token in 'last' as a
+           duplicate, which does not act and replies the state (spec
+           section 6). The plugin is registered in the test's own code:
+           the code decides what a name means. No relay for other test
+           languages now; it may stand on Hub later. SUPERSEDES o-21 in
+           its module names; its place: o-28.
+
+ o-26  A platform DEFINITION carries 'provides = [ <name> ... ]'. A bubble's
+           SPECIFICATION names a defined platform or a provided name; Q(B)
+           holds every definition so named or providing it. A platform
+           acting as a provided name must be present as it to run the
+           bubble. Names are unconstrained; no registry, no prefixes, no
+           management now. 'local' may be written as a definition with
+           the one key 'provides' (AMENDS intend/42 ruling 16). A name
+           both defined and provided is a fault at the start. S, F(B),
+           the refusal of |F(B)| > 1 and the markers stand. TRANSFERRED
+           to intend/42.
+
+ o-27  (a) A specified name is resolved against the definitions of every
+           conf the walk reads (spec/42 section 3 reads them all before
+           the first event). A bubble run alone sees its own definitions;
+           defining none, its F is {} and it is not run, reason
+           'available'. A name defined twice in the walk is a fault at the
+           start naming both confs. A machine-local file of definitions
+           waits for a lab that needs one. TRANSFERRED to intend/42.
+
+ o-28  (a) The package stands in support/remote/, beside support/
+           test_writing/ and support/demo/: a subject, not a language
+           port, so LANGUAGES.conf and adm/support_layout.py are untouched.
+           Home 'support': hwut imports nothing of it. host/ holds the
+           Python package, target/ the agents, proto/ the prototypes.
+           SUPERSEDES o-21's place (test_writing_support/remote_execution/).
+
+ o-29  The import name is 'hwut_remote' (ruled 2026-11-04: "because it
+           specifies a specific way of managing remote control: the
+           'standard hwut way'"). A package, support/remote/host/
+           hwut_remote/: its __init__ the facade, its modules the layers
+           and the loaders ('python3 -m hwut_remote.quartus flash ...').
+           Inside it no further 'hwut_' prefix (o-21 stands there).
+
+ o-30  VISA (2026-11-05: "both are good"): its patterns are already the
+           design's -- the resource manager is create_hub, an alias is a
+           bench name, a backend is a plugin, the session is the hub.
+           Adopted: a seventh built-in producer 'visa', a VisaHub over
+           pyvisa (query, write, opc, reset; the error queue read after
+           every message; '*IDN?' as '##'), reaching GPIB, USBTMC, LXI
+           and HiSLIP; prototype proto/scpi-sim on pyvisa-sim. Not
+           adopted: resource strings for our transports, VISA locks
+           (R-32 stands), service requests (one outstanding command).
+           Hub becomes the base (reset, close); the map's methods are
+           LinkHub's.
+
+ o-31  Transparency is not optional; provision management is an
+           overshoot. 'python3 -m hwut_remote list' shows what is attached
+           and which entry names it; it writes nothing and opens no link.
+           No face writes, generates or reserves entries or definitions.
+
 ==============================================================================
 OPEN
 ==============================================================================
- none.
+ o-32  Showing the platform resolution (TRANSFERRED to intend/42 when
+           ruled). What a run decided -- which definition took a bubble,
+           under which provided name, why another was not reachable --
+           must be visible.
+           (a) the run's console names it where spec/42 P-7 prints
+               '(linux)': '(local as max10)'; the NOTE of '[PLATFORM not
+               reachable]' names the bench: "bench max10: no device"
+               <- recommended: shown where the decision lands, no new face
+           (b) (a), and a face listing every definition, what it
+               provides, which bubbles specify it, and its availability now.
