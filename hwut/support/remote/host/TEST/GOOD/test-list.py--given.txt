@@ -1,0 +1,10 @@
+file        transport  address                                                      state
+esp.conf    serial     dev/serial/by-id/usb-Silicon_Labs_CP210x_0001-if00-port0     absent
+max10.conf  serial     dev/serial/by-id/usb-Altera_USB-Blaster_91d28408-if00-port0  present
+sim.conf    launch     vvp -n TMP/uut.vvp                                           not probed
+--          can        can0                                                         no file
+--          jtag       USB-Blaster [1-3]  10M50DA                                   no file
+--          serial     dev/serial/by-id/usb-FTDI_FT232R_A50285BI-if00-port0         no file
+## not looked: openFPGALoader
+## not looked: pyvisa
+<hwut-end>

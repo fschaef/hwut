@@ -1,0 +1,6 @@
+FAILED: HubError: stale agent: image 12345678, built 3f9a07c1
+wire:
+    --> 4 r 0 1a *301d
+    <-- 4 6877757401000000785634120202050080f0fa0280969800ff80 *4a29
+    --- close
+<hwut-end>

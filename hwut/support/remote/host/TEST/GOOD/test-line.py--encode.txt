@@ -1,0 +1,6 @@
+b'b x 0403 *2b95\n'
+b'0 r 0 1a *3f70\n'
+b'f ! busy *1f51\n'
+refused: token 16 out of 0..f
+refused: line of 91 bytes exceeds 80
+<hwut-end>

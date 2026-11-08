@@ -1,0 +1,8 @@
+boot         2.0
+link_margin  1.0
+loader       'none'
+mqtt         'broker:1883'
+qos          1
+time         'wall'
+topic        'lab/adder'
+<hwut-end>

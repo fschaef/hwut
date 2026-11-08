@@ -1,0 +1,9 @@
+reset           00
+x 0102, token 5 010100
+x 0102, token 5 010100 (duplicate)
+r 18 4          05010100
+x 0102, token 7 010200
+w 40 0000, tok 8 01
+w 40 0000, tok 8 01 (duplicate)
+r 40 2          0000
+<hwut-end>

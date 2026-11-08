@@ -1,0 +1,7 @@
+crc fails        -> None
+outside alphabet -> None
+over 80 bytes    -> None
+carriage return  -> None
+trailer missing  -> None
+r f 1            -> 05   (5 lines discarded)
+<hwut-end>

@@ -1,0 +1,10 @@
+verified          -> [(11, '010700')]         lines 0, bytes 0
+crc fails         -> []                       lines 1, bytes 15
+over 80 bytes     -> []                       lines 2, bytes 97
+carriage return   -> []                       lines 3, bytes 113
+outside alphabet  -> []                       lines 4, bytes 128
+malformed body    -> []                       lines 5, bytes 144
+empty line        -> []                       lines 5, bytes 144
+partial, flushed  -> []                       lines 6, bytes 151
+verified after    -> [(12, '010001')]         lines 6, bytes 151
+<hwut-end>

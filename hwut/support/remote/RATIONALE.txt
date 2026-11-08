@@ -1,0 +1,99 @@
+==============================================================================
+RATIONALE -- support/remote (remote execution; built from 2026-11-06)
+==============================================================================
+
+    The results of the design discussion of intend/26 (rulings o-1 .. o-42,
+    2026-10-25 .. 2026-11-06), entered as each is built. Append only.
+
+------------------------------------------------------------------------------
+RX-1  HWUT HOLDS NO BENCH; THE CONFIGURATION IS THE TEST'S      (intend o-35)
+PROBLEM   A 'bench { }' block in hwut-root.conf made hwut validate, default
+          and probe hardware it never talks to.
+DECISION  hwut knows a name ('provides') and an exit status (77); every
+          configuration of the link -- device, baud, loader -- is the
+          test's and the hub's (RX-2). This directory imports nothing of
+          hwut; hwut imports nothing of it.
+COST      A device path stands in a configuration file of the bubble; a
+          machine-local file of definitions stays deferred.
+GRAVEYARD 'bench { }' in hwut-root.conf with its validator, its defaults
+          face 'hwut.sanitize.bench.defaults' and a bench probe in
+          engine/platforms (o-7, o-8, o-9, o-24, o-34; withdrawn).
+
+------------------------------------------------------------------------------
+RX-2  A PROPER FACTORY                                           (intend o-37)
+PROBLEM   'create_hub(name)' looked a name up in hwut-root.conf; the
+          Makefile's loader read the same entry by name; nothing tied a
+          configuration file to the code that reads it.
+DECISION  REGISTRY add_plugin(transport, producer); FACTORY
+          create_hub(transport, address=None, *, config_file=None,
+          note=None, image_id=None, image=None, failures=3, **options):
+          the producer by the transport, its read() of the file in its own
+          format, the options over the file, the address over both, the
+          common keys checked by the factory and the transport's by the
+          producer, the hub NOT opened; PRODUCT Hub -- 'with' opens and
+          greets, flash(), reset_bench(); one CLI over the same factory.
+          A loader is a strategy of the Hub, chosen by 'loader', with no
+          CLI of its own.
+COST      One word more per call (the transport); the default reader takes
+          one 'key = value' per line.
+GRAVEYARD board.py:MAX10 imported by the loader; the producer picking
+          itself by a file's suffix or by 'accepts(path)' (o-37, struck).
+
+------------------------------------------------------------------------------
+RX-3  LATENCY IN mode [7:2]                                      (intend o-42)
+PROBLEM   Found building step 1: Hub.contract() prints "sample 1 cycle
+          after apply", and no map byte held LATENCY.
+DECISION  mode (0e) [7:2] = LATENCY, 0..63; the hello stays 26 bytes and
+          holds the whole contract. A slower UUT waits for done. The
+          hello of README 11 changed to mode 05, its CRC recomputed
+          (085c, host/TEST/test-line.py 'crc').
+COST      LATENCY above 63 is refused at synthesis.
+GRAVEYARD A byte at 3a (a second round trip per session); not reporting
+          it (the row would not carry the contract).
+
+------------------------------------------------------------------------------
+RX-4  THE CONTRACT ROW NAMES ITS CLOCK, NOT A UNIT WORD
+PROBLEM   "timeout N cycles" (spec/26 18) holds only for the Verilog agent;
+          the C and Python agents count ticks, and mode 0 cannot tell them
+          apart from the map.
+DECISION  'contract: sample 1 cycle after apply, timeout 10000000 counts
+          at 50 MHz': the count and the clock the map reports (0x10).
+COST      A row longer by two words.
+
+------------------------------------------------------------------------------
+RX-5  EXIT 77 WHERE THE DEVICE IS ABSENT                         (intend o-36)
+PROBLEM   An unplugged board made the test red: the infrastructure's
+          absence read as the software's fault.
+DECISION  Where a hub cannot open its link for want of the device (a
+          serial path that does not exist), hwut_remote writes "<transport>:
+          no device <path>" as the last line of stderr and exits 77; the
+          writer writes nothing. The same in 'flash'. Elsewhere 77 is never
+          used (measured free, 2026-11-05).
+COST      A library ends the process; it does so only for this one fact.
+
+------------------------------------------------------------------------------
+RX-6  'list' READS THE FILES GIVEN, OR THE DIRECTORY'S      (intend o-31, o-38)
+DECISION  'python3 -m hwut_remote list [F ...]' shows what is attached
+          (/dev/serial/by-id, jtagconfig, openFPGALoader, CAN interfaces,
+          pyvisa) and which file names it; with none given, every file of
+          the current directory the default reader reads and that names one
+          transport; a file no producer reads is skipped. A tool not
+          installed is one '## not looked' line.
+
+------------------------------------------------------------------------------
+RX-7  THREE FAILURES IN A ROW COUNT ACROSS THE RECOVERY READ
+PROBLEM   Measured building step 1: the count restarted inside the
+          reconciling 'r 18 2+RW', so 'silent' came after four lost lines.
+DECISION  One run of failures per session: a lost 'x', then two lost
+          'r 18 4', is silent; any reply with the command's token resets
+          the run.
+
+------------------------------------------------------------------------------
+RX-8  THE STDIO PHY READS ONLY WHILE THE AGENT IS IDLE
+PROBLEM   '$fgetc' blocks the simulation: a read while an 'x' waits stops
+          the UUT's clock, and the reply never comes.
+DECISION  phy_stdio.v reads a byte only while the agent is idle and no
+          command is pending ('rx_idle'); under simulation no line meets a
+          pending one, so '! busy' cannot arise there -- it is proven on
+          the UART phy's road only by design, not by a GOOD.
+COST      '! busy' has no regression page under iverilog.

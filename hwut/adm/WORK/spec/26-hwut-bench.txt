@@ -2,17 +2,24 @@
 spec/26-hwut-bench -- REMOTE EXECUTION: DESIGN
 ==============================================================================
 
-VERSION: 18
+VERSION: 20
 
 COMPONENTS: support/remote (new),
-            engine/orchestrator/exploration (the validator: 'bench { }'),
             engine/orchestrator/run (a condition on build order, axis Q),
-            engine/platforms ('provides', the bench probe: section 16;
+            engine/platforms ('provides', routing only: section 16;
             specified in spec/42),
-            services (hwut.sanitize.bench.defaults).
+            engine/orchestrator/exploration (the scope 'deploy': section 14),
+            engine/operations (the stage deploy, DEPLOY_FAILED: section 14;
+            exit status 77, the case's infrastructure absent: section 16).
 INTEND:     adm/WORK/intend/26-hwut-bench.txt
-STATUS:     FINAL (2026-11-05); nothing built; nothing open here (o-32
-            of the intend concerns spec/42).
+STATUS:     nothing built. VERSION 20 (2026-11-06): hwut holds no bench
+            (intend o-35); a case whose infrastructure is absent exits 77
+            (o-36); section 16 rewritten, 'bench { }' in hwut-root.conf,
+            its validator, its defaults face and the bench probe gone.
+            The factory after o-37 (2026-11-06): sections 1, 2, 11, 14,
+            15, 19, 22 to 24. Open: o-38 (the list's files, section 11),
+            o-39. The deploy section after o-40, o-41 (2026-11-06):
+            sections 1, 3, 11, 14, 16, 19 to 21, 25.
 
 CONTENTS
 
@@ -31,7 +38,7 @@ CONTENTS
     10  M, N  Reception and recovery
 
         PART B -- THE BENCH               README.txt
-    11        The bench entry and the hub
+    11        The factory and the hub
     12  C     Transport, and opening a session
     13  B     Time domain
     14  D, F  Loader and image identity
@@ -65,29 +72,30 @@ CONTENTS
     +---------------------------------+          +------------------------+
     | test application    (writer)    |          | agent                  |
     |   prints rows and '##' lines    |          |   support/remote/      |
-    |   hub = create_hub("max10")     |          |   target/<impl>/       |
+    |   hub = create_hub("serial",    |
+    |       config_file="max10.conf") |          |   target/<impl>/       |
     |---------------------------------|   link   |   verilog | c | python |
     | hwut_remote      the hub        |<========>|                        |
     |   support/remote/host/          |  serial  |   map <---> UUT        |
     |   session  the protocol         |  tcp     |                        |
     |   line     token, CRC, the line |  udp     +------------------------+
     |   link     the bytes            |  ssh                 ^
-    |   entry    the bench entry      |  launch              |
-    |   <loader> flash, reset         |  can, visa           |
+    |   entry    the configuration    |  launch              |
+    |   <loader> flash, reset: Hub's  |  can, visa           |
     |   capture  rows from captures   |                      |
     +---------------------------------+                      |
            |              |                                  |
            |              +---- loader (vendor tool) --------+
            |                    puts the image on the target
            v
-    hwut-root.conf  bench    { <name> { link, loader, ... } }
-                    platform = [ { name = ..., provides = [ <name> ] } ]
+    the test         max10.conf: link, loader, ...: create_hub's (11)
+    hwut-root.conf   platform = [ { name = ..., provides = [ <name> ] } ]
 
     host           the machine that runs hwut and the test application
     hwut_remote    the Python package the writer imports, in
                    support/remote/host/: create_hub, add_plugin, Hub,
                    LinkHub, VisaHub; its modules session, line, link,
-                   entry, visa, one module per loader, capture; 'list'
+                   entry, visa, one module per loader, capture; the CLI
     hub            the object create_hub returns: the host's end of one
                    link to one agent
     target         the board, simulator or emulator
@@ -98,7 +106,7 @@ CONTENTS
     link           the channel between host and agent
     loader         the vendor tool that puts an image on the target, run
                    through its loader module
-    bench          one named entry of 'bench { }': a target, its link and
+    bench          a target, its link and
                    its loader
     platform       where hwut runs a bubble (spec/42); a definition that
                    provides a bench's name has that board attached
@@ -110,8 +118,8 @@ CONTENTS
          |              |                |                |               |
          |  ONCE PER BENCH                                                |
          |  wire the target; install the vendor tool                      |
-         |  hwut.sanitize.bench.defaults; fill in the entry               |
-         |  python3 -m hwut_remote list: what is attached, which entry    |
+         |  write the board's configuration (o-37)                        |
+         |  python3 -m hwut_remote list: what is attached, which file     |
          |    names it                                                    |
          |  name it in the 'provides' of the platform it is attached to   |
          |              |                |                |               |
@@ -125,9 +133,11 @@ CONTENTS
          |              |                |                |               |
          |  EVERY RUN                                                     |
          |-- hwut.run ->|                |                |               |
-         |              |-- the bench's device present? else not run      |
+         |              |-- run where the name is provided                |
          |              |-- build ------>|                |               |
-         |              |                |-- image id? flash if stale --->|
+         |              |-- deploy ---------------------->|               |
+         |              |                |                |-- flash ----->|
+         |              |                |                |   if stale    |
          |              |-- run a choice ---------------->|               |
          |              |                |                |-- open ------>|
          |              |                |                |-- reset ----->|
@@ -139,9 +149,9 @@ CONTENTS
 
     The host reads and writes bytes of a map; one verb, 'x', applies a
     stimulus and returns the outcome and the report. Every reply is the
-    content of a read. hwut learns two things: the block 'bench { }' of
-    hwut-root.conf, and which platform provides a bench; it looks for a
-    bench's device and never talks to a board.
+    content of a read. hwut learns two things: which platform provides a
+    name, and one exit status, 77 -- the case's infrastructure is absent.
+    It holds no bench, looks for no device and never talks to a board.
 
     Running example: an 8-bit registered adder on a MAX 10 at 50 MHz,
     LATENCY 1; a = 03, b = 04, sum = 007. Stimulus a[15:8] b[7:0]
@@ -196,9 +206,9 @@ CONTENTS
       hello          the read 'r 0 1a' that opens a session (5, 12)
 
     THE BENCH
-      bench          a target with its link and loader, named by one entry
-                     of 'bench { }' in hwut-root.conf (11)
-      entry key      a key of that entry: serial, baud, link_margin, boot,
+      bench          a target with its link and loader; its configuration
+                     is the test's (11, o-37); hwut holds none
+      key            a key of a hub's configuration: serial, baud, boot,
                      loader, ... (11)
       loader         the tool that puts an image on the target (14)
       loader module  hwut_remote.<loader>: 'flash' and 'reset' for one
@@ -208,14 +218,20 @@ CONTENTS
                      outside the link (15)
       provides       a platform definition's list of the names it acts
                      as; a bench's name there: the board is attached to
-                     that platform (16; spec/42)
+                     that platform (16; spec/42); one-way: A provides B
+                     says nothing of B providing A
+      provision      one name of a definition's 'provides': informal
+                     functionality the platform claims to hold (16)
+      exit 77        a test application's statement: the infrastructure
+                     this case needs is absent (16)
       collision group
                      hwut's: the tests that share one owner (R-32)
       caps           hwut's bounds on a choice
 
     THE HUB
       create_hub     the factory: a bench's name -> a hub (11)
-      producer       a function (entry, note) -> Hub, registered under a
+      producer       read(config_file) -> dict and (values, note) -> Hub,
+                     registered under a
                      transport key by add_plugin (11)
       LinkHub        the Hub for any byte or datagram channel: a producer
                      supplies open, send, recv, close (11)
@@ -244,17 +260,17 @@ CONTENTS
     axis               values                         owner         sect.
     ----               ------                         -----         -----
     A agent impl.      verilog, c, python             target/<impl>/    9
-    B time domain      wall, virtual                  entry key        13
+    B time domain      wall, virtual                  key              13
                                                       'time'
     C transport        serial, tcp, udp, ssh, launch, hwut_remote.     12
                        can, visa; a plugin's key      link, visa, a
                                                       plugin
     D loader           quartus, openfpgaloader,       loader module,   14
-                       openocd, esptool, copy, none   entry key
+                       openocd, esptool, copy, none   key
                                                       'loader'
     E bench reset      reload, probe, line, reopen,   loader module    15
-                       scpi, power                    'reset', entry
-                                                      key 'power'
+                       scpi, power                    'reset', key
+                                                      'power'
     F image identity   id = H(inputs, toolchain);     Makefile,        14
                        board: equal, differs, absent  map 08
     G address space    regions * access (section 5)   MAP.txt           5
@@ -299,10 +315,10 @@ CONTENTS
     N  Recovery is decided by one idempotent read; nothing is applied
        twice.
     O  A row is a function of the stimuli, the wait contract and the UUT.
-    Q  One owner per board; within a collision group the build and the run
-       of one application are adjacent; a board's tests run only on the
-       platform that provides its bench, and only while its device is
-       present.
+    Q  One owner per board; within a collision group the deploy and the
+       run of one application are adjacent; a board's tests run only on the
+       platform that provides its name; a case whose board is absent
+       exits 77 and is not judged.
 
     THE COUPLINGS -- every place where two axes depend on each other; all
     are necessary.
@@ -396,6 +412,8 @@ PART A -- THE PROTOCOL
     0e     1    r       mode      [0] 1: sample LATENCY cycles after apply;
                                       0: wait for done to rise
                                   [1] 1: run seam (c, python); 0: poll
+                                  [7:2] LATENCY, 0..63 (o-42); 0 in
+                                      mode 0
     0f     1    r       discard   lines discarded since start, stops at ff
     10     4    r       clock     Hz of the count 'timeout' uses
     14     4    rw      timeout   counts a wait may take (section 8)
@@ -500,7 +518,8 @@ PART A -- THE PROTOCOL
               |    addr wdata we re rdata ---------------------------+<> bus
               +------------------------------------------------------+
        parameters  SW, RW (1..32, refused otherwise at synthesis),
-                   IMAGE_ID, CLOCK_HZ, TIMEOUT, LATENCY (0: mode 0),
+                   IMAGE_ID, CLOCK_HZ, TIMEOUT, LATENCY (0: mode 0;
+                   1..63, refused above at synthesis),
                    RESET_CYCLES, BAUD
        phy_stdio.v replaces phy_uart.v by $fgetc / $fwrite and calls
        $fflush after every '\n'
@@ -548,8 +567,8 @@ PART A -- THE PROTOCOL
 
         deadline = waits + line_time + link_margin
         waits      timeout / clock    'x' and the reset write; else 0
-        line_time  2 * 80 * 10 / baud  when the entry has 'baud'; else 0
-        link_margin                    the entry's (section 13)
+        line_time  2 * 80 * 10 / baud  when 'baud' is set; else 0
+        link_margin                    the configuration's (section 13)
 
     THE LADDER
 
@@ -602,28 +621,59 @@ PART B -- THE BENCH
 ==============================================================================
 
 ==============================================================================
-11  THE BENCH ENTRY AND THE HUB
+11  THE FACTORY AND THE HUB
 ==============================================================================
 
-    hwut-root.conf:
+    REGISTRY        add_plugin(transport, producer)   transport -> producer
+                    built in: serial tcp udp ssh launch can visa
+                                      |
+    FACTORY         create_hub(transport, address=None, *, config_file=None,
+                               note=None, **options) -> Hub
+                      1. producer = registry[transport]     unknown: refused
+                      2. values  = producer.read(config_file)   the
+                                   producer's format; absent: {}
+                         values |= options; the address, if given:
+                                   the call wins over the file
+                      3. the common keys (B, D, E below) checked by the
+                         factory, the rest by the producer
+                      4. return producer(values, note)       NOT opened
+                                      |
+    PRODUCT         Hub
+                      with hub: ...      opens the link, hello (12); closes
+                      hub.flash(image, image_id)   the loader strategy
+                                         'loader' names; opens, checks the
+                                         image, flashes if stale (14)
+                      hub.reset_bench()  the bench reset (15)
+                      LinkHub:  reset() vector() read() write() contract()
+                      VisaHub:  reset() query() write() opc()       (22)
+                                      |
+    CLI             python3 -m hwut_remote <transport> [<address>]
+                            [--config-file F] [--<key> V ...]
+                            flash <image> (<image-id> | --image-id-file F)
+                            | reset [<image>]
+                    python3 -m hwut_remote list [F ...]
+                    the same factory; nothing else
 
-    bench {
-      max10 { serial = "/dev/serial/by-id/usb-FTDI_..."  baud = 115200
-              low_latency = true  boot = 1.0
-              loader = quartus  cable = "USB-Blaster [1-3]" }
-      disco { serial = "/dev/serial/by-id/usb-STM..."  baud = 115200
-              boot = 3.0
-              loader = openocd  cfg = "board/stm32f4discovery.cfg" }
-      esp   { serial = "/dev/serial/by-id/usb-Silicon..."  baud = 115200
-              dtr = false  rts = false  boot = 2.0
-              loader = esptool  image_offset = 0 }
-      pi    { host = "pi@board"  boot = 30.0
-              loader = copy  agent = "hwut-agent/agent.py" }
-      sim   { launch = "vvp TMP/uut.vvp"  time = virtual  boot = inf
-              loader = none }
-    }
+    THE TEST AND ITS DEPLOY SHARE ONE FILE
 
-    KEYS -- closed; an unknown key is refused
+    max10.conf, the serial producer's format:
+        serial = /dev/serial/by-id/usb-Altera_...
+        baud = 115200  low_latency = true  boot = 1.0
+        loader = quartus  cable = USB-Blaster [1-3]
+
+    the test:      with create_hub("serial", config_file="max10.conf",
+                                   note=note) as hub:
+    its deploy:    python3 -m hwut_remote serial --config-file max10.conf
+                           flash uut.sof --image-id-file TMP/image_id
+    in code:       create_hub("serial", "/dev/serial/by-id/usb-Altera_...",
+                              baud=115200, boot=1.0, loader="quartus",
+                              cable="USB-Blaster [1-3]")
+
+    The address is the value of the key named after the transport: given
+    as 'address' in the call, or as 'serial = ...' (tcp, udp, host,
+    launch, can, visa = ...) in the file. hwut reads none of it (o-35).
+
+KEYS -- closed; an unknown key is refused
 
     key           axis  meaning
     ---           ----  -------
@@ -650,31 +700,26 @@ PART B -- THE BENCH
     agent         C, D  ssh and copy: the agent's path on <host>
     power         E     a command that power-cycles the board
 
-    VALIDATION. hwut validates a map of maps of scalars;
-    entry.get(name) validates the KEYS and the one-transport rule
-    (section 12), and refuses a placeholder: "bench max10: fill in
-    serial". A plugin's transport key is known once registered; the other
-    keys of its entry beside the table's B, D and E keys are the
-    producer's, checked by it. An inner root's benches are its own
-    (D-56). A /dev/serial/by-id path names the board on every host.
+    VALIDATION. The factory checks the B, D and E keys; the producer
+    checks its transport's C keys and refuses the others by name. A file
+    the producer cannot read is refused with its reason. A
+    /dev/serial/by-id path names the board on every host.
 
-    THE HUB -- hwut_remote, what the writer imports:
+    THE CLASSES -- hwut_remote, what the writer imports:
 
-    create_hub(name, note=None, image_id=None, image=None, failures=3)
-                                   -> Hub
-        entry.get(name); the producer registered under the entry's
-        transport key; producer(entry, note); the Hub opened (section 12)
-    add_plugin(key, producer)      registers a producer under a transport
-                                   key; a key taken is refused
-    Hub        reset(), close(); a context manager; the base of every hub
-    LinkHub    a Hub over the agent's map: vector(stim) -> int | TIMEOUT,
-               read(addr, n), write(addr, bytes), contract(); a producer
-               gives it open, send(bytes), recv(deadline) -> bytes, close;
-               line, CRC, token and the ladder are LinkHub's (sections 4,
-               10)
-    VisaHub    a Hub over an instrument: query(cmd) -> str, write(cmd),
-               opc(); no agent, no map (section 22)
-    TIMEOUT    section 18
+    add_plugin(transport, producer)  a transport taken is refused
+    producer       an object with read(config_file) -> dict and
+                   __call__(values, note) -> Hub
+    Hub            with, flash(image, image_id), reset_bench(), close();
+                   the base of every hub
+    LinkHub        a Hub over the agent's map: vector(stim) -> int |
+                   TIMEOUT, read(addr, n), write(addr, bytes), contract(),
+                   reset(); a producer gives it open, send(bytes),
+                   recv(deadline) -> bytes, close; line, CRC, token and
+                   the ladder are LinkHub's (sections 4, 10)
+    VisaHub        a Hub over an instrument: query(cmd) -> str,
+                   write(cmd), opc(), reset(); no agent, no map (22)
+    TIMEOUT        section 18
 
     The seven built-in producers are registered by add_plugin: six
     LinkHubs, serial, tcp, udp, host (ssh), launch, can, and one VisaHub,
@@ -682,38 +727,37 @@ PART B -- THE BENCH
     whole and register it the same way. A plugin is registered by the
     test's own code, before create_hub:
 
-        from hwut_remote import create_hub, add_plugin, LinkHub
-        add_plugin("bridge", lambda entry, note: LinkHub(BridgeLink(entry),
-                                                         entry, note))
-        bench { lab { bridge = "usb:1-3"  boot = 2.0  loader = none } }
+        from hwut_remote import create_hub, add_plugin, LinkHub, producer
+        add_plugin("bridge", producer(lambda values, note:
+                       LinkHub(BridgeLink(values), values, note)))
+        with create_hub("bridge", "usb:1-3", boot=2.0, loader="none",
+                        note=note) as hub: ...
 
-    DEFAULTS. hwut.sanitize.bench.defaults writes such a block into a
-    hwut-root.conf that has none, with '<device>', '<cfg>', '<host>'
-    placeholders; a tree with a block is left as it is and told so; one
-    line per bench written.
+    'producer(make)' wraps a constructor with the default reader, which
+    reads key = value lines.
 
-    THE LIST -- python3 -m hwut_remote list [<dir>]: what is attached to
-    this machine and which bench entry names it. It reads the 'bench { }'
-    blocks the walk from <dir> (default: the current directory) reads,
-    looks, and prints; it writes nothing and opens no link.
+    THE LIST -- python3 -m hwut_remote list [F ...]: what is attached to
+    this machine and which of the configuration files given names it
+    (what it reads when none is given: o-38). It looks and prints; it
+    writes nothing and opens no link.
 
-    bench  transport  address                                   state
-    max10  serial     /dev/serial/by-id/usb-Altera_USB-Blaster_  present
-    esp    serial     /dev/serial/by-id/usb-Silicon_Labs_CP210x  absent
-    sim    launch     vvp TMP/uut.vvp                           not probed
-    dmm    visa       USB0::0x2A8D::0x1301::MY59001234::INSTR   present
-    --     serial     /dev/serial/by-id/usb-FTDI_FT232R_A50285  no entry
-    --     jtag       USB-Blaster [1-3]  10M50DA                no entry
-    --     can        can0                                      no entry
+    file        transport  address                                  state
+    max10.conf  serial     /dev/serial/by-id/usb-Altera_USB-Blaster_ present
+    esp.conf    serial     /dev/serial/by-id/usb-Silicon_Labs_CP210x absent
+    sim.conf    launch     vvp TMP/uut.vvp                          not probed
+    dmm.conf    visa       USB0::0x2A8D::0x1301::MY59001234::INSTR  present
+    --          serial     /dev/serial/by-id/usb-FTDI_FT232R_A50285 no file
+    --          jtag       USB-Blaster [1-3]  10M50DA               no file
+    --          can        can0                                     no file
 
-    state       present, absent (the bench probe of section 16; visa:
-                listed by pyvisa); not probed; no entry -- attached, named
-                by no entry
+    state       present, absent (the device path exists; visa:
+                listed by pyvisa); not probed; no file -- attached, named
+                by no file
     looks at    /dev/serial/by-id; 'jtagconfig' and 'openFPGALoader
                 --scan-usb' where on PATH; CAN interfaces (/sys/class/net,
                 type 280); pyvisa's list_resources() where pyvisa is
                 installed
-    The order: entries by name, then the unnamed by transport and
+    The order: files by name, then the unnamed by transport and
     address. A tool not installed is one '##' line: "## not looked:
     jtagconfig".
 
@@ -721,7 +765,7 @@ PART B -- THE BENCH
 12  C -- TRANSPORT, AND OPENING A SESSION
 ==============================================================================
 
-    transport  entry key            the link
+    transport  address key          the link
     ---------  ---------            --------
     serial     serial = "<device>"  the UART; 'baud', 'dtr', 'rts',
                                     'low_latency' apply
@@ -744,8 +788,8 @@ PART B -- THE BENCH
                                     default; "@sim" for pyvisa-sim; SCPI
                                     messages end in '\n' (section 22)
 
-    An entry has exactly one transport key: one of the seven, or a
-    plugin's.
+    A hub has exactly one transport: create_hub's first argument, one
+    of the seven or a plugin's; a file that names another is refused.
 
     COMMON CHANNELS, and the transport that reaches each:
 
@@ -767,7 +811,7 @@ PART B -- THE BENCH
     XCP, UDS, SOME/IP, ASAM XIL, ROS 2        their own API (section 22);
                                               or a plugin: a whole Hub
 
-    hwut_remote.link.open(entry) is the only constructor of a built-in
+    hwut_remote.link.open(values) is the only constructor of a built-in
     channel; create_hub and the loader modules both use it.
 
     OPENING:
@@ -802,7 +846,7 @@ PART B -- THE BENCH
                             ssh 500 ms, launch 1 s, visa 2 s (the
                             VISA timeout); a plugin's:
                             its producer's
-               boot         mandatory in every entry
+               boot         mandatory in every configuration
 
 ==============================================================================
 14  D, F -- LOADER AND IMAGE IDENTITY
@@ -812,7 +856,8 @@ PART B -- THE BENCH
        hash, compared               |yes                              |
                                     +--> nothing to do                v
                                                       [board runs it now?]
-                                                        no --> BUILD FAIL
+                                                        no --> DEPLOY_FAILED
+      \__________ build ___________/  \____________ deploy _____________/
 
     THE MAKEFILE (the writer's); the rule for TMP/image_id is the shared
     fragment host/image_id.mk, included:
@@ -832,29 +877,51 @@ PART B -- THE BENCH
     	  echo "\`define IMAGE_ID 32'h$$(cat $@)" > TMP/image_id.vh
     uut.sof: TMP/image_id
     	quartus_sh --flow compile uut
-    flash: uut.sof
-    	python3 -m hwut_remote.quartus \
-    	        flash max10 uut.sof $$(cat TMP/image_id)
-    .PHONY: flash FORCE
+    .PHONY: FORCE
 
     INPUTS names everything that changes the image; TOOLCHAIN names the
     compiler's version command. TMP/image_id changes only when the hash
     does.
 
-    THE TEST:  @hwut { build = "make flash" }
+    THE TEST -- build and deploy, two stages, two meanings (o-41):
 
-    THE LOADER MODULE, hwut_remote.<loader>, the same for every loader:
+        @hwut { build   { framework = "make"  executable = "uut.sof" }
+                execute = "python3 test-max10.py"
+                deploy  = "python3 -m hwut_remote serial --config-file
+                           max10.conf flash uut.sof --image-id-file
+                           TMP/image_id" }
 
-        python3 -m hwut_remote.<loader> \
-                flash <bench> <image> <image-id>
+    A build makes its 'executable' (default 'app') and the test then runs
+    THAT, unless 'execute' states the call (R-68): a Python writer states
+    it. The build runs where the Makefile stands, in the test directory.
+
+    'deploy' mirrors 'build': the short form is the scope with its one
+    principal key, deploy { flash = "<command>" }; the scope also takes
+    'caps'. Its vocabulary is closed and grows (copy over ssh, an install
+    to come). The command runs directly, never through make: make would
+    turn 77 into 2.
+
+        provision:  build ----------> deploy -----------> execute
+                    BUILD_FAILED      77: [ABSENT]         77: [ABSENT]
+                    (the code)        else DEPLOY_FAILED   (behaviour)
+                                      (the infrastructure)
+
+    The stage deploy runs after the build and before execute, remembered
+    as StageBuild is: it runs again only when the build ran again.
+    DEPLOY_FAILED is a FAIL with its own report token.
+
+    hub.flash(image, image_id), the same for every loader; its CLI:
+
+        python3 -m hwut_remote <transport> [<address>] [--config-file F] \
+                flash <image> (<image-id> | --image-id-file F)
           open (section 12) --> port held by another process: "bench
-                                busy"; device absent: "no device";
-                                exit 1; nothing flashed
-          hello: image = <image-id> --> "already on <bench>", exit 0
+                                busy", exit 1; device absent: "no
+                                device", exit 77; nothing flashed
+          hello: image = <image-id> --> "already on the board", exit 0
           else: close; flash; reopen; hello within 'boot';
                 exit 0 only if the image is now running
 
-    loader   flash
+    loader   flash  (a strategy of the Hub, chosen by 'loader')
     ------   -----
     quartus  quartus_pgm -c <cable> -m jtag -o "p;<image>"  (.pof: "pv;")
     openfpgaloader  openFPGALoader -b <board> <image>  (SRAM)
@@ -870,16 +937,18 @@ PART B -- THE BENCH
     inputs changed       new id; compile; flash; confirm
     nothing changed      no flash
     someone reflashed    flash; confirm
-    port busy            BUILD FAIL "bench busy"
-    device absent        BUILD FAIL "no device"
-    board unpowered      BUILD FAIL (no agent; the loader fails)
-    flash did not take   BUILD FAIL
+    port busy            DEPLOY_FAILED "bench busy"
+    device absent        [ABSENT] "no device" (exit 77)
+    board unpowered      DEPLOY_FAILED (no agent; the loader fails)
+    flash did not take   DEPLOY_FAILED
+    the code does not    BUILD_FAILED
+      compile
 
 ==============================================================================
 15  E -- BENCH RESET
 ==============================================================================
 
-        python3 -m hwut_remote.<loader> reset <bench> [<image>]
+        hub.reset_bench();  python3 -m hwut_remote <transport> ... reset [<image>]
 
     always with the link closed; scpi alone through the open hub.
 
@@ -890,7 +959,7 @@ PART B -- THE BENCH
     line     esptool --port <serial> --after hard_reset run
     reopen   launch, ssh: end and restart the process
     scpi     visa: '*RST', '*CLS' through the open hub (Hub.reset)
-    power    any loader, when the entry has 'power': run it first
+    power    any loader, when 'power' is set: run it first
 
 ==============================================================================
 16  Q -- OWNERSHIP
@@ -905,15 +974,36 @@ PART B -- THE BENCH
     the board's bubble, support/remote/proto/de10-lite/hwut-root.conf:
         platform = [ "max10" ]
 
-    THE BENCH PROBE. A platform used under a provided bench name is
-    available only while the bench's device is present: serial, the
-    device path exists; can, the interface exists; tcp, udp, ssh, launch,
-    visa and a plugin's key, not probed. A miss is '[PLATFORM not reachable]'
-    with the NOTE "bench max10: no device", the bubble not run. hwut
-    looks; it never opens the link.
+    A PROVISION IS ONE-WAY: A provides B lets a bubble specifying B run
+    on A; a bubble specifying A asks nothing of B. A name both defined
+    and provided is a fault (spec/42), so a provided name provides
+    nothing: no chain, no cycle. 'provides' names informal
+    functionality; it routes, hwut checks nothing of it.
 
-    CONDITION ON HWUT: no other build of the group runs between the build
-    and the run of one application. Delivery step 4 verifies it.
+    THE INFRASTRUCTURE ABSENT -- exit status 77. Only the test knows what
+    it needs; it says so, and hwut judges nothing:
+
+        create_hub(...)  device absent --> stderr "max10: no device
+                                           /dev/serial/by-id/usb-Altera_..."
+                                       --> exit 77
+
+        test-max10.py adder [ABSENT]
+              NOTE  max10: no device /dev/serial/by-id/usb-Altera_...
+
+    hwut_remote does both where it cannot open the link for want of the
+    device; the writer writes nothing. The NOTE is the last line of
+    stderr. The verdict is E_TestRunResult.INFRA_ABSENT: not compared,
+    not FAIL, counted as a bubble not run is (spec/42 section 6: not in
+    RESULTS, no book entry, the last verdict kept, exit status
+    unchanged). Every other exit status stays behaviour.
+
+    A VERDICT measured under a provided name shows it once per directory,
+    where spec/42 shows '(linux)':
+
+        de10-lite/  (max10 in local)
+
+    CONDITION ON HWUT: no other build or deploy of the group runs between
+    the deploy and the run of one application. Delivery step 4 verifies it.
 
     Two roots holding one board are detected only as "stale agent" or
     "bench busy".
@@ -964,7 +1054,7 @@ PART C -- THE WRITER
 
     ## agent: proto 1  image 3f9a07c1  stim 2  report 2  50 MHz
     ## discarded 12 bytes, 0 lines
-    contract: sample 1 cycle after apply, timeout 10000000 cycles
+    contract: sample 1 cycle after apply, timeout 10000000 counts at 50 MHz
     ## stim = a[15:8] b[7:0]   report = sum[8:0]
     0304 007
     ff01 100
@@ -981,7 +1071,12 @@ PART C -- THE WRITER
 19  THE TEST, AS THE WRITER WRITES IT
 ==============================================================================
 
-    # @hwut { build = "make flash"  collision = [ test-max10-timing.py ] }
+    # @hwut { build   { framework = "make"  executable = "uut.sof" }
+    #         execute = "python3 test-max10.py"
+    #         collision = [ "test-max10-timing.py" ]
+    #         deploy  = "python3 -m hwut_remote serial --config-file
+    #                    max10.conf flash uut.sof --image-id-file
+    #                    TMP/image_id" }
     import sys
     from hwut_runner import HwutRunner
     from hwut_remote import create_hub
@@ -992,8 +1087,8 @@ PART C -- THE WRITER
 
     def adder():
         image = int(open("TMP/image_id").read(), 16)
-        with create_hub("max10", note=note, image_id=image,
-                        image="uut.sof") as hub:
+        with create_hub("serial", config_file="max10.conf", note=note,
+                        image_id=image, image="uut.sof") as hub:
             hub.reset()
             print(hub.contract())
             print("## stim = a[15:8] b[7:0]   report = sum[8:0]")
@@ -1004,8 +1099,8 @@ PART C -- THE WRITER
 
     Nothing runs at import: '--hwut-info' needs no build and no board.
     The bubble's hwut-root.conf specifies platform = [ "max10" ]; the
-    test names the bench, never the platform. The hub finds the bench
-    reset by the entry's 'loader'. The writer never sees a token, a CRC,
+    test names its configuration file, never the platform. The hub finds
+    the bench reset by 'loader'. The board absent: exit 77 (section 16). The writer never sees a token, a CRC,
     a byte order or a recovery.
 
 ==============================================================================
@@ -1014,13 +1109,14 @@ PART C -- THE WRITER
 
     host                                  agent           picture
     ----                                  -----           -------
-    [build: make flash, done before the run]
+    [build: make; deploy: flash -- done before the run]
     open, '\n'
     9 r 0 1a *6679 ---------------------->
           <... noise ... discarded, counted
-       <-- 9 6877757401000000c1079a3f0202010080f0fa0280969800ff80 *8c51
+       <-- 9 6877757401000000c1079a3f0202050080f0fa0280969800ff80 *085c
            magic, proto 1, image 3f9a07c1, stim 2,        ## agent: ...
-           report 2, mode 1, 0 lines discarded,           ## discarded ...
+           report 2, mode 05 (sample, LATENCY 1),         ## discarded ...
+           0 lines discarded,
            50 MHz, timeout 10000000, last ff, fresh
     a w 3f 01 *e167 --------------------->  UUT reset
        <-- a 00 *1ea6                       outcome 00, fresh 0
@@ -1040,8 +1136,8 @@ PART C -- THE WRITER
 
     test-max10.py                       test-sim.py
     -------------                       -----------
-    build = "make flash"                build = "make sim"   (iverilog)
-    entry("max10"): serial, wall        entry("sim"): launch, virtual
+    build: make uut.sof, deploy: flash  build: make TMP/uut.vvp (iverilog)
+    max10.conf: serial, wall            sim.conf: launch, virtual
     platform = [ "max10" ]              no platform: runs locally
               |                                   |
               +---- from vectors import adder ----+   the shared code
@@ -1091,7 +1187,7 @@ PART C -- THE WRITER
     itself (rclpy). It publishes stimuli and subscribes to results,
     recording each message with its header stamp.
       simulation  Gazebo (or another simulator) publishes /clock;
-                  use_sim_time = true for every node; the bench entry has
+                  use_sim_time = true for every node; the hub's configuration has
                   time = virtual; the simulator runs in lockstep, so the
                   stamps are model time and the RULES above hold
       real robot  stamps are wall time: rows hold final states and the
@@ -1121,10 +1217,9 @@ PART C -- THE WRITER
 
     INSTRUMENTS (SCPI), through VisaHub:
 
-        bench { dmm { visa = "USB0::0x2A8D::0x1301::MY59001234::INSTR"
-                      boot = 5.0  loader = none } }
-
-        with create_hub("dmm", note=note) as dmm:   # '## idn: ...'
+        with create_hub("visa", "USB0::0x2A8D::0x1301::MY59001234::INSTR",
+                        boot=5.0, loader="none", note=note) as dmm:
+                                                    # '## idn: ...'
             dmm.reset()                             # *RST, *CLS
             dmm.write("CONF:VOLT:DC 10,0.001")
             dmm.write("INIT"); dmm.opc()
@@ -1159,7 +1254,7 @@ PART D -- DELIVERY
 ==============================================================================
 
     A prototype is a directory that runs end to end: a writer copies it,
-    replaces the UUT and fills in the bench entry. Together they take
+    replaces the UUT and fills in its configuration file. Together they take
     every value of axes A to E, the two wait modes and the two seams.
 
     proto           agent    time     transport  loader          reset
@@ -1187,15 +1282,15 @@ PART D -- DELIVERY
     can-nucleo      C function         run seam (nucleo-f4 over CAN)
     ros2-gazebo     a ROS 2 node       section 22: rclpy, /clock
     scpi-sim        a DMM in a         backend "@sim"; the same test
-                    pyvisa-sim YAML    against a real DMM by its entry
+                    pyvisa-sim YAML    against a real DMM by its file
 
     Each holds: README.txt (board, wiring, host setup), the Makefile with
-    host/image_id.mk, the top level or port, the bench entry and the
+    host/image_id.mk, the top level or port, the configuration file, the
     platform's 'provides' as a hwut-root.conf snippet, the bubble's
     hwut-root.conf specifying the bench, the test application. A GOOD is
     recorded where the board stands; iverilog, qemu and scpi-sim record
     theirs on
-    every host. tcp and power are entry variants, documented in the
+    every host. tcp and power are configuration variants, documented in the
     de10-lite README; udp in the esp32-devkitc README.
 
 ==============================================================================
@@ -1213,19 +1308,20 @@ PART D -- DELIVERY
           __init__.py     create_hub, add_plugin, Hub, LinkHub, VisaHub,
                           TIMEOUT (section 11); registers the seven
                           producers
-          __main__.py     'python3 -m hwut_remote list' (section 11)
+          __main__.py     the CLI: <transport> ... flash | reset; list (11)
           visa.py         VisaHub; imports pyvisa only when used (22)
           session.py      the ladder, reset, vector, contract: LinkHub's
                           body (sections 7, 8, 10, 18)
           line.py         token, CRC-16, the 80-byte line, noise (4)
-          link.py         open(entry) -> Link: open, send, recv(deadline),
+          link.py         open(values) -> Link: open, send, recv(deadline),
                           close; serial, tcp, udp, ssh, launch, can (12)
-          entry.py        get(name) -> dict, validated (11)
+          entry.py        the factory's checks of the common keys; the
+                          default reader of key = value files (11)
           capture.py      rows(samples, times, fmt) (22)
-          quartus.py      flash(entry, image, image_id),
-          openfpgaloader.py reset(entry, image=None) -- the same two in
-          openocd.py      every loader module; each also
-          esptool.py      'python3 -m hwut_remote.<loader> flash | reset'
+          quartus.py      flash(values, image, image_id),
+          openfpgaloader.py reset(values, image=None) -- the same two in
+          openocd.py      every loader strategy, called by Hub.flash and
+          esptool.py      Hub.reset_bench; none has a CLI of its own
           copy.py
         image_id.mk       the image-id rule (section 14)
         TEST/test-line.py     the line and CRC against the check values
@@ -1234,13 +1330,14 @@ PART D -- DELIVERY
                               echoed, stale, restarted, busy, silent,
                               duplicate, 'p'
         TEST/test-plugin.py   add_plugin: a producer used; a key taken
-                              refused; a plugin entry's keys passed
+                              refused; a plugin's keys passed; a file
+                              read by its producer
         TEST/test-capture.py  rows at, between and outside the samples
         TEST/test-visa.py     VisaHub against pyvisa-sim: idn, reset,
                               opc, an error-queue entry raised
         TEST/test-list.py     the list against a fake /dev tree and
                               fake tools on PATH: present, absent, not
-                              probed, no entry, not looked
+                              probed, no file, not looked
 
       target/             one directory per agent implementation
         verilog/          agent.v, phy_uart.v, phy_stdio.v (section 9);
@@ -1252,9 +1349,8 @@ PART D -- DELIVERY
       proto/<name>/       section 23
 
     A module function RETURNS what happened as one string and raises on
-    failure. No module prints but __main__. No module reads an entry the
-    caller did not
-    name.
+    failure. No module prints but __main__. No module reads a file the
+    caller did not name.
 
 ==============================================================================
 25  DELIVERY ORDER
@@ -1266,22 +1362,23 @@ PART D -- DELIVERY
     2  target/verilog/; target/verilog/TEST/test-agent.py under
        iverilog: the agent proven on every host; its size on a 10M50
        measured and stated in MAP.txt
-    3  hwut_remote/entry.py, host/image_id.mk, 'list' and its test;
+    3  the scope 'deploy' (validator), the stage deploy and DEPLOY_FAILED
+       (operations), proved against a fake command exiting 0, 1, 77;
+       hwut_remote/entry.py, host/image_id.mk, 'list' and its test;
        proto/iverilog end to end; Chapter 11's adder as the first writer;
-       in engine/platforms (spec/42): 'provides', and the bench probe of
-       section 16
+       in engine/platforms (spec/42): 'provides'; in engine/operations:
+       exit 77, INFRA_ABSENT, documented (section 16)
     4  hwut_remote/quartus.py; proto/de10-lite; the condition of
        section 16 verified; the MAX 10 run on the author's bench, its GOOD
        recorded there, its bubble specifying 'max10', provided by
-       'local'; the board unplugged: not run, '[PLATFORM not
-       reachable]'; a supply dip and a reset injected deliberately, their
+       'local'; the board unplugged: '[ABSENT]', its NOTE; a supply dip and a reset injected deliberately, their
        '##' lines recorded
     5  target/c/, target/python/; hwut_remote/openocd.py, esptool.py,
        copy.py; proto/qemu, proto/nucleo-f4, proto/esp32-devkitc,
        proto/linux-ssh; the same injections on the ESP32; the udp
        transport against the C agent on the ESP32, a datagram dropped
        and doubled deliberately
-    6  the validator's 'bench { }'; hwut.sanitize.bench.defaults
+    6  (withdrawn by o-35: no validator, no defaults face)
     7  hwut_remote/capture.py and its test; README section 22 with
        the three worked examples, each checked against the vendor's
        current API documentation

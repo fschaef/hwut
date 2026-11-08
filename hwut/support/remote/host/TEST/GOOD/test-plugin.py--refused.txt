@@ -1,0 +1,10 @@
+unknown transport unknown transport 'bluetooth'; known: can, launch, serial, ssh, tcp, udp, visa
+no boot           serial: 'boot' is mandatory: the seconds the hello may take, or inf
+two transports    serial: the configuration names transport key 'tcp'; a hub has exactly one transport
+unknown key       serial: unknown key 'speed'
+placeholder       serial: fill in 'serial'
+other loader's    serial: 'cable' is a key of loader 'quartus', not of 'openocd'
+no address        tcp: no address: give it as the second argument or as 'tcp = ...'
+bad time          launch: 'time' is wall or virtual, not 'model'
+not built yet     transport 'can' is not built yet (spec/26 delivery step 9)
+<hwut-end>

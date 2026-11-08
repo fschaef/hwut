@@ -5,12 +5,13 @@ intend/26-hwut-bench -- A UNIT UNDER TEST BEHIND A LINK: THE BENCH
 COMPONENTS CONCERNED: support/remote (new: the package hwut_remote over the
                       host layers, the agent's device halves, the protocol;
                       o-28, o-29),
-                      engine/orchestrator/exploration (a block 'bench { }' in
-                      hwut-root.conf: shape validation, nothing more),
-                      engine/platforms (a definition's 'provides'; the
-                      probe of a provided bench: o-26, o-27, TRANSFERRED to
-                      intend/42),
-                      services (a face hwut.sanitize.bench.defaults),
+                      engine/platforms (a definition's 'provides', routing
+                      only: o-26, o-27, o-33, TRANSFERRED to intend/42),
+                      engine/orchestrator/exploration (the scope
+                      'deploy': o-40, o-41),
+                      engine/operations (the stage deploy, DEPLOY_FAILED:
+                      o-40; exit status 77, the case's infrastructure
+                      absent: o-36),
                       the book (Chapter 11, "Tests on Real Hardware").
 SPEC:                 adm/WORK/spec/26-hwut-bench.txt
 RAISED:               2026-10-25, the book writers' PROPOSAL-hardware-in-the-
@@ -77,21 +78,21 @@ THE SHAPE
                                      entry, <loader>, capture
     Makefile ── flash ──▶ hwut_remote.<loader> ── vendor tool ──▶ image
 
-    hwut-root.conf:
-        bench    { max10 { serial ... loader ... } }     what the code names
-        platform = [ { name = "local", provides = [ "max10" ] } ]
+    the test:        the board's configuration, serial ... loader ...
+                     (o-35; where it stands: o-37)
+    hwut-root.conf:  platform = [ { name = "local", provides = [ "max10" ] } ]
                                                          where it is attached
     A bubble specifies 'max10'; the platform that provides it runs the
-    bubble, once present (o-26). The test opens create_hub("max10") and
-    knows nothing of the platform (intend/42, ruling 1). The picture and
-    the names stand in the spec, section 1.
+    bubble (o-26). The test opens its hub and knows nothing of the
+    platform (intend/42, ruling 1); a board it cannot reach, it reports
+    by exit 77 (o-36). The picture and the names stand in the spec,
+    section 1.
 
-What the code decides: the tool chain and the board -- the tool module
-the Makefile calls and the entry's name. What the entry decides: device
-path, cable, baud -- the device table. What a platform definition
-decides: where a board is attached ('provides'). What hwut decides:
-nothing; it validates the block, lays down defaults, and runs a board's
-bubble where its bench is provided and its device is present.
+What the code decides: the tool chain, the board and its configuration --
+device path, cable, baud. What a platform definition decides: where a
+board is attached ('provides'). What hwut decides: nothing; it runs a
+board's bubble where its name is provided, and takes exit 77 as 'the
+infrastructure is absent'.
 
 ONE LAW, ONE PLACE: the protocol is one page (PROTOCOL.txt), the agent's
 registers one page (MAP.txt), both in support/remote/; the agent
@@ -135,14 +136,14 @@ WHY THE PROTOCOL IS WHAT IT IS -- the review's rules, each with a precedent
 
 ______________________________________________________________________________
 
-WHAT HWUT LEARNS: ONE BLOCK
+WHAT HWUT LEARNS: A NAME AND A STATUS (o-35, o-36)
 
-    bench { <name> { <key> = <scalar> ... } }        in hwut-root.conf
+    platform = [ { name = "local", provides = [ "max10" ] } ]
+                                   in hwut-root.conf: where a name is
+    exit status 77                 from the test: the case's infrastructure
+                                   is absent
 
-validated as a map of maps of scalars; D-56 applies (a root's benches are
-its own). 'hwut.sanitize.bench.defaults' lays the standard entries down for
-a tree that has none. Beside it, platform definitions name the benches
-they provide (o-26); nothing else.
+Nothing else: no bench block, no validator, no defaults face, no probe.
 
 ==============================================================================
 RULED  (chat, 2026-10-25/26; RATIONALE entries are written with the build)
@@ -158,10 +159,11 @@ RULED  (chat, 2026-10-25/26; RATIONALE entries are written with the build)
  o-4   withdrawn: the UUT clock plays no role in the protocol; it exists as
            the agent's timeout while waiting on the UUT.
  o-6   (a) CRC-16, polynomial 0x1021, four hex digits; line <= 80 bytes.
- o-7   'bench { }' lands in hwut-root.conf.
- o-8   hwut.sanitize.bench.defaults prepares default benches.
+ o-7   'bench { }' lands in hwut-root.conf. WITHDRAWN by o-35.
+ o-8   hwut.sanitize.bench.defaults prepares default benches. WITHDRAWN by
+           o-35.
  o-9   (b) hwut knows 'bench { }' as configuration and nothing else; the
-           code names its bench.
+           code names its bench. WITHDRAWN by o-35: hwut knows no bench.
  o-10  (a) one flat map: agent control at the bottom, stimulus, report,
            pass-through above 100; verbs r, w, p (+x). Offsets: o-13.
        Location: test_writing_support/remote_execution/ (o-21).
@@ -194,6 +196,9 @@ RULED  (chat, 2026-10-25/26; RATIONALE entries are written with the build)
            asks the agent's image register and flashes only on a
            difference; the image id is a hash of the inputs. A board that
            cannot be flashed is a build failure, not a red picture.
+           SUPERSEDED by o-40 (2026-11-06): flashing is deployment, not
+           build; 'build = "make flash"' was never valid ('build' is a
+           framework name; the validator knows 'make').
 
  o-17  (a) the reviews of 2026-10-26 taken as decided by the bench
            engineer (claude/EXPERT-REVIEW-3-proposals-2026-10-26.md), with
@@ -265,8 +270,10 @@ RULED  (chat, 2026-10-25/26; RATIONALE entries are written with the build)
            'is_available' looks for the entry's device (a serial path, a
            CAN interface) and never opens the link -- hwut never talks to
            a board; a miss is '[PLATFORM not reachable]', the bubble not
-           run. The label
-           'max10-connected' (intend 25) is no longer needed for it.
+           run. The label 'max10-connected' (intend 25) is no longer
+           needed for it. WITHDRAWN by o-35 and o-36 in its bench block and
+           its probe; 'a board is reached as a platform that provides its
+           name' stands.
 
  o-25  (a) The writer imports one module, hwut_remote (o-29), a facade
            over the host layers, which stay testable each alone (link:
@@ -336,19 +343,160 @@ RULED  (chat, 2026-10-25/26; RATIONALE entries are written with the build)
 
  o-31  Transparency is not optional; provision management is an
            overshoot. 'python3 -m hwut_remote list' shows what is attached
-           and which entry names it; it writes nothing and opens no link.
+           and which entry names it (the entries' source: o-38); it writes nothing and opens no link.
            No face writes, generates or reserves entries or definitions.
+
+ o-32  (a) Showing the platform resolution (ruled 2026-11-05). What a run
+           decided is shown where the decision lands, with no new face. A
+           verdict measured under a provided name says '(max10 in local)'
+           where spec/42 P-7 prints '(linux)'. (b), a face listing every
+           definition, struck. Its second clause, a failed provision as
+           o-33's marker, WITHDRAWN by o-36. TRANSFERRED to intend/42.
+
+ o-33  A PROVISION IS ONE-WAY (ruled 2026-11-05: "Provided is a one way
+           connection. A provides B does not mean that B provides A.").
+           A provides B: a bubble that specifies B may run on A; one that
+           specifies A asks nothing of B. The direction is structural:
+           o-26 makes a name both defined and provided a fault, so a
+           provided name provides nothing -- no chain, no cycle, no rule
+           for them. TRANSFERRED to intend/42.
+           Its marker '[provision B in platform A failed]' and the
+           'not-run' reason 'provision' WITHDRAWN by o-36 (2026-11-05):
+           hwut checks no provision; the case says it.
+
+ o-34  A provision probed where its platform is. WITHDRAWN by o-35 and
+           o-36 (2026-11-05), with the probe itself. What stands of it:
+           'provides' is the definition's claim about its platform (a
+           container that cannot reach the board does not provide it);
+           passing a device into a container is the definition's
+           business, a later key of the kind 'container'.
+
+ o-35  HWUT HOLDS NO BENCH (ruled 2026-11-05: "I do not think we need the
+           bench actually, do we? every configuration of the remote will
+           be done in the test and the hub"; and "provides = [] does not
+           list platforms but functionality, unformally referred to").
+           hwut-root.conf carries no 'bench { }'; no validator, no
+           'hwut.sanitize.bench.defaults', no bench probe. The board's
+           configuration -- link, loader, device -- is the test's and the
+           hub's (where it stands: o-37). 'provides' names informal
+           functionality and routes; the user must be able to learn what
+           a name means (o-39). WITHDRAWS o-7, o-8, o-9; o-24 in its bench
+           block and probe; o-34. The D-56 citation (a root's benches are
+           its own) leaves with it: D-56 is the labels' '[derived]'.
+
+ o-36  EXIT 77: THE INFRASTRUCTURE IS ABSENT (ruled 2026-11-05: "the
+           return value 77, if it is free. must be documented!"; 77
+           MEASURED free 2026-11-05: hwut's own statuses are 0 1 2 3 130
+           141 143, no test application in the tree exits 77, no GOOD
+           records it). A test application that exits 77 says: the
+           infrastructure this case needs is not here. Every other
+           status stays behaviour. '<hwut-end>' stays the one signature
+           ("a singularity, a single signature, a singular decoration").
+           CONSEQUENCES (all affirmed, 2026-11-06):
+           - The reason is the last line of stderr, shown as the NOTE;
+             hwut_remote writes it and exits 77 where the device is
+             absent, so the writer writes nothing.
+           - E_TestRunResult.INFRA_ABSENT, '[ABSENT]': not compared, not
+             FAIL; counted as a bubble not run is (intend/42 rulings 13,
+             21): not in RESULTS, no book entry, the last verdict kept,
+             exit status unchanged.
+           - Documented in engine/operations/README.txt (what a status
+             means), at E_TestRunResult, in support/test_writing/
+             README.txt for every port, in a NOTE to the book writers;
+             RATIONALE with the build.
+           - It reaches beyond boards: an absent toolchain (services
+             E-218's cascade of 127) may say it the same way.
+
+ o-37  A PROPER FACTORY (ruled 2026-11-06: "Design a proper Factory";
+           the design "Yes. Oh happy day"; before it: "may be the factory
+           may take a config file optionally, and the producer decides
+           what Format he supports").
+               REGISTRY  add_plugin(transport, producer)
+               FACTORY   create_hub(transport, address=None, *,
+                         config_file=None, note=None, **options) -> Hub:
+                         the producer by the transport; its read() of the
+                         file, in its format; the options over the file;
+                         the common keys checked; the hub NOT opened
+               PRODUCT   Hub: 'with' opens, hello, closes; flash(image,
+                         image_id); reset_bench(); LinkHub, VisaHub
+               CLI       python3 -m hwut_remote <transport> [<address>]
+                         [--config-file F] [--<key> V] flash | reset;
+                         list -- the same factory
+           The test and the Makefile share one file ('max10.conf').
+           SUPERSEDES o-25 in create_hub(name) and producer(entry, note);
+           o-16 and o-29 in the loader's CLI ('python3 -m hwut_remote.
+           quartus flash max10 ...'): a loader is a strategy of the Hub,
+           chosen by 'loader', and has no CLI of its own.
+
+ o-40  A DEPLOY SECTION; FLASHING BELONGS INSIDE IT (ruled 2026-11-06: "A
+           deploy section is due and flashing belongs inside it").
+           ROOT: flashing had no place of its own -- 'build = "make
+           flash"' hid it in a framework name -- and operations' law
+           says "A FAILED BUILD IS A FAILED TEST ... a SHORTCOMING OF THE
+           CODE"; an unplugged board is not the code's, and through make
+           its 77 became 2.
+               build ----------> deploy -----------> execute
+               BUILD_FAILED      77: [ABSENT]         77: [ABSENT]
+               (the code)        else DEPLOY_FAILED   (behaviour)
+                                 (the infrastructure)
+           CONSEQUENCES (affirmed 2026-11-06):
+           - 'deploy' is a scope beside 'build'; the stage deploy runs
+             after the build and before execute, remembered as StageBuild
+             is: again only when the build ran again.
+           - its vocabulary is closed and grows; 'flash' is its first key.
+           - 77 means [ABSENT] on both roads; any other failure is
+             DEPLOY_FAILED, a FAIL with its own report token.
+           - an unplugged board at flash: [ABSENT]; present and not
+             taking: DEPLOY_FAILED.
+           - spec/26 section 14: build makes the image and TMP/image_id;
+             deploy puts it on the board.
+           - section 16's condition: no other build or deploy of the
+             group between one application's deploy and its run.
+
+ o-41  'deploy' IS OF THE SAME KIND AS 'build' (ruled 2026-11-06: "If build
+           is a single line should deploy not be of same kind?" -- "Yes").
+               build  = "make"     = build  { framework = "make" }
+               deploy = "<command>" = deploy { flash = "<command>" }
+           The short form is the scope with its one principal key; both
+           scopes take 'caps'; the validator treats both alike. Unlike
+           build's, deploy's value is a command run directly: no deploy
+           system exists to name, and make would mask 77 (stated with the
+           proposal its 'Yes' affirmed).
+
+ o-38  (a) 'list' WITH NO FILE GIVEN reads every file of the current
+           directory a producer reads (ruled 2026-11-06: "First a"); a
+           file no producer reads is skipped, not refused.
+
+ o-39  'hwut-provided.conf': OPTIONAL BUT BINDING (ruled 2026-11-06:
+           "optional but binding. Present: hwut-provided.conf"; the
+           consequences "Yes").
+               hwut-provided.conf   max10 = "Terasic DE10-Lite, MAX 10
+                                    10M50DA; proto/de10-lite/README.txt"
+           Absent: no check, 'provides' is free text. Present: every name
+           the definitions of the conf beside it provide has an entry; one
+           without is a fault at the start: "hwut-provided.conf: 'max10'
+           is provided and not explained".
+           CONSEQUENCES (affirmed 2026-11-06):
+           - it stands beside 'hwut-root.conf', as 'hwut-root.labels'
+             does, and binds that conf's definitions; a name resolved
+             across the walk (o-27) is explained beside its definition.
+           - it IS the explanation file: an entry is a name and its text,
+             in conf syntax; the text may point to a README. A name
+             explained and provided by nobody is a NOTE, not a fault.
+           - hwut shows the text where the name lands: one NOTE under
+             '(max10 in local)' per directory; no face of its own (o-32).
+           - it names provided names only; platform names need none.
+           TRANSFERRED to intend/42.
+
+ o-42  LATENCY IN mode [7:2] (ruled 2026-11-06, found while building step 1:
+           Hub.contract() prints "sample 1 cycle after apply", and no map
+           byte held LATENCY). mode (0e) [7:2] = LATENCY, 0..63; the hello
+           stays 26 bytes and holds the whole contract. A UUT slower than
+           63 cycles uses wait-for-done. Struck: a byte at 3a (a second
+           round trip); not reporting it (the row would not carry the
+           contract, J * O).
 
 ==============================================================================
 OPEN
 ==============================================================================
- o-32  Showing the platform resolution (TRANSFERRED to intend/42 when
-           ruled). What a run decided -- which definition took a bubble,
-           under which provided name, why another was not reachable --
-           must be visible.
-           (a) the run's console names it where spec/42 P-7 prints
-               '(linux)': '(local as max10)'; the NOTE of '[PLATFORM not
-               reachable]' names the bench: "bench max10: no device"
-               <- recommended: shown where the decision lands, no new face
-           (b) (a), and a face listing every definition, what it
-               provides, which bubbles specify it, and its availability now.
+      (none: every fork of this intend is ruled.)

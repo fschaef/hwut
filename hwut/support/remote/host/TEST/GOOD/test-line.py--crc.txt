@@ -1,0 +1,24 @@
+check("123456789") = 29b1
+crc("b x 0403"                                                ) = 2b95
+crc("b 010700"                                                ) = 8bff
+crc("6 x ffff"                                                ) = 23d9
+crc("6 01fe01"                                                ) = 3ddb
+crc("6 01fe03"                                                ) = 1d99
+crc("7 r 18 4"                                                ) = 5e0c
+crc("7 0601fe01"                                              ) = edd4
+crc("3 x 0403"                                                ) = a722
+crc("4 r 18 4"                                                ) = 9679
+crc("4 02010700"                                              ) = eff0
+crc("5 x 0403"                                                ) = 27e9
+crc("5 010700"                                                ) = 8783
+crc("8 x 0403"                                                ) = 718d
+crc("8 810700"                                                ) = dca5
+crc("9 r 0 1a"                                                ) = 6679
+crc("9 6877757401000000c1079a3f0202050080f0fa0280969800ff80"  ) = 085c
+crc("a w 3f 01"                                               ) = e167
+crc("a 00"                                                    ) = 1ea6
+crc("c x 01ff"                                                ) = 29ff
+crc("c 010001"                                                ) = 599d
+crc("d x ffff"                                                ) = 671b
+crc("d 01fe01"                                                ) = 7919
+<hwut-end>

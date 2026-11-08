@@ -7,6 +7,10 @@ support -- WHAT HELPS A USER, BESIDE WHAT HWUT IS
                     which port lives with hwut ('home = "hwut"') and which
                     may leave for a repository of its own ('home =
                     "support"'); 'adm/support_layout.py' checks it.
+    remote/         remote execution: a test application drives a board,
+                    a simulator or an emulator through an agent beside the
+                    UUT -- 'hwut_remote' (host/), the agents (target/), the
+                    prototypes (proto/); its own README.txt.
     demo/           '<language>/', the demonstration in each language,
                     which 'hwut.support <language> <dir>' writes out with
                     the support; 'showcase/', worked examples, a root of

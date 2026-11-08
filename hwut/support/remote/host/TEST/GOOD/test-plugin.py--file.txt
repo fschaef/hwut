@@ -1,0 +1,11 @@
+baud         57600
+boot         1.0
+cable        'USB-Blaster [1-3]'
+link_margin  0.05
+loader       'quartus'
+low_latency  True
+serial       '/dev/serial/by-id/usb-Altera_USB-Blaster'
+time         'wall'
+address: /dev/serial/by-id/other
+open: False
+<hwut-end>

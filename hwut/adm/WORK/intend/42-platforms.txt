@@ -12,7 +12,8 @@ COMPONENTS CONCERNED: engine/orchestrator (exploration: the walk into a
                       adm/container (the images),
                       support/ (the first bubble to use it).
 SPEC:                 spec/42-platforms (the first release), plan/42-platforms;
-                      every fork is ruled (rulings 1-22).
+                      every fork is ruled (rulings 1-27); rulings 23-27,
+                      transferred from intend/26, await spec/42.
 RAISED:               2026-11-01/02. The author's run of 'support/' on his
                       machine: every demonstration whose toolchain was
                       absent ended in a cascade of handler NOTEs, exit 127
@@ -350,6 +351,43 @@ RULED (the author, 2026-11-02)
       freshness digest at accept), no more.
     - The day a syncing kind is built, ruling 7's guard is built with it.
 
+23  A DEFINITION PROVIDES NAMES (intend/26 o-26, ruled 2026-11-04; its
+    names are informal functionality, o-35, 2026-11-05). A definition
+    carries 'provides = [ <name> ... ]'. A bubble's specification names a
+    defined platform or a provided name; Q(B) holds every definition so
+    named or providing it. Names are unconstrained; no registry. 'local'
+    may be written as a definition with the one key 'provides'. A name
+    both defined and provided is a fault at the start. AMENDS ruling 16:
+    'local' takes no keys but 'provides'.
+
+24  A NAME RESOLVES ACROSS THE WALK (intend/26 o-27 (a), ruled
+    2026-11-04). A specified name is resolved against the definitions of
+    every conf the walk reads. A bubble run alone sees its own
+    definitions; defining none, its F is {} and it is not run, reason
+    'available'. A name defined twice in the walk is a fault naming both
+    confs. It reads beyond the bubble's own conf for this one purpose;
+    how that stands to ruling 10 and services E-200 is written into
+    RATIONALE with the build.
+
+25  A PROVISION IS ONE-WAY (intend/26 o-33, ruled 2026-11-05). A provides
+    B: a bubble that specifies B may run on A; one that specifies A asks
+    nothing of B. Ruling 23's fault makes it structural: a provided name
+    provides nothing; no chain, no cycle.
+
+26  THE RESOLUTION IS SHOWN WHERE IT LANDS (intend/26 o-32 (a), ruled
+    2026-11-05). A verdict measured under a provided name says
+    '(max10 in local)' where P-7 prints '(linux)'. No face lists the
+    definitions.
+
+27  EXIT 77: THE CASE'S INFRASTRUCTURE IS ABSENT (intend/26 o-36, ruled
+    2026-11-05). hwut checks no provision; the case says it. Exit 77 is
+    '[ABSENT]', E_TestRunResult.INFRA_ABSENT, the last stderr line its
+    NOTE; counted as a bubble not run is (rulings 13, 21). AMENDS ruling
+    21: what is not counted extends to such a case. Documented where a
+    status is said to be behaviour (engine/operations), at
+    E_TestRunResult, in support/test_writing/README.txt, to the book
+    writers.
+
 ==============================================================================
 THE RULE (rulings 10 and 12, formally)
 ==============================================================================
@@ -462,11 +500,11 @@ WHAT A PLATFORM GIVES BEYOND THE RUN
     one stated   a platform that cannot be reached refuses the bubble once,
     precondition with its reason, not case by case
 
-HIL, AND THE BENCH. The bench design (project document
-'DESIGN-hwut-bench-2026-10-26': 'bench { <name> { link, loader } }') says
-how a test reaches a board. A platform says where that test runs. The two
-compose without knowing of each other: the lab PC is a 'host'; the bench
-entry is read there, as anywhere.
+HIL, AND THE BENCH. The bench design (intend/26, spec/26) says how a test
+reaches a board; its configuration is the test's, hwut holds no bench
+(intend/26 o-35). A platform says where that test runs: the definition
+that provides the board's name (ruling 23). A board the test cannot reach,
+it reports by exit 77 (ruling 27).
 
 ==============================================================================
 OPEN

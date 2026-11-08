@@ -1,0 +1,4 @@
+stdout: ''
+stderr: 'serial: no device /dev/serial/by-id/usb-no-such-board\n'
+exit:   77
+<hwut-end>

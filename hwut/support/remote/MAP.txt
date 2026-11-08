@@ -1,0 +1,150 @@
+==============================================================================
+MAP.txt -- THE ADDRESS SPACE, OUTCOME, THE WAIT CONTRACT, THE AGENTS
+==============================================================================
+
+    The agent's byte-addressed space and what reading and writing it does;
+    the agent implementations. The terms and the verbs: PROTOCOL.txt.
+
+
+==============================================================================
+1  G -- THE ADDRESS SPACE
+==============================================================================
+
+    A linear, byte-addressed space; a multi-byte value is little-endian.
+
+    offset len  access  name      content
+    ------ ---  ------  ----      -------
+    00     4    r       magic     'hwut' (68 77 75 74 on the wire)
+    04     4    r       proto     1
+    08     4    r       image     IMAGE_ID (README)
+    0c     1    r       stim len  SW, 1..32
+    0d     1    r       rep len   RW, 1..32
+    0e     1    r       mode      [0] 1: sample LATENCY cycles after apply;
+                                      0: wait for done to rise
+                                  [1] 1: run seam (c, python); 0: poll
+                                  [7:2] LATENCY, 0..63 (o-42); 0 in
+                                      mode 0
+    0f     1    r       discard   lines discarded since start, stops at ff
+    10     4    r       clock     Hz of the count 'timeout' uses
+    14     4    rw      timeout   counts a wait may take (section 3)
+    18     1    r       last      token of the last 'w' or 'x'; ff after
+                                  start
+    19     1    r       status    [1:0] outcome, [7] fresh (section 2)
+    1a     RW   r       report    the UUT's outputs
+    3f     1    w       reset     any write resets the UUT          waits
+    40     SW   rw      stim      the UUT's inputs
+    100    ..   rw      bus       optional: the UUT's own registers, or
+    ..ffff                        the MCU's memory; no wait states; word
+                                  buses take aligned 4-byte runs
+    10000.. -   -       xfer      reserved (o-5)
+
+    REFUSED with '! limit': every other address, a read of a w-only byte,
+    a write of an r-only byte, a length of 0, a read of more than 35
+    bytes, an access a word bus cannot take.
+
+    THE SESSION IN ADDRESSES
+
+    hello    r 0 1a    (00 .. 19: identity, contract, last, status)
+    reset    w 3f 01
+    vector   x <stim>
+    recover  r 18 2+RW (last, status, report)
+
+
+==============================================================================
+2  K, L -- OUTCOME AND AGENT LIFE
+==============================================================================
+
+    status (19)   [1:0] outcome of the last 'x'   [7] fresh
+
+    outcome  00  none: no 'x' since start or since the reset write
+             01  done: the report holds the UUT's answer
+             02  timeout: no done within 'timeout' UUT cycles -- data
+             03  expired: no done within 'timeout' ticks -- a failure
+
+    'x <bytes>', inside the agent:
+
+        "b x 0403"
+            |
+            +--> last   <- b
+            +--> stim   <- 04 03
+            +--> strobe apply, one cycle -----------> UUT
+            +--> wait (section 3) --> outcome <- 01 | 02 | 03
+            +--> reply: status, report  "b 010700"
+
+    THE RESET WRITE: last <- token; UUT reset (section 3); outcome <- 00;
+    fresh <- 0; report unchanged; reply: status.
+
+
+==============================================================================
+3  J -- THE WAIT CONTRACT
+==============================================================================
+
+    mode 0   the agent waits for done to rise after the apply strobe
+    mode 1   done is not used; the report is sampled LATENCY cycles after
+             the strobe
+    timeout  counts any wait may take: an 'x', a reset
+    reset    verilog: uut_rst high for RESET_CYCLES; c, python: complete
+             when uut_reset() returns
+
+    stim and report are stable from the strobe to the sample.
+
+    The wait contract is mode, LATENCY, timeout and its unit.
+
+
+==============================================================================
+4  A -- THE AGENT IMPLEMENTATIONS
+==============================================================================
+
+    VERILOG (target/verilog/):
+
+              +---------------------- agent -------------------------+
+    uart_rx ->| phy > line > CRC > parser > map -+- stim[SW*8] ------+-> UUT
+    uart_tx <-| phy < line < CRC <---------------+  apply -----------+->
+              |                                  |  uut_rst ---------+->
+              |  timeout counter (clk)           +<- done -----------+--
+              |                                  +<- report[RW*8] ---+--
+       clk -->|  bus master (optional):                              |
+              |    addr wdata we re rdata ---------------------------+<> bus
+              +------------------------------------------------------+
+       parameters  SW, RW (1..32, refused otherwise at synthesis),
+                   IMAGE_ID, CLOCK_HZ, TIMEOUT, LATENCY (0: mode 0;
+                   1..63, refused above at synthesis),
+                   RESET_CYCLES, BAUD
+       phy_stdio.v replaces phy_uart.v by $fgetc / $fwrite and calls
+       $fflush after every '\n'
+
+    C (target/c/) and PYTHON (target/python/):
+
+       hooks, from the port     int      agent_getc(void);  /* -1: none */
+                                void     agent_putc(int c); /* '\n' flushes */
+                                uint32_t agent_tick(void);
+                                /* getc reads an interrupt- or DMA-fed ring
+                                   of at least two lines; on udp the
+                                   datagrams' bytes, putc's '\n' sends
+                                   one datagram */
+       seam, from the writer    void uut_reset(void);   /* the UUT only */
+         run (default)          void uut_run(const uint8_t *stim,
+                                             uint8_t *report);
+                                /* returns when done; may block */
+         poll                   void uut_start(const uint8_t *stim);
+                                int  uut_done(uint8_t *report); /* 1: done */
+       main loop                for (;;) agent_poll();
+       The writer provides one of the two seams; the agent reports it in
+       mode [1]. With the run seam the agent is deaf while uut_run runs:
+       no '! busy', no outcome 03; a call that never returns is "agent
+       silent" (PROTOCOL.txt 5). With the poll seam the main loop never
+       blocks.
+       'clock' = the rate of agent_tick;
+       elapsed = (uint32_t)(agent_tick() - start), wrap-around tolerated
+
+    Outcomes and mode per implementation: couplings A * K and A * J
+    (PROTOCOL.txt 2).
+
+    SIZE on a MAX 10 (10M50): UNMEASURED -- no Quartus at hand where it
+    was built (2026-11-06); measured with delivery step 4 on the author's
+    bench, and stated here.
+
+    Every implementation passes the 'x' oracle of
+    target/verilog/TEST/test-agent.py: the reply to 'x' equals
+    the bytes of the following 'r 19 1+RW'; a duplicate 'x' returns the
+    same bytes and does not apply.

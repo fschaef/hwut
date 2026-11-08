@@ -1,0 +1,6 @@
+## agent: proto 1  image 3f9a07c1  stim 2  report 2  50 MHz
+## discarded 0 bytes, 0 lines
+contract: wait for done, timeout 20 counts at 50 MHz
+0304 timeout
+0304 timeout
+<hwut-end>

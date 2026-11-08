@@ -1,0 +1,324 @@
+==============================================================================
+PROTOCOL.txt -- THE LINE, THE VERBS, RECEPTION AND RECOVERY
+==============================================================================
+
+    What an implementer of an agent or of a host needs of the wire: the
+    terms and the axes of remote execution, the line, the verbs, and how a
+    host receives and recovers. The address space and the agents: MAP.txt.
+    The bench and the writer: README.txt.
+
+    Every CRC printed here is computed (host/TEST/test-line.py 'crc').
+
+
+==============================================================================
+1  TERMS
+==============================================================================
+
+    Each word below is used in this one sense throughout. The number names
+    the section that specifies it.
+
+    THE PICTURE
+      host           the machine that runs hwut and the test application
+      target         the board, simulator or emulator that runs the agent
+      UUT            the unit under test, on the target
+      agent          the circuit or program on the target that drives the
+                     UUT for the host (MAP 4)
+      agent implementation
+                     one of target/verilog, target/c, target/python
+      agent start    power-up, configuration or process start of an agent
+      link           the channel between host and agent: bytes, or lines
+                     as datagrams (README)
+      duplicate      a 'w' or 'x' whose token equals 'last' (4)
+      line           one command or reply on the link (3)
+      token          the hex digit that pairs a reply with its command (3)
+      noise          what section 3 classes as noise
+      verified line  a line that is not noise
+      map            the agent's byte-addressed space (MAP 1)
+      last, status   map bytes 18 and 19 (MAP 1, MAP 2)
+      fresh          bit 7 of status (MAP 2)
+      reset write    'w 3f <byte>': the UUT reset through the map (MAP 2)
+      SW, RW         the stimulus and report lengths in bytes (MAP 1)
+      LATENCY, RESET_CYCLES
+                     verilog parameters: sample delay and UUT reset
+                     length, in cycles (MAP 3, MAP 4)
+      wait contract  mode, LATENCY, timeout and its unit (MAP 3)
+      phy            the agent's byte interface: a UART, or stdio under
+                     simulation (MAP 4)
+      deadline       how long the host waits for a reply (5)
+      ladder         the host's recovery procedure (5)
+      hello          the read 'r 0 1a' that opens a session (MAP 1, README)
+
+    THE BENCH
+      bench          a target with its link and loader; its configuration
+                     is the test's (11, o-37); hwut holds none
+      key            a key of a hub's configuration: serial, baud, boot,
+                     loader, ... (README)
+      loader         the tool that puts an image on the target (README)
+      loader module  hwut_remote.<loader>: 'flash' and 'reset' for one
+                     loader (README)
+      image id       the hash baked into an image; map 08 (README)
+      bench reset    the return of the agent to its start state, from
+                     outside the link (README)
+      provides       a platform definition's list of the names it acts
+                     as; a bench's name there: the board is attached to
+                     that platform (16; spec/42); one-way: A provides B
+                     says nothing of B providing A
+      provision      one name of a definition's 'provides': informal
+                     functionality the platform claims to hold (README)
+      exit 77        a test application's statement: the infrastructure
+                     this case needs is absent (README)
+      collision group
+                     hwut's: the tests that share one owner (R-32)
+      caps           hwut's bounds on a choice
+
+    THE HUB
+      create_hub     the factory: a transport, its address and options -> a
+                     hub, not opened (README)
+      producer       read(config_file) -> dict and (values, note) -> Hub,
+                     registered under a
+                     transport key by add_plugin (README)
+      LinkHub        the Hub for any byte or datagram channel: a producer
+                     supplies open, send, recv, close (README)
+      VisaHub        the Hub for an instrument through VISA and SCPI (README)
+
+    THE WRITER
+      writer         the author of a test application
+      choice         a part of a test application that hwut runs and
+                     compares on its own
+      session        a hub's use of an agent from opening the link to
+                     closing it (README)
+      picture        a choice's output, compared against its GOOD file
+      row            a line of the picture that is compared
+      '##' line      a line of the picture that is not compared
+      note           the writer's callable that prints a '##' line (README)
+
+
+==============================================================================
+2  AXES, LAWS, COUPLINGS
+==============================================================================
+
+    Every rule of this design is a statement about one axis, or one of the
+    couplings below. Any combination of axis values not excluded there is
+    meaningful. The axes and their laws are stated here only; the sections
+    that follow, MAP.txt and README.txt specify each axis without
+    repeating its law.
+
+    axis               values                         owner      where
+    ----               ------                         -----      -----
+    A agent impl.      verilog, c, python             target/<impl>/ MAP 4
+    B time domain      wall, virtual                  key         README
+                                                      'time'
+    C transport        serial, tcp, udp, ssh, launch, hwut_remote. README
+                       can, visa; a plugin's key      link, visa, a
+                                                      plugin
+    D loader           quartus, openfpgaloader,       loader module, README
+                       openocd, esptool, copy, none   key
+                                                      'loader'
+    E bench reset      reload, probe, line, reopen,   loader module README
+                       scpi, power                    'reset', key
+                                                      'power'
+    F image identity   id = H(inputs, toolchain);     Makefile,   README
+                       board: equal, differs, absent  map 08
+    G address space    regions * access (MAP.txt 1)   MAP.txt         MAP 1
+    H verb             r, w, x  (p reserved)          PROTOCOL.txt     4
+    J wait contract    mode * LATENCY * timeout *     agent        MAP 3
+                       reset length                   parameters,
+                                                      map 0e, 14
+    K outcome of 'x'   00 none, 01 done, 02 timeout,  map 19 [1:0] MAP 2
+                       03 expired
+    L agent life       fresh in {1, 0} * last         map 19 [7],  MAP 2
+                                                      18
+    M reception        reply, other token, noise      hwut_remote.     5
+                                                      line, session
+    N recovery         acted, not acted, restarted,   hwut_remote.     5
+                       busy, refused, silent, ended   session
+    O picture class    row, '##'                      the writer  README
+    Q ownership        collision group * providing    hwut (R-32),  README
+                       platform                       platforms
+
+    THE LAW OF EACH AXIS
+
+    A  An agent implementation implements MAP and PROTOCOL; verilog counts its
+       timeout in the clock it shares with the UUT, c and python in ticks.
+    B  In wall time every host wait is bounded in seconds; in virtual
+       time only hwut's caps bound it.
+    C  A transport carries bytes, or lines as datagrams, between host and
+       agent; only a UART on the path has a bit rate ('baud').
+    D  A loader flashes iff the agent's image differs from the built id,
+       and succeeds iff they are equal afterwards.
+    E  After a bench reset the agent is in its start state: last = ff,
+       fresh = 1; an instrument is in its '*RST' state.
+    F  The id has one source, the hash of the inputs; stale iff the board's
+       id differs.
+    G  A byte operation on a byte that does not permit it is refused.
+    H  'r' never acts; 'w' and 'x' write 'last' before they act; a
+       duplicate never acts; every reply is the content of a read.
+    J  Every wait of the agent ends within 'timeout' counts.
+    K  01 and 02 are behaviour of the UUT; 03 is a failure.
+    L  fresh holds from agent start until the reset write; last is ff only
+       since start.
+    M  Only a verified line with the expected token is a reply; the agent
+       answers only verified lines; everything else is counted.
+    N  Recovery is decided by one idempotent read; nothing is applied
+       twice.
+    O  A row is a function of the stimuli, the wait contract and the UUT.
+    Q  One owner per board; within a collision group the deploy and the
+       run of one application are adjacent; a board's tests run only on the
+       platform that provides its name; a case whose board is absent
+       exits 77 and is not judged.
+
+    THE COUPLINGS -- every place where two axes depend on each other; all
+    are necessary.
+
+    coupling      statement                                         sect.
+    --------      ---------                                         -----
+    A * K         verilog yields outcomes 00, 01, 02; c and python MAP 4
+                  yield 00, 01, 03 with the poll seam, 00, 01 with
+                  the run seam
+    A * J         only verilog has LATENCY and RESET_CYCLES; c and MAP 4
+                  python report mode 0 (wait for done)
+    J * O         the wait contract is part of every row's meaning: README
+                  the writer prints it as a row
+    J * J         timeout >= max(LATENCY, RESET_CYCLES); a write   MAP 3
+                  below is refused: '! limit'
+    G * deadline  an address may wait: 'x' and the reset write wait    5
+                  up to timeout / clock; every other address answers
+                  at once
+    B * C         time = virtual sets link_margin and boot to inf on README
+                  any transport
+    C * deadline  a link with 'baud' adds two line times               5
+    C * E         on transports 'launch' and 'ssh' the bench reset is README
+                  reopening; on 'visa' it is '*RST', '*CLS'
+    C * D         loader 'copy' requires transport 'ssh'; loader  README
+                  'esptool' uses the serial address as its target;
+                  transport 'visa' requires loader 'none'
+    D * E         reload: quartus with a .sof, openfpgaloader; probe: README
+                  openocd; line: esptool; reopen: launch, ssh; scpi:
+                  visa; power: any, when 'power' is set
+    L * H         the host never sends a 'w' or 'x' with the token in  4
+                  'last'; the agent takes one that arrives as a
+                  duplicate
+    L * N         reconciliation compares 'last' with the token and    5
+                  with the previous 'last'
+    M * C         one command is outstanding at a time; the token README
+                  alphabet relies on that, not on the transport's
+                  order; on udp a duplicate delayed past the next
+                  command is excluded only by a delay below one
+                  round trip
+
+    The column 'where' names where the coupling is put to work; the
+    statement stands here only.
+
+
+==============================================================================
+3  THE LINE
+==============================================================================
+
+        b x 0403 *2b95\n
+        | | \__/  \__/
+        | |  |     +-- CRC-16 over "b x 0403"
+        | |  +-------- bytes in address order: 04 03 = 0x0304, little-endian
+        | +----------- verb
+        +------------- token 0..f: the host chooses, the reply echoes it
+
+        b 010700 *8bff\n      the reply: status 01, report 07 00
+
+    LINE   := TOKEN ' ' BODY ' *' CRC '\n'
+    TOKEN  := one hex digit
+    BODY   := words of [a-z0-9]+, or '!' and a word, single spaces between
+    BYTES  := hex digit pairs, contiguous, in address order
+    CRC    := CRC-16/CCITT-FALSE: poly 0x1021, init 0xffff, refin false,
+              refout false, xorout 0; check("123456789") = 29b1;
+              input TOKEN ' ' BODY as transmitted, not ' *';
+              four lowercase hex digits, most significant first
+    length <= 80 bytes, trailer and '\n' included
+
+    NOISE, on both sides counted and never answered: a line whose CRC
+    fails, a line over 80 bytes, '\r', and every byte outside
+    [a-z0-9 !*\n]. An empty line flushes a partial line.
+
+
+==============================================================================
+4  H -- THE VERBS
+==============================================================================
+
+    host --> agent       agent --> host              acts
+    r <addr> <len>       the bytes of r addr len     no
+    w <addr> <bytes>     the bytes of r 19 1         yes
+                         (status, after the write)
+    x <bytes>            the bytes of r 19 1+RW      yes: the apply and the
+                         (status, report)            wait of MAP.txt 2
+    p                    ! unknown                   reserved
+
+    DUPLICATE -- a 'w' or 'x' whose token equals 'last' does not act; its
+    reply is the reply of the table, the state the first one left. The
+    host takes it as it takes any reply, by its token (section 5).
+
+    REFUSALS -- the command did not act; sent only for verified lines:
+
+        ! unknown   verb not known
+        ! syntax    malformed body
+        ! limit     MAP.txt 1; and 'x <bytes>' with a byte count other
+                    than SW
+        ! busy      an 'x' or the reset write is pending
+
+
+==============================================================================
+5  M, N -- RECEPTION AND RECOVERY
+==============================================================================
+
+    RECEPTION (host): a verified line with another token is a late reply,
+    noted and discarded.
+
+    DEADLINE, per command:
+
+        deadline = waits + line_time + link_margin
+        waits      timeout / clock    'x' and the reset write; else 0
+        line_time  2 * 80 * 10 / baud  when 'baud' is set; else 0
+        link_margin                    the configuration's (README)
+
+    THE LADDER
+
+        no reply by the deadline:
+          r       --> resend, new token
+          w, x    --> r 18 2+RW --+-- last = token          --> acted: the
+                                  |                             bytes after
+                                  |                             last are the
+                                  |                             reply
+                                  +-- last = previous last  --> not acted:
+                                  |                             resend, new
+                                  |                             token
+                                  +-- anything else         --> restarted
+        fresh = 1 in any status after the session's reset --> restarted
+        ! busy                  --> wait one deadline, resend; counts as a
+                                    failure
+        ! unknown|syntax|limit  --> raise
+        end of file (launch,    --> silent
+        ssh)
+        3 failures in a row     --> silent; any reply with the command's
+                                    token resets the count
+
+        restarted, silent --> close the link, bench reset (README),
+                              reopen, hello; then raise: the choice fails
+
+    A LOST REPLY -- acted:
+
+    6 x ffff *23d9 ----------------------> last := 6, outcome 01,
+          <---- 6 01fe03 *3ddb               report fe 01
+                crc("6 01fe03") = 1d99 != 3ddb: noise
+    7 r 18 4 *5e0c ---------------------->
+          <---- 7 0601fe01 *edd4           last 6 = token: the reply is
+                                           01fe01
+
+    A LOST COMMAND -- not acted (the previous 'x' had token 2):
+
+    3 x 0403 *a722 -------X
+    4 r 18 4 *9679 ---------------------->
+          <---- 4 02010700 *eff0           last 2 = previous: resend
+    5 x 0403 *27e9 ---------------------->
+          <---- 5 010700 *8783
+
+    A REBOOT -- the agent restarted since the session's reset:
+
+    8 x 0403 *718d ---------------------->
+          <---- 8 810700 *dca5             fresh = 1: restarted

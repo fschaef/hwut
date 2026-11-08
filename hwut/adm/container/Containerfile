@@ -92,7 +92,7 @@ RUN apt-get update \
  && apt-get install -y --no-install-recommends \
         python3.13 python3.13-venv python3.13-dev \
         gcc g++ libc6-dev make lcov gcovr \
-        verilator ghdl \
+        verilator ghdl iverilog \
         lua5.4 luarocks \
         git mercurial subversion brz fossil zsh \
         curl ca-certificates xz-utils \

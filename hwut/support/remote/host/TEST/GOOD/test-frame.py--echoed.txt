@@ -1,0 +1,6 @@
+FAILED: NoAgent: no agent: link echoes
+wire:
+    --> 4 r 0 1a *301d
+    ... repeated until 'boot' ends
+    --- close
+<hwut-end>

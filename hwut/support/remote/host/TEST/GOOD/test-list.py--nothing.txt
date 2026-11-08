@@ -1,0 +1,5 @@
+file  transport  address  state
+## not looked: jtagconfig
+## not looked: openFPGALoader
+## not looked: pyvisa
+<hwut-end>

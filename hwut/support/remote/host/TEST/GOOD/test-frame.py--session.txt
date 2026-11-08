@@ -1,0 +1,19 @@
+## agent: proto 1  image 3f9a07c1  stim 2  report 2  50 MHz
+## discarded 0 bytes, 0 lines
+contract: sample 1 cycle after apply, timeout 10000000 counts at 50 MHz
+0304 007
+ff01 100
+ffff 1fe
+wire:
+    --> 4 r 0 1a *301d
+    <-- 4 6877757401000000c1079a3f0202050080f0fa0280969800ff80 *6659
+    --> 5 w 3f 01 *71af
+    <-- 5 00 *a16c
+    --> 6 x 0403 *ef9c
+    <-- 6 010700 *4ff6
+    --> 7 x 01ff *edf6
+    <-- 7 010001 *9d94
+    --> 8 x ffff *bdc8
+    <-- 8 01fe01 *a3ca
+    --- close
+<hwut-end>
