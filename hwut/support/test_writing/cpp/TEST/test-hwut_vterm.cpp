@@ -1,6 +1,6 @@
 /* @hwut {
  *     title      = "A terminal's screen read by a test: libvterm, loaded at run time."
- *     build      { framework = "make", executable = "%.exe" }
+ *     build      { framework = "make", target = "%.exe" }
  *     choices {
  *         attributes { features = ["cpp-vterm"] }
  *         colours    { features = ["cpp-vterm"] }

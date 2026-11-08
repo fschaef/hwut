@@ -5,7 +5,7 @@
 # its one source ('shop.exe' and 'fixture.exe' with 'sqlite.go' beside it).
 #
 #     make demo.exe          what hwut asks, for a test whose header says
-#                            'build { framework = "make", executable = "%.exe" }'
+#                            'build { framework = "make", target = "%.exe" }'
 #     make helpers           what 'on_entry' asks: the programs that are no
 #                            test, and 'shop.exe' for 'delivery.json'
 #

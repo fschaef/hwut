@@ -45,8 +45,10 @@ from hwut.engine.orchestrator.exploration.configuration_tree import KEY_TO_FIELD
 #  EVERY KEY THE FRAMEWORK KNOWS, with a minimal well-formed value.
 VALUE_DB = {
     #  test parameters
-    "build":                   'build { framework = "make"  executable = "app" }',
+    "build":                   'build { framework = "make"  target = "app" }',
     "caps":                    "caps { timeout_sec = 5 }",
+    "deploy":                  'deploy = "./flash.sh"',
+    "requires":                'requires = ["iverilog"]',
     "pype":                    'pype = "cat"',
     "tolerance":               "tolerance { whitespace = false }",
     "diff_display_parameters": "diff_display_parameters { margin = 0.2 }",

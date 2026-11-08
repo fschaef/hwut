@@ -26,7 +26,7 @@ FORMAT = 1
 #  are OPEN under the add-only promise.
 VERDICT_TUPLE = ("ok", "test-failed", "build-failed", "launch-failed",
                  "unsupported", "misdep", "unaccepted", "no-good-file",
-                 "uncapped")
+                 "uncapped", "deploy-failed")
 
 #  kind -> (required {field: type}, optional {field: type}).
 #  'when' is on EVERY event and stated once below the table.
@@ -82,7 +82,7 @@ _FIELD_TEXT_DB = {
     "good":           "true where the thing stood",
     "node":           "the plan node's name, e.g. 'test-a.py one', "
                       "'build[make test-a.py]'",
-    "node_kind":      "'TEST', 'BUILD' or 'SESSION'",
+    "node_kind":      "'TEST', 'BUILD', 'DEPLOY' or 'SESSION'",
     "verdict":        "WHY it ended so: " + ", ".join(VERDICT_TUPLE)
                       + ", ... (open; unknown reads not-ok)",
     "cause":          "the node whose breaking failed this one; "

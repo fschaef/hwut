@@ -138,3 +138,44 @@ OWED      The session-level switch that installs 'DiagnosisObserver'
           on 'hwut.run' (todo-21's "request flag"): not built; a run's
           empty case is diagnosed by playing it.
 PINNED    'services/TEST/test-play.sh silent, why'.
+
+O-36  EXIT 77: THE DEVICE IS NOT REACHABLE                         (2026-11-07)
+------------------------------------------------------------------------------
+PROBLEM   A test whose board was unplugged exited and was judged on half a
+          picture: 'stderr [FAIL]', the device named nowhere (MEASURED
+          2026-11-07, services/TEST/test-device.sh 'unreachable').
+DECISION  RULED (Frank-Rene, intend/26 o-36, o-49): exit status 77 is the
+          one status that is not behaviour. On both roads, the plain call
+          (stage_execute) and the session (multi_execute), it delivers
+          nothing and reports 'device-unreachable': a FAILURE of the test,
+          like a build that fails, counted, booked, its dependents failing
+          with it; the output is not compared; the last stderr line is the
+          detail. Category ENVIRONMENT, brief 'no-device'.
+          A platform is not a device: a missing TOOL is the platform's
+          matter, never 77.
+COST      A test that exits 77 for a reason of its own loses its picture;
+          77 was measured free in the tree (2026-11-05).
+GRAVEYARD '[ABSENT]', not counted, "like a bubble not run" (o-36 as first
+          read): it took a device for a platform.
+
+O-37  THE DEPLOY: ONE COMMAND, RUN DIRECTLY, JUDGED BY ITS STATUS (2026-11-07)
+------------------------------------------------------------------------------
+PROBLEM   A board's image was put on the board by 'make flash' inside the
+          build: a flash failure read as the code's, and make turned the
+          device's 77 into 2.
+DECISION  RULED (intend/26 o-40, o-41, o-47): 'deploy = "<command>"' is
+          'deploy { flash = "<command>" caps { } }'. 'deploy_action.py'
+          runs the command once per run, split as a shell would and
+          executed directly, in the build's directory (the image stands
+          there) or the test directory where nothing is built. Exit 0:
+          OK. Exit 77: 'device-unreachable' (O-36). A command not found:
+          'deploy-tool-not-found'; a cap: 'deploy-contained'; any other
+          exit: 'deploy-failed'. The last stderr line is the detail. That
+          the tests fail with it is the plan's word: the deploy is a node
+          supporting them.
+          MEASURED: services/TEST/test-deploy.sh (flashed, failed, absent,
+          unbuilt).
+COST      No shell: a deploy wanting a pipe states 'sh -c "..."'.
+GRAVEYARD The stage deploy inside each case's provision (o-40 as first
+          read: "remembered as StageBuild is"; struck by o-47).
+

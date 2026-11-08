@@ -137,6 +137,15 @@ def test_configuration_of(app, directory, variant_tuple=(), variant_db=None,
         build_caps     = (_caps_of(root.build, caps)
                           if build is not None and root.build is not None
                              and root.build.caps is not None else None),
+        #  'deploy = "<command>"' IS 'deploy { flash = "<command>" }'
+        #  (intend/26 o-41): the command split as a shell would, run
+        #  directly; its caps folded onto the application's.
+        deploy         = (tuple(shlex.split(root.deploy.flash))
+                          if root.deploy is not None
+                             and root.deploy.flash else None),
+        deploy_caps    = (_caps_of(root.deploy, caps)
+                          if root.deploy is not None
+                             and root.deploy.caps is not None else None),
         interactive    = any(p.interactive for p in
                              app.choice_db.values()),
         execute        = (None if root.execute is None
@@ -149,8 +158,8 @@ def test_configuration_of(app, directory, variant_tuple=(), variant_db=None,
 def _build_of(parameters, source_file):
     """
     RETURN: BuildConfig from the stated 'build' key, 'None' where none
-            stands. The framework word must be known; the executable
-            is the one target. '%' in either is the source file's
+            stands. The framework word must be known; 'target' is the
+            one target ('app' unstated). '%' in either is the source file's
             stem (R-74).
     """
     stated = parameters.build
@@ -162,7 +171,7 @@ def _build_of(parameters, source_file):
         raise ValueError("unknown build framework '%s' (from '%s'); "
                          "known: %s" % (framework, stated.framework,
                                         ", ".join(BUILD_FRAMEWORK_TUPLE)))
-    target = stem_expanded(stated.executable or "app", source_file)
+    target = stem_expanded(stated.target or "app", source_file)
     return BuildConfig(_BUILD_SYSTEM_DB[framework], [target])
 
 

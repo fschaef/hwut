@@ -1,6 +1,6 @@
 // @hwut {
 //     title      = "TriggerDispatcher: schedule, priority, and the end of time"
-//     build      { framework = "make", executable = "%.exe"
+//     build      { framework = "make", target = "%.exe"
 //                  caps { file_size_mb = 256 } }
 //     choices {
 //          abstract    { features = ["go-timeline"] }

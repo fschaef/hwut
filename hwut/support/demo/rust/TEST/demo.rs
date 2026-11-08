@@ -1,6 +1,6 @@
 // @hwut {
 //     title   = "Demo: what hwut tolerates, and where it is said"
-//     build   { framework = "make", executable = "%.exe"
+//     build   { framework = "make", target = "%.exe"
 //               caps { timeout_sec = 900 } }
 //     choices {
 //         plain       { features = ["demo-passes-on-every-run", "exact-comparison"] }

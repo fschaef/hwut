@@ -4,29 +4,34 @@ support/remote -- REMOTE EXECUTION: A TEST APPLICATION DRIVES A BOARD
 
     A test application on the host drives a unit under test on a target --
     a board, a simulator, an emulator -- through an agent beside the UUT.
-    hwut runs the test where its platform provides the board, and knows
-    nothing else of it: hwut imports nothing of this directory, and this
-    directory imports nothing of hwut.
+    hwut runs the test on a platform holding the tools it requires; the
+    board is a device the test reaches itself. hwut knows nothing else of
+    it: hwut imports nothing of this directory, and this directory imports
+    nothing of hwut.
 
     PROTOCOL.txt   the terms, the axes, the line, the verbs, recovery
     MAP.txt        the agent's address space and its implementations
     README.txt     this file: the bench and the writer
     host/          hwut_remote, the package the writer imports; image_id.mk
     target/        the agents: verilog/ (built); c/, python/ (delivery 5)
-    proto/         the prototypes a writer copies: iverilog/ (built)
+    <platform>/    one per target kind, each with its hwut-root.conf and
+                   TEST/; a writer copies one, root and all (o-45):
+                   model/     the host against a model agent and a fake link
+                   iverilog/  the Verilog agent and the prototype (built)
 
     BUILT (spec/26 delivery steps 1 to 3): PROTOCOL.txt, MAP.txt;
     hwut_remote -- the factory, LinkHub and its ladder, the links serial,
     tcp, udp, ssh, launch, the configuration file, the CLI, 'list'; the
-    loader 'none'; target/verilog with its UART and stdio phys, proven
-    under iverilog; host/image_id.mk; proto/iverilog end to end. NOT YET
+    loader 'none'; the termination request 'k' and the hub's abort path;
+    target/verilog with its UART and stdio phys, proven under iverilog;
+    host/image_id.mk; iverilog/ end to end. NOT YET
     BUILT, refused by name where reached: the vendor loaders (quartus 4;
     openocd, esptool, copy 5; openfpgaloader 8), the C and Python agents
     (5), 'can' (9), capture.py (7), 'visa' and VisaHub (12); the other
     prototypes. The bus (map 100 and above) is not built in the Verilog
-    agent. hwut's side (the 'deploy' stage, exit 77 as '[ABSENT]',
-    'provides' and hwut-provided.conf) arrives in the next bundle; until
-    then a test exiting 77 is judged as any other exit.
+    agent. hwut's side -- exit 77 as 'device not reachable', 'deploy',
+    'target', 'tools' and 'requires', hwut-tools.rst -- is in the making;
+    until it is built a test exiting 77 is judged as any other exit.
 
 
 ==============================================================================
@@ -59,7 +64,8 @@ support/remote -- REMOTE EXECUTION: A TEST APPLICATION DRIVES A BOARD
            |                    puts the image on the target
            v
     the test         max10.conf: link, loader, ...: create_hub's (2)
-    hwut-root.conf   platform = [ { name = ..., provides = [ <name> ] } ]
+    hwut-root.conf   outermost: platform = [ { ..., tools = [ <tool> ] } ];
+                     below: requires = [ <tool> ] (o-51 .. o-53)
 
     host           the machine that runs hwut and the test application
     hwut_remote    the Python package the writer imports, in
@@ -78,8 +84,10 @@ support/remote -- REMOTE EXECUTION: A TEST APPLICATION DRIVES A BOARD
                    through its loader module
     bench          a target, its link and
                    its loader
-    platform       where hwut runs a bubble (spec/42); a definition that
-                   provides a bench's name has that board attached
+    platform       an environment holding the TOOLS a subtree needs, defined
+                   in the outermost hwut-root.conf (o-49, o-51; spec/42)
+    device         what ONE test talks to: a board, a simulator; reached
+                   by the test, never by hwut (o-49)
 
     WHAT THE USER DOES -- everything else is done by the modules; the
     protocol (Part A) stays hidden from the user.
@@ -91,11 +99,11 @@ support/remote -- REMOTE EXECUTION: A TEST APPLICATION DRIVES A BOARD
          |  write the board's configuration (o-37)                        |
          |  python3 -m hwut_remote list: what is attached, which file     |
          |    names it                                                    |
-         |  name it in the 'provides' of the platform it is attached to   |
+         |  require its tools ('requires') where its tests stand          |
          |              |                |                |               |
          |  ONCE PER TEST                                                 |
-         |  copy a prototype: support/remote/proto/<name>/                |
-         |  its bubble specifies the bench: platform = [ "<name>" ]       |
+         |  copy a prototype: support/remote/<name>/                |
+         |  its root says the tools it needs: requires = [ "<tool>" ]     |
          |  put the UUT beside the agent: verilog -- in the top           |
          |    level; c, python -- write uut_run(stim, report)             |
          |  write the test application: vectors, prints                   |
@@ -119,8 +127,9 @@ support/remote -- REMOTE EXECUTION: A TEST APPLICATION DRIVES A BOARD
 
     The host reads and writes bytes of a map; one verb, 'x', applies a
     stimulus and returns the outcome and the report. Every reply is the
-    content of a read. hwut learns two things: which platform provides a
-    name, and one exit status, 77 -- the case's infrastructure is absent.
+    content of a read. hwut learns two things: which platform holds the
+    tools a subtree requires, and one exit status, 77 -- the device is not
+    reachable.
     It holds no bench, looks for no device and never talks to a board.
 
     Running example: an 8-bit registered adder on a MAX 10 at 50 MHz,
@@ -152,7 +161,7 @@ support/remote -- REMOTE EXECUTION: A TEST APPLICATION DRIVES A BOARD
                                          'loader' names; opens, checks the
                                          image, flashes if stale (5)
                       hub.reset_bench()  the bench reset (6)
-                      LinkHub:  reset() vector() read() write() contract()
+                      LinkHub:  reset() vector() read() write() terminate()
                       VisaHub:  reset() query() write() opc()       (13)
                                       |
     CLI             python3 -m hwut_remote <transport> [<address>]
@@ -221,7 +230,7 @@ KEYS -- closed; an unknown key is refused
     Hub            with, flash(image, image_id), reset_bench(), close();
                    the base of every hub
     LinkHub        a Hub over the agent's map: vector(stim) -> int |
-                   TIMEOUT, read(addr, n), write(addr, bytes), contract(),
+                   TIMEOUT, read(addr, n), write(addr, bytes), terminate(),
                    reset(); a producer gives it open, send(bytes),
                    recv(deadline) -> bytes, close; line, CRC, token and
                    the ladder are LinkHub's (sections 4, 10)
@@ -396,13 +405,13 @@ KEYS -- closed; an unknown key is refused
 
     THE TEST -- build and deploy, two stages, two meanings (o-41):
 
-        @hwut { build   { framework = "make"  executable = "uut.sof" }
+        @hwut { build   { framework = "make"  target = "uut.sof" }
                 execute = "python3 test-max10.py"
                 deploy  = "python3 -m hwut_remote serial --config-file
                            max10.conf flash uut.sof --image-id-file
                            TMP/image_id" }
 
-    A build makes its 'executable' (default 'app') and the test then runs
+    A build makes its 'target' (default 'app'; o-48) and the test then runs
     THAT, unless 'execute' states the call (R-68): a Python writer states
     it. The build runs where the Makefile stands, in the test directory.
 
@@ -413,13 +422,18 @@ KEYS -- closed; an unknown key is refused
     turn 77 into 2.
 
         provision:  build ----------> deploy -----------> execute
-                    BUILD_FAILED      77: [ABSENT]         77: [ABSENT]
-                    (the code)        else DEPLOY_FAILED   (behaviour)
-                                      (the infrastructure)
+                    BUILD_FAILED      77: no-device        77: no-device
+                    (the code)        else DEPLOY_FAILED   else behaviour
+                    every one of them a failure of the test (o-49)
 
-    The stage deploy runs after the build and before execute, remembered
-    as StageBuild is: it runs again only when the build ran again.
-    DEPLOY_FAILED is a FAIL with its own report token.
+    The deploy is a NODE of the plan (o-47; plan P-20), 'deploy[<file>]':
+    supported by the application's build, supporting its tests, run once
+    per run in the build's directory. Exit 0 stands; 77 is "device not
+    reachable"; any other failure is DEPLOY_FAILED ('deploy-failed',
+    'no-deploy [FAIL]'), its last stderr line the NOTE. Either way the
+    tests are unsupported: they FAIL, not run. A collision group naming
+    the application covers its deploy. Measured:
+    services/TEST/test-deploy.sh (flashed, failed, absent, unbuilt).
 
     hub.flash(image, image_id), the same for every loader; its CLI:
 
@@ -449,7 +463,7 @@ KEYS -- closed; an unknown key is refused
     nothing changed      no flash
     someone reflashed    flash; confirm
     port busy            DEPLOY_FAILED "bench busy"
-    device absent        [ABSENT] "no device" (exit 77)
+    device absent        no-device [FAIL] "no device" (exit 77)
     board unpowered      DEPLOY_FAILED (no agent; the loader fails)
     flash did not take   DEPLOY_FAILED
     the code does not    BUILD_FAILED
@@ -478,42 +492,35 @@ KEYS -- closed; an unknown key is refused
 7  Q -- OWNERSHIP
 ==============================================================================
 
-    The tests of one board are a collision group (R-32). The board is
-    attached to the platform whose definition provides its bench's name;
-    the board's bubble specifies that name (spec/42, 'provides'):
+    The tests of one board are a collision group (R-32); the group covers
+    the board's deploy too (section 5, plan P-20).
 
-    a hwut-root.conf the walk reads (the name resolves across all):
-        platform = [ { name = "local", provides = [ "max10" ] } ]
-    the board's bubble, support/remote/proto/de10-lite/hwut-root.conf:
-        platform = [ "max10" ]
+    A BOARD IS A DEVICE, NOT A PLATFORM (o-49). A platform holds the TOOLS
+    a subtree needs (quartus, iverilog) and is defined once, in the
+    outermost hwut-root.conf, with 'tools = [ ... ]'; a conf below and a
+    directory says 'requires = [ <tool> ... ]' (o-50 .. o-58; spec/42 --
+    BUILT): a hwut.conf adds, an inner root replaces; the first platform
+    defined that announces them all runs the subtree, '-p' narrowing. A device is what one test talks to; the test reaches it
+    itself, through its hub.
 
-    A PROVISION IS ONE-WAY: A provides B lets a bubble specifying B run
-    on A; a bubble specifying A asks nothing of B. A name both defined
-    and provided is a fault (spec/42), so a provided name provides
-    nothing: no chain, no cycle. 'provides' names informal
-    functionality; it routes, hwut checks nothing of it.
+    THE DEVICE NOT REACHABLE -- exit status 77 (o-49; BUILT). Only the test
+    knows what it talks to; it says so:
 
-    THE INFRASTRUCTURE ABSENT -- exit status 77. Only the test knows what
-    it needs; it says so, and hwut judges nothing:
-
-        create_hub(...)  device absent --> stderr "max10: no device
+        create_hub(...)  device absent --> stderr "serial: no device
                                            /dev/serial/by-id/usb-Altera_..."
                                        --> exit 77
 
-        test-max10.py adder [ABSENT]
-              NOTE  max10: no device /dev/serial/by-id/usb-Altera_...
+        END   :          x ..................................... no-device [FAIL]
+                test-b.sh  x   device not reachable  (serial: no device ...)
 
     hwut_remote does both where it cannot open the link for want of the
-    device; the writer writes nothing. The NOTE is the last line of
-    stderr. The verdict is E_TestRunResult.INFRA_ABSENT: not compared,
-    not FAIL, counted as a bubble not run is (spec/42 PROTOCOL.txt 4: not in
-    RESULTS, no book entry, the last verdict kept, exit status
-    unchanged). Every other exit status stays behaviour.
-
-    A VERDICT measured under a provided name shows it once per directory,
-    where spec/42 shows '(linux)':
-
-        de10-lite/  (max10 in local)
+    device; the writer writes nothing. hwut does not compare the output;
+    the test FAILS with E_TestRunResult.DEVICE_UNREACHABLE
+    ('device-unreachable', brief 'no-device'), the last stderr line its
+    NOTE; counted, booked, red; its dependents fail with it. The same 77
+    from a deploy fails the deploy node, and its tests unsupported. Every
+    other exit status stays behaviour. Measured: services/TEST/
+    test-device.sh, test-deploy.sh.
 
     CONDITION ON HWUT: no other build or deploy of the group runs between
     the deploy and the run of one application. Delivery step 4 verifies it.
@@ -559,13 +566,12 @@ KEYS -- closed; an unknown key is refused
     Hub.vector() and Hub.write() raise unless this hub has reset; leaving
     the 'with' block closes the link.
 
-    The writer prints the wait contract as a row, Hub.contract().
-    Everything else the session knows is a '##' line, delivered through
-    'note'.
+    Everything the session knows is a '##' line, delivered through
+    'note'. What the rows depend on beyond the stimuli -- how the agent
+    waits, for one -- the test prints itself.
 
     ## agent: proto 1  image 3f9a07c1  stim 2  report 2  50 MHz
     ## discarded 12 bytes, 0 lines
-    contract: sample 1 cycle after apply, timeout 10000000 counts at 50 MHz
     ## stim = a[15:8] b[7:0]   report = sum[8:0]
     0304 007
     ff01 100
@@ -583,7 +589,7 @@ KEYS -- closed; an unknown key is refused
 10  THE TEST, AS THE WRITER WRITES IT
 ==============================================================================
 
-    # @hwut { build   { framework = "make"  executable = "uut.sof" }
+    # @hwut { build   { framework = "make"  target = "uut.sof" }
     #         execute = "python3 test-max10.py"
     #         collision = [ "test-max10-timing.py" ]
     #         deploy  = "python3 -m hwut_remote serial --config-file
@@ -602,7 +608,6 @@ KEYS -- closed; an unknown key is refused
         with create_hub("serial", config_file="max10.conf", note=note,
                         image_id=image, image="uut.sof") as hub:
             hub.reset()
-            print(hub.contract())
             print("## stim = a[15:8] b[7:0]   report = sum[8:0]")
             for x, y in VECTORS:
                 print(f"{x:02x}{y:02x} {hub.vector((x << 8) | y):03x}")
@@ -610,10 +615,10 @@ KEYS -- closed; an unknown key is refused
     HwutRunner(sys.argv, "Adder on MAX 10;", {"adder": adder}).run()
 
     Nothing runs at import: '--hwut-info' needs no build and no board.
-    The bubble's hwut-root.conf specifies platform = [ "max10" ]; the
+    The directory's hwut-root.conf says requires = [ "quartus" ]; the
     test names its configuration file, never the platform. The hub finds
-    the bench reset by 'loader'. The board absent: exit 77 (section 7). The writer never sees a token, a CRC,
-    a byte order or a recovery.
+    the bench reset by 'loader'. The board absent: exit 77 (section 7).
+    The writer never sees a token, a CRC, a byte order or a recovery.
 
 
 ==============================================================================
@@ -626,14 +631,13 @@ KEYS -- closed; an unknown key is refused
     open, '\n'
     9 r 0 1a *6679 ---------------------->
           <... noise ... discarded, counted
-       <-- 9 6877757401000000c1079a3f0202050080f0fa0280969800ff80 *085c
+       <-- 9 6877757401000000c1079a3f0202010080f0fa0280969800ff80 *8c51
            magic, proto 1, image 3f9a07c1, stim 2,        ## agent: ...
-           report 2, mode 05 (sample, LATENCY 1),         ## discarded ...
-           0 lines discarded,
+           report 2, mode 01 (sample), 0 lines            ## discarded ...
+           discarded,
            50 MHz, timeout 10000000, last ff, fresh
     a w 3f 01 *e167 --------------------->  UUT reset
        <-- a 00 *1ea6                       outcome 00, fresh 0
-                                                          contract: ...
                                                           ## stim = ...
     b x 0403 *2b95 ---------------------->  apply 0x0304
        <-- b 010700 *8bff                                 0304 007
@@ -652,7 +656,7 @@ KEYS -- closed; an unknown key is refused
     -------------                       -----------
     build: make uut.sof, deploy: flash  build: make TMP/uut.vvp (iverilog)
     max10.conf: serial, wall            sim.conf: launch, virtual
-    platform = [ "max10" ]              no platform: runs locally
+    requires = [ "quartus" ]            requires = [ "iverilog" ]
               |                                   |
               +---- from vectors import adder ----+   the shared code
 
@@ -798,8 +802,8 @@ KEYS -- closed; an unknown key is refused
 
     Each holds: README.txt (board, wiring, host setup), the Makefile with
     host/image_id.mk, the top level or port, the configuration file, the
-    platform's 'provides' as a hwut-root.conf snippet, the bubble's
-    hwut-root.conf specifying the bench, the test application. A GOOD is
+    platform's 'tools' as a snippet for the outermost hwut-root.conf, the
+    directory's hwut-root.conf saying 'requires', the test application. A GOOD is
     recorded where the board stands; iverilog, qemu and scpi-sim record
     theirs on
     every host. tcp and power are configuration variants, documented in the

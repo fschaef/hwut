@@ -1,6 +1,6 @@
 /* @hwut {
  *     title   = "Demo: a recursive build, serial and parallel -- one summary, by a pype system"
- *     build   { framework = "make", executable = "%.exe" }
+ *     build   { framework = "make", target = "%.exe" }
  *     pype    = "build.pypes"
  *     same    = true
  *     choices = ["serial", "parallel"]

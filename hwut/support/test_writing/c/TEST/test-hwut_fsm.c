@@ -1,6 +1,6 @@
 /* @hwut {
  *     title      = "hwut_fsm: a state machine as the test's model of the system"
- *     build      { framework = "make", executable = "%.exe" }
+ *     build      { framework = "make", target = "%.exe" }
  *     choices {
  *         syntax    { features = ["c-fsm"] }
  *         refused   { features = ["c-fsm"] }

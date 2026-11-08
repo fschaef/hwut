@@ -133,7 +133,7 @@ def fixture(entry_command="true"):
     put(test, "test-built.c",
         '/* @hwut { title = "Built"\n'
         '          build { framework = "make"'
-        '                  executable = "app" } } */\n')
+        '                  target = "app" } } */\n')
     put(test, "Makefile",
         'app:\n\tfalse\n')
     #  ACCEPTED (E-41): the gate admits by the nominal; the built and

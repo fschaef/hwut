@@ -140,6 +140,7 @@ _NOT_TESTIFIED = frozenset((
     E_TestRunResult.SOURCE_NOT_FOUND,
     E_TestRunResult.INTERPRETER_NOT_FOUND,
     E_TestRunResult.TEST_APP_LAUNCH_FAILED,
+    E_TestRunResult.DEVICE_UNREACHABLE,
     E_TestRunResult.TEST_APP_CONTAINED,
     E_TestRunResult.TEST_APP_SESSION_GONE,       # O-21: never served
     E_TestRunResult.TEST_APP_WALL_CLOCK_EXCEEDED,

@@ -1,0 +1,12 @@
+BUILD build[make test-b.sh]
+BUILT build[make test-b.sh] ........................................ [OK]
+START deploy[test-b.sh]
+END   deploy[test-b.sh] ............................................ [OK]
+START test-b.sh  x
+      :          y
+END   :          x ................................................. [OK]
+      :          y ................................................. [OK]
+RESULTS: 2 ok, 0 fail, <t> [sec], <t> [sec] total
+exit: 0
+flash calls: 1
+<hwut-end>

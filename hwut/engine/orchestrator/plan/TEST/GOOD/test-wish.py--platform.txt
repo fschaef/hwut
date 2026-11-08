@@ -49,8 +49,8 @@
 --- '-p=' naming nothing: -p= ---
     REFUSED: '-p' names no platform
 
---- the NOTE: a '-p' no bubble requires ---
-    a bubble with no 'platform', one with linux:
+--- the NOTE: a '-p' no bubble can use ---
+    a bubble requiring nothing, one held by linux:
         NOTE  -p lab-3: no bubble below requires it
     linux alone:
         NOTE  -p lab-3: no bubble below requires it

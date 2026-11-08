@@ -28,6 +28,8 @@ class E_Origin(Enum):
 #  HOCON key -> TestParameters field.
 KEY_TO_FIELD = {
     "build":       "build",
+    "deploy":      "deploy",
+    "requires":    "requires",
     "caps":        "caps",
     "pype":        "pype",
     "tolerance":   "tolerance",
@@ -109,11 +111,26 @@ class Build(_Scope):
     'caps' here caps the BUILD process; the caps at choice level cap the
     RUN. One noun, one meaning, two places.
 
-    '%' in 'framework' and 'executable' is the SOURCE FILE'S STEM (R-74).
+    'target' is what the build makes and the test runs (unless 'execute'
+    states the call); 'executable' was its name before 2026-11-07 (o-48).
+    '%' in 'framework' and 'target' is the SOURCE FILE'S STEM (R-74).
     The coverage target is NOT here: it is the language's word,
     'language-setup.<lang>.coverage_target' (R-73)."""
     framework:  str  | None = None
-    executable: str  | None = None
+    target:     str  | None = None
+    caps:       Caps | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class Deploy(_Scope):
+    """How the built image comes where the test reaches it (intend/26
+    o-40, o-41). 'deploy = "<command>"' is this record with 'flash' alone;
+    the scope form states the rest. The vocabulary is closed and grows:
+    'flash' is its first key.
+
+    'flash' is a COMMAND, run directly (never through make, which turns
+    77 into 2) where the build ran. 'caps' caps the deploy process."""
+    flash:      str  | None = None
     caps:       Caps | None = None
 
 
@@ -190,6 +207,8 @@ class TestParameters(_Scope):
     through the resolution; a choice never states them itself.
     """
     build:       Build | None = None
+    deploy:      Deploy | None = None
+    requires:    tuple | None = None   # tools the case needs (o-59)
     caps:        Caps  | None = None
     pype:        str   | None = None
     tolerance:   Tolerance | None = None
@@ -250,10 +269,10 @@ class LanguageSetup:
                        the empty tuple is an answer (coverage D-2)
     'coverage_target'  the COVERAGE-CAPABLE build target, '%' the source
                        file's stem (R-74); under 'hwut.cov.run' it is built
-                       and run in place of 'build.executable'. Unstated
+                       and run in place of 'build.target'. Unstated
                        for a COMPILED test: noted 'NO_COVERAGE_TARGET'
                        on the book entry, the run continues with the
-                       executable (coverage D-19)
+                       target (coverage D-19)
     'profiler'         declared, not yet consumed"""
     extensions:      tuple      = ()
     interpreter:     str | None = None
@@ -315,12 +334,16 @@ class DirectorySpec:
     groups may not share an alternative name. Two alternatives of ONE
     group named together are refused: they configure one subspace.
 
-    'platform_tuple' holds the PLATFORMS THE BUBBLE REQUIRES, its
-    'hwut-root.conf' 'platform = [ ... ]' as read (intend/42): one
-    (name, spec) pair per entry, 'spec' the entry's keys ('{}' for the
-    bare "local"). None where the conf says nothing: the local machine
-    alone (ruling 10). The root's alone; it flows to the bubble's
-    directories and stops at an inner bubble, which decides on its own."""
+    'platform_tuple' holds the PLATFORMS DEFINED, 'platform = [ ... ]'
+    as read: one (name, spec) pair per entry, 'spec' the entry's keys,
+    its 'tools' a tuple (intend/26 o-50 .. o-53). Only the OUTERMOST
+    'hwut-root.conf' may state it ('plan/bubble.py' refuses it in an
+    inner one).
+
+    'requires_tuple' names the TOOLS the subtree needs (o-51, o-57): a
+    'hwut.conf' adds to what it inherits; an inner 'hwut-root.conf'
+    replaces it, nothing being inherited into a root (o-54). None where
+    nothing above says one."""
     title:           str | None = None   # the directory's own (X-INFO-DAT)
     on_entry:        str | None = None
     on_exit:         str | None = None
@@ -341,7 +364,8 @@ class DirectorySpec:
     procsitter_db:   dict       = None   # platform -> frozenset of caps
                                          #  acknowledged unenforceable (R-48)
     free_disk_min_mb: int       = None   # every disk's free-space floor
-    platform_tuple:  tuple      = None   # of (name, spec): intend/42
+    platform_tuple:  tuple      = None   # of (name, spec): intend/26 o-53
+    requires_tuple:  tuple      = None   # tool names: intend/26 o-57
     position:        Position   = None
 
 

@@ -20,7 +20,7 @@ DECISION  One Rust application per Python application, the same stems:
           Python one says; 'hwut-features.conf' is the Python one (its
           documents resolve from here as from there: the same depth).
           ONE MAKEFILE, run by hwut where it stands (services E-210), per
-          test whose header says 'build { framework = "make", executable =
+          test whose header says 'build { framework = "make", target =
           "%.exe" }'. No two targets share an output: 'garage.exe' and
           'screen.exe' each compile their own copy of the support crate into
           'build-<stem>/'; the modules 'clock_random.rs' and 'shop_db.rs'

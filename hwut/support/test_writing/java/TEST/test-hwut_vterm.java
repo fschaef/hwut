@@ -1,6 +1,6 @@
 /* @hwut {
  *     title      = "A terminal's screen read by a test: libvterm through the Foreign Function & Memory API."
- *     build      { framework = "make", executable = "%.exe" }
+ *     build      { framework = "make", target = "%.exe" }
  *     choices {
  *         attributes { features = ["java-vterm"] }
  *         colours    { features = ["java-vterm"] }

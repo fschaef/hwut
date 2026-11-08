@@ -1,5 +1,6 @@
     build[make lib]        BUILD    -> BUILD
+    deploy[test-app.py]    DEPLOY   -> DEPLOY
     session[test-app.py]   SESSION  -> EXECUTE
     test-app.py one        TEST     -> EXECUTE
-    the ladder's rungs: ACQUIRE, BUILD, EXECUTE
+    the ladder's rungs: ACQUIRE, BUILD, DEPLOY, EXECUTE
 <hwut-end>

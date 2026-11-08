@@ -2,7 +2,7 @@
 ______________________________________________________________________________
 
 PURPOSE: THE HUB -- Hub, the base of every hub, and LinkHub, the session
-         over an agent's map: hello, reset, vector, read, write, contract,
+         over an agent's map: hello, reset, vector, read, write, terminate,
          and the ladder (README 11, 18; PROTOCOL.txt 4, 5; MAP.txt).
 
     with hub:                    opens the link, says hello (PROTOCOL 4)
@@ -15,9 +15,12 @@ A session is one choice. The writer never sees a token, a CRC, a byte order
 or a recovery; a recovery is one '##' line through 'note'.
 ______________________________________________________________________________
 """
+import os
 import random
+import signal
 import subprocess
 import sys
+import threading
 import time
 
 from .     import line as line_
@@ -73,6 +76,21 @@ class Expired(HubError):
     """Outcome 03: no done within 'timeout' ticks -- a failure."""
 
 
+class Aborted(BaseException):
+    """hwut's watchdog ended the test application by a signal; the hub
+    ends the remote side, then the process dies by that signal."""
+
+    def __init__(self, signum):
+        """RETURN: None."""
+        BaseException.__init__(self, signal.Signals(signum).name)
+        self.signum = signum
+
+
+def _raise_aborted(signum, _frame):
+    """RETURN: never. The signal turned into Aborted, in the main thread."""
+    raise Aborted(signum)
+
+
 def absent(text):
     """
     RETURN: never. 'text' to stderr as the last line, then exit status 77:
@@ -108,17 +126,48 @@ class Hub:
         return self
 
     def __enter__(self):
-        """RETURN: Hub, self, opened; exit 77 where the device is absent."""
+        """RETURN: Hub, self, opened; exit 77 where the device is absent.
+        SIGTERM and SIGINT -- hwut's watchdog -- are caught for the
+        session: the hub ends the remote side first (README 9)."""
+        self._saved = {}
+        if threading.current_thread() is threading.main_thread():
+            for signum in (signal.SIGTERM, signal.SIGINT):
+                self._saved[signum] = signal.signal(signum, _raise_aborted)
         try:
             self.open()
         except DeviceAbsent as error:
+            self._restore()
             absent("%s: %s" % (self.transport, error))
+        except BaseException:
+            self._restore()
+            raise
         return self
 
-    def __exit__(self, *_):
-        """RETURN: False. The hub closed; an exception passes on."""
-        self.close()
+    def __exit__(self, kind, error, _traceback):
+        """RETURN: False. The hub closed; an exception passes on. On
+        Aborted: the termination request, the link closed, then the process
+        ended by the same signal, as hwut expects of it."""
+        try:
+            if isinstance(error, Aborted) and self.open_f:
+                self.terminate()
+            self.close()
+        finally:
+            self._restore()
+        if isinstance(error, Aborted):
+            sys.stdout.flush()
+            signal.signal(error.signum, signal.SIG_DFL)
+            os.kill(os.getpid(), error.signum)
         return False
+
+    def _restore(self):
+        """RETURN: None. The signal handlers as before the session."""
+        for signum, handler in getattr(self, "_saved", {}).items():
+            signal.signal(signum, handler)
+        self._saved = {}
+
+    def terminate(self):
+        """RETURN: None. The remote side ended as far as the subclass can;
+        the base has nothing to end."""
 
     def open(self):
         """RETURN: None. The link opened and greeted."""
@@ -196,7 +245,7 @@ class LinkHub(Hub):
 
     def _hello(self):
         """RETURN: None. 'r 0 1a' answered within 'boot': identity, lengths
-        and contract read, noted."""
+        read, noted."""
         boot      = float(self.values["boot"])
         margin    = self._margin()
         self.link.send(b"\n")
@@ -289,21 +338,21 @@ class LinkHub(Hub):
                                wait_f=(address == A_RESET))
         self._check_status(status[0])
 
-    def contract(self):
+    def terminate(self):
         """
-        RETURN: str, the wait contract as the writer prints it, a row:
-                'contract: sample 1 cycle after apply, timeout 10000000
-                counts at 50 MHz' or 'contract: wait for done, ...'.
+        RETURN: None. The termination request 'k' sent and its reply awaited
+                for at most one second: the agent aborts a pending wait and
+                resets the UUT. Noted; a silent agent is noted, not raised --
+                the link is closed next in any case.
         """
-        self._require_open()
-        latency = self.mode >> 2
-        if self.mode & 0x01:
-            how = "sample %i cycle%s after apply" \
-                  % (latency, "" if latency == 1 else "s")
-        else:
-            how = "wait for done"
-        return "contract: %s, timeout %i counts at %s" \
-               % (how, self.timeout, _hz(self.clock))
+        token = self._next_token("k")
+        try:
+            self.link.send(line_.encode(token, "k"))
+            reply, _ = self._await(token, time.monotonic() + 1.0)
+        except (EOFError, OSError):
+            reply = None
+        self.note("terminated: 'k' %s" % ("answered" if reply is not None
+                                           else "unanswered"))
 
     # ------------------------------------------------------- the ladder ---
     def _command(self, verb, body=None, wait_f=False):
@@ -442,6 +491,8 @@ class LinkHub(Hub):
         """RETURN: float, seconds: waits + line_time + link_margin
         (PROTOCOL 5)."""
         margin = self._margin()
+        if wait_f and self.timeout == 0:
+            return float("inf")            # no agent timeout: hwut's caps end it
         waits  = self.timeout / self.clock if wait_f and self.clock else 0.0
         baud   = self.values.get("baud")
         line_time = 2 * 80 * 10 / baud if baud else 0.0

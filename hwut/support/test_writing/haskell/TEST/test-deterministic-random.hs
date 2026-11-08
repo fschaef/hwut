@@ -1,6 +1,6 @@
 -- @hwut {
 --     title      = "DeterministicStream RNG and SelectionMarker spread"
---     build      { framework = "make", executable = "%.exe" }
+--     build      { framework = "make", target = "%.exe" }
 --     choices {
 --         gauss      { features = ["haskell-random"] }
 --         primitives { features = ["haskell-random"] }

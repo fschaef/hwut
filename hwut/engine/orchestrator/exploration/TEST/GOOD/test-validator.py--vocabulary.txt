@@ -24,6 +24,14 @@ choice -:
     (nothing stated)
 FAULT f.py:3:19: VOCABULARY: 'slash' is retired: '/' and '\' are equivalent by eq_pattern = ["[\\\\/]+"]; 'hwut.renovate --apply' rewrites it
 
+--- a renamed key: 'executable' (intend/26 o-48), refused, 'target' named ---
+title    'T'  language None  origin HEADER  at 1:10
+root:
+    build = Build(framework='make', target=None, caps=None)
+choice -:
+    (nothing stated)
+FAULT f.py:3:35: VOCABULARY: 'executable' is now 'target': build { framework = ...  target = ... } (o-48)
+
 --- 'title' absent ---
 title    'f.py <title unspecified>'  language None  origin HEADER  at 1:8
 root:
@@ -36,9 +44,9 @@ title    'T'  language None  origin HEADER  at 1:8
 root:
     (nothing stated)
 choice 'one':
-    build = Build(framework=None, executable=None, caps=None)
+    build = Build(framework=None, target=None, caps=None)
 choice 'two':
-    build = Build(framework='%-make', executable=None, caps=None)
+    build = Build(framework='%-make', target=None, caps=None)
 FAULT f.py:3:15: VOCABULARY: unknown build framework 'cmake'; known: make
 FAULT f.py:5:35: VOCABULARY: unknown build framework 'scons'; known: make
 <hwut-end>

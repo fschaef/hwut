@@ -23,7 +23,7 @@ Where a run is seeded by the clock or the scheduler its output differs
 from run to run, and every choice passes anyway.
 
 A JAVA TEST IS BUILT, then run: its header says 'build { framework =
-"make", executable = "%.exe" }', and hwut runs 'make x.exe' here, by the
+"make", target = "%.exe" }', and hwut runs 'make x.exe' here, by the
 'Makefile' beside it. 'make x.exe' compiles 'x.java' and the support
 classes it uses into 'x.classes/' -- each its own directory, so tests
 build at once -- and writes the launcher 'x.exe'. JDK 21; libvterm for

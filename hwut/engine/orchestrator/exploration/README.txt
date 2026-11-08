@@ -142,21 +142,60 @@ cannot make.
 
                         build {
                             framework  = "make"
-                            executable = "special.exe"
+                            target     = "special.exe"
                             caps { ... }
                         }
 
                     'framework'  the build framework
-                    'executable' the artefact to call; the source file's
-                                 stem where unstated
+                    'target'     what the build makes, and what the test
+                                 then runs unless 'execute' states the
+                                 call; 'app' where unstated. Its name was
+                                 'executable' until 2026-11-07: that word
+                                 is refused, 'target' named (o-48)
                     'caps'       the caps of the BUILD process
 
-                    '%' in 'framework' and 'executable' is the SOURCE
+                    '%' in 'framework' and 'target' is the SOURCE
                     FILE'S STEM (section 4.1). The coverage-capable
                     target is NOT stated here: it is the language's
                     word, 'language-setup.<lang>.coverage_target'
                     (section 7), and a 'coverage_target' inside 'build'
                     is refused by name.
+
+    REQUIRES
+        requires    the tools this test -- or this choice -- needs beyond
+                    its directory's (intend/26 o-59): a list of names the
+                    outermost hwut-root.conf's platforms announce. A case
+                    whose platform does not announce one is refused, named,
+                    not counted (plan/bubble.py 'case_refusal').
+
+    DEPLOY
+        deploy      the command that puts the built image where the test
+                    reaches it -- a flash onto a board, a copy onto a
+                    target -- named alone:
+
+                        deploy = "python3 -m hwut_remote serial
+                                  --config-file max10.conf flash uut.sof
+                                  --image-id-file TMP/image_id"
+
+                    or the scope (intend/26 o-41):
+
+                        deploy {
+                            flash = "<command>"
+                            caps { ... }
+                        }
+
+                    'flash'      the command, split as a shell would and
+                                 run DIRECTLY (never through make, which
+                                 turns 77 into 2), once per run, where
+                                 the build ran
+                    'caps'       the caps of the DEPLOY process
+
+                    The vocabulary is closed and grows; another key is
+                    refused by name. The deploy is a plan node between
+                    the build and the tests (plan P-20): exit 77 says
+                    the device is not reachable, any other failure is
+                    'deploy-failed'; either way the application's tests
+                    fail, not run.
 
     CANONICALISATION -- the D of Equivalence(D(b_pole), D(b), T)
         pype        pype script that rewrites a stream into canonical
@@ -373,7 +412,7 @@ expands to the stem of its source file -- 'test-parse.c' gives
 'test-parse' -- and '%%' is one literal '%'. It is admitted in:
 
     build.framework                        header, 'apps'
-    build.executable                       header, 'apps'
+    build.target                           header, 'apps'
     language-setup.<lang>.coverage_target  hwut-root.conf     '%.cov.exe'
 
 It is NOT admitted in 'target { }' of 'hwut.conf': a target is the
@@ -483,8 +522,8 @@ ______________________________________________________________________________
 configuration; each of its alternatives is a point on that dimension.
 
     variant_group {
-        opt  { o0   { build { executable = "%-O0.exe" } }
-               o3   { build { executable = "%-O3.exe" } } }
+        opt  { o0   { build { target = "%-O0.exe" } }
+               o3   { build { target = "%-O3.exe" } } }
         load { fast { caps { timeout_sec = 30 } }
                slow { caps { timeout_sec = 600 } } }
     }
@@ -615,7 +654,7 @@ everything HWUT does with the file follows from that entry:
                      first this machine has serves. '[]' is an ANSWER --
                      nobody vouches for a tool (coverage D-2)
     coverage_target  the coverage-capable build target of a COMPILED
-                     test, built and run in place of 'build.executable'
+                     test, built and run in place of 'build.target'
                      under 'hwut.cov.run'; '%' the source file's stem (4.1)
     profiler         declared, not yet consumed
 

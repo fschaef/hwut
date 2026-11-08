@@ -28,7 +28,7 @@ from hwut.support.test_writing.python.hwut_hocon import parse, SourceLine
 
 HEADER = "@" + '''hwut {
     title       = "Parser corner cases"
-    build       { framework = "make"  executable = "special.exe" }
+    build       { framework = "make"  target = "special.exe" }
     caps        { timeout_sec = 30  network = false  memory_mb = 512 }
     pype        = "strip.pype"
     tolerance {

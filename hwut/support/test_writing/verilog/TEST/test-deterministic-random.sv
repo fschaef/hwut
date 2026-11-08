@@ -1,6 +1,6 @@
 // @hwut {
 //     title      = "DeterministicStream RNG and SelectionMarker spread"
-//     build      { framework = "make", executable = "%.exe"
+//     build      { framework = "make", target = "%.exe"
 //                  caps { memory_mb = 2048 } }
 //     choices {
 //         gauss      { features = ["sv-random"] }

@@ -9,7 +9,7 @@ choice 'one':
 FAULT f.py:3:33: TYPE: 'numeric_ratio' is a relative ratio in [0..1]
 FAULT f.py:3:51: TYPE: 'whitespace' must be a boolean
 FAULT f.py:4:27: TYPE: 'analogy' names two markers, the opening and the closing; 3 given
-FAULT f.py:5:15: TYPE: 'build' is a framework name or a scope of 'framework', 'executable' and 'caps'
+FAULT f.py:5:15: TYPE: 'build' is a framework name or a scope of 'framework', 'target' and 'caps'
 FAULT f.py:6:29: TYPE: 'timeout_sec' must be a number
 FAULT f.py:6:49: TYPE: 'memory_mb' must be greater than zero
 FAULT f.py:7:15: VOCABULARY: unknown cap 'bandwidth'

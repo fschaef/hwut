@@ -1,0 +1,19 @@
+## agent: proto 1  image 3f9a07c1  stim 2  report 2  50 MHz
+## discarded 0 bytes, 0 lines
+## recovered: no reply to 'r 18 4', resent
+## agent silent: 3 failures in a row
+## bench reset failed: no agent within 0.3 s
+FAILED: AgentSilent: agent silent: 3 failures in a row
+wire:
+    --> 4 r 0 1a *301d
+    <-- 4 6877757401000000c1079a3f0202010080f0fa0280969800ff80 *e254
+    --> 5 w 3f 01 *71af
+    <-- 5 00 *a16c
+    --> 6 x 0403 *ef9c   [silent]
+    --> 7 r 18 4 *5e0c
+    --> 8 r 18 4 *87ce
+    --- close
+    --> c r 0 1a *3c61
+    ... repeated until 'boot' ends
+    --- close
+<hwut-end>

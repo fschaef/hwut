@@ -867,21 +867,19 @@ def _ancestor_tuple(bubble):
 
 def unrequired_platform_note_tuple(wish, required_iterable):
     """
-    RETURN: tuple of str, one NOTE per '-p' name that no bubble requires
+    RETURN: tuple of str, one NOTE per '-p' name that no bubble can use
             -- 'NOTE  -p lab-3: no bubble below requires it' (spec/42
             section 2) -- in the order the names were typed; empty where
-            every one is required by some bubble, or no '-p' stands.
+            every one is a candidate of some bubble, or no '-p' stands.
 
-    'required_iterable' yields, per test directory walked, its bubble's
-    'platform' list as read ('DirectorySpec.platform_tuple': (name,
-    spec) pairs), None where the bubble says none -- it requires
-    'local' alone (ruling 10).
+    'required_iterable' yields, per bubble, its candidates -- the names
+    of the platforms announcing what it requires ('plan/bubble.py'
+    'candidate_tuple'; ('local',) where it requires nothing).
     """
     if not wish.platform_tuple: return ()
     required_set = set()
-    for platform_tuple in required_iterable:
-        if platform_tuple is None: required_set.add(LOCAL_PLATFORM)
-        else: required_set.update(name for name, _ in platform_tuple)
+    for name_tuple in required_iterable:
+        required_set.update(name_tuple or (LOCAL_PLATFORM,))
     return tuple("NOTE  -p %s: no bubble below requires it" % name
                  for name in wish.platform_tuple
                  if name not in required_set)

@@ -1,0 +1,22 @@
+## agent: proto 1  image 3f9a07c1  stim 2  report 2  50 MHz
+## discarded 0 bytes, 0 lines
+0304 007
+## recovered: 'x' was lost, resent
+ff01 100
+ffff 1fe
+wire:
+    --> 4 r 0 1a *301d
+    <-- 4 6877757401000000c1079a3f0202010080f0fa0280969800ff80 *e254
+    --> 5 w 3f 01 *71af
+    <-- 5 00 *a16c
+    --> 6 x 0403 *ef9c
+    <-- 6 010700 *4ff6
+    --> 7 x 01ff *edf6   [drop_command]
+    --> 8 r 18 4 *87ce
+    <-- 8 06010700 *c948
+    --> 9 x 01ff *73e7
+    <-- 9 010001 *0385
+    --> a x ffff *2fa5
+    <-- a 01fe01 *31a7
+    --- close
+<hwut-end>

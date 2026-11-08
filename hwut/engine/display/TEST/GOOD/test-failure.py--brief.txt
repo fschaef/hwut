@@ -5,6 +5,10 @@ build-tool-not-found           build        no-build
 compare-error                  execution    compare
 conf-broken                    build        spec
 constraint                     nominal      constraint
+deploy-contained               build        no-deploy
+deploy-failed                  build        no-deploy
+deploy-tool-not-found          build        no-deploy
+device-unreachable             environment  no-device
 disk-short                     environment  no-disk
 display-target-unreachable     environment  no-display
 interpreter-not-found          build        no-launch

@@ -97,3 +97,67 @@ DECISION  phy_stdio.v reads a byte only while the agent is idle and no
           pending one, so '! busy' cannot arise there -- it is proven on
           the UART phy's road only by design, not by a GOOD.
 COST      '! busy' has no regression page under iverilog.
+
+------------------------------------------------------------------------------
+RX-9  THE PROTOCOL CARRIES NO WAIT CONTRACT          (intend o-43; 2026-11-07)
+PROBLEM   RX-3 put LATENCY into the map and RX-4 named a unit, so that
+          Hub.contract() could print the wait as a row.
+DECISION  How the agent waits is the test's business: LATENCY is a
+          parameter of the agent's top level, not a byte of the map; mode
+          (0e) keeps [0] sample/wait and [1] seam; Hub.contract() is gone;
+          the test prints what its rows depend on. The hello is back to mode
+          01, CRC 8c51 (model/TEST/test-line.py 'crc').
+GRAVEYARD RX-3 (LATENCY in mode [7:2]) and RX-4 (the contract row's unit):
+          WITHDRAWN.
+
+------------------------------------------------------------------------------
+RX-10 THE WATCHDOG ENDS A HUNG TEST; 'k' ENDS THE WAIT   (o-44, o-46)
+PROBLEM   A UUT that never raises done held the agent, the link and the
+          test until something outside ended them, and left the agent
+          waiting.
+DECISION  hwut's caps end the test application by a signal. The hub catches
+          SIGTERM and SIGINT for the session, sends 'k', awaits its reply at
+          most one second, closes the link (a launched simulator ends with
+          it) and lets the process die by the same signal. 'k' is the one
+          line the agent takes while a command is pending: it aborts the
+          wait, resets the UUT (outcome 00), leaves 'last' and 'fresh', and
+          replies the status; the aborted command sends no reply. The
+          agent's own 'timeout' is optional: 0, the default, is none.
+          Measured: model/TEST/test-frame.py 'killed' (the wire, then
+          "ended by: SIGTERM"), iverilog/TEST/test-agent.py 'kill' (idle
+          under stdio; pending over the UART, where '! busy' is shown too).
+COST      Under stdio no byte is read while a command is pending: there the
+          closing, not 'k', ends a hung simulation.
+GRAVEYARD The reset write taking a second meaning; nothing in-band.
+AMENDS    RX-8: '! busy' is now proven, on the UART path (test-agent 'kill').
+
+------------------------------------------------------------------------------
+RX-11 support/remote/<platform>/                          (o-45; 2026-11-07)
+PROBLEM   Three TEST directories each carried their own hwut-root.conf, the
+          prototype a fourth.
+DECISION  One directory per target kind, each with its own hwut-root.conf
+          and TEST/; a writer copies one, root and all: model/ (the host
+          against a model agent behind a fake link; needs no tool) and
+          iverilog/ (the Verilog agent and the prototype). The package
+          (host/), the agents (target/) and the documents carry no root.
+COST      The agent's tests and the prototype a writer copies share one
+          TEST directory.
+
+------------------------------------------------------------------------------
+RX-12 THE FLASH IS hwut's DEPLOY; A BOARD IS A DEVICE       (o-47, o-49 .. o-53)
+DECISION  'python3 -m hwut_remote <transport> ... flash <image> <id>' is the
+          command a test's header names as its 'deploy': hwut runs it once
+          per run, as a node of the plan between the build and the tests
+          (engine/orchestrator/plan P-20); its 77 fails the deploy with "device
+          not reachable", the tests unsupported. A board is a DEVICE the
+          test reaches; a PLATFORM holds tools ('tools', 'requires';
+          spec/42, ruled, not built).
+AMENDS    RX-1: hwut knows no 'provides'; it knows tools and an exit status.
+          RX-5: a 77 FAILS the test (o-49), its output not compared.
+
+------------------------------------------------------------------------------
+RX-13 'requires' BUILT                                   (o-54 .. o-58; 2026-11-08)
+DECISION  iverilog/hwut-root.conf says 'requires = [ "iverilog" ]': it
+          replaces what support/ requires; the top root's 'local'
+          announces iverilog, so it runs here; model/ requires nothing.
+AMENDS    RX-12 ("not built").

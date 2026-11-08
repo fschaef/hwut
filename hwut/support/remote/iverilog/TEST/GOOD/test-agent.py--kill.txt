@@ -1,0 +1,10 @@
+reset           00
+x 0403          010700
+k, idle         00
+r 18 4          03000700   (last 03, outcome 00)
+reset           00
+x 0403          (no reply: the UUT hangs)
+r 19 1          ! busy
+k, pending      00
+r 18 2          0300   (outcome 00, fresh 0)
+<hwut-end>

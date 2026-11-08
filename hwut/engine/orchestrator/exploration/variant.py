@@ -12,8 +12,8 @@ DESCRIPTION
        is what makes them combinable:
 
            variant_group {
-               opt  { o0   { build { executable = "%-O0.exe" } }
-                      o3   { build { executable = "%-O3.exe" } } }
+               opt  { o0   { build { target = "%-O0.exe" } }
+                      o3   { build { target = "%-O3.exe" } } }
                load { fast { caps { timeout_sec = 30 } }
                       slow { caps { timeout_sec = 600 } } }
            }

@@ -1,6 +1,6 @@
 /* @hwut {
  *     title      = "HOCON parser: subset (A), annotated tree"
- *     build      { framework = "make", executable = "%.exe" }
+ *     build      { framework = "make", target = "%.exe" }
  *     choices {
  *         comments  { features = ["c-hocon"] }
  *         faults    { features = ["c-hocon"] }

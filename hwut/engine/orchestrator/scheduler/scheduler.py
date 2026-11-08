@@ -13,9 +13,9 @@ PURPOSE: THE SCHEDULER -- the unit that EXECUTES a test plan. It reads
                     said, the work is dispatched whatever it was.
     admission       CPlanState says who MAY start; the scheduler picks
                     out of that, at run time, free to use timings (P-3).
-    supports law    a BUILD or SESSION node ending BAD leaves the TEST
-                    nodes it supports UNSUPPORTED -- they FAIL, they do
-                    not wait (P-5).
+    supports law    a BUILD, DEPLOY or SESSION node ending BAD leaves
+                    the nodes it supports UNSUPPORTED, and theirs in
+                    turn -- they FAIL, they do not wait (P-5, o-47).
     [MISDEP]        never dispatched, reported as FAILURE (P-6).
     sessions        a SESSION node is opened by dispatch and CLOSED
                     once every TEST node it supports stands terminal.
@@ -27,6 +27,7 @@ work to operations.
 
     open_session(node)      -> bool     the session launched
     run_build(node)         -> bool     the build stood
+    run_deploy(node)        -> bool     the deploy stood
     run_test(node)          -> bool     the verdict
     close_session(node)     -> None
     run_script(role, text)  -> bool     'on_entry' / 'on_exit'
@@ -65,6 +66,14 @@ class I_Dispatcher(ABC):
     @abstractmethod
     async def run_build(self, node):
         """RETURN: bool, True where the build action stood."""
+
+    async def run_deploy(self, node):
+        """
+        RETURN: bool, True where the application's deploy stood.
+                False here: a dispatcher that knows no deploy cannot
+                stand one, and the deploy's tests FAIL with it.
+        """
+        return False
 
     @abstractmethod
     async def open_session(self, node):
@@ -315,10 +324,13 @@ class Scheduler:
     async def _work(self, node):
         """
         RETURN: bool, the outcome of one node's work: the build stood,
-                the session launched, or the test's verdict.
+                the deploy stood, the session launched, or the test's
+                verdict.
         """
         if   node.kind is E_NodeKind.BUILD:
             return bool(await self.dispatcher.run_build(node))
+        elif node.kind is E_NodeKind.DEPLOY:
+            return bool(await self.dispatcher.run_deploy(node))
         elif node.kind is E_NodeKind.SESSION:
             return bool(await self.dispatcher.open_session(node))
         else:

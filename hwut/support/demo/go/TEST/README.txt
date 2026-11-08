@@ -20,7 +20,7 @@ choice passes anyway. A file's comment says what each of its choices shows;
 the Python file says it at length.
 
 BUILT, NOT INTERPRETED: each header says 'build { framework = "make",
-executable = "%.exe" }', and hwut runs 'make <stem>.exe' here, where the
+target = "%.exe" }', and hwut runs 'make <stem>.exe' here, where the
 'Makefile' stands (services E-210); several tests build at once. The
 programs that are no test -- 'fixture.exe', 'viewer.exe', 'producer.exe',
 and 'shop.exe' for 'delivery.json' -- are built by 'on_entry' ('make
@@ -112,7 +112,7 @@ The test then writes, one line per package it uses:
 
 (and '.../deterministicrandom', '.../deterministictimeline',
 '.../spaceiterator', '.../hwutfsm', '.../hwuthocon', '.../hwutvterm',
-'.../pytext'). Its header says 'build { framework = "make", executable =
+'.../pytext'). Its header says 'build { framework = "make", target =
 "%.exe" caps { file_size_mb = 256 } }' -- the cap because Go's runtime
 archive exceeds the default 10 MB per file on a cold build cache.
 

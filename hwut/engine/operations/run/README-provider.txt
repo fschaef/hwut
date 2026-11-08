@@ -114,11 +114,25 @@ hwut_runner protocol; sinks are the transport, RELATIVE, under
       |     of it. The sinks outlive the quit and leave with the   |
       |     visit ('discard()').                                   |
 
-Status: 0 and positive DELIVER, report OK (an exit is behavior);
+Status: 0 and positive DELIVER, report OK (an exit is behavior) --
+except 77, 'device-unreachable', which delivers nothing (below);
 negative delivers with 'test-app-contained'; 'fail' delivers nothing,
 'test-app-launch-failed'; a session ending first answers
 'test-app-contained' with the session record beside it. A session
 serves CHANNEL subjects only ('OUT/' is shared across its choices).
+
+EXIT 77: THE DEVICE IS NOT REACHABLE (intend/26 o-49). On both roads, the
+plain call and the session, an application that exits 77 says the device it
+talks to -- a board, a simulator -- is missing or did not come up. Nothing
+is delivered: the output is NOT compared (half a picture would only read as
+a difference). The report is 'device-unreachable', a failure like a build
+that fails; the last line of the application's stderr is the detail, shown
+beside it. Every other status stays behaviour.
+
+        exit 0, 1, 2, 3, ...   behaviour: the output compared
+        exit 77                device-unreachable: not compared, FAIL
+        a signal               test-app-contained (the cap's token)
+
 
 
 4  SEQUENCE: THE WAVE BUILD (MultiBuild)

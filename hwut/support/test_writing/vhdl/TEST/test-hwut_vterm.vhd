@@ -1,6 +1,6 @@
 -- @hwut {
 --     title      = "A terminal's screen read by a test: libvterm through dlopen."
---     build      { framework = "make", executable = "%.exe" }
+--     build      { framework = "make", target = "%.exe" }
 --     choices {
 --         attributes { features = ["vhdl-vterm"] }
 --         colours    { features = ["vhdl-vterm"] }

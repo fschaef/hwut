@@ -1,8 +1,0 @@
-## agent: proto 1  image 0dd0ff8e  stim 2  report 2  50 MHz
-## discarded 0 bytes, 0 lines
-contract: sample 1 cycle after apply, timeout 10000000 counts at 50 MHz
-## stim = a[15:8] b[7:0]   report = sum[8:0]
-0304 007
-ff01 100
-ffff 1fe
-<hwut-end>

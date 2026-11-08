@@ -1,0 +1,19 @@
+BUILD build[make test-b.sh]
+END   build[make test-b.sh] ............................. no-build [FAIL]
+SKIP  test-b.sh  x ........................................ failed [FAIL]
+      :          y ........................................ failed [FAIL]
+      deploy[test-b.sh] ................................... failed [FAIL]
+HINTS
+BUILD -- build or launch error
+    TEST
+        build[make  test-b.sh]   build failed
+ENVIRONMENT -- error around the test
+    TEST
+        deploy[test-b.sh]        supporter failed; not run  <- build[make test-b.sh]
+        test-b.sh  x             :  <- build[make test-b.sh]
+        :          y             :  <- build[make test-b.sh]
+HINT: use 'hwut.help' for explanation of subtle issues.
+RESULTS: 0 ok, 4 fail, <t> [sec], <t> [sec] total
+exit: 1
+flash calls: 0
+<hwut-end>

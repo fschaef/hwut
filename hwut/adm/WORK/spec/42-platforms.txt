@@ -3,7 +3,7 @@ spec/42-platforms -- THE FIRST RELEASE: 'local' AND 'container', 'support/'
                      THE FIRST BUBBLE TO USE IT
 ==============================================================================
 
-VERSION: 8
+VERSION: 9
 
 COMPONENTS: engine/orchestrator (exploration: the conf key, the walk;
             plan: the wish's '-p'; run: handing a bubble over),
@@ -371,3 +371,48 @@ MEASURED:   on 08217f1 + bundles 31..35 (the dev tree w33), 2026-11-02.
     toolchains are blocked by policy). Label 'needs-container' (spec/24,
     ruling 8): 'hwut.run -p linux' over 'support/', on the author's
     machine.
+
+==============================================================================
+10  AMENDED: TOOLS AND 'requires' (intend/26 o-49 .. o-58; built 2026-11-08)
+==============================================================================
+
+    SUPERSEDES section 1's reading of 'platform' as what a bubble requires,
+    and section 3's Q(B) and its refusal.
+
+    DEFINED ONCE: 'platform = [ ... ]' stands in the OUTERMOST
+    'hwut-root.conf' alone ('outermost_root_directory': the climb goes
+    past every inner root, to '/' or 'TMP/'). Each entry announces
+    'tools = [ ... ]', hwut's own key beside 'name' and 'kind' (o-50);
+    'local' may carry 'tools', and nothing else (o-56). In an inner root
+    'platform' is REFUSED at the start, naming 'requires' (o-53).
+
+    REQUIRED BELOW: 'requires = [ <tool> ... ]' in a 'hwut-root.conf' or a
+    'hwut.conf'. A 'hwut.conf' ADDS to what it inherits; an inner root
+    REPLACES it -- nothing is inherited into a root (o-54, o-57).
+
+    THE DECISION (plan/bubble.py):
+
+        C(B)   R(B) empty: {local}; else every platform defined that
+               announces all of R(B), in DEFINITION order
+        F(B)   C(B) & S, the same order; S = {local} + '-p' (no '-p'
+               excludes 'local'; '--exclude-local' does)
+        take   the FIRST of F(B) (o-58) -- no refusal for two
+
+    BELOW A BUBBLE: a directory whose requires its bubble's platform does
+    not announce is not entered -- 'NOTE  sub/: requires ghdl; local does
+    not hold it' -- its inner bubbles still decided (o-57).
+
+    BINDING (o-52): where 'hwut-tools.rst' stands beside the outermost
+    root, a tool it does not explain ('[[tool]]') -- announced or
+    required -- is REFUSED at the start, named.
+
+    IN A TEST'S HEADER (o-59): 'requires = [ ... ]', in the header or a
+    choice, adds to the directory's for that case. A case requiring a
+    tool its bubble's platform does not announce is REFUSED -- not run,
+    named in REFUSED, uncounted ('plan/bubble.py' 'case_refusal'; the
+    plan's admission, and 'hwut.play' asks the same door).
+
+    PROOF: engine/orchestrator/exploration/TEST/test-platform.py (tools,
+    requires, tools-faults); engine/orchestrator/run/TEST/test-bubble.py
+    (refused, first, below and the hand-over on the new tree);
+    services/TEST/test-platform-console.py.

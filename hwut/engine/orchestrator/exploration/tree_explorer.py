@@ -82,7 +82,8 @@ INHERITABLE_FIELD_TUPLE = ("app_defaults", "language_setup", "ignore",
                            "admit",
                            "test_directory", "variant_db",
                            "procsitter_db", "free_disk_min_mb",
-                           "script_caps", "platform_tuple")
+                           "script_caps", "platform_tuple",
+                           "requires_tuple")
 LOCAL_FIELD_TUPLE       = ("on_entry", "on_exit", "on_before_test",
                            "on_after_test", "collision",
                            "dependency", "target_db")
@@ -115,9 +116,9 @@ ROOT_CONF_ONLY_REASON_DB = {
                       "(R-48)",
     "free_disk_min_mb": "the floor is a property of the DISK, not of a "
                       "directory: every case on it shares one (D-24)",
-    "platform_tuple": "a bubble's platforms are said by its own root, "
-                      "and each bubble decides alone (intend/42, rulings "
-                      "3, 10)",
+    "platform_tuple": "the platforms are defined once, in the outermost "
+                      "root; below it a conf says 'requires = [ <tool> ]'"
+                      " (intend/26 o-53)",
 }
 
 
@@ -137,7 +138,8 @@ KEY_OF_FIELD = {"variant_db":     "variant_group",
                 "target_db":      "target",
                 "language_setup": "language-setup",
                 "procsitter_db":  "procsitter",
-                "platform_tuple": "platform"}
+                "platform_tuple": "platform",
+                "requires_tuple": "requires"}
 
 #  THE BOUNDARY OF THE ASCENT, and the most dominant configuration
 #  there is. It plays BOTH ROLES: it is READ like any other conf --
@@ -323,7 +325,7 @@ GATE_RUN, GATE_NOT_RUN, GATE_HANDED = "run", "not-run", "handed"
 
 def explore_tree_stream(root, interview_runner=None, fault_list=None,
                         note_list=None, boundary_f=True, bubble_gate=None,
-                        wanted_f=None):
+                        wanted_f=None, entry_gate=None):
     """
     YIELD: [0] str                one test directory, RELATIVE to
                                   'root', in walk order.
@@ -366,6 +368,13 @@ def explore_tree_stream(root, interview_runner=None, fault_list=None,
     (2026-11-04). MEASURED before: '--dir' filtered the CASES alone, so
     a run narrowed to one directory still interviewed all 129 and said
     'the selection is empty' of 128 of them.
+
+    'entry_gate' takes a directory (absolute) and the tools it requires
+    ('DirectorySpec.requires_tuple', o-57) and answers None -- the
+    platform it runs on announces them all -- or the NOTE that it is not
+    entered; such a directory is passed over as a bubble not run is
+    (its inner bubbles still sought), the NOTE given to 'note_list'.
+    None enters every one.
     """
     if fault_list is None: fault_list = []
     if note_list  is None: note_list  = []
@@ -386,6 +395,14 @@ def explore_tree_stream(root, interview_runner=None, fault_list=None,
     #  way down to here.
     above_tuple = tuple(f for f in ascent_fault_list if conf_fault_f(f))
     if state == GATE_HANDED: return
+    if state == GATE_RUN and entry_gate is not None \
+       and test_directory_f(root, inherited):
+        #  A TEST DIRECTORY ASKED ITSELF: its own conf joins the climb's.
+        text = _entry_refused(entry_gate, root, inherited,
+                              own_requires(root))
+        if text is not None:
+            note_list.append(text)
+            state = GATE_NOT_RUN
     if test_directory_f(root, inherited):
         if state == GATE_RUN and (wanted_f is None or wanted_f(".")):
             yield (".", governed(explore(root,
@@ -397,7 +414,8 @@ def explore_tree_stream(root, interview_runner=None, fault_list=None,
                                 above_tuple=above_tuple,
                                 explore_f=(state == GATE_RUN),
                                 bubble_gate=bubble_gate,
-                                wanted_f=wanted_f)
+                                wanted_f=wanted_f,
+                                entry_gate=entry_gate)
 
 
 def test_directory_name_tuple(bubble_path):
@@ -440,7 +458,7 @@ def test_directory_f(directory, inherited):
 
 
 def explore_tree(root, interview_runner=None, boundary_f=True,
-                 bubble_gate=None, wanted_f=None):
+                 bubble_gate=None, wanted_f=None, entry_gate=None):
     """
     RETURN: CTreeExploration -- every test directory below 'root',
             explored under the configuration tree, in walk order.
@@ -460,7 +478,8 @@ def explore_tree(root, interview_runner=None, boundary_f=True,
     result_list = list(explore_tree_stream(root, interview_runner,
                                            fault_list, note_list,
                                            boundary_f, bubble_gate,
-                                           wanted_f=wanted_f))
+                                           wanted_f=wanted_f,
+                                           entry_gate=entry_gate))
     return CTreeExploration(root         = root,
                             result_tuple = tuple(result_list),
                             fault_tuple  = tuple(fault_list),
@@ -470,7 +489,7 @@ def explore_tree(root, interview_runner=None, boundary_f=True,
 def _walk_stream(root, relative, effective, interview_runner, fault_list,
                  note_list=None, boundary_f=True, folded_f=False,
                  above_tuple=(), explore_f=True, bubble_gate=None,
-                 passed_list=None, wanted_f=None):
+                 passed_list=None, wanted_f=None, entry_gate=None):
     """
     YIELD: [0] str                one test directory, relative to root.
            [1] ExplorationResult  what it offers.
@@ -486,7 +505,9 @@ def _walk_stream(root, relative, effective, interview_runner, fault_list,
     passed over is appended to 'passed_list', where one is given.
     'wanted_f' ('explore_tree_stream') keeps a test directory the wish
     never asked about out of the walk: not explored, not yielded, and
-    not counted among those passed over.
+    not counted among those passed over. 'entry_gate'
+    ('explore_tree_stream') turns 'explore_f' off below a directory whose
+    platform does not hold what it requires.
     """
     directory = os.path.normpath(os.path.join(root, relative))
     #  'folded_f': the level's own confs are in 'effective' already --
@@ -500,6 +521,11 @@ def _walk_stream(root, relative, effective, interview_runner, fault_list,
                               if conf_fault_f(f))
     marker    = effective.test_directory or FALLBACK_TEST_DIRECTORY
     if note_list is None: note_list = []
+    if explore_f and entry_gate is not None:
+        text = _entry_refused(entry_gate, directory, effective, ())
+        if text is not None:
+            note_list.append(text)
+            explore_f = False
 
     for name in sorted(os.listdir(directory)):
         if name.startswith("."):                          continue
@@ -533,6 +559,12 @@ def _walk_stream(root, relative, effective, interview_runner, fault_list,
         if name == (child_effective.test_directory
                     or FALLBACK_TEST_DIRECTORY) \
            and (child_folded_f or name == marker):
+            if child_explore_f and entry_gate is not None:
+                text = _entry_refused(entry_gate, path, child_effective,
+                                      own_requires(path))
+                if text is not None:
+                    note_list.append(text)
+                    child_explore_f = False
             if not child_explore_f:
                 if passed_list is not None: passed_list.append(child_relative)
                 continue
@@ -551,7 +583,32 @@ def _walk_stream(root, relative, effective, interview_runner, fault_list,
                                     explore_f=child_explore_f,
                                     bubble_gate=bubble_gate,
                                     passed_list=passed_list,
-                                    wanted_f=wanted_f)
+                                    wanted_f=wanted_f,
+                                    entry_gate=entry_gate)
+
+
+def own_requires(directory):
+    """
+    RETURN: tuple of str, the tools a TEST directory's own 'hwut.conf'
+            requires -- read by the explorer, not by the walk's fold;
+            empty where it states none or does not read.
+    """
+    text = finder.conf_text(directory)
+    if text is None: return ()
+    spec, _app_db, _fault_list = reader.read_conf(text, finder.CONF_NAME)
+    return tuple(spec.requires_tuple or ()) if spec is not None else ()
+
+
+def _entry_refused(entry_gate, directory, effective, own):
+    """
+    RETURN: str, the NOTE that 'directory' is not entered -- its platform
+            does not hold all it requires, inherited and 'own' -- or None
+            where it requires nothing or is let in.
+    """
+    required = tuple(dict.fromkeys(tuple(effective.requires_tuple or ())
+                                   + tuple(own)))
+    if not required: return None
+    return entry_gate(os.path.abspath(directory), required)
 
 
 def inherited_spec(parent, child):
@@ -568,6 +625,12 @@ def inherited_spec(parent, child):
         if name == "app_defaults" and mine is not None \
            and theirs is not None:
             field_db[name] = mine.merged_with(theirs)
+        elif name == "requires_tuple":
+            #  TOOLS ADD UP down the hwut.conf files (intend/26 o-57); an
+            #  inner root replaces them -- its reset reads it alone (o-54).
+            joined = tuple(dict.fromkeys(tuple(mine or ())
+                                         + tuple(theirs or ())))
+            field_db[name] = joined or None
         elif name in ("ignore", "admit"):
             #  GLOBS ADD UP (D-25): the parent's first, each once.
             field_db[name] = tuple(dict.fromkeys(tuple(mine or ())
@@ -654,6 +717,25 @@ def root_conf_directory(start):
                                 " (the climb ends at the transient "
                                 "ground 'TMP/', E-24)"))
         here = parent
+
+
+def outermost_root_directory(start):
+    """
+    RETURN: str, the ABSOLUTE directory of the OUTERMOST 'hwut-root.conf'
+            at or above 'start' -- the climb goes past every inner root,
+            up to the file system's root or the transient ground 'TMP/'
+            (intend/26 o-51: the platforms are defined there alone).
+
+    Raises RootConfMissing where no 'hwut-root.conf' stands above 'start'.
+    """
+    found = root_conf_directory(start)
+    here  = found
+    while not transient_ground_f(here):
+        parent = os.path.dirname(here)
+        if parent == here: break
+        here = parent
+        if os.path.isfile(os.path.join(here, ROOT_CONF_NAME)): found = here
+    return found
 
 
 def ascended_spec(start, root_shown=ROOT_CONF_NAME):

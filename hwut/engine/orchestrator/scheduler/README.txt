@@ -28,8 +28,9 @@ them. It runs nothing and knows no clock.
 PENDING node whose ordering sources stand terminal, whose supporters ended
 GOOD, and no member of whose exclusion sets is RUNNING -- admission, never
 choice. 'started(name)' refuses a node that is not ready. 'ended(name,
-good_f)' answers the TEST nodes it left UNSUPPORTED: a BUILD or SESSION
-node ending BAD fails what it supports. A TERMINAL state satisfies an
+good_f)' answers the nodes it left UNSUPPORTED: a BUILD, DEPLOY or
+SESSION node ending BAD fails what it supports, and what that supports in
+turn -- a build broken leaves its deploy and the deploy's tests (o-47). A TERMINAL state satisfies an
 ordering link, whatever it says. 'failure_db()' names every node whose
 state is ENDED_BAD, UNSUPPORTED or MISDEP; 'session_spent_f(name)' says a
 SESSION has nothing left to serve.
@@ -61,9 +62,10 @@ coroutine answering a 'CRunReport'.
 A bound below one is refused.
 
 'I_Dispatcher' is the seam to the world -- 'run_script(role, command)',
-'run_build(node)', 'open_session(node)', 'close_session(node)',
-'run_test(node)'. Every member is a coroutine and a failure is a value,
-never an exception.
+'run_build(node)', 'run_deploy(node)', 'open_session(node)',
+'close_session(node)', 'run_test(node)'. Every member is a coroutine and a
+failure is a value, never an exception; 'run_deploy' alone has a body (it
+answers False: a dispatcher that knows no deploy cannot stand one).
 
 'CRunReport' carries the frame's outcome ('None' where the directory
 states no script -- absence is data), the state of every node, and what

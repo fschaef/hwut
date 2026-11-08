@@ -1,6 +1,6 @@
 // @hwut {
 //     title      = "space_iterator: every combination of a parameter basis"
-//     build      { framework = "make", executable = "%.exe"
+//     build      { framework = "make", target = "%.exe"
 //                  caps { file_size_mb = 256 } }
 //     choices {
 //          product { features = ["go-space"] }

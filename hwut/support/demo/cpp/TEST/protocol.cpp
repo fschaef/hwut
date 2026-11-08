@@ -1,6 +1,6 @@
 /* @hwut {
  *     title   = "Demo: an order law, stated as modes (a pype)"
- *     build   { framework = "make", executable = "%.exe" }
+ *     build   { framework = "make", target = "%.exe" }
  *     features = ["demo-passes-on-every-run", "order-law-by-pype", "pype-owns-terminal-token"]
  *     choices { clean  { }
  *               broken { features = ["law-breach-verdict"] }

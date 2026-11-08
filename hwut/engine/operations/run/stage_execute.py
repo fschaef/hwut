@@ -14,7 +14,8 @@ import asyncio
 from pathlib import Path
 from   dataclasses import replace
 
-from   ..result                   import E_TestRunResult
+from   ..result                   import (E_TestRunResult,
+                                          DEVICE_EXIT_CODE, last_line_of)
 from   ...procsitter.api   import Procsitter, E_Containment
 from   ...procsitter.api import Link, chain
 from   .core                      import (Supply, scratch_dir_of,
@@ -109,6 +110,17 @@ class StageExecute(I_ExecuteProvider):
 
         raw_db = {STDOUT: stdout_text, STDERR: stderr_text}
         self._witness_error(stderr_text)
+
+        if record.containment is E_Containment.FAIL_COMPLETED \
+           and record.exit_code == DEVICE_EXIT_CODE:
+            #  THE DEVICE IS NOT REACHABLE (intend/26 o-49): a failure, its
+            #  output NOT compared; the reason is the last stderr line.
+            self.detail = last_line_of(stderr_text)
+            return Supply(product     = None,
+                          report      = E_TestRunResult.DEVICE_UNREACHABLE,
+                          record_list = record_list,
+                          detail      = self.detail)
+
         missing_report = self._output_files(raw_db)
 
         report    = E_TestRunResult.OK

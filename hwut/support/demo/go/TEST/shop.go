@@ -1,6 +1,6 @@
 // @hwut {
 //     title     = "Demo: a shop's stock -- what the directory's hwut.conf arranges"
-//     build     { framework = "make", executable = "%.exe"
+//     build     { framework = "make", target = "%.exe"
 //                 caps { file_size_mb = 256 } }
 //     tolerance { stderr_ignored = true }
 //     choices {

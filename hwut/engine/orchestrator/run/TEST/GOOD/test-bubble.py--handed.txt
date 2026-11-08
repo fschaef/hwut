@@ -1,6 +1,6 @@
 $ --exclude-local -p linux
-    not-run  .              ''         available ./: requires local; specified linux
-    not-run  none           ''         available none/: requires local; specified linux
+    not-run  .              ''         available ./: requires no tool -- runs on local; specified linux
+    not-run  none           ''         available none/: requires no tool -- runs on local; specified linux
     handed   both           linux      far: hwut.run --as-platform=linux
     handed   linux          linux      far: hwut.run --as-platform=linux
     PLANNED: 

@@ -1,0 +1,11 @@
+$ (no -p)
+    not-run  linux          ''         available linux/: requires ghdl, held by linux; specified local
+    PLANNED: TEST, both/TEST, linux/inner/TEST, none/TEST, none/shallow/TEST
+    EXPLORED TEST               1
+    EXPLORED none/TEST          1
+    EXPLORED linux/TEST         0
+    EXPLORED linux/inner/TEST   1
+    EXPLORED both/TEST          1
+    NOTE  none/deep/: requires ghdl; local does not hold it
+SUCCESS: the directory not entered, its sibling run.
+<hwut-end>

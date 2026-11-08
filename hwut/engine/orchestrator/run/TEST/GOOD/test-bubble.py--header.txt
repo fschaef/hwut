@@ -1,0 +1,14 @@
+$ hwut.run   [exit 0]
+    REFUSED -- not run
+    ------------------------------------------------------------------------------
+    requires ghdl; local does not hold it
+        none/TEST
+            test-g.sh
+            test-h.sh  two
+    HINT: use 'hwut.help' for explanation of subtle issues.
+    RESULTS: 5 ok, 0 fail, 2 refused
+$ (none/TEST) hwut.play test-h.sh two   [exit 2]
+    REFUSED: test-h.sh two -- requires ghdl; local does not hold it
+        => a platform announcing it, '-p <platform>' (intend/26 o-59)
+SUCCESS: the cases this platform cannot hold refused, named.
+<hwut-end>

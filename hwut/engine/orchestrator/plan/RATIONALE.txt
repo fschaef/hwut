@@ -289,3 +289,50 @@ P-19 THE FRAME IS NO VERDICT (2026-10-17, amends P-10)
     dispatches the work whatever the entry script did; the run report's
     'good_f' is the nodes' alone. P-10's "entry failure: nothing is
     dispatched" no longer holds.
+
+P-20 DEPLOY IS A PLAN NODE (2026-11-07; intend/26 o-47)
+----------------------------------------------------------------------------
+PROBLEM   A test whose image must be flashed onto a board (or copied onto a
+          target) had no place for that step: inside the build it hid
+          behind make, which turns the device's exit 77 into 2; inside
+          each case it would flash once per choice.
+DECISION  'E_NodeKind.DEPLOY' and the rung 'E_ProvisionStage.DEPLOY'
+          between BUILD and EXECUTE. 'provision_deploy.py' raises one
+          'deploy[file]' per application stating 'deploy'; the BUILD
+          nodes building it support it, it supports the file's TEST
+          nodes. A break propagates down the supports links: a build
+          broken leaves the deploy and its tests UNSUPPORTED, a deploy
+          broken leaves its tests. An exclusion member naming the file
+          covers its deploy.
+COST      A supports link may now end on a non-TEST node; the state's
+          unsupported sweep walks a chain instead of one step.
+GRAVEYARD A step inside each case (a flash per choice; struck by o-47).
+          The deploy as a key of the build ('build = "make flash"'; make
+          masks 77; o-40).
+OPEN      Adjacency of a deploy and its tests within a collision group
+          (spec/26 section 16's condition) is verified with delivery
+          step 4; the exclusion keeps them from interleaving with a
+          member running, not from a sibling deploy between them.
+
+P-21 TOOLS DECIDE WHERE A BUBBLE RUNS (2026-11-08; intend/26 o-49 .. o-58)
+----------------------------------------------------------------------------
+PROBLEM   A bubble named the platforms it runs on, and defined them there;
+          a board was attached to a platform by a 'provides' name. Every
+          bubble carried its own definitions, and two specified platforms
+          meeting one bubble were refused.
+DECISION  The platforms are defined once, in the outermost root, each
+          announcing 'tools'; a root or a hwut.conf says what its subtree
+          'requires' (a hwut.conf adds, an inner root replaces). The
+          candidates are the definitions announcing every tool required,
+          in definition order; '-p' narrows them, the first is taken. A
+          subtree requiring nothing runs on 'local'. A directory below a
+          bubble requiring more than the bubble's platform announces is
+          not entered ('entry_refusal'). 'hwut-tools.rst' beside the root
+          binds the names.
+COST      'tools' is a hint the platform may not keep: a tool announced and
+          absent fails the tests that need it, not the decision.
+GRAVEYARD 'platform' in each bubble's root with "local" bare (spec/42 v8);
+          'provides' and '(max10 in local)' (intend/42 rulings 23 .. 27);
+          the refusal of |F(B)| > 1; ordering by the command line (o-55,
+          struck by o-58).
+

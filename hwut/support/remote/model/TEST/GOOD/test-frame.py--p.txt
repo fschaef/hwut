@@ -1,0 +1,12 @@
+## agent: proto 1  image 3f9a07c1  stim 2  report 2  50 MHz
+## discarded 0 bytes, 0 lines
+FAILED: Refused: ! unknown: 'p'
+wire:
+    --> 4 r 0 1a *301d
+    <-- 4 6877757401000000c1079a3f0202010080f0fa0280969800ff80 *e254
+    --> 5 w 3f 01 *71af
+    <-- 5 00 *a16c
+    --> 6 p *c3e8
+    <-- 6 ! unknown *532c
+    --- close
+<hwut-end>

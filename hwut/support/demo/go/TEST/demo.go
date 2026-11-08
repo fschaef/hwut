@@ -1,6 +1,6 @@
 // @hwut {
 //     title   = "Demo: what hwut tolerates, and where it is said"
-//     build   { framework = "make", executable = "%.exe"
+//     build   { framework = "make", target = "%.exe"
 //               caps { file_size_mb = 256 } }
 //     choices {
 //         plain       { features = ["demo-passes-on-every-run", "exact-comparison"] }

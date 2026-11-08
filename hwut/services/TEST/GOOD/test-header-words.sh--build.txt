@@ -7,7 +7,7 @@ test-s.sh {
         - {
             build {
                 framework = "make"            # app
-                executable = "s.exe"          # app
+                target = "s.exe"              # app
             }
         }
     }

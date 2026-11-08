@@ -1,0 +1,14 @@
+    wire: --> 4 r 0 1a *301d
+    wire: <-- 4 6877757401000000c1079a3f0202010080f0fa0200000000ff80 *4cde
+## agent: proto 1  image 3f9a07c1  stim 2  report 2  50 MHz
+## discarded 0 bytes, 0 lines
+    wire: --> 5 w 3f 01 *71af
+    wire: <-- 5 00 *a16c
+## waiting for the UUT
+    wire: --> 6 x 0304 *1aeb
+    wire: --> 7 k *5782
+    wire: <-- 7 00 *4c04
+## terminated: 'k' answered
+    wire: --- close
+ended by: SIGTERM
+<hwut-end>

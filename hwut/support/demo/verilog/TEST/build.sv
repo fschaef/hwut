@@ -1,6 +1,6 @@
 // @hwut {
 //     title   = "Demo: a recursive build, serial and parallel -- one summary, by a pype system"
-//     build   { framework = "make", executable = "%.exe"
+//     build   { framework = "make", target = "%.exe"
 //               caps { memory_mb = 2048  file_size_mb = 256  disk_mb = 1024 } }
 //     pype    = "build.pypes"
 //     same    = true

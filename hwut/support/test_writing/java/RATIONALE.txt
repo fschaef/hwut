@@ -25,7 +25,7 @@ DECISION  One class per Python class in package 'hwut' ('README.txt',
           HOW A TEST STARTS -- MEASURED: hwut-root.conf names 'java' the
           interpreter; 'java test-x.java' (JDK 21's single-file launcher)
           compiles the one file and answers "package hwut does not exist".
-          So a test states 'build { framework = "make", executable = "%.exe"
+          So a test states 'build { framework = "make", target = "%.exe"
           }': 'TEST/Makefile' compiles 'test-x.java' with '-sourcepath ..' --
           only the support classes it uses -- into 'test-x.classes/', one
           directory per target (E-210: several builds at once share nothing),

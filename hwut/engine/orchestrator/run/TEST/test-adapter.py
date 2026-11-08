@@ -68,7 +68,7 @@ import sys
 from config import HwutRunner                                # noqa: F401
 
 from hwut.engine.orchestrator.exploration.configuration_tree import (
-                                                  Build, Caps,
+                                                  Build, Caps, Deploy,
                                                   CTestApp, E_Origin,
                                                   Position,
                                                   TestParameters, Tolerance,
@@ -131,7 +131,9 @@ def _stated_value(member):
     """
     match member.name:
         case "build":       return Build(framework="make",
-                                         executable="app")
+                                         target="app")
+        case "deploy":      return Deploy(flash="./flash.sh uut.img")
+        case "requires":    return ("iverilog",)
         case "caps":        return Caps(timeout_sec=11)
         case "tolerance":   return Tolerance(numeric_ratio=0.25)
         case "diff_display_parameters":
@@ -188,7 +190,26 @@ def _arrivals(parameters):
     #  not its links resolve. Its receiver is the feature relation.
     if linked_name_tuple(parameters) != linked_name_tuple(TestParameters()):
         arrival.append("feature relation")
+    #  'requires' IS THE PLAN'S (intend/26 o-59): it admits the case on
+    #  its bubble's platform, or refuses it.
+    if _required_of(parameters) != _required_of(TestParameters()):
+        arrival.append("plan admission")
     return arrival
+
+
+def _required_of(parameters):
+    """RETURN: tuple of str, what the bubble's case gate reads of an
+    application whose header states 'parameters'."""
+    from hwut.engine.orchestrator.plan.bubble import case_required_tuple
+    app = _app(parameters)
+    return case_required_tuple(_AppSet(app), app.source_file, None)
+
+
+class _AppSet:
+    """The one member 'case_required_tuple' reads: 'app_db'."""
+    def __init__(self, app):
+        """RETURN: None. An app set of 'app' alone."""
+        self.app_db = {app.source_file: app}
 
 
 def test_sweep():

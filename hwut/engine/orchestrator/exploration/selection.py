@@ -42,7 +42,8 @@ import os
 from   dataclasses import dataclass
 
 from   .explorer         import explore
-from   .tree_explorer    import (explore_tree, explore_tree_stream,
+from   .tree_explorer    import (RootConfMissing, explore_tree,
+                                 explore_tree_stream,
                                  ascended_spec)
 from   .task_list       import CTestTaskListAll
 from   .task_list_query  import CTestTaskListQuery, dir_wanted_f
@@ -145,14 +146,26 @@ def of_directory(directory, wish, label_view=None, inherited=None,
                       warning_tuple = _warning_tuple(query, wish,
                                                      result.app_set)
                                       + unrequired_platform_note_tuple(
-                                            wish, (result.app_set
-                                                   .directory_spec
-                                                   .platform_tuple,)),
+                                            wish, (_candidates_of(
+                                                       directory),)),
                       result_db     = {".": result},
                       bookkeeper_db = {".": bookkeeper},
                       query_db      = {".": query},
                       met_set       = _met_set(query, wish,
                                                result.app_set))
+
+
+def _candidates_of(directory):
+    """
+    RETURN: tuple of str, the platforms the bubble governing 'directory'
+            can use ('plan/bubble.py' 'candidates_of'); ('local',) where
+            no root bounds it.
+    """
+    from ..plan.bubble import candidates_of
+    try:
+        return candidates_of(directory)
+    except RootConfMissing:
+        return ("local",)
 
 
 def of_tree(root, wish, label_view=None, base_f=None):
@@ -203,9 +216,9 @@ def of_tree(root, wish, label_view=None, base_f=None):
         warning_tuple = tuple(exploration.note_tuple)
                         + swallowed_warning_tuple(met_set, visible_set)
                         + unrequired_platform_note_tuple(
-                              wish, (result.app_set.directory_spec
-                                           .platform_tuple
-                                     for result in result_db.values())),
+                              wish, (_candidates_of(os.path.join(root,
+                                                                 directory))
+                                     for directory in result_db)),
         result_db     = result_db,
         bookkeeper_db = bookkeeper_db,
         query_db      = query_db,

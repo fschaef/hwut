@@ -38,7 +38,7 @@ A test compiles the classes it uses with its own source ('javac -sourcepath
 A Java test starts:
 
     /* @hwut {
-     *     build   { framework = "make", executable = "%.exe" }
+     *     build   { framework = "make", target = "%.exe" }
      *     choices = ["plain", "tricky"]
      *     interactive = true
      * } */
@@ -185,7 +185,7 @@ says whether the library is there ('Vterm.detectionText()').
 hwut-root.conf's 'java' entry names the interpreter 'java': a test WITHOUT a
 'build' runs as 'java test-x.java', the single-file source launcher, which on
 JDK 21 sees no class beside the file -- 'package hwut does not exist'. So a
-test of these classes states 'build { framework = "make", executable =
+test of these classes states 'build { framework = "make", target =
 "%.exe" }', and hwut builds it, as a C test.
 
 

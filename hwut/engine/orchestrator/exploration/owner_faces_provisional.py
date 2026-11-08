@@ -24,10 +24,19 @@ class ConfigBuild:
     """OWED TO: the build component.
 
     'framework' unstated means there is nothing to build: the source file
-    is the test application. 'executable' unstated means the source file's
-    stem."""
+    is the test application. 'target' unstated means 'app' (o-48: it was
+    'executable')."""
     framework:  str | None = None
-    executable: str | None = None
+    target:     str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class ConfigDeploy:
+    """OWED TO: the deploy (engine/operations/deploy_action.py).
+
+    'flash' unstated means there is nothing to deploy: the test reaches
+    what it tests without (intend/26 o-40, o-41)."""
+    flash:      str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -117,6 +126,15 @@ class ConfigRunner:
     stderr_ignored_f: bool = False
     output:        tuple = ("<stdout>",)
     execute:       str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class ConfigRequires:
+    """OWED TO: the bubble decision ('plan/bubble.py' 'case_refusal').
+
+    'tool_tuple' -- the tools ONE test needs beyond its directory's
+    (intend/26 o-59). None: none; the case runs where its bubble runs."""
+    tool_tuple: tuple | None = None
 
 
 @dataclass(frozen=True, slots=True)

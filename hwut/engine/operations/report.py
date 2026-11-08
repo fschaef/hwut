@@ -54,8 +54,13 @@ _PRECEDENCE = (
     E_TestRunResult.BUILD_CONTAINED,
     E_TestRunResult.BUILD_FAILED,
     E_TestRunResult.TARGET_NOT_BUILT,
+    # -- the deploy: the image would not go where the test reaches it
+    E_TestRunResult.DEPLOY_TOOL_NOT_FOUND,
+    E_TestRunResult.DEPLOY_CONTAINED,
+    E_TestRunResult.DEPLOY_FAILED,
     # -- the run itself
     E_TestRunResult.TEST_APP_LAUNCH_FAILED,
+    E_TestRunResult.DEVICE_UNREACHABLE,
     E_TestRunResult.TEST_APP_CONTAINED,
     E_TestRunResult.TEST_APP_SESSION_GONE,       # O-21: never served
     E_TestRunResult.TEST_APP_WALL_CLOCK_EXCEEDED,

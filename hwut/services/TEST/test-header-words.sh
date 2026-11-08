@@ -290,7 +290,7 @@ case "$1" in
     build)
         word 'build = "make"' "framework\|:[0-9]*:"
         word 'app = "x.exe"' "framework\|:[0-9]*:"
-        page test-s.sh '#     title = "s"\n#     build { framework = "make" executable = "s.exe" }\n' 'echo s'
+        page test-s.sh '#     title = "s"\n#     build { framework = "make" target = "s.exe" }\n' 'echo s'
         $SHOW test-s.sh --no-default 2>&1 | shown ;;
     printed)
         page test-p.sh '#     title = "p"\n#     caps { timeout_sec = 7 }\n#     choices = ["a"]\n' 'echo p'

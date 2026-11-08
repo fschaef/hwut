@@ -4,6 +4,7 @@
 #     title      = "Plan state: admission, supports, exclusion, ordering"
 #     choices {
 #         admission { features = ["readiness-admission", "misdep-never-dispatched"] }
+#         chain     { features = ["supports-transitive"] }
 #         exclusion { features = ["exclusion-set"] }
 #         ordering  { features = ["ordering-link"] }
 #         supports  { features = ["supports-carry-verdict"] }
@@ -17,7 +18,7 @@ ______________________________________________________________________________
 PURPOSE: THE STATE MACHINE -- who may start now, and what an ending
          drives terminal.
 
-CHOICES: admission, supports, exclusion, ordering;
+CHOICES: admission, supports, exclusion, ordering, chain;
 
 DESCRIPTION:
 
@@ -113,6 +114,49 @@ def test_supports():
                       in sorted(state.failure_db().items())))
 
 
+def test_chain():
+    """RETURN: None. build ==> deploy ==> tests: a break anywhere
+    leaves everything below it unsupported (intend/26 o-47)."""
+    def plan_of():
+        return CTestPlan([CPlanNode.build("make"),
+                          CPlanNode.deploy("a.py"),
+                          CPlanNode.test("a.py", "one"),
+                          CPlanNode.test("a.py", "two")],
+                         [CPlanLink(E_LinkKind.SUPPORTS, "build[make]",
+                                    "deploy[a.py]"),
+                          CPlanLink(E_LinkKind.SUPPORTS, "build[make]",
+                                    "a.py one"),
+                          CPlanLink(E_LinkKind.SUPPORTS, "build[make]",
+                                    "a.py two"),
+                          CPlanLink(E_LinkKind.SUPPORTS, "deploy[a.py]",
+                                    "a.py one"),
+                          CPlanLink(E_LinkKind.SUPPORTS, "deploy[a.py]",
+                                    "a.py two")])
+
+    banner("the build stands: the deploy is ready, the tests are not")
+    state = CPlanState(plan_of())
+    state.started("build[make]")
+    state.ended("build[make]", True)
+    print("    ready: %s" % ", ".join(state.ready()))
+
+    banner("the build breaks")
+    state = CPlanState(plan_of())
+    state.started("build[make]")
+    print("    ended() named: %s"
+          % (", ".join(state.ended("build[make]", False)) or "-"))
+    show(state)
+
+    banner("the deploy breaks")
+    state = CPlanState(plan_of())
+    state.started("build[make]")
+    state.ended("build[make]", True)
+    state.started("deploy[a.py]")
+    print("    ended() named: %s"
+          % (", ".join(state.ended("deploy[a.py]", False)) or "-"))
+    show(state)
+    print("    done_f=%s" % state.done_f())
+
+
 def test_exclusion():
     """RETURN: None. A running member withholds admission."""
     plan = CTestPlan([CPlanNode.test("net.py", None),
@@ -158,4 +202,5 @@ if __name__ == "__main__":
         "supports":  test_supports,
         "exclusion": test_exclusion,
         "ordering":  test_ordering,
+        "chain":     test_chain,
     }).run()

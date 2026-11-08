@@ -1,6 +1,6 @@
 -- @hwut {
 --     title     = "Demo: a terminal program's screen, as a person sees it"
---     build     { framework = "make", executable = "%.exe" }
+--     build     { framework = "make", target = "%.exe" }
 --     tolerance { regions    = false
 --                 comment    = false
 --                 whitespace = false }

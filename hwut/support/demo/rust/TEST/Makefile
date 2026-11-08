@@ -3,7 +3,7 @@
 #
 # THE DEMONSTRATION'S PROGRAMS: 'x.exe' from 'x.rs'. hwut runs this Makefile
 # here, where it stands (services E-210), once per test that says
-# 'build { framework = "make", executable = "%.exe" }'; 'on_entry' runs
+# 'build { framework = "make", target = "%.exe" }'; 'on_entry' runs
 # 'make helpers' -- the programs that are no tests, and 'shop.exe' which
 # 'delivery.json' runs -- before any test is built.
 #

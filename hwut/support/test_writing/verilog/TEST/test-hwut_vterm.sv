@@ -1,6 +1,6 @@
 // @hwut {
 //     title      = "A terminal's screen read by a test: libvterm through DPI-C."
-//     build      { framework = "make", executable = "%.exe"
+//     build      { framework = "make", target = "%.exe"
 //                  caps { memory_mb = 2048 } }
 //     choices {
 //         attributes { features = ["sv-vterm"] }

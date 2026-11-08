@@ -1,0 +1,8 @@
+hwut-root.conf:  hwut { platform = [ { name = "linux", kind = "container", image = "x", tools = [7] }, { name = "lab", kind = "container", image = "y", tools = [""] } ]
+    requires = ["", "gcc"] }
+    TEST         platform_tuple=None
+                 runs not: 3 conf fault(s)
+    FAULT hwut-root.conf:2:78: TYPE: 'tools' carries strings only
+    FAULT hwut-root.conf:2:133: VOCABULARY: 'tools' names tools; a name is empty
+    FAULT hwut-root.conf:3:16: VOCABULARY: 'requires' names tools; a name is empty
+<hwut-end>

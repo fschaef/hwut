@@ -496,7 +496,220 @@ RULED  (chat, 2026-10-25/26; RATIONALE entries are written with the build)
            round trip); not reporting it (the row would not carry the
            contract, J * O).
 
+ o-43  THE PROTOCOL CARRIES NO WAIT CONTRACT (ruled 2026-11-07: "Take
+           LATENCY from the general protocol. That is something a specific
+           test needs to figure out how to communicate"; the timeout's unit
+           "Same, that is test specific"). LATENCY leaves the map: mode
+           (0e) keeps [0] sample/wait and [1] seam; o-42 WITHDRAWN, the
+           hello back to mode 01. Hub.contract() goes; the coupling J * O
+           leaves PROTOCOL.txt; the writer prints what his rows need.
+
+ o-44  HWUT'S WATCHDOG ENDS A HUNG TEST; THE HUB ENDS THE REMOTE SIDE (ruled
+           2026-11-07: "The remote agent may receive a timeout requirement,
+           optionally, but not mandatory. The 'official' way would be that
+           hwut's watchdog detects the timeout, reports/kills the test app,
+           the test app receives the signal and sends a termination request
+           to the remote agent"; before it: "The app that handles the remote
+           execution, may be our hub, must catch the abort signal and do
+           what is necessary to kill the remote process").
+               hwut caps --signal--> test app (hub) --termination--> agent
+           The agent's 'timeout' (map 14) is optional: set by the writer
+           where he wants it, none by default. The termination request:
+           OPEN o-46.
+
+ o-45  (layout, ruled 2026-11-07: "we will have support/remote/<platform>
+           directories. In those, it makes sense to have hwut-root.conf
+           files") support/remote/<platform>/, each with its own
+           hwut-root.conf and TEST/. CONSEQUENCES (affirmed 2026-11-07):
+           proto/ and <platform>/ merge -- a prototype is a <platform>
+           directory a writer copies, root and all; the tests of host/ and
+           target/verilog/ move under the <platform> directories that
+           exercise them.
+
+ o-46  (a) THE TERMINATION REQUEST IS A VERB OF ITS OWN, 'k' (ruled
+           2026-11-07: "a"). 'k' is accepted while an 'x' or the reset
+           write is pending, where every other line is '! busy': it aborts
+           the wait, resets the UUT, and replies the status. The hub sends
+           it on the signal of hwut's watchdog (o-44), then closes the link;
+           under simulation, where the stdio phy reads nothing while a
+           command is pending, the hub ends the simulator. 'p' stays
+           reserved. Struck: the reset write taking a second meaning (b);
+           nothing in-band (c).
+
+ o-47  DEPLOY IS A PLAN NODE (ruled 2026-11-07: "deploy is like a build
+           action, something probably the orchestrator should organize").
+           E_NodeKind.DEPLOY beside BUILD: supported by the build, supporting
+           the application's tests; run once per run; ordered and excluded
+           by the plan (section 16's condition). Struck: a step inside each
+           case (a flash per choice). AMENDS o-40's "remembered as StageBuild
+           is": StageBuild no longer exists; building is the plan's (P-18).
+
+ o-48  'executable' BECOMES 'target' (ruled 2026-11-07: "the build probably
+           needs to rename 'executable' to 'target'" -- "renaming: yes").
+           build { framework, target, caps }; the old word is refused with
+           the new one named. Then build, deploy, execute.
+
+ o-49  A PLATFORM IS NOT A DEVICE; AN ABSENT DEVICE FAILS THE TEST (ruled
+           2026-11-07, in conversation: "ein Remote Device ist nicht gleich
+           einer Plattform"; "Eine Plattform ist etwas, das ein Set von
+           Tools bereitstellt, das notwendig ist, um die Tests innerhalb
+           eines Subtrees durchzufuehren. Ein Device ist etwas, mit dem ich
+           mich kontaktiere, wenn ich einen Remote-Test ausfuehre. Wenn
+           dieses Device nicht hochfaehrt oder nicht erreichbar ist, dann
+           ist der Test damit auch fehlgeschlagen. Im gleichen Sinne wie ein
+           Test fehlschlaegt, der nicht gebaut werden kann"; "ABSENSE is
+           like any failure, dependents fail accordingly").
+               platform   an environment holding the tools a SUBTREE needs
+               device     what ONE test talks to (a board, a simulator)
+           Exit 77 stays as the reason, extra information ("eine
+           zusaetzliche Information, die durchaus nuetzlich ist"): the
+           device is not reachable; the output is NOT compared; the test
+           FAILS, the last stderr line its NOTE; counted, booked, red; its
+           dependents fail with it. WITHDRAWS o-36's count ("counted as a
+           bubble not run is") -- it came from taking a device for a
+           platform.
+
+ o-50  'provides' NAMES TOOLS, AS A HINT (ruled 2026-11-07, in conversation:
+           "die Plattform stellt Werkzeuge bereit und provides sagt, welches
+           Werkzeug im Spezifischen bereitgestellt wird. Das heisst nicht,
+           dass nur die Werkzeuge bereitgestellt werden, die durch Provides
+           angegeben sind, aber [...] dann hat man schon einen Hinweis, was
+           diese Plattform kann"). 'provides = [ "quartus" ]', not a board:
+           a board is a device the test reaches itself. The list is not
+           exhaustive. AMENDS o-26, o-35 in their example ('max10').
+
+ o-51  PLATFORMS ARE DEFINED ONCE, OUTERMOST; TESTS REQUIRE TOOLS (ruled
+           2026-11-07, in conversation: "dass man trotz allem eine aeussere
+           globale Wurzel hat, die immer als Referenz herangezogen wird";
+           "die Tests verweisen nur auf Tools"; "eine Plattform ist etwas,
+           was Werkzeuge zur Verfuegung stellt und bei der Definition wird
+           gesagt, wie man eine Plattform aufruft"; "in den Config-Files
+           [kann] required verwendet werden, wobei ein Werkzeug angegeben
+           wird"; "Wenn mehrere Plattformen das gleiche Werkzeug
+           bereitstellen, wuerde eine dieser Plattformen ausgewaehlt
+           werden"; the first defined -- "Ja, genau").
+               outermost hwut-root.conf   the platform definitions: each says
+                                          how it is called (kind) and which
+                                          tools it provides
+               any conf below, a test     'requires = [ <tool> ... ]',
+                                          inherited down the subtree
+           - The outermost root is ALWAYS the reference: hwut finds it from
+             wherever it starts, climbing past inner roots for this one
+             purpose.
+           - Before a subtree is entered, hwut looks for a platform that
+             provides what it requires; none: the subtree is not entered.
+           - Several provide it: the FIRST DEFINED is taken -- the same
+             answer on every run.
+           - A platform is whatever provides tools and is called as its
+             definition says: a container, a machine over ssh, a cloud
+             network. A device (o-49) is what one test talks to.
+           AMENDS o-26 (a bubble specified platforms by name), o-27 (any
+           conf of the walk held definitions).
+
+ o-52  'tools', AND hwut-tools.rst (ruled 2026-11-07, in conversation:
+           "statt Provided in Plattform Tools gleich und dann die Liste
+           angeben"; the file "sollte hwut-tools.rst sein, also
+           Restructured Text [...] eckige Klammer auf, eckige Klammer auf,
+           Toolsname, [...] zu, und dann Prosatext, um das Tool zu
+           erklaeren"; the binding rule of o-39 kept: "Genau").
+               platform = [ { name = "lab-pc", kind = "host", ...,
+                              tools = [ "quartus" ] } ]
+               hwut-tools.rst, beside the outermost hwut-root.conf:
+                   [[quartus]]
+                   Intel Quartus Prime Lite 23.1, with quartus_pgm on PATH;
+                   the USB-Blaster driver installed.
+           The key 'tools' replaces 'provides' (o-26, o-50). The file
+           replaces 'hwut-provided.conf' (o-39): optional; present, it is
+           binding -- every tool a definition announces has its
+           [[name]] entry, else a fault at the start. Handled like the
+           features' file (to be discussed with the features).
+
+ o-53  'platform' ONLY IN THE ROOT; BELOW IT ONLY 'requires' (ruled
+           2026-11-07: "Platform nur in root, spaeter requires aus
+           Platform.tools"). The key 'platform' stands in the outermost
+           hwut-root.conf alone; a conf below, and a test, say 'requires'
+           with names from the definitions' 'tools'. A 'platform' below the
+           root is refused, naming 'requires'. support/hwut-root.conf's
+           container moves to the outermost root. AMENDS spec/42 (built):
+           a bubble's 'platform = [ "linux" ]'; '-p', the '(linux)' after a
+           directory and the book's column 'platform' stay -- they say
+           where a verdict was measured.
+
+
+ o-54  AN INNER ROOT'S 'requires' REPLACES, IT IS NOT INHERITED (ruled
+           2026-11-07: "requires in InnerRoot ersetzt ein aeusseres required,
+           also das wird nicht vererbt, sondern ueberschreibt"). A
+           hwut-root.conf below the outermost no longer SPECIFIES a platform:
+           it RESTRICTS the platforms its subtree may run on, by the tools it
+           requires ("root.conf-Bubbles, die Plattform einschraenken, unter
+           denen der Rest laufen sollte"). Its 'requires' stands alone
+           (E-200): the support's python port, an inner root without
+           'requires', runs here.
+           AMENDS o-51 ("inherited down the subtree": across hwut.conf
+           files, not across an inner root).
+
+ o-55  '-p' RESTRICTS; THE FIRST GIVEN WINS (ruled 2026-11-07: "bei -p
+           [soll] das, was bei -p angegeben ist, die Plattform einschraenken,
+           die wir verwenden koennen. Wobei unter den Plattformen, die bei -p
+           angegeben sind, die erste genommen wird, die auf der
+           Kommandozeile definiert wurde").
+               candidates(B)  the defined platforms holding what B requires
+               -p a -p b      candidates restricted to {a, b}; of those, the
+                              one given FIRST on the command line
+           No longer refused: a bubble meeting two specified platforms
+           (spec/42 section 3, |F(B)| > 1) -- the command line orders them.
+           AMENDS o-51 ("the first defined") where '-p' is given.
+
+ o-56  'local' ANNOUNCES TOOLS (ruled 2026-11-07, q-54 (a): "bei lokalen
+           Sachen natuerlich Tools ankuendigen, das macht total Sinn. Das
+           sagt ja auch, was lokal unterstuetzen muss, damit es laeuft").
+               platform = [ { name = "local", tools = [ "iverilog" ] }, ... ]
+           'local' takes 'tools' and no other key; its definition is
+           optional (absent: it announces nothing). Its 'tools' say what
+           this machine must hold for the subtrees requiring them to run
+           here -- binding like every announcement (hwut-tools.rst, o-52).
+           AMENDS intend/42 ruling 16 ("no entry, no keys").
+
+ o-57  'requires' NAMES TOOLS AND IS INHERITED BY EVERY SUBDIRECTORY
+           (ruled 2026-11-07: "Requires bezieht sich auf ein tool. Es wird
+           vererbt an alle Unterverzeichnisse").
+               hwut-root.conf (inner)   requires = [ "iverilog" ]  replaces (o-54)
+               sub/hwut.conf            requires = [ "ghdl" ]      adds
+               sub/deeper/              requires iverilog, ghdl
+           A hwut.conf adds to what it inherits; an inner hwut-root.conf
+           replaces it (o-54). The subtree of an inner root is entered on
+           ONE platform; a directory below that requires a tool this
+           platform does not announce is not entered, named so ("requires
+           ghdl; linux does not hold it").
+           OPEN BEHIND IT: 'requires' in a test's header (not named).
+
+ o-58  THE FIRST DEFINED, ALWAYS (ruled 2026-11-08, q-58: "Das was zuerst
+           definiert wurde von den Plattformen die vorgegeben wurden. Wenn
+           also keine Plattform vorgegeben wurde einfach nur die erste die
+           definiert wurde von denen die passen").
+               candidates(B)  the defined platforms announcing every tool
+                              B requires, in DEFINITION order
+               no '-p'        the first candidate
+               -p a -p b      the first candidate among {a, b}
+           The order is the definitions' alone; the command line restricts,
+           it does not order. A plain 'hwut.run' may thus start a container
+           where it is the first candidate; a 'local' defined first and
+           holding the tools is taken before it.
+           AMENDS o-55 ("the one given FIRST on the command line": misread,
+           struck).
+
+ o-59  'requires' IN A TEST'S HEADER (ruled 2026-11-08: "bitte bau das
+           noch ein mit dem requires in test header").
+               # @hwut { requires = [ "ghdl" ]
+               #         choices { one { requires = [ "iverilog" ] } } }
+           The header's and its choice's add to the directory's for that
+           case. A case requiring a tool its bubble's platform does not
+           announce is not run: REFUSED, named with the remedy, not
+           counted -- the directory runs the rest.
+
 ==============================================================================
 OPEN
 ==============================================================================
-      (none: every fork of this intend is ruled.)
+
+
+      (none open.)

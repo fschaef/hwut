@@ -1,6 +1,6 @@
 -- @hwut {
 --     title     = "Demo: a climate chamber's step response -- regions, units, a string law"
---     build     { framework = "make", executable = "%.exe" }
+--     build     { framework = "make", target = "%.exe" }
 --     tolerance { constraints = ["overshoot <= 0.5 K",
 --                                "settle <= 4 min",
 --                                "verdict == 'settled'"] }

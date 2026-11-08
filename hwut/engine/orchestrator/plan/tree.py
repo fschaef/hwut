@@ -66,6 +66,16 @@ def admit_of(directory, app_set=None):
     return admit
 
 
+def _joined_admit(first, second):
+    """
+    RETURN: callable, 'admit(test, choice)': the refusal of 'first',
+            where it refuses, else that of 'second'.
+    """
+    def admit(test, choice):
+        return first(test, choice) or second(test, choice)
+    return admit
+
+
 @dataclass(frozen=True, slots=True)
 class CTreePlanEntry:
     """One test directory's share of the tree plan: the plan itself,
@@ -118,7 +128,7 @@ class CTreePlan:
 
 def determine_tree(tree_exploration, wish, bookkeeper_factory=None,
                    label_view=None,
-                   build_interview=None):
+                   build_interview=None, case_gate=None):
     """
     RETURN: CTreePlan, one plan per test directory of
             'tree_exploration', each determined for 'wish'.
@@ -126,6 +136,12 @@ def determine_tree(tree_exploration, wish, bookkeeper_factory=None,
     'bookkeeper_factory' takes a directory path and answers ITS
     Bookkeeper -- made above, handed down. Required where the wish
     asks the base ('--fail', '--pass', '--since=', '--until=').
+
+    'case_gate' takes a test directory (absolute) and its app set and
+    answers a callable 'admit(test, choice)' -- None where the case may
+    run where its bubble runs, the refusal else (a tool its header
+    requires and its platform does not announce, intend/26 o-59); None
+    admits every case.
 
     Raises AssertionError where the wish asks the base and no factory
     was handed down -- refused at the door, not answered by guessing.
@@ -163,11 +179,13 @@ def determine_tree(tree_exploration, wish, bookkeeper_factory=None,
                                    admit=lambda *_: "conf")
             report_list, refused_list = [], []
         else:
+            here  = os.path.join(tree_exploration.root, directory)
+            admit = admit_of(here, result.app_set)
+            if case_gate is not None:
+                admit = _joined_admit(case_gate(os.path.abspath(here),
+                                                result.app_set), admit)
             plan, report_list, refused_list = determine(
-                result.app_set, task_list,
-                admit=admit_of(os.path.join(tree_exploration.root,
-                                            directory),
-                               result.app_set))
+                result.app_set, task_list, admit=admit)
         refused_list = list(result.refused_tuple) + refused_list
         if label_view is not None and wish.glob_tuple:
             met, visible = task_list.glob_reach(result.app_set)

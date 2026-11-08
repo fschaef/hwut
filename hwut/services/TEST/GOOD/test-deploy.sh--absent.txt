@@ -1,0 +1,17 @@
+BUILD build[make test-b.sh]
+BUILT build[make test-b.sh] ........................................ [OK]
+START deploy[test-b.sh]
+END   deploy[test-b.sh] ................................ no-device [FAIL]
+SKIP  test-b.sh  x ........................................ failed [FAIL]
+      :          y ........................................ failed [FAIL]
+HINTS
+ENVIRONMENT -- error around the test
+    TEST
+        deploy[test-b.sh]   device not reachable  (serial: no device /dev/serial/by-id/usb-Altera_USB-Blaster)
+        test-b.sh  x        supporter failed; not run  <- deploy[test-b.sh]
+        :          y        :  <- deploy[test-b.sh]
+HINT: use 'hwut.help' for explanation of subtle issues.
+RESULTS: 0 ok, 3 fail, <t> [sec], <t> [sec] total
+exit: 1
+flash calls: 1
+<hwut-end>

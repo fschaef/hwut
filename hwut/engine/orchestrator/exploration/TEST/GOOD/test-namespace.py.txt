@@ -1,6 +1,8 @@
 key                      root      root.def  dir       dir.def   dir.app   header    choice  
 build                    -         +         -         +         +         +         +       
 caps                     -         +         -         +         +         +         +       
+deploy                   -         +         -         +         +         +         +       
+requires                 .         +         .         +         +         +         +       
 pype                     -         +         -         +         +         +         +       
 tolerance                -         +         -         +         +         +         +       
 diff_display_parameters  -         +         -         +         +         +         +       

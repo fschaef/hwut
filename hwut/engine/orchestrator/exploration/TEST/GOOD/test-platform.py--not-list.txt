@@ -1,5 +1,5 @@
 hwut-root.conf:  hwut { platform = "local" }
     TEST         platform_tuple=None
                  runs not: 1 conf fault(s)
-    FAULT hwut-root.conf:2:16: TYPE: 'platform' is a list: [ "local", { name = ... kind = ... } ]
+    FAULT hwut-root.conf:2:16: TYPE: 'platform' is a list: [ { name = ... kind = ... tools = [...] } ]
 <hwut-end>

@@ -35,7 +35,9 @@ ______________________________________________________________________________
     app --hwut-info     print the info block; exit 0.
     app <choice>        NORMAL MODE. Run one choice. Test output flows on
                         the process's stdout and stderr. Exit status is the
-                        process's exit status.
+                        process's exit status; 77 is reserved: "the device
+                        this test talks to is not reachable" -- hwut then
+                        fails the case without comparing its output.
     app --interactive   INTERACTIVE MODE. Section 2.
     app                 the choice-less test. Where the application has
                         choices it refuses, naming them, exit 1: the menu

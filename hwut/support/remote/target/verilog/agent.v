@@ -14,7 +14,8 @@
 // PARAMETERS   SW, RW            stimulus and report bytes, 1..32
 //              IMAGE_ID          the image id (TMP/image_id.vh)
 //              CLOCK_HZ          the clock shared with the UUT
-//              TIMEOUT           counts a wait may take, at start
+//              TIMEOUT           counts a wait for 'done' may take, at start;
+//                                0: none -- the wait is ended by 'k' alone
 //              LATENCY           0: wait for done to rise; 1..63: sample the
 //                                report LATENCY cycles after apply (mode 1)
 //              RESET_CYCLES      uut_rst high this long on the reset write
@@ -23,15 +24,18 @@
 // named after the fault. Every reply is the content of a read: the reply to
 // 'w' is map[19], to 'x' map[19 .. 19+RW]. A duplicate 'w' or 'x' (its token
 // equals 'last') does not act. A line arriving while an 'x' or the reset
-// write is pending is answered '! busy' (on a UART; under stdio no byte is
-// read then). The bus (100 and above) is not built: '! limit'.
+// write is pending is answered '! busy' -- except 'k', the termination
+// request: it aborts the wait, resets the UUT and replies the status; it
+// does not touch 'last' or 'fresh' (on a UART; under stdio no byte is read
+// while a command is pending, and the host ends the simulator instead).
+// The bus (100 and above) is not built: '! limit'.
 // ____________________________________________________________________________
 module hwut_agent #(
     parameter        SW           = 2,
     parameter        RW           = 2,
     parameter [31:0] IMAGE_ID     = 32'h0,
     parameter [31:0] CLOCK_HZ     = 32'd50_000_000,
-    parameter [31:0] TIMEOUT      = 32'd10_000_000,
+    parameter [31:0] TIMEOUT      = 32'd0,
     parameter        LATENCY      = 1,
     parameter        RESET_CYCLES = 4
 ) (
@@ -58,11 +62,11 @@ module hwut_agent #(
         if (RW < 1 || RW > 32)       begin : f2 RW_must_be_1_to_32      fault(); end
         if (LATENCY < 0 || LATENCY > 63)
                                      begin : f3 LATENCY_must_be_0_to_63 fault(); end
-        if (TIMEOUT < LATENCY || TIMEOUT < RESET_CYCLES)
+        if (TIMEOUT != 0 && (TIMEOUT < LATENCY || TIMEOUT < RESET_CYCLES))
                                      begin : f4 TIMEOUT_below_a_wait    fault(); end
     endgenerate
 
-    localparam [7:0] MODE    = {LATENCY[5:0], 1'b0, (LATENCY != 0)};
+    localparam [7:0] MODE    = {7'b0, (LATENCY != 0)};
     localparam [7:0] A_LAST  = 8'h18, A_STATUS = 8'h19, A_REPORT = 8'h1a;
     localparam [7:0] A_RESET = 8'h3f, A_STIM   = 8'h40;
 
@@ -151,9 +155,11 @@ module hwut_agent #(
     localparam [1:0] X_IDLE = 0, X_APPLY = 1, X_WAIT = 2, X_RESET = 3;
     reg  [1:0]  xstate;
     reg  [31:0] xcount;
-    reg         start_x, start_reset;
+    reg         start_x, start_reset, start_kill;
+    reg         kill_f;                   // the reset is 'k''s: fresh stays
     reg         done_q;
-    wire        ex_busy = (xstate != X_IDLE) || start_x || start_reset;
+    wire        ex_busy = (xstate != X_IDLE) || start_x || start_reset
+                       || start_kill;
 
     always @(posedge clk) begin
         apply  <= 1'b0;
@@ -164,6 +170,13 @@ module hwut_agent #(
             outcome  <= 2'b00;
             fresh    <= 1'b1;
             report_q <= {RW*8{1'b0}};
+            kill_f   <= 1'b0;
+        end
+        else if (start_kill) begin                // 'k': abort, reset the UUT
+            uut_rst <= 1'b1;
+            xcount  <= 0;
+            kill_f  <= 1'b1;
+            xstate  <= X_RESET;
         end
         else case (xstate)
             X_IDLE:
@@ -175,6 +188,7 @@ module hwut_agent #(
                 else if (start_reset) begin
                     uut_rst <= 1'b1;
                     xcount  <= 0;
+                    kill_f  <= 1'b0;
                     xstate  <= X_RESET;
                 end
             X_APPLY:                              // the strobe is out
@@ -191,7 +205,8 @@ module hwut_agent #(
                     outcome  <= 2'b01;
                     xstate   <= X_IDLE;
                 end
-                else if (LATENCY == 0 && xcount + 1 >= timeout) begin
+                else if (LATENCY == 0 && timeout != 0
+                         && xcount + 1 >= timeout) begin
                     report_q <= report;           // no done: data
                     outcome  <= 2'b10;
                     xstate   <= X_IDLE;
@@ -202,7 +217,7 @@ module hwut_agent #(
                 if (xcount + 1 >= RESET_CYCLES) begin
                     uut_rst <= 1'b0;
                     outcome <= 2'b00;
-                    fresh   <= 1'b0;
+                    if (!kill_f) fresh <= 1'b0;
                     xstate  <= X_IDLE;
                 end
             end
@@ -286,6 +301,7 @@ module hwut_agent #(
         tx_valid    <= 1'b0;
         start_x     <= 1'b0;
         start_reset <= 1'b0;
+        start_kill  <= 1'b0;
         if (rst) begin
             state   <= S_RX;
             rlen    <= 0;
@@ -359,7 +375,15 @@ module hwut_agent #(
         end
         // ------------------------------------------------- read the body --
         S_VERB:
-            if (pending)                                reply_refuse(token, W_BUSY);
+            if (verb == "k" && hend == 2) begin          // the termination
+                rlen        <= 0;                        // request
+                start_kill  <= 1'b1;
+                pending     <= 1'b1;
+                pend_x      <= 1'b0;
+                pend_token  <= token;
+                state       <= S_RX;
+            end
+            else if (pending)                           reply_refuse(token, W_BUSY);
             else if (hend >= 3 && rbuf[3] != " ")       reply_refuse(token, W_UNKNOWN);
             else if (verb == "r" || verb == "w" || verb == "x") begin
                 i      <= 4;
@@ -424,7 +448,7 @@ module hwut_agent #(
                         for (k = 0; k < 4; k = k + 1)
                             if (k >= arg0 - 8'h14 && k < arg0 - 8'h14 + nb)
                                 t[8*k +: 8] = abyte[k - (arg0 - 8'h14)];
-                        if (t < LATENCY || t < RESET_CYCLES)
+                        if (t != 0 && (t < LATENCY || t < RESET_CYCLES))
                             reply_refuse(token, W_LIMIT);
                         else begin
                             timeout <= t;

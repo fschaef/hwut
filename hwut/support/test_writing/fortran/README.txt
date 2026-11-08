@@ -38,7 +38,7 @@ is no library to install. Everything is Fortran but 'hwut_vterm', which binds
 A Fortran test starts:
 
     ! @hwut {
-    !     build   { framework = "make", executable = "%.exe" }
+    !     build   { framework = "make", target = "%.exe" }
     !     choices = ["plain", "tricky"]
     ! }
     module test_x_choices

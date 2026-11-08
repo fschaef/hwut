@@ -1,6 +1,8 @@
 INSPECT: every member of 'TestParameters', stated alone
          stated           arrives at
          build            source_kind, interpreter, build
+         deploy           deploy
+         requires         plan admission
          caps             caps
          pype             canonicalisers
          tolerance        compare

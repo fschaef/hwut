@@ -30,6 +30,23 @@ def region_fault_of(error):
     return E_TestRunResult.REGION_SYNTAX_ERROR
 
 
+#  THE ONE EXIT STATUS THAT IS NOT BEHAVIOUR (intend/26 o-36, o-49;
+#  measured free 2026-11-05): 77 says "the device this test talks to is not
+#  reachable". Every other status is behaviour, compared like any output.
+DEVICE_EXIT_CODE = 77
+
+
+def last_line_of(text):
+    """
+    RETURN: str, the last non-empty line of 'text', stripped, if there is
+            one;
+            None, else.
+    """
+    for line in reversed((text or "").splitlines()):
+        if line.strip(): return line.strip()
+    return None
+
+
 class E_TestRunResult(Enum):
     OK                          = "ok"
 
@@ -69,6 +86,13 @@ class E_TestRunResult(Enum):
 
     # THE TEST APPLICATION:
     TEST_APP_LAUNCH_FAILED      = "test-app-launch-failed"
+    #  THE DEVICE A TEST TALKS TO IS NOT REACHABLE (support/remote
+    #  RATIONALE; intend/26 o-49): the application exited 77 -- the board,
+    #  the simulator it drives is missing or did not come up. A failure of
+    #  the test, like a build that fails; its output is NOT compared, half
+    #  a picture would only read as a difference. The last line of its
+    #  stderr is the detail.
+    DEVICE_UNREACHABLE          = "device-unreachable"
     TEST_APP_CONTAINED          = "test-app-contained"
     #  THE MULTI ROAD (O-21): the one process serving every choice
     #  died -- of a cap, named on the choice that was running -- and
@@ -138,6 +162,12 @@ class E_TestRunResult(Enum):
     BUILD_CONTAINED             = "build-contained"
     BUILD_FAILED                = "build-failed"
     TARGET_NOT_BUILT            = "target-not-built"
+
+    # THE DEPLOY (deploy_action.py; intend/26 o-40, o-47): the image put
+    # where the test reaches it. Exit 77 there is DEVICE_UNREACHABLE.
+    DEPLOY_TOOL_NOT_FOUND       = "deploy-tool-not-found"
+    DEPLOY_CONTAINED            = "deploy-contained"
+    DEPLOY_FAILED               = "deploy-failed"
 
     # THE ACQUISITION: a dependency the world outside would not deliver.
     ACQUISITION_FAILED          = "acquisition-failed"

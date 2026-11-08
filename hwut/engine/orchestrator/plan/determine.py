@@ -17,6 +17,9 @@ THE STEPS, in order:
     3  BUILD ACTIONS: the build interview answers which actions the
        selected cases need and which cases each action supports. The
        actions become BUILD nodes, supports-linked (P-5).
+    3b DEPLOYS: per application stating 'deploy', one DEPLOY node,
+       supported by the BUILD nodes building it and supporting the
+       file's TEST nodes (intend/26 o-47; provision_deploy.py).
     4  SESSIONS: per interactive file holding a selected case, one
        SESSION node, supports-linked to that file's TEST nodes (P-5).
     5  ORDERING LINKS out of 'dependency', restricted to targets that
@@ -26,7 +29,7 @@ THE STEPS, in order:
        covering a TEST node of the plan; a set left with fewer than two
        members constrains nothing and is dropped.
 
-NODE ORDER: BUILD nodes, then SESSION nodes, then TEST nodes in
+NODE ORDER: BUILD nodes, then DEPLOY nodes, then SESSION nodes, then TEST nodes in
 selection order. Determination is deterministic -- the same wish on the
 same directory yields the same plan, and the print may be blessed
 byte-exact (P-4).
@@ -34,7 +37,8 @@ byte-exact (P-4).
 THE PROVISION LADDER (P-18) is the organising figure: this module
 walks the selection and raises the TEST nodes; each HOISTED rung has
 its own file, 'provision_<stage>.py' -- build actions
-(provision_build.py), the shared facet of execution
+(provision_build.py), the deploy (provision_deploy.py), the shared
+facet of execution
 (provision_execute.py) -- and acquisition lands someday as one more
 rung, not a redesign. The scheduler stays STAGE-BLIND: stage meaning
 enters only through node kind, read by the dispatcher alone.
@@ -43,6 +47,7 @@ ______________________________________________________________________________
 from ..exploration.configuration_tree import Target
 from .provision_build   import (SpecificationBuildInterview,
                                 build_nodes)
+from .provision_deploy  import deploy_nodes
 from .provision_execute import session_nodes
 from .form import (CExclusionSet, CPlanLink, CPlanNode, CTestPlan,
                    E_LinkKind, E_Provenance)
@@ -115,6 +120,8 @@ def determine(app_set, task_list, build_interview=None, admit=None):
 
     build_node_list, build_link_list = \
         build_nodes(build_interview, case_list, name_of)
+    deploy_node_list, deploy_link_list = \
+        deploy_nodes(case_list, name_of, build_link_list)
     session_node_list, session_link_list = \
         session_nodes(case_list, app_set, name_of)
 
@@ -122,8 +129,10 @@ def determine(app_set, task_list, build_interview=None, admit=None):
         _ordering_links(app_set, name_of, case_list)
     exclusion_list     = _exclusion_sets(app_set, test_node_list)
 
-    plan = CTestPlan(build_node_list + session_node_list + test_node_list,
+    plan = CTestPlan(build_node_list + deploy_node_list
+                                     + session_node_list + test_node_list,
                      ordering_link_list + build_link_list
+                                        + deploy_link_list
                                         + session_link_list,
                      exclusion_list)
     #  THE LINKS OF A CYCLE order nothing and the form refuses them

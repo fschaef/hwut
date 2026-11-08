@@ -17,7 +17,7 @@ what the Python ones were accepted for (bookkeeper B-32). Three are its
 own (../RATIONALE.txt, DEMO-CPP-4).
 
 Every test application is a '.cpp' whose header ('@hwut { }') is its whole
-configuration -- 'build { framework = "make", executable = "%.exe" }': hwut
+configuration -- 'build { framework = "make", target = "%.exe" }': hwut
 runs 'make <stem>.exe' HERE, where the 'Makefile' stands, and then the
 '.exe'. 'hwut.conf' is what the directory says. A file's comment says what
 each of its choices shows. Where a run is seeded by the clock or the

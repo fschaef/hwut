@@ -17,12 +17,14 @@ PURPOSE: THE CONSOLE OF adm/WORK/spec/42-platforms.txt section 6 (plan/42
          tree, of a bubble not run and of a directory measured on a
          platform; RESULTS untouched. The tree (as P-4's):
 
-    .                 hwut-root.conf, no 'platform'          Q = {local}
+    .                 platform = [ { local  tools = [iverilog] },
+                                   { linux  tools = [iverilog, ghdl] } ]
+                      no 'requires'                          C = {local}
     ./TEST            test-top.sh
-    none/             hwut-root.conf, no 'platform'          Q = {local}
-    linux/            platform = [ linux ]                   Q = {linux}
-    linux/inner/      hwut-root.conf, no 'platform'          Q = {local}
-    both/             platform = [ "local", linux ]          Q = {local, linux}
+    none/             hwut-root.conf, no 'requires'          C = {local}
+    linux/            requires = [ ghdl ]                    C = {linux}
+    linux/inner/      hwut-root.conf, no 'requires'          C = {local}
+    both/             requires = [ iverilog ]                C = {local, linux}
 
 CHOICES: available, reachable, handed;
 
@@ -49,7 +51,8 @@ import tempfile
 import config                                                     # noqa F401
 
 LINUX = ('{ name = "linux", kind = "container", image = "hwut-dev", '
-         'recipe = "Containerfile" }')
+         'recipe = "Containerfile", tools = ["iverilog", "ghdl"] }')
+LOCAL = '{ name = "local", tools = ["iverilog"] }'
 
 _HERE_PODMAN = """#! %s
 # A CONTAINER THAT IS THIS MACHINE: 'image inspect' stands; 'run' changes to
@@ -73,10 +76,10 @@ os.execvp(command[0], command)
 def tree():
     """RETURN: str, the root of a new tree as the PURPOSE draws it."""
     root = tempfile.mkdtemp(prefix="hwut_console_")
-    conf_db = {"": "", "none/": "",
-               "linux/": "platform = [ %s ]" % LINUX,
+    conf_db = {"": "platform = [ %s, %s ]" % (LOCAL, LINUX), "none/": "",
+               "linux/": 'requires = ["ghdl"]',
                "linux/inner/": "",
-               "both/": 'platform = [ "local", %s ]' % LINUX}
+               "both/": 'requires = ["iverilog"]'}
     test_db = {"TEST": "test-top.sh", "none/TEST": "test-a.sh",
                "linux/TEST": "test-b.sh", "linux/inner/TEST": "test-c.sh",
                "both/TEST": "test-d.sh"}

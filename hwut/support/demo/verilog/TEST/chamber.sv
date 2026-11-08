@@ -1,6 +1,6 @@
 // @hwut {
 //     title     = "Demo: a climate chamber's step response -- regions, units, a string law"
-//     build     { framework = "make", executable = "%.exe"
+//     build     { framework = "make", target = "%.exe"
 //                 caps { memory_mb = 2048  file_size_mb = 256  disk_mb = 1024 } }
 //     tolerance { constraints = ["overshoot <= 0.5 K",
 //                                "settle <= 4 min",

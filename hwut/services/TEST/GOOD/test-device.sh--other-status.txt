@@ -1,0 +1,4 @@
+END   :          x ................................................. [OK]
+RESULTS: 1 ok, 0 fail, <t> [sec], <t> [sec] total
+exit: 0
+<hwut-end>

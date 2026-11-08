@@ -4,6 +4,7 @@
 #     title      = "Determination: a wish and a directory become a plan"
 #     choices {
 #         closure       { features = ["dependency-closure"] }
+#         deploy        { features = ["deploy-node"] }
 #         deterministic { features = ["deterministic-plan"] }
 #         empty         { features = ["empty-selection-reported"] }
 #         misdep        { features = ["misdep-marked"] }
@@ -19,7 +20,7 @@ ______________________________________________________________________________
 PURPOSE: DETERMINATION -- a wish and a directory turned into a plan,
          shown through the canonical print.
 
-CHOICES: whole, closure, pruned, empty, misdep, deterministic;
+CHOICES: whole, closure, pruned, empty, misdep, deterministic, deploy;
 
 DESCRIPTION:
 
@@ -168,6 +169,47 @@ def test_misdep():
         shutil.rmtree(directory, ignore_errors=True)
 
 
+DEPLOY_FILE_DB = {
+    "hwut.conf":     'hwut { collision = ["test-board.py", "test-other.py"] }\n',
+    "test-board.py": '# @hwut { title = "Board"  build = "make"\n'
+                     '#        deploy = "python3 flash.py uut.img"\n'
+                     '#        choices = ["one", "two"] }\n',
+    "test-copy.py":  '# @hwut { title = "Copy"\n'
+                     '#        deploy { flash = "cp app /tmp/x" } }\n',
+    "test-other.py": '# @hwut { title = "Other" }\n',
+}
+
+
+def test_deploy():
+    """RETURN: None. An application stating 'deploy': one DEPLOY node,
+    the build feeding it, its tests fed by it, the collision covering
+    it; an application deploying without a build."""
+    directory = tempfile.mkdtemp(prefix="hwut_determine_")
+    try:
+        for name, content in DEPLOY_FILE_DB.items():
+            with open(os.path.join(directory, name), "w") as fh:
+                fh.write(content)
+        app_set = explore(directory).app_set
+        banner("deploy: build ==> deploy ==> tests")
+        plan, report_list, _refused = determine(app_set,
+                                                CTestTaskListQuery(Wish()))
+        for report in report_list:
+            print("REPORT: %s" % report)
+        print_plan(plan)
+        banner("the exclusion covers the deploy")
+        for name in ("deploy[test-board.py]", "deploy[test-copy.py]"):
+            print("    %-22s %s"
+                  % (name, "; ".join("{ %s }" % ", ".join(x.member_tuple)
+                                     for x in plan.exclusion_sets_of(name))
+                           or "-"))
+        banner("stages")
+        for node in plan:
+            print("    %-26s %s" % (node.name(),
+                                    node.provision_stage().name))
+    finally:
+        shutil.rmtree(directory, ignore_errors=True)
+
+
 def test_deterministic():
     """RETURN: None. Ten determinations, one print."""
     app_set, directory = build_directory()
@@ -195,4 +237,5 @@ if __name__ == "__main__":
         "empty":         test_empty,
         "misdep":        test_misdep,
         "deterministic": test_deterministic,
+        "deploy":        test_deploy,
     }).run()

@@ -320,7 +320,10 @@ DATA, never a null object pretending something ran:
     stage_canonicalise  raw         -> the SUBJECT
 
 WHAT LEFT WITH THE SURGERY: building is the plan's (BUILD nodes;
-'build_action.py' is one action, driven by the dispatcher); acquisition
+'build_action.py' is one action, driven by the dispatcher), and so is
+deploying (DEPLOY nodes; 'deploy_action.py' runs the header's 'deploy'
+command directly where the build ran -- 0 stands, 77 is
+'device-unreachable', anything else 'deploy-failed'; O-37); acquisition
 follows that road the day it returns; loading is 'consume/loaded.py',
 a Bookkeeper read. A loaded subject is ALREADY canonical;
 acquire, build and canonicalise stand only beside execute -- a loaded

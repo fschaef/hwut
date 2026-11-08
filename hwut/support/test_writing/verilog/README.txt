@@ -38,7 +38,7 @@ work, so there is one implementation of each, held by the same GOODs.
 A SystemVerilog test starts:
 
     // @hwut {
-    //     build   { framework = "make", executable = "%.exe"
+    //     build   { framework = "make", target = "%.exe"
     //               caps { memory_mb = 2048 } }
     //     choices = ["plain", "tricky"]
     //     interactive = true

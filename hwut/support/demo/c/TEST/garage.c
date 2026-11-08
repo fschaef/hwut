@@ -1,6 +1,6 @@
 /* @hwut {
  *     title    = "Demo: a garage's space counter -- a space, a stream and races, generated"
- *     build    { framework = "make", executable = "%.exe" }
+ *     build    { framework = "make", target = "%.exe" }
  *     interactive = true
  *     choices {
  *         space       { features = ["space-from-hocon", "space-iterator", "hwut-runner"]

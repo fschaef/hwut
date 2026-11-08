@@ -1,5 +1,5 @@
 ==============================================================================
-MAP.txt -- THE ADDRESS SPACE, OUTCOME, THE WAIT CONTRACT, THE AGENTS
+MAP.txt -- THE ADDRESS SPACE, OUTCOME, THE WAIT, THE AGENTS
 ==============================================================================
 
     The agent's byte-addressed space and what reading and writing it does;
@@ -22,11 +22,12 @@ MAP.txt -- THE ADDRESS SPACE, OUTCOME, THE WAIT CONTRACT, THE AGENTS
     0e     1    r       mode      [0] 1: sample LATENCY cycles after apply;
                                       0: wait for done to rise
                                   [1] 1: run seam (c, python); 0: poll
-                                  [7:2] LATENCY, 0..63 (o-42); 0 in
-                                      mode 0
+                                  LATENCY is the agent's parameter, not
+                                      the map's (o-43)
     0f     1    r       discard   lines discarded since start, stops at ff
     10     4    r       clock     Hz of the count 'timeout' uses
-    14     4    rw      timeout   counts a wait may take (section 3)
+    14     4    rw      timeout   counts a wait for done may take; 0:
+                                  none, the default (section 3)
     18     1    r       last      token of the last 'w' or 'x'; ff after
                                   start
     19     1    r       status    [1:0] outcome, [7] fresh (section 2)
@@ -44,7 +45,7 @@ MAP.txt -- THE ADDRESS SPACE, OUTCOME, THE WAIT CONTRACT, THE AGENTS
 
     THE SESSION IN ADDRESSES
 
-    hello    r 0 1a    (00 .. 19: identity, contract, last, status)
+    hello    r 0 1a    (00 .. 19: identity, lengths, last, status)
     reset    w 3f 01
     vector   x <stim>
     recover  r 18 2+RW (last, status, report)
@@ -81,14 +82,28 @@ MAP.txt -- THE ADDRESS SPACE, OUTCOME, THE WAIT CONTRACT, THE AGENTS
 
     mode 0   the agent waits for done to rise after the apply strobe
     mode 1   done is not used; the report is sampled LATENCY cycles after
-             the strobe
-    timeout  counts any wait may take: an 'x', a reset
+             the strobe (LATENCY: a parameter of the agent's top level)
+    timeout  optional: counts a wait for done may take, then outcome 02;
+             0, the default: none
     reset    verilog: uut_rst high for RESET_CYCLES; c, python: complete
              when uut_reset() returns
 
     stim and report are stable from the strobe to the sample.
 
-    The wait contract is mode, LATENCY, timeout and its unit.
+    How the agent waits is the TEST's business (o-43): where the rows
+    depend on it, the test prints it in its own words; the protocol
+    reports nothing of it.
+
+    THE END OF A WAIT THAT DOES NOT END (o-44):
+
+        hwut's watchdog (caps) --signal--> test application (its hub)
+                                               --'k'--> agent
+
+    The hub catches SIGTERM and SIGINT for the session: it sends 'k',
+    awaits its reply at most one second, closes the link (a launched
+    simulator ends with it), and the process ends by the same signal.
+    Under simulation the stdio phy reads nothing while a command is
+    pending; the closing ends the simulator.
 
 
 ==============================================================================
@@ -140,11 +155,10 @@ MAP.txt -- THE ADDRESS SPACE, OUTCOME, THE WAIT CONTRACT, THE AGENTS
     Outcomes and mode per implementation: couplings A * K and A * J
     (PROTOCOL.txt 2).
 
-    SIZE on a MAX 10 (10M50): UNMEASURED -- no Quartus at hand where it
-    was built (2026-11-06); measured with delivery step 4 on the author's
-    bench, and stated here.
+    SIZE on a MAX 10 (10M50): unmeasured; measured on the author's bench,
+    never by a hwut test (no vendor tool is needed by one, 2026-11-07).
 
     Every implementation passes the 'x' oracle of
-    target/verilog/TEST/test-agent.py: the reply to 'x' equals
+    iverilog/TEST/test-agent.py: the reply to 'x' equals
     the bytes of the following 'r 19 1+RW'; a duplicate 'x' returns the
     same bytes and does not apply.

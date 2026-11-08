@@ -1,9 +1,9 @@
 $ hwut.run --exclude-local -p linux   [exit 3]
     DIRECTORIES  (counts: 0 ok, 0 fail)
-       +--- ./  [PLATFORM not available]  requires local; specified linux
-       +--- both/  [PLATFORM not reachable]  image 'hwut-dev' absent and recipe '<root>/both/Containerfile' not found
-       +---  linux/  [PLATFORM not reachable]  image 'hwut-dev' absent and recipe '<root>/linux/Containerfile' not found
-       |   '--- inner/  [PLATFORM not available]  requires local; specified linux
-       '--- none/  [PLATFORM not available]  requires local; specified linux
+       +--- ./  [PLATFORM not available]  requires no tool -- runs on local; specified linux
+       +--- both/  [PLATFORM not reachable]  image 'hwut-dev' absent and recipe '<root>/Containerfile' not found
+       +---  linux/  [PLATFORM not reachable]  image 'hwut-dev' absent and recipe '<root>/Containerfile' not found
+       |   '--- inner/  [PLATFORM not available]  requires no tool -- runs on local; specified linux
+       '--- none/  [PLATFORM not available]  requires no tool -- runs on local; specified linux
     (no RESULTS)
 <hwut-end>

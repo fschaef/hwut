@@ -15,7 +15,7 @@ same GOOD files. A C program here prints what the Python program prints.
 
 Every test application is a file whose header ('@hwut { }', in the file's
 first comment) is its whole configuration; 'hwut.conf' is what the directory
-says. A C test's header says 'build { framework = "make", executable =
+says. A C test's header says 'build { framework = "make", target =
 "%.exe" }': hwut runs 'make <stem>.exe' HERE, where the 'Makefile' stands
 (services E-210), several tests at once -- the Makefile builds each program
 whole from its source and the C support modules it uses, sharing no object

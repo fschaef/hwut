@@ -4,7 +4,9 @@ record: tolerance Tolerance(numeric_ratio=0.05, whitespace=None, regions=None, e
 
 ConfigBuild:
     framework                      None
-    executable                     None
+    target                         None
+ConfigDeploy:
+    flash                          None
 ProcsitterConfig:
     max_wall_clock_sec             300.0
     max_cpu_time_sec               300
@@ -56,4 +58,6 @@ ConfigStore:
     same_nominal_f                 False
 ConfigFeatures:
     feature_name_tuple             None
+ConfigRequires:
+    tool_tuple                     None
 <hwut-end>

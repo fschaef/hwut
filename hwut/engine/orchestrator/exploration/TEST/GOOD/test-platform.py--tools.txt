@@ -1,0 +1,4 @@
+hwut-root.conf:  hwut { platform = [ { name = "local", tools = ["iverilog"] }, { name = "linux", kind = "container", image = "hwut-dev", tools = ["iverilog", "ghdl"] } ] }
+    TEST         platform_tuple=(('local', {'name': 'local', 'tools': ('iverilog',)}), ('linux', {'name': 'linux', 'kind': 'container', 'image': 'hwut-dev', 'tools': ('iverilog', 'ghdl')}))
+                 runs
+<hwut-end>

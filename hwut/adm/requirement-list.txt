@@ -112,7 +112,7 @@ program  node            support:node          -                         node 22
 program  npm             support:node          -                         comes with node; fetches koffi for hwut_vterm
 program  verilator       support:verilog       verilator>=5.020          SystemVerilog
 program  ghdl            support:vhdl          ghdl>=4.1                 VHDL (the mcode back end)
-program  iverilog        support:remote        iverilog>=12              the Verilog agent and proto/iverilog (support/remote); without it their cases exit 77
+program  iverilog        support:remote        iverilog>=12              the Verilog agent and the prototype (support/remote/iverilog)
 program  vvp             support:remote        iverilog>=12              the same: the simulator
 program  flock           support:bash          util-linux                bash's shop
 program  pwsh            support:powershell    -                         PowerShell 7.4.6, the release tarball

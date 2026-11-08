@@ -860,12 +860,12 @@ class CPlainFlow(CRunReportReceiver):
         here is a path on which no line is written, and the caller's
         'finally' still lowers what the launch raised.
         """
-        #  A PASSING PROVISION NODE IS NO CASE. SESSION and BUILD wrap
+        #  A PASSING PROVISION NODE IS NO CASE. SESSION, BUILD and DEPLOY wrap
         #  cases; counted, they would make this run's numbers disagree
         #  with the cases it prints and with 'hwut.report', which counts
         #  cases. A FAILING one is recorded -- a failed precondition is a
         #  test result -- whatever the tier shows.
-        if not (good and node_kind in ("SESSION", "BUILD")):
+        if not (good and node_kind in ("SESSION", "BUILD", "DEPLOY")):
             self.verdict_db.setdefault(key[0], {})[key[1]] = verdict
         if report is not None: self.report_db[key] = report
         if cause  is not None: self.cause_db[key]  = cause

@@ -137,9 +137,11 @@ class CPlanState:
     def ended(self, name, good_f):
         """
         RETURN: tuple of str, the names driven terminal by this ending
-                besides the node itself -- the TEST nodes left
-                UNSUPPORTED where a BUILD or SESSION node ended BAD
-                (P-5); empty else.
+                besides the node itself -- the nodes left UNSUPPORTED
+                where a BUILD, DEPLOY or SESSION node ended BAD (P-5),
+                and those THEY supported in turn (a build broken leaves
+                its deploy and the deploy's tests unsupported, o-47);
+                empty else.
 
         Raises AssertionError where the node is not RUNNING.
         """
@@ -155,10 +157,15 @@ class CPlanState:
         if node.kind is E_NodeKind.TEST: return ()
 
         unsupported = []
-        for target in self.plan.supports_db.get(name, ()):
-            if self.state_db[target] is E_NodeState.PENDING:
+        work_list   = [name]
+        while work_list:
+            source = work_list.pop(0)
+            for target in self.plan.supports_db.get(source, ()):
+                if self.state_db[target] is not E_NodeState.PENDING:
+                    continue
                 self.state_db[target] = E_NodeState.UNSUPPORTED
                 unsupported.append(target)
+                work_list.append(target)
         return tuple(unsupported)
 
     def session_spent_f(self, name):

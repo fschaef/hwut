@@ -18,6 +18,9 @@
 #         image-missing   { features = ["platform-faults-named"] }
 #         engine-unknown  { features = ["platform-faults-named"] }
 #         value-no-string { features = ["platform-faults-named"] }
+#         tools           { features = ["platform-list-read"] }
+#         requires        { features = ["platform-list-read"] }
+#         tools-faults    { features = ["platform-faults-named"] }
 #     }
 #     interactive = true
 # }
@@ -29,7 +32,8 @@ PURPOSE: 'platform = [ ... ]' OF A BUBBLE'S 'hwut-root.conf' (spec/42
          section 1; intend/42 rulings 3, 4, 10, 14, 15, 16, 19): the
          list a tree walk reads, and every fault of it by name.
 
-CHOICES: reads, bubble, root-only, and one per fault;
+CHOICES: reads, bubble, root-only, tools, requires, tools-faults, and one
+         per fault;
 
 reads           "local" and a 'container' entry: the tuple of (name,
                 spec) in the list's order, and it reaches the bubble's
@@ -39,6 +43,12 @@ bubble          an inner bubble with no 'platform' decides alone: its
                 at its root (rulings 10, 19).
 root-only       'platform' in a tree level's 'hwut.conf' and in a test
                 directory's own: refused, the root's alone.
+tools           'tools' on each entry, 'local' with 'tools' alone (intend/26
+                o-50, o-56): kept with the entry, a tuple.
+requires        'requires' in the root, added to by a tree level's
+                'hwut.conf' and a test directory's own, replaced by an
+                inner root (o-54, o-57).
+tools-faults    'tools' and 'requires' that do not read: refused by name.
 not-list .. value-no-string
                 one fault each: the shape, the bare name, the name, the
                 kind, and the kind's own keys (checked by the kind,
@@ -81,8 +91,11 @@ def walked(root_text, file_db=None):
                 print("%-16s %s" % (relative + ":", file_db[relative].strip()))
         tree = explore_tree(root, boundary_f=False)
         for directory, result in tree:
+            spec = result.app_set.directory_spec
             print("    %-12s platform_tuple=%r"
-                  % (directory, result.app_set.directory_spec.platform_tuple))
+                  % (directory, spec.platform_tuple))
+            if spec.requires_tuple is not None:
+                print("    %-12s requires_tuple=%r" % ("", spec.requires_tuple))
             print("    %-12s %s" % ("", "runs" if not result.conf_fault_tuple
                                      else "runs not: %i conf fault(s)"
                                           % len(result.conf_fault_tuple)))
@@ -114,6 +127,33 @@ def test_root_only():
                     '# @hwut { title = "B" }\n',
                 "TEST/hwut.conf":
                     'hwut { platform = [ "local" ] }\n'})
+
+
+def test_tools():
+    """RETURN: None. 'tools' read, 'local' carrying them."""
+    walked('platform = [ { name = "local", tools = ["iverilog"] }, '
+           '{ name = "linux", kind = "container", image = "hwut-dev", '
+           'tools = ["iverilog", "ghdl"] } ]')
+
+
+def test_requires():
+    """RETURN: None. 'requires' added down, replaced at an inner root."""
+    walked('requires = ["iverilog"]',
+           {"sub/hwut.conf":          'hwut { requires = ["ghdl"] }\n',
+            "sub/TEST/test-b.py":     '# @hwut { title = "B" }\n',
+            "sub/TEST/hwut.conf":     'hwut { requires = ["ghdl", "gcc"] }\n',
+            "inner/hwut-root.conf":   'hwut { requires = ["gcc"] }\n',
+            "inner/TEST/test-c.py":   '# @hwut { title = "C" }\n',
+            "bare/hwut-root.conf":    'hwut {\n}\n',
+            "bare/TEST/test-d.py":    '# @hwut { title = "D" }\n'})
+
+
+def test_tools_faults():
+    """RETURN: None. 'tools' and 'requires' that do not read."""
+    walked('platform = [ { name = "linux", kind = "container", '
+           'image = "x", tools = [7] }, '
+           '{ name = "lab", kind = "container", image = "y", tools = [""] } ]'
+           '\n    requires = ["", "gcc"]')
 
 
 _FAULT_DB = {
@@ -148,7 +188,10 @@ def fault_choice(choice):
 if __name__ == "__main__":
     choice_db = {"reads":     test_reads,
                  "bubble":    test_bubble,
-                 "root-only": test_root_only}
+                 "root-only": test_root_only,
+                 "tools":     test_tools,
+                 "requires":  test_requires,
+                 "tools-faults": test_tools_faults}
     choice_db.update((choice, fault_choice(choice)) for choice in _FAULT_DB)
     HwutRunner(sys.argv,
                "The conf key 'platform': read, or refused by name;",

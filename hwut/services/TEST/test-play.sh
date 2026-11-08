@@ -181,7 +181,7 @@ stderr)
 
 build)
     fixture
-    printf '#! /bin/bash\n# @hwut { title = "B"  build { framework = "make"  executable = "app" } }\necho "never reached"\necho "<hwut-end>"\n' \
+    printf '#! /bin/bash\n# @hwut { title = "B"  build { framework = "make"  target = "app" } }\necho "never reached"\necho "<hwut-end>"\n' \
         > suite/TEST/test-built.sh
     chmod +x suite/TEST/test-built.sh
     mkdir -p suite/TEST/BUILD/test-built.sh

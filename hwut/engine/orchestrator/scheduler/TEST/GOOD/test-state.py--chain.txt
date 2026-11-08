@@ -1,0 +1,21 @@
+
+--- the build stands: the deploy is ready, the tests are not ---
+    ready: deploy[a.py]
+
+--- the build breaks ---
+    ended() named: deploy[a.py], a.py one, a.py two
+    build[make]            ENDED_BAD
+    deploy[a.py]           UNSUPPORTED
+    a.py one               UNSUPPORTED
+    a.py two               UNSUPPORTED
+    ready: -
+
+--- the deploy breaks ---
+    ended() named: a.py one, a.py two
+    build[make]            ENDED_GOOD
+    deploy[a.py]           ENDED_BAD
+    a.py one               UNSUPPORTED
+    a.py two               UNSUPPORTED
+    ready: -
+    done_f=True
+<hwut-end>

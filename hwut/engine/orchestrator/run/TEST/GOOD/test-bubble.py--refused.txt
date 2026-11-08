@@ -1,10 +1,9 @@
-$ -p linux
-    REFUSED: both/: requires local, linux; specified local, linux
-         => narrow with '--exclude-local -p linux', or run without '-p'
+$ (no -p)
+    REFUSED: none/hwut-root.conf: 'platform' stands in the outermost root alone (<root>/hwut-root.conf); here say 'requires = [ <tool> ... ]' (intend/26 o-53)
     EXPLORED: nothing
-$ -p linux -p win11
-    REFUSED: both/: requires local, linux; specified local, linux, win11
-         => narrow with '--exclude-local -p linux', or run without '-p'
+$ (no -p)
+    REFUSED: platform 'linux' announces 'ghdl'; hwut-tools.rst does not explain it -- add '[[ghdl]]'
+         linux/ requires 'ghdl'; hwut-tools.rst does not explain it -- add '[[ghdl]]'
     EXPLORED: nothing
-SUCCESS: refused at the call, every such bubble named.
+SUCCESS: refused at the call, every such conf named.
 <hwut-end>

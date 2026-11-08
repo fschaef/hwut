@@ -6,11 +6,12 @@ PURPOSE: THE TEST PLAN -- the formal data structure that determination
 
 A plan states CONSTRAINTS and ADMISSIONS, never a total order:
 
-    nodes            the work: TEST, BUILD, SESSION
+    nodes            the work: TEST, BUILD, DEPLOY, SESSION
     ordering links   'x -> y': x runs to completion before y starts;
                      no verdict enters (R-33)
     supports links   'w ==> t': w broken, t FAILS -- the verdict-carrying
-                     link (build ==> test, session ==> test)
+                     link (build ==> test, build ==> deploy,
+                     deploy ==> test, session ==> test)
     exclusion sets   members may not stand at once; a member names an
                      application or one choice (target form, R-34)
 
@@ -27,6 +28,7 @@ from enum        import Enum, auto
 class E_NodeKind(Enum):
     TEST    = auto()   # one (file, choice) call
     BUILD   = auto()   # one build action, from the build interview
+    DEPLOY  = auto()   # one application's deploy (intend/26 o-47)
     SESSION = auto()   # one interactive application call (R-46)
 
 
@@ -38,6 +40,7 @@ class E_ProvisionStage(Enum):
     someday as one more rung, not a redesign."""
     ACQUIRE = auto()   # dependencies come to exist (future rung)
     BUILD   = auto()   # sources -> the application
+    DEPLOY  = auto()   # the image -> where the test reaches it (o-47)
     EXECUTE = auto()   # application -> the subject
 
 
@@ -48,7 +51,7 @@ class E_Provenance(Enum):
 
 class E_LinkKind(Enum):
     ORDERING = auto()  # test -> test: run-to-completion order, no verdict
-    SUPPORTS = auto()  # work ==> test: supporter broken, supported FAILS
+    SUPPORTS = auto()  # work ==> work: supporter broken, supported FAILS
 
 
 @dataclass(frozen=True, slots=True)
@@ -58,6 +61,7 @@ class CPlanNode:
         TEST     file, choice ('None' for the choice-less application),
                  misdep_f, provenance, implied_by
         BUILD    action -- the build action's name
+        DEPLOY   file -- the application whose image it deploys
         SESSION  file -- the interactive application
 
     'payload' is the constructor's own object (a CTestCase, a build
@@ -100,6 +104,14 @@ class CPlanNode:
         return cls(kind=E_NodeKind.BUILD, action=action, payload=payload)
 
     @classmethod
+    def deploy(cls, file, payload=None):
+        """
+        RETURN: CPlanNode, a DEPLOY node for the application 'file' --
+                one per application stating 'deploy' (intend/26 o-47).
+        """
+        return cls(kind=E_NodeKind.DEPLOY, file=file, payload=payload)
+
+    @classmethod
     def session(cls, file, payload=None):
         """
         RETURN: CPlanNode, a SESSION node for the interactive
@@ -115,6 +127,7 @@ class CPlanNode:
                 EXECUTE, a TEST is the case itself on the same rung.
         """
         return {E_NodeKind.BUILD:   E_ProvisionStage.BUILD,
+                E_NodeKind.DEPLOY:  E_ProvisionStage.DEPLOY,
                 E_NodeKind.SESSION: E_ProvisionStage.EXECUTE,
                 E_NodeKind.TEST:    E_ProvisionStage.EXECUTE}[self.kind]
 
@@ -124,6 +137,7 @@ class CPlanNode:
 
             TEST     'file' or 'file choice' -- the target form (R-34)
             BUILD    'build[action]'
+            DEPLOY   'deploy[file]'
             SESSION  'session[file]'
         """
         if self.kind is E_NodeKind.TEST:
@@ -131,6 +145,8 @@ class CPlanNode:
             return "%s %s" % (self.file, self.choice)
         elif self.kind is E_NodeKind.BUILD:
             return "build[%s]" % self.action
+        elif self.kind is E_NodeKind.DEPLOY:
+            return "deploy[%s]" % self.file
         else:
             return "session[%s]" % self.file
 
@@ -141,8 +157,8 @@ class CPlanLink:
 
     ORDERING: 'source' runs to completion before 'target' starts; the
     verdict of 'source' does not enter (R-33). SUPPORTS: 'source' is
-    the BUILD or SESSION node whose failure FAILS the TEST node
-    'target'."""
+    the BUILD, DEPLOY or SESSION node whose failure FAILS 'target' -- a
+    TEST node, or the DEPLOY node a BUILD feeds."""
     kind:   E_LinkKind
     source: str
     target: str
@@ -157,7 +173,9 @@ class CExclusionSet:
     def covers(self, node):
         """
         RETURN: bool, True where 'node' is a TEST node named by one of
-                the members -- by its call, or by its file alone.
+                the members -- by its call, or by its file alone -- or
+                the DEPLOY node of a file a member names: a deploy
+                touches what its tests touch (spec/26 section 16).
         """
         return any(_member_covers(member, node)
                    for member in self.member_tuple)
@@ -171,8 +189,8 @@ class CTestPlan:
     Derived at construction, one tuple per name, deterministic:
 
         before_db     TEST name -> names that run to completion first
-        supports_db   BUILD/SESSION name -> TEST names it supports
-        supporter_db  TEST name -> BUILD/SESSION names supporting it
+        supports_db   BUILD/DEPLOY/SESSION name -> names it supports
+        supporter_db  TEST/DEPLOY name -> names supporting it
     """
 
     def __init__(self, node_list, link_list=(), exclusion_list=()):
@@ -183,9 +201,9 @@ class CTestPlan:
         Raises AssertionError, naming the offender, where a law is
         violated: (i) node names collide; (ii) a link endpoint names no
         node; (iii) an ORDERING link's endpoints are not both TEST;
-        (iv) a SUPPORTS link's source is not BUILD or SESSION or its
-        target is not TEST; (v) a SESSION supports a choice of another
-        file; (vi) the ORDERING links carry a cycle -- resolved before
+        (iv) a SUPPORTS link's source is not BUILD, DEPLOY or SESSION, or
+        its target is not TEST -- save a BUILD supporting a DEPLOY; (v) a
+        SESSION or a DEPLOY supports a choice of another file; (vi) the ORDERING links carry a cycle -- resolved before
         the plan exists (R-35), asserted here; (vii) an ORDERING link
         leaves a [MISDEP] node for a non-[MISDEP] node -- the R-35
         closure violated; (viii) an exclusion member covers no TEST
@@ -228,16 +246,22 @@ class CTestPlan:
                 before_db.setdefault(link.target, []).append(link.source)
             else:
                 assert source.kind in (E_NodeKind.BUILD,
+                                       E_NodeKind.DEPLOY,
                                        E_NodeKind.SESSION), \
                        "supports link '%s ==> %s': source must be a " \
-                       "BUILD or SESSION node" % (link.source, link.target)
-                assert target.kind is E_NodeKind.TEST, \
+                       "BUILD, DEPLOY or SESSION node" \
+                       % (link.source, link.target)
+                assert target.kind is E_NodeKind.TEST \
+                       or (target.kind is E_NodeKind.DEPLOY
+                           and source.kind is E_NodeKind.BUILD), \
                        "supports link '%s ==> %s': target must be a " \
-                       "TEST node" % (link.source, link.target)
-                assert source.kind is not E_NodeKind.SESSION \
+                       "TEST node, or a DEPLOY node a BUILD feeds" \
+                       % (link.source, link.target)
+                assert source.kind not in (E_NodeKind.SESSION,
+                                           E_NodeKind.DEPLOY) \
                        or source.file == target.file, \
-                       "'%s' supports '%s': a session serves the " \
-                       "choices of its own file alone" \
+                       "'%s' supports '%s': a session or a deploy serves " \
+                       "the choices of its own file alone" \
                        % (link.source, link.target)
                 supports_db.setdefault(link.source, []).append(link.target)
                 supporter_db.setdefault(link.target, []).append(link.source)
@@ -253,7 +277,8 @@ class CTestPlan:
 
         for exclusion in self.exclusion_tuple:
             for member in exclusion.member_tuple:
-                assert any(_member_covers(member, node)
+                assert any(node.kind is E_NodeKind.TEST
+                           and _member_covers(member, node)
                            for node in self.node_tuple), \
                        "exclusion member '%s' covers no TEST node of " \
                        "the plan" % member
@@ -288,8 +313,13 @@ def _member_covers(member, node):
     """
     RETURN: bool, True where the target 'member' names the TEST node
             'node' -- by its call ('file choice'), or by its file alone
-            (every choice of the file, R-34).
+            (every choice of the file, R-34) -- or where 'node' is the
+            DEPLOY node of the file 'member' names, by itself or by one
+            of its choices.
     """
+    if node.kind is E_NodeKind.DEPLOY:
+        return member == node.file \
+               or member.startswith(node.file + " ")
     if node.kind is not E_NodeKind.TEST: return False
     return member == node.name() or member == node.file
 

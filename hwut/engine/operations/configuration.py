@@ -139,6 +139,14 @@ class TestConfiguration:
     build_caps:     Optional[ProcsitterConfig] = None  # 'build { caps }'
                                             # folded onto 'caps'; None:
                                             # the build runs under 'caps'
+    deploy:         Optional[Sequence[str]] = None   # THE DEPLOY'S ARGV
+                                            # ('deploy { flash }', intend/26
+                                            # o-41), run directly where
+                                            # the build ran; None: nothing
+                                            # to deploy
+    deploy_caps:    Optional[ProcsitterConfig] = None  # 'deploy { caps }'
+                                            # folded onto 'caps'; None:
+                                            # the deploy runs under 'caps'
     store:          object                  = None   # None: do not record
     execute:        Optional[Sequence[str]] = None   # THE CALL, STATED
                                             # VERBATIM (R-68): where an

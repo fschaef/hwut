@@ -2,24 +2,27 @@
 spec/26-hwut-bench -- REMOTE EXECUTION: DESIGN
 ==============================================================================
 
-VERSION: 20
+VERSION: 22
 
 COMPONENTS: support/remote (new),
             engine/orchestrator/run (a condition on build order, axis Q),
-            engine/platforms ('provides', routing only: section 16;
-            specified in spec/42),
+            engine/platforms ('tools' and 'requires', routing only:
+            section 16; specified in spec/42; built 2026-11-08),
             engine/orchestrator/exploration (the scope 'deploy': section 14),
-            engine/operations (the stage deploy, DEPLOY_FAILED: section 14;
+            engine/orchestrator/plan (the node DEPLOY: section 14, o-47),
+            engine/operations (the deploy action, DEPLOY_FAILED: section 14;
             exit status 77, the case's infrastructure absent: section 16).
 INTEND:     adm/WORK/intend/26-hwut-bench.txt
-STATUS:     nothing built. VERSION 20 (2026-11-06): hwut holds no bench
-            (intend o-35); a case whose infrastructure is absent exits 77
-            (o-36); section 16 rewritten, 'bench { }' in hwut-root.conf,
-            its validator, its defaults face and the bench probe gone.
-            The factory after o-37 (2026-11-06): sections 1, 2, 11, 14,
-            15, 19, 22 to 24. Open: o-38 (the list's files, section 11),
-            o-39. The deploy section after o-40, o-41 (2026-11-06):
-            sections 1, 3, 11, 14, 16, 19 to 21, 25.
+STATUS:     steps 1 to 3 built on the support side (bundle 1). VERSION 21
+            (2026-11-07): no wait contract in the protocol (intend o-43);
+            the watchdog and the termination request 'k' (o-44, o-46); the
+            agent's timeout optional; the layout support/remote/<platform>/
+            (o-45: model/, iverilog/). VERSION 22 (2026-11-07, bundle 2):
+            the hwut side built -- exit 77 (section 16, o-49), 'target'
+            (o-48), 'deploy' as a plan node (section 14, o-47).
+            Platforms, devices, 'tools' and
+            'requires' (o-49 .. o-53) are spec/42's: not yet carried here
+            beyond section 16.
 
 CONTENTS
 
@@ -33,7 +36,7 @@ CONTENTS
      5  G     The address space
      6  H     The verbs
      7  K, L  Outcome and agent life
-     8  J     The wait contract
+     8  J     The wait, and its end
      9  A     The agent implementations
     10  M, N  Reception and recovery
 
@@ -89,7 +92,8 @@ CONTENTS
            |                    puts the image on the target
            v
     the test         max10.conf: link, loader, ...: create_hub's (11)
-    hwut-root.conf   platform = [ { name = ..., provides = [ <name> ] } ]
+    hwut-root.conf   outermost: platform = [ { ..., tools = [ <tool> ] } ];
+                     below: requires = [ <tool> ] (o-51 .. o-53)
 
     host           the machine that runs hwut and the test application
     hwut_remote    the Python package the writer imports, in
@@ -108,8 +112,10 @@ CONTENTS
                    through its loader module
     bench          a target, its link and
                    its loader
-    platform       where hwut runs a bubble (spec/42); a definition that
-                   provides a bench's name has that board attached
+    platform       an environment holding the TOOLS a subtree needs, defined
+                   in the outermost hwut-root.conf (o-49, o-51; spec/42)
+    device         what ONE test talks to: a board, a simulator; reached
+                   by the test, never by hwut (o-49)
 
     WHAT THE USER DOES -- everything else is done by the modules; the
     protocol (Part A) stays hidden from the user.
@@ -121,11 +127,11 @@ CONTENTS
          |  write the board's configuration (o-37)                        |
          |  python3 -m hwut_remote list: what is attached, which file     |
          |    names it                                                    |
-         |  name it in the 'provides' of the platform it is attached to   |
+         |  require its tools ('requires') where its tests stand          |
          |              |                |                |               |
          |  ONCE PER TEST                                                 |
-         |  copy a prototype: support/remote/proto/<name>/                |
-         |  its bubble specifies the bench: platform = [ "<name>" ]       |
+         |  copy a prototype: support/remote/<name>/                |
+         |  its root says the tools it needs: requires = [ "<tool>" ]     |
          |  put the UUT beside the agent: verilog -- in the top           |
          |    level; c, python -- write uut_run(stim, report)             |
          |  write the test application: vectors, prints                   |
@@ -149,8 +155,9 @@ CONTENTS
 
     The host reads and writes bytes of a map; one verb, 'x', applies a
     stimulus and returns the outcome and the report. Every reply is the
-    content of a read. hwut learns two things: which platform provides a
-    name, and one exit status, 77 -- the case's infrastructure is absent.
+    content of a read. hwut learns two things: which platform holds the
+    tools a subtree requires, and one exit status, 77 -- the device is not
+    reachable.
     It holds no bench, looks for no device and never talks to a board.
 
     Running example: an 8-bit registered adder on a MAX 10 at 50 MHz,
@@ -198,7 +205,8 @@ CONTENTS
       LATENCY, RESET_CYCLES
                      verilog parameters: sample delay and UUT reset
                      length, in cycles (8, 9)
-      wait contract  mode, LATENCY, timeout and its unit (8)
+      termination request
+                     'k': ends a pending wait, resets the UUT (6, 8)
       phy            the agent's byte interface: a UART, or stdio under
                      simulation (9)
       deadline       how long the host waits for a reply (10)
@@ -216,14 +224,14 @@ CONTENTS
       image id       the hash baked into an image; map 08 (14)
       bench reset    the return of the agent to its start state, from
                      outside the link (15)
-      provides       a platform definition's list of the names it acts
-                     as; a bench's name there: the board is attached to
-                     that platform (16; spec/42); one-way: A provides B
-                     says nothing of B providing A
-      provision      one name of a definition's 'provides': informal
-                     functionality the platform claims to hold (16)
-      exit 77        a test application's statement: the infrastructure
-                     this case needs is absent (16)
+      tools          a platform definition's list of the tools it holds,
+                     a hint, not exhaustive; explained in hwut-tools.rst
+                     (o-50, o-52; spec/42); one-way
+      requires       a conf's or a test's list of the tools it needs,
+                     inherited down the subtree (o-51, o-53)
+      exit 77        a test application's statement: the device it talks
+                     to is not reachable -- the test FAILS, its output not
+                     compared (16; o-49)
       collision group
                      hwut's: the tests that share one owner (R-32)
       caps           hwut's bounds on a choice
@@ -254,8 +262,8 @@ CONTENTS
 
     Every rule of this design is a statement about one axis, or one of the
     couplings below. Any combination of axis values not excluded there is
-    meaningful. The axes and their laws are stated here only; sections 4
-    to 21 specify each axis without repeating its law.
+    meaningful. The axes and their laws are stated here only; the sections
+    that follow specify each axis without repeating its law.
 
     axis               values                         owner         sect.
     ----               ------                         -----         -----
@@ -274,8 +282,8 @@ CONTENTS
     F image identity   id = H(inputs, toolchain);     Makefile,        14
                        board: equal, differs, absent  map 08
     G address space    regions * access (section 5)   MAP.txt           5
-    H verb             r, w, x  (p reserved)          PROTOCOL.txt      6
-    J wait contract    mode * LATENCY * timeout *     agent            8
+    H verb             r, w, x, k  (p reserved)       PROTOCOL.txt      6
+    J the wait         mode * LATENCY * timeout *     agent            8
                        reset length                   parameters,
                                                       map 0e, 14
     K outcome of 'x'   00 none, 01 done, 02 timeout,  map 19 [1:0]      7
@@ -305,8 +313,10 @@ CONTENTS
        id differs.
     G  A byte operation on a byte that does not permit it is refused.
     H  'r' never acts; 'w' and 'x' write 'last' before they act; a
-       duplicate never acts; every reply is the content of a read.
-    J  Every wait of the agent ends within 'timeout' counts.
+       duplicate never acts; 'k' is taken also while a command is pending;
+       every reply is the content of a read.
+    J  A wait of the agent ends at done, after LATENCY, at 'timeout' where
+       one is set, or at 'k'.
     K  01 and 02 are behaviour of the UUT; 03 is a failure.
     L  fresh holds from agent start until the reset write; last is ff only
        since start.
@@ -314,11 +324,12 @@ CONTENTS
        answers only verified lines; everything else is counted.
     N  Recovery is decided by one idempotent read; nothing is applied
        twice.
-    O  A row is a function of the stimuli, the wait contract and the UUT.
+    O  A row is a function of the stimuli and the UUT; what else the rows
+       depend on, the test prints in its own words.
     Q  One owner per board; within a collision group the deploy and the
-       run of one application are adjacent; a board's tests run only on the
-       platform that provides its name; a case whose board is absent
-       exits 77 and is not judged.
+       run of one application are adjacent; a board's tests run only on a
+       platform holding the tools they require; a case whose board is
+       absent exits 77 and FAILS, its output not compared.
 
     THE COUPLINGS -- every place where two axes depend on each other; all
     are necessary.
@@ -330,9 +341,7 @@ CONTENTS
                   the run seam
     A * J         only verilog has LATENCY and RESET_CYCLES; c and      9
                   python report mode 0 (wait for done)
-    J * O         the wait contract is part of every row's meaning:    18
-                  the writer prints it as a row
-    J * J         timeout >= max(LATENCY, RESET_CYCLES); a write        8
+    J * J         a timeout set is >= max(LATENCY, RESET_CYCLES); a     8
                   below is refused: '! limit'
     G * deadline  an address may wait: 'x' and the reset write wait    10
                   up to timeout / clock; every other address answers
@@ -412,11 +421,12 @@ PART A -- THE PROTOCOL
     0e     1    r       mode      [0] 1: sample LATENCY cycles after apply;
                                       0: wait for done to rise
                                   [1] 1: run seam (c, python); 0: poll
-                                  [7:2] LATENCY, 0..63 (o-42); 0 in
-                                      mode 0
+                                  LATENCY is the agent's parameter, not
+                                      the map's (o-43)
     0f     1    r       discard   lines discarded since start, stops at ff
     10     4    r       clock     Hz of the count 'timeout' uses
-    14     4    rw      timeout   counts a wait may take (section 8)
+    14     4    rw      timeout   counts a wait for done may take; 0:
+                                  none, the default (section 8)
     18     1    r       last      token of the last 'w' or 'x'; ff after
                                   start
     19     1    r       status    [1:0] outcome, [7] fresh (section 7)
@@ -434,7 +444,7 @@ PART A -- THE PROTOCOL
 
     THE SESSION IN ADDRESSES
 
-    hello    r 0 1a    (00 .. 19: identity, contract, last, status)
+    hello    r 0 1a    (00 .. 19: identity, lengths, last, status)
     reset    w 3f 01
     vector   x <stim>
     recover  r 18 2+RW (last, status, report)
@@ -449,6 +459,8 @@ PART A -- THE PROTOCOL
                          (status, after the write)
     x <bytes>            the bytes of r 19 1+RW      yes: the apply and the
                          (status, report)            wait of section 7
+    k                    the bytes of r 19 1         yes: aborts a pending
+                         (status, after the reset)   wait, resets the UUT
     p                    ! unknown                   reserved
 
     DUPLICATE -- a 'w' or 'x' whose token equals 'last' does not act; its
@@ -461,7 +473,13 @@ PART A -- THE PROTOCOL
         ! syntax    malformed body
         ! limit     section 5; and 'x <bytes>' with a byte count other
                     than SW
-        ! busy      an 'x' or the reset write is pending
+        ! busy      an 'x' or the reset write is pending -- to every line
+                    but 'k'
+
+    k -- THE TERMINATION REQUEST (o-44, o-46): accepted always, also while a
+    command is pending. It aborts the wait, resets the UUT (outcome 00),
+    leaves 'last' and 'fresh', and replies the status. The aborted command
+    sends no reply. The hub sends it on the signal of hwut's watchdog.
 
 ==============================================================================
 7  K, L -- OUTCOME AND AGENT LIFE
@@ -493,14 +511,28 @@ PART A -- THE PROTOCOL
 
     mode 0   the agent waits for done to rise after the apply strobe
     mode 1   done is not used; the report is sampled LATENCY cycles after
-             the strobe
-    timeout  counts any wait may take: an 'x', a reset
+             the strobe (LATENCY: a parameter of the agent's top level)
+    timeout  optional: counts a wait for done may take, then outcome 02;
+             0, the default: none
     reset    verilog: uut_rst high for RESET_CYCLES; c, python: complete
              when uut_reset() returns
 
     stim and report are stable from the strobe to the sample.
 
-    The wait contract is mode, LATENCY, timeout and its unit.
+    How the agent waits is the TEST's business (o-43): where the rows
+    depend on it, the test prints it in its own words; the protocol
+    reports nothing of it.
+
+    THE END OF A WAIT THAT DOES NOT END (o-44):
+
+        hwut's watchdog (caps) --signal--> test application (its hub)
+                                               --'k'--> agent
+
+    The hub catches SIGTERM and SIGINT for the session: it sends 'k',
+    awaits its reply at most one second, closes the link (a launched
+    simulator ends with it), and the process ends by the same signal.
+    Under simulation the stdio phy reads nothing while a command is
+    pending; the closing ends the simulator.
 
 ==============================================================================
 9  A -- THE AGENT IMPLEMENTATIONS
@@ -551,8 +583,11 @@ PART A -- THE PROTOCOL
     Outcomes and mode per implementation: couplings A * K and A * J
     (section 3).
 
+    SIZE on a MAX 10 (10M50): unmeasured; measured on the author's bench,
+    never by a hwut test (no vendor tool is needed by one, 2026-11-07).
+
     Every implementation passes the 'x' oracle of
-    target/verilog/TEST/test-agent.py: the reply to 'x' equals
+    iverilog/TEST/test-agent.py: the reply to 'x' equals
     the bytes of the following 'r 19 1+RW'; a duplicate 'x' returns the
     same bytes and does not apply.
 
@@ -644,7 +679,7 @@ PART B -- THE BENCH
                                          'loader' names; opens, checks the
                                          image, flashes if stale (14)
                       hub.reset_bench()  the bench reset (15)
-                      LinkHub:  reset() vector() read() write() contract()
+                      LinkHub:  reset() vector() read() write() terminate()
                       VisaHub:  reset() query() write() opc()       (22)
                                       |
     CLI             python3 -m hwut_remote <transport> [<address>]
@@ -713,7 +748,7 @@ KEYS -- closed; an unknown key is refused
     Hub            with, flash(image, image_id), reset_bench(), close();
                    the base of every hub
     LinkHub        a Hub over the agent's map: vector(stim) -> int |
-                   TIMEOUT, read(addr, n), write(addr, bytes), contract(),
+                   TIMEOUT, read(addr, n), write(addr, bytes), terminate(),
                    reset(); a producer gives it open, send(bytes),
                    recv(deadline) -> bytes, close; line, CRC, token and
                    the ladder are LinkHub's (sections 4, 10)
@@ -885,13 +920,13 @@ KEYS -- closed; an unknown key is refused
 
     THE TEST -- build and deploy, two stages, two meanings (o-41):
 
-        @hwut { build   { framework = "make"  executable = "uut.sof" }
+        @hwut { build   { framework = "make"  target = "uut.sof" }
                 execute = "python3 test-max10.py"
                 deploy  = "python3 -m hwut_remote serial --config-file
                            max10.conf flash uut.sof --image-id-file
                            TMP/image_id" }
 
-    A build makes its 'executable' (default 'app') and the test then runs
+    A build makes its 'target' (default 'app'; o-48) and the test then runs
     THAT, unless 'execute' states the call (R-68): a Python writer states
     it. The build runs where the Makefile stands, in the test directory.
 
@@ -902,13 +937,18 @@ KEYS -- closed; an unknown key is refused
     turn 77 into 2.
 
         provision:  build ----------> deploy -----------> execute
-                    BUILD_FAILED      77: [ABSENT]         77: [ABSENT]
-                    (the code)        else DEPLOY_FAILED   (behaviour)
-                                      (the infrastructure)
+                    BUILD_FAILED      77: no-device        77: no-device
+                    (the code)        else DEPLOY_FAILED   else behaviour
+                    every one of them a failure of the test (o-49)
 
-    The stage deploy runs after the build and before execute, remembered
-    as StageBuild is: it runs again only when the build ran again.
-    DEPLOY_FAILED is a FAIL with its own report token.
+    The deploy is a NODE of the plan (o-47; plan P-20), 'deploy[<file>]':
+    supported by the application's build, supporting its tests, run once
+    per run in the build's directory. Exit 0 stands; 77 is "device not
+    reachable"; any other failure is DEPLOY_FAILED ('deploy-failed',
+    'no-deploy [FAIL]'), its last stderr line the NOTE. Either way the
+    tests are unsupported: they FAIL, not run. A collision group naming
+    the application covers its deploy. Measured:
+    services/TEST/test-deploy.sh (flashed, failed, absent, unbuilt).
 
     hub.flash(image, image_id), the same for every loader; its CLI:
 
@@ -938,7 +978,7 @@ KEYS -- closed; an unknown key is refused
     nothing changed      no flash
     someone reflashed    flash; confirm
     port busy            DEPLOY_FAILED "bench busy"
-    device absent        [ABSENT] "no device" (exit 77)
+    device absent        no-device [FAIL] "no device" (exit 77)
     board unpowered      DEPLOY_FAILED (no agent; the loader fails)
     flash did not take   DEPLOY_FAILED
     the code does not    BUILD_FAILED
@@ -965,42 +1005,35 @@ KEYS -- closed; an unknown key is refused
 16  Q -- OWNERSHIP
 ==============================================================================
 
-    The tests of one board are a collision group (R-32). The board is
-    attached to the platform whose definition provides its bench's name;
-    the board's bubble specifies that name (spec/42, 'provides'):
+    The tests of one board are a collision group (R-32); the group covers
+    the board's deploy too (section 14, plan P-20).
 
-    a hwut-root.conf the walk reads (the name resolves across all):
-        platform = [ { name = "local", provides = [ "max10" ] } ]
-    the board's bubble, support/remote/proto/de10-lite/hwut-root.conf:
-        platform = [ "max10" ]
+    A BOARD IS A DEVICE, NOT A PLATFORM (o-49). A platform holds the TOOLS
+    a subtree needs (quartus, iverilog) and is defined once, in the
+    outermost hwut-root.conf, with 'tools = [ ... ]'; a conf below and a
+    directory says 'requires = [ <tool> ... ]' (o-50 .. o-58; spec/42 --
+    BUILT): a hwut.conf adds, an inner root replaces; the first platform
+    defined that announces them all runs the subtree, '-p' narrowing. A device is what one test talks to; the test reaches it
+    itself, through its hub.
 
-    A PROVISION IS ONE-WAY: A provides B lets a bubble specifying B run
-    on A; a bubble specifying A asks nothing of B. A name both defined
-    and provided is a fault (spec/42), so a provided name provides
-    nothing: no chain, no cycle. 'provides' names informal
-    functionality; it routes, hwut checks nothing of it.
+    THE DEVICE NOT REACHABLE -- exit status 77 (o-49; BUILT). Only the test
+    knows what it talks to; it says so:
 
-    THE INFRASTRUCTURE ABSENT -- exit status 77. Only the test knows what
-    it needs; it says so, and hwut judges nothing:
-
-        create_hub(...)  device absent --> stderr "max10: no device
+        create_hub(...)  device absent --> stderr "serial: no device
                                            /dev/serial/by-id/usb-Altera_..."
                                        --> exit 77
 
-        test-max10.py adder [ABSENT]
-              NOTE  max10: no device /dev/serial/by-id/usb-Altera_...
+        END   :          x ..................................... no-device [FAIL]
+                test-b.sh  x   device not reachable  (serial: no device ...)
 
     hwut_remote does both where it cannot open the link for want of the
-    device; the writer writes nothing. The NOTE is the last line of
-    stderr. The verdict is E_TestRunResult.INFRA_ABSENT: not compared,
-    not FAIL, counted as a bubble not run is (spec/42 section 6: not in
-    RESULTS, no book entry, the last verdict kept, exit status
-    unchanged). Every other exit status stays behaviour.
-
-    A VERDICT measured under a provided name shows it once per directory,
-    where spec/42 shows '(linux)':
-
-        de10-lite/  (max10 in local)
+    device; the writer writes nothing. hwut does not compare the output;
+    the test FAILS with E_TestRunResult.DEVICE_UNREACHABLE
+    ('device-unreachable', brief 'no-device'), the last stderr line its
+    NOTE; counted, booked, red; its dependents fail with it. The same 77
+    from a deploy fails the deploy node, and its tests unsupported. Every
+    other exit status stays behaviour. Measured: services/TEST/
+    test-device.sh, test-deploy.sh.
 
     CONDITION ON HWUT: no other build or deploy of the group runs between
     the deploy and the run of one application. Delivery step 4 verifies it.
@@ -1048,13 +1081,12 @@ PART C -- THE WRITER
     Hub.vector() and Hub.write() raise unless this hub has reset; leaving
     the 'with' block closes the link.
 
-    The writer prints the wait contract as a row, Hub.contract().
-    Everything else the session knows is a '##' line, delivered through
-    'note'.
+    Everything the session knows is a '##' line, delivered through
+    'note'. What the rows depend on beyond the stimuli -- how the agent
+    waits, for one -- the test prints itself.
 
     ## agent: proto 1  image 3f9a07c1  stim 2  report 2  50 MHz
     ## discarded 12 bytes, 0 lines
-    contract: sample 1 cycle after apply, timeout 10000000 counts at 50 MHz
     ## stim = a[15:8] b[7:0]   report = sum[8:0]
     0304 007
     ff01 100
@@ -1071,7 +1103,7 @@ PART C -- THE WRITER
 19  THE TEST, AS THE WRITER WRITES IT
 ==============================================================================
 
-    # @hwut { build   { framework = "make"  executable = "uut.sof" }
+    # @hwut { build   { framework = "make"  target = "uut.sof" }
     #         execute = "python3 test-max10.py"
     #         collision = [ "test-max10-timing.py" ]
     #         deploy  = "python3 -m hwut_remote serial --config-file
@@ -1090,7 +1122,6 @@ PART C -- THE WRITER
         with create_hub("serial", config_file="max10.conf", note=note,
                         image_id=image, image="uut.sof") as hub:
             hub.reset()
-            print(hub.contract())
             print("## stim = a[15:8] b[7:0]   report = sum[8:0]")
             for x, y in VECTORS:
                 print(f"{x:02x}{y:02x} {hub.vector((x << 8) | y):03x}")
@@ -1098,10 +1129,10 @@ PART C -- THE WRITER
     HwutRunner(sys.argv, "Adder on MAX 10;", {"adder": adder}).run()
 
     Nothing runs at import: '--hwut-info' needs no build and no board.
-    The bubble's hwut-root.conf specifies platform = [ "max10" ]; the
+    The directory's hwut-root.conf says requires = [ "quartus" ]; the
     test names its configuration file, never the platform. The hub finds
-    the bench reset by 'loader'. The board absent: exit 77 (section 16). The writer never sees a token, a CRC,
-    a byte order or a recovery.
+    the bench reset by 'loader'. The board absent: exit 77 (section 16).
+    The writer never sees a token, a CRC, a byte order or a recovery.
 
 ==============================================================================
 20  A SESSION ON THE WIRE
@@ -1113,14 +1144,13 @@ PART C -- THE WRITER
     open, '\n'
     9 r 0 1a *6679 ---------------------->
           <... noise ... discarded, counted
-       <-- 9 6877757401000000c1079a3f0202050080f0fa0280969800ff80 *085c
+       <-- 9 6877757401000000c1079a3f0202010080f0fa0280969800ff80 *8c51
            magic, proto 1, image 3f9a07c1, stim 2,        ## agent: ...
-           report 2, mode 05 (sample, LATENCY 1),         ## discarded ...
-           0 lines discarded,
+           report 2, mode 01 (sample), 0 lines            ## discarded ...
+           discarded,
            50 MHz, timeout 10000000, last ff, fresh
     a w 3f 01 *e167 --------------------->  UUT reset
        <-- a 00 *1ea6                       outcome 00, fresh 0
-                                                          contract: ...
                                                           ## stim = ...
     b x 0403 *2b95 ---------------------->  apply 0x0304
        <-- b 010700 *8bff                                 0304 007
@@ -1138,7 +1168,7 @@ PART C -- THE WRITER
     -------------                       -----------
     build: make uut.sof, deploy: flash  build: make TMP/uut.vvp (iverilog)
     max10.conf: serial, wall            sim.conf: launch, virtual
-    platform = [ "max10" ]              no platform: runs locally
+    requires = [ "quartus" ]            requires = [ "iverilog" ]
               |                                   |
               +---- from vectors import adder ----+   the shared code
 
@@ -1286,8 +1316,8 @@ PART D -- DELIVERY
 
     Each holds: README.txt (board, wiring, host setup), the Makefile with
     host/image_id.mk, the top level or port, the configuration file, the
-    platform's 'provides' as a hwut-root.conf snippet, the bubble's
-    hwut-root.conf specifying the bench, the test application. A GOOD is
+    platform's 'tools' as a snippet for the outermost hwut-root.conf, the
+    directory's hwut-root.conf saying 'requires', the test application. A GOOD is
     recorded where the board stands; iverilog, qemu and scpi-sim record
     theirs on
     every host. tcp and power are configuration variants, documented in the
@@ -1310,7 +1340,7 @@ PART D -- DELIVERY
                           producers
           __main__.py     the CLI: <transport> ... flash | reset; list (11)
           visa.py         VisaHub; imports pyvisa only when used (22)
-          session.py      the ladder, reset, vector, contract: LinkHub's
+          session.py      the ladder, reset, vector, terminate: LinkHub's
                           body (sections 7, 8, 10, 18)
           line.py         token, CRC-16, the 80-byte line, noise (4)
           link.py         open(values) -> Link: open, send, recv(deadline),
@@ -1340,13 +1370,16 @@ PART D -- DELIVERY
                               probed, no file, not looked
 
       target/             one directory per agent implementation
-        verilog/          agent.v, phy_uart.v, phy_stdio.v (section 9);
-                          TEST/test-agent.py under iverilog: the 'x'
-                          oracle, the duplicate
+        verilog/          agent.v, phy_uart.v, phy_stdio.v (section 9)
         c/                agent.c, agent.h; ports/<family>/ (section 9)
         python/           agent.py, the C seam
 
-      proto/<name>/       section 23
+      <platform>/         section 23 (o-45): its hwut-root.conf and
+                          TEST/; built: model/ (the host against a model
+                          agent and a fake link: test-line, test-frame,
+                          test-plugin, test-list), iverilog/ (test-agent:
+                          the 'x' oracle, the duplicate, 'k'; the
+                          prototype test-sim)
 
     A module function RETURNS what happened as one string and raises on
     failure. No module prints but __main__. No module reads a file the
@@ -1357,38 +1390,39 @@ PART D -- DELIVERY
 ==============================================================================
 
     1  PROTOCOL.txt, MAP.txt; hwut_remote: __init__, line, session, link
-       against a fake link (host/TEST/test-line.py, test-frame.py,
+       against a fake link (model/TEST/test-line.py, test-frame.py,
        test-plugin.py)
-    2  target/verilog/; target/verilog/TEST/test-agent.py under
+    2  target/verilog/; iverilog/TEST/test-agent.py under
        iverilog: the agent proven on every host; its size on a 10M50
        measured and stated in MAP.txt
     3  the scope 'deploy' (validator), the stage deploy and DEPLOY_FAILED
        (operations), proved against a fake command exiting 0, 1, 77;
        hwut_remote/entry.py, host/image_id.mk, 'list' and its test;
-       proto/iverilog end to end; Chapter 11's adder as the first writer;
-       in engine/platforms (spec/42): 'provides'; in engine/operations:
-       exit 77, INFRA_ABSENT, documented (section 16)
-    4  hwut_remote/quartus.py; proto/de10-lite; the condition of
+       iverilog/ end to end; Chapter 11's adder as the first writer;
+       in engine/operations: exit 77, DEVICE_UNREACHABLE, documented
+       (section 16) -- BUILT (bundles 1, 2); 'tools' and 'requires' in
+       engine/orchestrator (spec/42, o-50 .. o-58) -- BUILT
+    4  hwut_remote/quartus.py; de10-lite/; the condition of
        section 16 verified; the MAX 10 run on the author's bench, its GOOD
-       recorded there, its bubble specifying 'max10', provided by
-       'local'; the board unplugged: '[ABSENT]', its NOTE; a supply dip and a reset injected deliberately, their
+       recorded there, its subtree requiring 'quartus'; the board
+       unplugged: 'no-device [FAIL]', its NOTE; a supply dip and a reset injected deliberately, their
        '##' lines recorded
     5  target/c/, target/python/; hwut_remote/openocd.py, esptool.py,
-       copy.py; proto/qemu, proto/nucleo-f4, proto/esp32-devkitc,
-       proto/linux-ssh; the same injections on the ESP32; the udp
+       copy.py; qemu/, nucleo-f4/, esp32-devkitc/,
+       linux-ssh/; the same injections on the ESP32; the udp
        transport against the C agent on the ESP32, a datagram dropped
        and doubled deliberately
     6  (withdrawn by o-35: no validator, no defaults face)
     7  hwut_remote/capture.py and its test; README section 22 with
        the three worked examples, each checked against the vendor's
        current API documentation
-    8  hwut_remote/openfpgaloader.py; proto/arty-a7
-    9  the can transport in hwut_remote/link.py and target/c/ports; proto/
-       can-nucleo
-    10 proto/ros2-gazebo; README section 22's ROS 2 example, checked
+    8  hwut_remote/openfpgaloader.py; arty-a7/
+    9  the can transport in hwut_remote/link.py and target/c/ports;
+       can-nucleo/
+    10 ros2-gazebo/; README section 22's ROS 2 example, checked
        against the current ROS 2 LTS
     11 README section 22's XCP, UDS, SOME/IP and RTE examples, each
        checked against the library's current documentation
-    12 hwut_remote/visa.py and its test; proto/scpi-sim; README section
+    12 hwut_remote/visa.py and its test; scpi-sim/; README section
        22's SCPI example; one run against a real instrument where the
        author has one

@@ -417,13 +417,14 @@ def test_platform():
         print("    S    : %s" % ", ".join(sorted(wish.specified_platform_set())))
         print("    rest : %s" % (", ".join(rest) or "-"))
 
-    banner("the NOTE: a '-p' no bubble requires")
+    banner("the NOTE: a '-p' no bubble can use")
     wish, _ = parse_wish(["-p", "lab-3", "-p", "linux", "-p", "local"],
                          platform_f=True)
-    linux = (("linux", {"name": "linux", "kind": "container",
-                        "image": "hwut-dev"}),)
-    for title, required in (("a bubble with no 'platform', one with linux",
-                             (None, linux)),
+    #  PER BUBBLE ITS CANDIDATES (intend/26 o-58): the platforms that
+    #  announce what it requires; ('local',) where it requires nothing.
+    linux = ("linux",)
+    for title, required in (("a bubble requiring nothing, one held by linux",
+                             (("local",), linux)),
                             ("linux alone", (linux,)),
                             ("no test directory walked", ())):
         print("    %s:" % title)

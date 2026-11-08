@@ -1,0 +1,34 @@
+
+--- deploy: build ==> deploy ==> tests ---
+TEST PLAN: 7 node(s), 6 link(s), 1 exclusion set(s)
+NODES
+    build[make test-board.py]  BUILD
+    deploy[test-board.py]      DEPLOY
+    deploy[test-copy.py]       DEPLOY
+    test-board.py one          TEST
+    test-board.py two          TEST
+    test-copy.py               TEST
+    test-other.py              TEST
+LINKS
+    build[make test-board.py] ==> test-board.py one
+    build[make test-board.py] ==> test-board.py two
+    build[make test-board.py] ==> deploy[test-board.py]
+    deploy[test-board.py] ==> test-board.py one
+    deploy[test-board.py] ==> test-board.py two
+    deploy[test-copy.py] ==> test-copy.py
+EXCLUSIONS
+    { test-board.py, test-other.py }
+
+--- the exclusion covers the deploy ---
+    deploy[test-board.py]  { test-board.py, test-other.py }
+    deploy[test-copy.py]   -
+
+--- stages ---
+    build[make test-board.py]  BUILD
+    deploy[test-board.py]      DEPLOY
+    deploy[test-copy.py]       DEPLOY
+    test-board.py one          EXECUTE
+    test-board.py two          EXECUTE
+    test-copy.py               EXECUTE
+    test-other.py              EXECUTE
+<hwut-end>

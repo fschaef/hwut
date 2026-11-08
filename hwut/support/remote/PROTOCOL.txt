@@ -7,7 +7,7 @@ PROTOCOL.txt -- THE LINE, THE VERBS, RECEPTION AND RECOVERY
     host receives and recovers. The address space and the agents: MAP.txt.
     The bench and the writer: README.txt.
 
-    Every CRC printed here is computed (host/TEST/test-line.py 'crc').
+    Every CRC printed here is computed (model/TEST/test-line.py 'crc').
 
 
 ==============================================================================
@@ -41,7 +41,8 @@ PROTOCOL.txt -- THE LINE, THE VERBS, RECEPTION AND RECOVERY
       LATENCY, RESET_CYCLES
                      verilog parameters: sample delay and UUT reset
                      length, in cycles (MAP 3, MAP 4)
-      wait contract  mode, LATENCY, timeout and its unit (MAP 3)
+      termination request
+                     'k': ends a pending wait, resets the UUT (4, MAP 3)
       phy            the agent's byte interface: a UART, or stdio under
                      simulation (MAP 4)
       deadline       how long the host waits for a reply (5)
@@ -72,8 +73,7 @@ PROTOCOL.txt -- THE LINE, THE VERBS, RECEPTION AND RECOVERY
       caps           hwut's bounds on a choice
 
     THE HUB
-      create_hub     the factory: a transport, its address and options -> a
-                     hub, not opened (README)
+      create_hub     the factory: a bench's name -> a hub (README)
       producer       read(config_file) -> dict and (values, note) -> Hub,
                      registered under a
                      transport key by add_plugin (README)
@@ -100,8 +100,7 @@ PROTOCOL.txt -- THE LINE, THE VERBS, RECEPTION AND RECOVERY
     Every rule of this design is a statement about one axis, or one of the
     couplings below. Any combination of axis values not excluded there is
     meaningful. The axes and their laws are stated here only; the sections
-    that follow, MAP.txt and README.txt specify each axis without
-    repeating its law.
+    that follow specify each axis without repeating its law.
 
     axis               values                         owner      where
     ----               ------                         -----      -----
@@ -119,21 +118,20 @@ PROTOCOL.txt -- THE LINE, THE VERBS, RECEPTION AND RECOVERY
                                                       'power'
     F image identity   id = H(inputs, toolchain);     Makefile,   README
                        board: equal, differs, absent  map 08
-    G address space    regions * access (MAP.txt 1)   MAP.txt         MAP 1
-    H verb             r, w, x  (p reserved)          PROTOCOL.txt     4
-    J wait contract    mode * LATENCY * timeout *     agent        MAP 3
+    G address space    regions * access (MAP.txt 1)   MAP.txt      MAP 1
+    H verb             r, w, x, k  (p reserved)       PROTOCOL.txt     4
+    J the wait         mode * LATENCY * timeout *     agent        MAP 3
                        reset length                   parameters,
                                                       map 0e, 14
     K outcome of 'x'   00 none, 01 done, 02 timeout,  map 19 [1:0] MAP 2
                        03 expired
-    L agent life       fresh in {1, 0} * last         map 19 [7],  MAP 2
-                                                      18
+    L agent life       fresh in {1, 0} * last         map 19 [7], 18 MAP 2
     M reception        reply, other token, noise      hwut_remote.     5
                                                       line, session
     N recovery         acted, not acted, restarted,   hwut_remote.     5
                        busy, refused, silent, ended   session
     O picture class    row, '##'                      the writer  README
-    Q ownership        collision group * providing    hwut (R-32),  README
+    Q ownership        collision group * providing    hwut (R-32), README
                        platform                       platforms
 
     THE LAW OF EACH AXIS
@@ -152,8 +150,10 @@ PROTOCOL.txt -- THE LINE, THE VERBS, RECEPTION AND RECOVERY
        id differs.
     G  A byte operation on a byte that does not permit it is refused.
     H  'r' never acts; 'w' and 'x' write 'last' before they act; a
-       duplicate never acts; every reply is the content of a read.
-    J  Every wait of the agent ends within 'timeout' counts.
+       duplicate never acts; 'k' is taken also while a command is pending;
+       every reply is the content of a read.
+    J  A wait of the agent ends at done, after LATENCY, at 'timeout' where
+       one is set, or at 'k'.
     K  01 and 02 are behaviour of the UUT; 03 is a failure.
     L  fresh holds from agent start until the reset write; last is ff only
        since start.
@@ -161,7 +161,8 @@ PROTOCOL.txt -- THE LINE, THE VERBS, RECEPTION AND RECOVERY
        answers only verified lines; everything else is counted.
     N  Recovery is decided by one idempotent read; nothing is applied
        twice.
-    O  A row is a function of the stimuli, the wait contract and the UUT.
+    O  A row is a function of the stimuli and the UUT; what else the rows
+       depend on, the test prints in its own words.
     Q  One owner per board; within a collision group the deploy and the
        run of one application are adjacent; a board's tests run only on the
        platform that provides its name; a case whose board is absent
@@ -170,37 +171,35 @@ PROTOCOL.txt -- THE LINE, THE VERBS, RECEPTION AND RECOVERY
     THE COUPLINGS -- every place where two axes depend on each other; all
     are necessary.
 
-    coupling      statement                                         sect.
+    coupling      statement                                         where
     --------      ---------                                         -----
-    A * K         verilog yields outcomes 00, 01, 02; c and python MAP 4
+    A * K         verilog yields outcomes 00, 01, 02; c and python   MAP 4
                   yield 00, 01, 03 with the poll seam, 00, 01 with
                   the run seam
-    A * J         only verilog has LATENCY and RESET_CYCLES; c and MAP 4
+    A * J         only verilog has LATENCY and RESET_CYCLES; c and   MAP 4
                   python report mode 0 (wait for done)
-    J * O         the wait contract is part of every row's meaning: README
-                  the writer prints it as a row
-    J * J         timeout >= max(LATENCY, RESET_CYCLES); a write   MAP 3
+    J * J         a timeout set is >= max(LATENCY, RESET_CYCLES); a  MAP 3
                   below is refused: '! limit'
-    G * deadline  an address may wait: 'x' and the reset write wait    5
+    G * deadline  an address may wait: 'x' and the reset write wait      5
                   up to timeout / clock; every other address answers
                   at once
     B * C         time = virtual sets link_margin and boot to inf on README
                   any transport
-    C * deadline  a link with 'baud' adds two line times               5
+    C * deadline  a link with 'baud' adds two line times                 5
     C * E         on transports 'launch' and 'ssh' the bench reset is README
                   reopening; on 'visa' it is '*RST', '*CLS'
-    C * D         loader 'copy' requires transport 'ssh'; loader  README
+    C * D         loader 'copy' requires transport 'ssh'; loader    README
                   'esptool' uses the serial address as its target;
                   transport 'visa' requires loader 'none'
     D * E         reload: quartus with a .sof, openfpgaloader; probe: README
                   openocd; line: esptool; reopen: launch, ssh; scpi:
                   visa; power: any, when 'power' is set
-    L * H         the host never sends a 'w' or 'x' with the token in  4
+    L * H         the host never sends a 'w' or 'x' with the token in    4
                   'last'; the agent takes one that arrives as a
                   duplicate
-    L * N         reconciliation compares 'last' with the token and    5
+    L * N         reconciliation compares 'last' with the token and      5
                   with the previous 'last'
-    M * C         one command is outstanding at a time; the token README
+    M * C         one command is outstanding at a time; the token   README
                   alphabet relies on that, not on the transport's
                   order; on udp a duplicate delayed past the next
                   command is excluded only by a delay below one
@@ -248,6 +247,8 @@ PROTOCOL.txt -- THE LINE, THE VERBS, RECEPTION AND RECOVERY
                          (status, after the write)
     x <bytes>            the bytes of r 19 1+RW      yes: the apply and the
                          (status, report)            wait of MAP.txt 2
+    k                    the bytes of r 19 1         yes: aborts a pending
+                         (status, after the reset)   wait, resets the UUT
     p                    ! unknown                   reserved
 
     DUPLICATE -- a 'w' or 'x' whose token equals 'last' does not act; its
@@ -260,7 +261,13 @@ PROTOCOL.txt -- THE LINE, THE VERBS, RECEPTION AND RECOVERY
         ! syntax    malformed body
         ! limit     MAP.txt 1; and 'x <bytes>' with a byte count other
                     than SW
-        ! busy      an 'x' or the reset write is pending
+        ! busy      an 'x' or the reset write is pending -- to every line
+                    but 'k'
+
+    k -- THE TERMINATION REQUEST (o-44, o-46): accepted always, also while a
+    command is pending. It aborts the wait, resets the UUT (outcome 00),
+    leaves 'last' and 'fresh', and replies the status. The aborted command
+    sends no reply. The hub sends it on the signal of hwut's watchdog.
 
 
 ==============================================================================

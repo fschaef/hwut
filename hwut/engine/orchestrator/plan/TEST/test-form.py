@@ -184,6 +184,16 @@ def test_refused():
     refused("a session supporting a choice of another file",
             [CPlanNode.test("b.py", "one"), ses],
             [CPlanLink(E_LinkKind.SUPPORTS, "session[a.py]", "b.py one")])
+    dep = CPlanNode.deploy("a.py")
+    refused("a deploy supporting a choice of another file",
+            [CPlanNode.test("b.py", "one"), dep],
+            [CPlanLink(E_LinkKind.SUPPORTS, "deploy[a.py]", "b.py one")])
+    refused("a deploy supporting a deploy",
+            [dep, CPlanNode.deploy("b.py")],
+            [CPlanLink(E_LinkKind.SUPPORTS, "deploy[a.py]",
+                       "deploy[b.py]")])
+    refused("an exclusion member naming only a DEPLOY node",
+            [a, CPlanNode.deploy("c.py")], (), [CExclusionSet(("c.py",))])
     refused("an exclusion member covering no TEST node",
             [a], (), [CExclusionSet(("a.py one", "ghost.py"))])
     refused("an exclusion member naming only a BUILD node",
@@ -231,9 +241,10 @@ def test_stage():
     the kind, stored nowhere -- a SESSION is the shared facet of
     EXECUTE, a TEST is the case itself on the same rung."""
     build   = CPlanNode.build("make lib")
+    deploy  = CPlanNode.deploy("test-app.py")
     session = CPlanNode.session("test-app.py")
     test    = CPlanNode.test("test-app.py", "one")
-    for node in (build, session, test):
+    for node in (build, deploy, session, test):
         print("    %-22s %-8s -> %s"
               % (node.name(), node.kind.name,
                  node.provision_stage().name))

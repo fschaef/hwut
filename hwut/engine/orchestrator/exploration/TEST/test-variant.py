@@ -53,9 +53,9 @@ CONF = '''\
 hwut {
     variant_group {
         cov  {
-            gcov { build { executable = "cov-app.exe" }
+            gcov { build { target = "cov-app.exe" }
                    caps  { memory_mb = 2048 } }
-            llvm { build { executable = "app-prof.exe" }
+            llvm { build { target = "app-prof.exe" }
                    caps  { memory_mb = 4096 } }
         }
         load {
@@ -119,7 +119,7 @@ def test_declared():
     banner("what each alternative states")
     for name in sorted(variant_db):
         variant = variant_db[name]
-        target  = variant.parameters.build.executable \
+        target  = variant.parameters.build.target \
                   if variant.parameters.build is not None else None
         caps    = variant.parameters.caps
         print("         %-6s of group '%-5s'  executable %-16s "
@@ -151,20 +151,20 @@ def test_selected():
     both = merged_parameters(name_tuple_of("gcov,slow"), variant_db)
     print("         --variant=gcov,slow -> executable %s  "
           "timeout %s  memory %s"
-          % (both.build.executable, both.caps.timeout_sec,
+          % (both.build.target, both.caps.timeout_sec,
              both.caps.memory_mb))
 
     banner("the other order says the same")
     other = merged_parameters(name_tuple_of("slow,gcov"), variant_db)
     print("         --variant=slow,gcov -> executable %s  "
           "timeout %s  memory %s"
-          % (other.build.executable, other.caps.timeout_sec,
+          % (other.build.target, other.caps.timeout_sec,
              other.caps.memory_mb))
 
     banner("one alone leaves the other dimension unstated")
     alone = merged_parameters(name_tuple_of("llvm"), variant_db)
     print("         --variant=llvm      -> executable %s  "
-          "timeout %s" % (alone.build.executable,
+          "timeout %s" % (alone.build.target,
                           alone.caps.timeout_sec))
 
     banner("no variant at all")
@@ -173,7 +173,7 @@ def test_selected():
           % (none.build, none.caps))
 
     ok = check([
-        (both.build.executable == "cov-app.exe"
+        (both.build.target == "cov-app.exe"
          and both.caps.timeout_sec == 600.0,
          "each dimension contributes what it states"),
         (both.caps.memory_mb == 2048,

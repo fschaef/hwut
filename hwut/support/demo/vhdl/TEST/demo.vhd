@@ -1,6 +1,6 @@
 -- @hwut {
 --     title   = "Demo: what hwut tolerates, and where it is said"
---     build   { framework = "make", executable = "%.exe" }
+--     build   { framework = "make", target = "%.exe" }
 --     choices {
 --         plain       { features = ["demo-passes-on-every-run", "exact-comparison"] }
 --         tolerance   { features = ["demo-passes-on-every-run", "equivalence-pattern", "numeric-ratio"]

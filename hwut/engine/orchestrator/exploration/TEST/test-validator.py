@@ -5,6 +5,7 @@
 #     choices {
 #         choiceless  { features = ["specification-shape"] }
 #         conf        { features = ["directory-keys"] }
+#         deploy      { features = ["specification-shape", "unknown-key-refused", "value-shape-refused"] }
 #         exclusivity { features = ["conf-root-no-test-parameter"] }
 #         header      { features = ["specification-shape", "record-keeps-chosen"] }
 #         list_form   { features = ["specification-shape"] }
@@ -144,7 +145,7 @@ def test_header():
            '    language   = "heartfun"\n'
            '    build {\n'
            '        framework  = "make"\n'
-           '        executable = "special.exe"\n'
+           '        target     = "special.exe"\n'
            '        caps { timeout_sec = 300 }\n'
            '    }\n'
            '    caps {\n'
@@ -214,6 +215,10 @@ def test_vocabulary():
            '}\n')
     header("a retired key: 'slash' (compare C-18), refused with its successor",
            '# @hwut {\n#     title = "T"\n#     tolerance { slash = true }\n# }\n')
+    header("a renamed key: 'executable' (intend/26 o-48), refused, 'target' "
+           "named",
+           '# @hwut {\n#     title = "T"\n'
+           '#     build { framework = "make"  executable = "app.exe" }\n# }\n')
     header("'title' absent",
            '@hwut {\n'
            '    tolerance { numeric_ratio = 0.5 }\n'
@@ -225,6 +230,33 @@ def test_vocabulary():
            '    choices {\n'
            '        one { build { framework = "scons" } }\n'
            '        two { build { framework = "%-make" } }\n'
+           '    }\n'
+           '}\n')
+
+
+def test_deploy():
+    """RETURN: None. 'deploy' (intend/26 o-41): the command alone is the
+    short form of the scope 'deploy { flash = "<command>" }'; the scope
+    takes 'flash' and 'caps'; anything else is refused by name."""
+    header("the short form: a command",
+           '@hwut {\n'
+           '    title   = "T"\n'
+           '    build   = "make"\n'
+           '    deploy  = "python3 -m hwut_remote serial --config-file '
+           'max10.conf flash uut.sof --image-id-file TMP/image_id"\n'
+           '}\n')
+    header("the scope: 'flash' and 'caps'",
+           '@hwut {\n'
+           '    title   = "T"\n'
+           '    deploy { flash = "./copy.sh"  caps { timeout_sec = 600 } }\n'
+           '}\n')
+    header("refused: an unknown key, a wrong shape, an empty command",
+           '@hwut {\n'
+           '    title   = "T"\n'
+           '    deploy { flash = "./copy.sh"  install = "x" }\n'
+           '    choices {\n'
+           '        one { deploy = 5 }\n'
+           '        two { deploy = "  " }\n'
            '    }\n'
            '}\n')
 
@@ -348,6 +380,7 @@ if __name__ == "__main__":
         "list_form":   test_list_form,
         "choiceless":  test_choiceless,
         "vocabulary":  test_vocabulary,
+        "deploy":      test_deploy,
         "types":       test_types,
         "off":         test_off,
         "root_only":   test_root_only,

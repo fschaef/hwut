@@ -1,6 +1,6 @@
 -- @hwut {
 --     title      = "TriggerDispatcher: schedule, priority, and the end of time"
---     build      { framework = "make", executable = "%.exe" }
+--     build      { framework = "make", target = "%.exe" }
 --     choices {
 --         abstract    { features = ["haskell-timeline"] }
 --         cancel      { features = ["haskell-timeline"] }

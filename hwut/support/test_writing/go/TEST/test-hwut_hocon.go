@@ -1,6 +1,6 @@
 // @hwut {
 //     title      = "HOCON parser: subset (A), annotated tree"
-//     build      { framework = "make", executable = "%.exe"
+//     build      { framework = "make", target = "%.exe"
 //                  caps { file_size_mb = 256 } }
 //     choices {
 //          comments  { features = ["go-hocon"] }

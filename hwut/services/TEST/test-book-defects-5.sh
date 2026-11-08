@@ -627,7 +627,7 @@ EOF2
         #  'test-thrust.exe'" -- make called in an empty 'BUILD/test-thrust.c/'.
         cat > test-thrust.c <<'END'
 /* @hwut { choices = ["short"]
-           build { framework = "make", executable = "%.exe" } } */
+           build { framework = "make", target = "%.exe" } } */
 #include <stdio.h>
 int main(int argc, char** argv) { printf("thrust %s\n<hwut-end>\n", argv[1]); return 0; }
 END
@@ -652,7 +652,7 @@ END
         printf 'test-big.exe: test-big.c\n\thead -c 12000000 /dev/zero > big.bin\n\tcc -o test-big.exe test-big.c\n' > Makefile
         printf 'hwut {\n    ignore = ["Makefile", "test-big.exe", "big.bin"]\n}\n' > hwut.conf
         big() {         # <build scope>: the header, then what 'hwut.play' says
-            printf '/* @hwut { choices = ["short"]\n           build { framework = "make", executable = "%%.exe" %s } } */\n' "$1" > test-big.c
+            printf '/* @hwut { choices = ["short"]\n           build { framework = "make", target = "%%.exe" %s } } */\n' "$1" > test-big.c
             printf '#include <stdio.h>\nint main(int argc, char** argv) { printf("big %%s\\n<hwut-end>\\n", argv[1]); return 0; }\n' >> test-big.c
             rm -rf BUILD OUT TMP test-big.exe big.bin
             "$BIN/hwut.play" test-big.c short --plain 2>&1 | grep -E "^ *[0-9]+ \||RECORDED|FAULT" | shown

@@ -12,13 +12,22 @@ REFUSED: link target 'ghost.py' names no node
 REFUSED: ordering link 'build[make] -> a.py one': both ends must be TEST nodes
 
 --- a supports link whose source is a TEST node ---
-REFUSED: supports link 'b.py ==> a.py one': source must be a BUILD or SESSION node
+REFUSED: supports link 'b.py ==> a.py one': source must be a BUILD, DEPLOY or SESSION node
 
 --- a supports link whose target is a BUILD node ---
-REFUSED: supports link 'build[make] ==> build[make]': target must be a TEST node
+REFUSED: supports link 'build[make] ==> build[make]': target must be a TEST node, or a DEPLOY node a BUILD feeds
 
 --- a session supporting a choice of another file ---
-REFUSED: 'session[a.py]' supports 'b.py one': a session serves the choices of its own file alone
+REFUSED: 'session[a.py]' supports 'b.py one': a session or a deploy serves the choices of its own file alone
+
+--- a deploy supporting a choice of another file ---
+REFUSED: 'deploy[a.py]' supports 'b.py one': a session or a deploy serves the choices of its own file alone
+
+--- a deploy supporting a deploy ---
+REFUSED: supports link 'deploy[a.py] ==> deploy[b.py]': target must be a TEST node, or a DEPLOY node a BUILD feeds
+
+--- an exclusion member naming only a DEPLOY node ---
+REFUSED: exclusion member 'c.py' covers no TEST node of the plan
 
 --- an exclusion member covering no TEST node ---
 REFUSED: exclusion member 'ghost.py' covers no TEST node of the plan

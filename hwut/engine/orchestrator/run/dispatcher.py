@@ -27,6 +27,7 @@ it on the wire as 'run-ended.report' (O-6).
 ______________________________________________________________________________
 """
 from ...operations.build_action     import build
+from ...operations.deploy_action    import deploy
 from ...operations.run.multi_execute import MultiExecute
 from ...operations.run.stage_canonicalise import StageCanonicalise
 from ...operations.run.core         import Provision
@@ -248,6 +249,25 @@ class TestRunDispatcher(I_Dispatcher):
         outcome = await build(configuration)
         if not outcome.succeeded:
             self.report_db[node.name()] = outcome.report.value
+        return outcome.succeeded
+
+    async def run_deploy(self, node):
+        """
+        RETURN: bool, the application's deploy command ended 0 (intend/26
+                o-47); the finer word kept for the wire: 'deploy-failed',
+                'deploy-tool-not-found', 'deploy-contained', or
+                'device-unreachable' where it exited 77. The last line of
+                its stderr is the detail.
+        """
+        configuration = self.config_db.get(node.file)
+        if configuration is None or not configuration.deploy:
+            self.report_db[node.name()] = "deploy-failed"
+            return False
+        outcome = await deploy(configuration)
+        if not outcome.succeeded:
+            self.report_db[node.name()] = outcome.report.value
+            if outcome.detail:
+                self.detail_db[node.name()] = outcome.detail
         return outcome.succeeded
 
     async def open_session(self, node):

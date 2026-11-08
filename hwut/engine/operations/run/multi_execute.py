@@ -101,7 +101,8 @@ from   dataclasses import replace
 import shutil
 from   pathlib import Path
 
-from   ..result                   import E_TestRunResult
+from   ..result                   import (E_TestRunResult,
+                                          DEVICE_EXIT_CODE, last_line_of)
 from   .stage_execute             import read_declared_files
 from   ...procsitter.api   import Procsitter, E_Containment
 from   .containment               import token_of, detail_of
@@ -407,7 +408,8 @@ class ChoiceExecute(I_ProxyProvider, I_ExecuteProvider):
                 absent, never empty. Product None when the command did
                 not execute or the session ended first; the report
                 token speaks. A NON-ZERO status DELIVERS: the exit of
-                the application is behavior, not provision failure.
+                the application is behavior, not provision failure --
+                except 77, the device not reachable (DEVICE_UNREACHABLE).
         """
         session = self.multi
         if not session._started and not session.held_f:
@@ -474,6 +476,15 @@ class ChoiceExecute(I_ProxyProvider, I_ExecuteProvider):
                 #  CHOICE: B never reads A's leftover.
                 missing = read_declared_files(session.configuration,
                                               self.choice_name, raw_db)
+                if answer == DEVICE_EXIT_CODE:
+                    #  THE DEVICE IS NOT REACHABLE (intend/26 o-49), as on
+                    #  the plain road: a failure, the output not compared.
+                    self.detail = last_line_of(raw_db.get(STDERR))
+                    return Supply(product     = None,
+                                  report      = E_TestRunResult
+                                                .DEVICE_UNREACHABLE,
+                                  record_list = record,
+                                  detail      = self.detail)
                 #  A NEGATIVE STATUS IS A TERMINATING SIGNAL the app
                 #  reported for one choice's command; where the
                 #  session's own record names a cap, that is the

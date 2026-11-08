@@ -1,0 +1,6 @@
+## agent: proto 1  image 3f9a07c1  stim 2  report 2  50 MHz
+## discarded 0 bytes, 0 lines
+0304 007
+ff01 100
+ffff 1fe
+<hwut-end>

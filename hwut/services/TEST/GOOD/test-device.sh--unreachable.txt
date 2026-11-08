@@ -1,0 +1,9 @@
+== the device present
+END   :          x ................................................. [OK]
+RESULTS: 1 ok, 0 fail, <t> [sec], <t> [sec] total
+== the device gone
+END   :          x ..................................... no-device [FAIL]
+        test-b.sh  x   device not reachable  (serial: no device /dev/serial/by-id/usb-Altera_USB-Blaster)
+RESULTS: 0 ok, 1 fail, <t> [sec], <t> [sec] total
+exit: 1
+<hwut-end>

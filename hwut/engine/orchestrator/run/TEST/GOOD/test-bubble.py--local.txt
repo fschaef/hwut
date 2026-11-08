@@ -1,5 +1,5 @@
 $ (no -p)
-    not-run  linux          ''         available linux/: requires linux; specified local
+    not-run  linux          ''         available linux/: requires ghdl, held by linux; specified local
     PLANNED: TEST, both/TEST, linux/inner/TEST, none/TEST
     EXPLORED TEST               1
     EXPLORED none/TEST          1

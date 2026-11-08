@@ -33,12 +33,14 @@ Three kinds, one class, three constructors:
                                           choice-less application
     CPlanNode.build(action, ...)          one build action, collected from
                                           test_run's multi-builder
+    CPlanNode.deploy(file, ...)           one application's deploy (o-47)
     CPlanNode.session(file, ...)          one interactive application call
 
 'name()' is the node's identity, unique per plan:
 
     TEST        'file'  or  'file choice'      -- the target form
     BUILD       'build[action]'
+    DEPLOY      'deploy[file]'
     SESSION     'session[file]'
 
 A TEST node carries:
@@ -59,11 +61,13 @@ ______________________________________________________________________________
     ORDERING    'x -> y'      TEST -> TEST. 'x' runs to completion before
                               'y' starts. The verdict of 'x' does not
                               enter.
-    SUPPORTS    'w ==> t'     BUILD/SESSION ==> TEST. The verdict-carrying
-                              link: 'w' broken, 't' FAILS -- it does not
-                              wait.
+    SUPPORTS    'w ==> t'     BUILD/DEPLOY/SESSION ==> TEST, and BUILD ==>
+                              DEPLOY. The verdict-carrying link: 'w'
+                              broken, 't' FAILS -- it does not wait --
+                              and what 't' supports fails with it.
 
-A SESSION node supports the choices of its own file alone.
+A SESSION node and a DEPLOY node support the choices of their own file
+alone.
 
 
 3  THE EXCLUSION SETS  (form.py)
@@ -71,7 +75,9 @@ ______________________________________________________________________________
 
 'CExclusionSet(member_tuple)': at most one member stands at a time. A
 member is a target: 'file' -- covering every choice of that file -- or
-'file choice'. The order in which the scheduler admits the members is the
+'file choice'. A member naming a file, or a choice of it, covers that
+file's DEPLOY node too: a flash touches the board its tests touch
+(spec/26 section 16). The order in which the scheduler admits the members is the
 scheduler's own, timing-driven decision.
 
 
@@ -84,9 +90,9 @@ name:
     - two nodes of one name
     - a link endpoint naming no node
     - an ORDERING link whose ends are not both TEST
-    - a SUPPORTS link whose source is not BUILD/SESSION, or whose target
-      is not TEST
-    - a SESSION supporting a choice of another file
+    - a SUPPORTS link whose source is not BUILD/DEPLOY/SESSION, or whose
+      target is not TEST -- save a BUILD supporting a DEPLOY
+    - a SESSION or a DEPLOY supporting a choice of another file
     - a cycle in the ORDERING links -- resolved before the plan exists;
       asserted here
     - an ORDERING link leaving a [MISDEP] node for a non-[MISDEP] node
@@ -95,8 +101,8 @@ name:
 Derived at construction, deterministic:
 
     before_db       TEST name -> names that run to completion first
-    supports_db     BUILD/SESSION name -> TEST names it supports
-    supporter_db    TEST name -> BUILD/SESSION names supporting it
+    supports_db     BUILD/DEPLOY/SESSION name -> names it supports
+    supporter_db    TEST/DEPLOY name -> names supporting it
 
 
 5  THE PRINT  (printer.py)
@@ -170,13 +176,16 @@ ______________________________________________________________________________
 The steps, in order: SELECT through 'task_list.get_test_cases'; IMPLICATION
 CLOSURE over 'dependency' to a fixed point, each implied case marked with
 the first target that required it; the BUILD INTERVIEW, whose actions become
-BUILD nodes with supports links; one SESSION node per interactive file
+BUILD nodes with supports links; one DEPLOY node per application stating
+'deploy', supported by the BUILD nodes building it and supporting the
+file's TEST nodes (intend/26 o-47); one SESSION node per interactive file
 holding a selected case, supports-linked to that file's TEST nodes; ORDERING
 links out of 'dependency' restricted to what stands in the plan; the
 collision group as an exclusion set, pruned to the members covering a TEST
 node and dropped where fewer than two remain.
 
-Node order: BUILD nodes, then SESSION nodes, then TEST nodes in selection
+Node order: BUILD nodes, then DEPLOY nodes, then SESSION nodes, then TEST
+nodes in selection
 order. An empty selection yields an empty plan and a report.
 
 'I_BuildInterview.actions(case_list)' answers '(action name, ((file,
@@ -205,10 +214,11 @@ heading '[ <directory> ]', its faults and reports, and its canonical plan.
 ______________________________________________________________________________
 
 'E_ProvisionStage' names the rungs by which a test's output comes to
-exist: ACQUIRE (the empty rung), BUILD, EXECUTE.
+exist: ACQUIRE (the empty rung), BUILD, DEPLOY, EXECUTE.
 'CPlanNode.provision_stage()' derives a node's rung from its kind.
 Determination is organised by the ladder: 'provision_build.py' raises
-BUILD nodes from the interview; 'provision_execute.py' raises SESSION
+BUILD nodes from the interview; 'provision_deploy.py' raises a DEPLOY node
+per application stating 'deploy'; 'provision_execute.py' raises SESSION
 nodes for the shared facet of execution; 'determine.py' raises the
 TEST nodes, walks, closes and assembles. The scheduler is stage-blind.
 

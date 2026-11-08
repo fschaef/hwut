@@ -1,6 +1,6 @@
 // @hwut {
 //     title   = "Demo: a door's state machine, watched by a pype"
-//     build   { framework = "make", executable = "%.exe"
+//     build   { framework = "make", target = "%.exe"
 //               caps { memory_mb = 2048  file_size_mb = 256  disk_mb = 1024 } }
 //     pype    = "door.pype"
 //     choices {

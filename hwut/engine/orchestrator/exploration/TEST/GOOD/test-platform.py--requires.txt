@@ -1,0 +1,18 @@
+hwut-root.conf:  hwut { requires = ["iverilog"] }
+bare/hwut-root.conf: hwut {
+}
+inner/hwut-root.conf: hwut { requires = ["gcc"] }
+sub/TEST/hwut.conf: hwut { requires = ["ghdl", "gcc"] }
+sub/hwut.conf:   hwut { requires = ["ghdl"] }
+    TEST         platform_tuple=None
+                 requires_tuple=('iverilog',)
+                 runs
+    bare/TEST    platform_tuple=None
+                 runs
+    inner/TEST   platform_tuple=None
+                 requires_tuple=('gcc',)
+                 runs
+    sub/TEST     platform_tuple=None
+                 requires_tuple=('iverilog', 'ghdl', 'gcc')
+                 runs
+<hwut-end>

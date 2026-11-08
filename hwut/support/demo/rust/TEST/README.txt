@@ -11,7 +11,7 @@ directory can say, each thing shown once
 
 The same demonstration as '../../python/TEST', choice for choice, in Rust.
 Every test application is a file whose header ('@hwut { }') is its whole
-configuration -- here with 'build { framework = "make", executable =
+configuration -- here with 'build { framework = "make", target =
 "%.exe" }': hwut runs the 'Makefile' beside it, which makes 'x.exe' of
 'x.rs' with rustc alone (no cargo, no crate from outside). 'hwut.conf' is
 what the directory says. A file's comment says what each of its choices

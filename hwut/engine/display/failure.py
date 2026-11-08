@@ -32,6 +32,9 @@ class E_Failure(Enum):
     BUILD_FAILED                = "build-failed"
     BUILD_TOOL_NOT_FOUND        = "build-tool-not-found"
     CONSTRAINT                  = "constraint"
+    DEPLOY_CONTAINED            = "deploy-contained"
+    DEPLOY_FAILED               = "deploy-failed"
+    DEPLOY_TOOL_NOT_FOUND       = "deploy-tool-not-found"
     OUTPUT_CONSTRAINT           = "output-constraint"
     DISPLAY_TARGET_UNREACHABLE  = "display-target-unreachable"
     INTERPRETER_NOT_FOUND       = "interpreter-not-found"
@@ -69,6 +72,7 @@ class E_Failure(Enum):
     TEST_APP_DISK_LOW           = "test-app-disk-low"
     TEST_APP_FILE_SIZE_EXCEEDED = "test-app-file-size-exceeded"
     TEST_APP_LAUNCH_FAILED      = "test-app-launch-failed"
+    DEVICE_UNREACHABLE          = "device-unreachable"
     TEST_APP_MEMORY_EXCEEDED    = "test-app-memory-exceeded"
     TEST_APP_NO_OUTPUT          = "test-app-no-output"
     TEST_APP_PIDS_EXCEEDED      = "test-app-pids-exceeded"
@@ -209,6 +213,9 @@ _brief_failure_db = {
     _F.TARGET_NOT_BUILT:            (_C.BUILD,      "no-build"),
     _F.BUILD_TOOL_NOT_FOUND:        (_C.BUILD,      "no-build"),
     _F.BUILD_CONTAINED:             (_C.BUILD,      "no-build"),
+    _F.DEPLOY_FAILED:               (_C.BUILD,      "no-deploy"),
+    _F.DEPLOY_TOOL_NOT_FOUND:       (_C.BUILD,      "no-deploy"),
+    _F.DEPLOY_CONTAINED:            (_C.BUILD,      "no-deploy"),
     #  DEVIATION
     _F.NOT_EQUIVALENT_WITH_NOMINAL: (_C.DEVIATION,  None),
     _F.NOT_EQUIVALENT_GREW:         (_C.DEVIATION,  None),
@@ -237,6 +244,7 @@ _brief_failure_db = {
     _F.TEST_APP_PIDS_EXCEEDED:      (_C.EXECUTION,  "killed"),
     _F.TEST_APP_DISK_EXCEEDED:      (_C.EXECUTION,  "killed"),
     _F.TEST_APP_DISK_LOW:           (_C.ENVIRONMENT, "no-disk"),
+    _F.DEVICE_UNREACHABLE:          (_C.ENVIRONMENT, "no-device"),
     _F.TEST_APP_SESSION_GONE:       (_C.EXECUTION,  "no-session"),
     _F.PYPE_INTERPRETER_NOT_FOUND:  (_C.EXECUTION,  "pype"),
     _F.PYPE_FILE_NOT_FOUND:         (_C.EXECUTION,  "pype"),
@@ -361,6 +369,19 @@ failure_db = MappingProxyType({f.failure_id: f for f in (
     _failure(_F.BUILD_CONTAINED, "build killed by supervisor",
              "The supervisor killed the build: a cap was hit.",
              _CAP_HEAL % "..."),
+    _failure(_F.DEPLOY_FAILED, "deploy failed",
+             "The test's deploy command -- a flash, a copy -- failed: the "
+             "image did not reach the device. The NOTE is the last line "
+             "of its stderr.",
+             "Run the header's 'deploy' command by hand in the directory "
+             "the build ran in and read what it says."),
+    _failure(_F.DEPLOY_TOOL_NOT_FOUND, "deploy tool missing",
+             "The program the header's 'deploy' names is not installed or "
+             "not on PATH.",
+             "Install it, or name the right one in 'deploy'."),
+    _failure(_F.DEPLOY_CONTAINED, "deploy killed by supervisor",
+             "The supervisor killed the deploy: a cap was hit.",
+             _CAP_HEAL % "..."),
     _failure(_F.SOURCE_NOT_FOUND, "source file missing",
              "The test's source file is not where the configuration says.",
              "Restore it; or, if the test is gone on purpose, "
@@ -379,6 +400,13 @@ failure_db = MappingProxyType({f.failure_id: f for f in (
              "The application process could not be started.",
              "Check that the file is executable and its first line names "
              "an interpreter that exists."),
+    _failure(_F.DEVICE_UNREACHABLE, "device not reachable",
+             "The test application exited 77: the device it talks to -- a "
+             "board, a simulator -- is missing or did not come up. Its "
+             "output was not compared. The NOTE is the last line of its "
+             "stderr.",
+             "Connect, power or start the device the NOTE names; a test "
+             "that needs no device never exits 77."),
     _failure(_F.CONF_BROKEN, "its configuration does not read",
              "A 'hwut-root.conf' or 'hwut.conf' at or above the test's "
              "directory does not read, so no case it governs runs as "

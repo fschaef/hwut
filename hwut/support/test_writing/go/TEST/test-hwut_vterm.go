@@ -1,6 +1,6 @@
 // @hwut {
 //     title      = "A terminal's screen read by a test: libvterm through cgo."
-//     build      { framework = "make", executable = "%.exe"
+//     build      { framework = "make", target = "%.exe"
 //                  caps { file_size_mb = 256 } }
 //     choices {
 //          attributes { features = ["go-vterm"] }

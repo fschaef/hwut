@@ -55,7 +55,7 @@ SCRIPT = ('#!/bin/bash\n'
           'echo "interpreted $1"\n'
           'echo "<hwut-end>"\n')
 PROGRAM = ('/* @hwut { title = "B"  choices = ["c"]\n'
-           '           build { framework = "make"  executable = "app" } } */\n'
+           '           build { framework = "make"  target = "app" } } */\n'
            '#include <stdio.h>\n'
            '#include <string.h>\n'
            'int main(int argc, char** argv) {\n'

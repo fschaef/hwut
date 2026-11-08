@@ -1,9 +1,9 @@
 $ --exclude-local -p linux
-    not-run  .              ''         available ./: requires local; specified linux
-    not-run  both           linux      reachable both/: platform 'linux' not reachable: image 'hwut-dev' absent and recipe '<root>/both/Containerfile' not found
-    not-run  linux          linux      reachable linux/: platform 'linux' not reachable: image 'hwut-dev' absent and recipe '<root>/linux/Containerfile' not found
-    not-run  linux/inner    ''         available linux/inner/: requires local; specified linux
-    not-run  none           ''         available none/: requires local; specified linux
+    not-run  .              ''         available ./: requires no tool -- runs on local; specified linux
+    not-run  both           linux      reachable both/: platform 'linux' not reachable: image 'hwut-dev' absent and recipe '<root>/Containerfile' not found
+    not-run  linux          linux      reachable linux/: platform 'linux' not reachable: image 'hwut-dev' absent and recipe '<root>/Containerfile' not found
+    not-run  linux/inner    ''         available linux/inner/: requires no tool -- runs on local; specified linux
+    not-run  none           ''         available none/: requires no tool -- runs on local; specified linux
     PLANNED: 
     EXPLORED TEST               0
     EXPLORED none/TEST          0

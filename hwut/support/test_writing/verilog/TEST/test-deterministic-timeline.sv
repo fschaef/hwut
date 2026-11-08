@@ -1,6 +1,6 @@
 // @hwut {
 //     title      = "TriggerDispatcher: schedule, priority, and the end of time"
-//     build      { framework = "make", executable = "%.exe"
+//     build      { framework = "make", target = "%.exe"
 //                  caps { memory_mb = 2048 } }
 //     choices {
 //         abstract    { features = ["sv-timeline"] }

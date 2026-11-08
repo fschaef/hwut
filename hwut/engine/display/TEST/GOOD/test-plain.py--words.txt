@@ -22,11 +22,11 @@ END   test-08.sh ......................................... no-disk [FAIL]  ||0
 START test-09.sh                                                           ||1
 END   test-09.sh ....................................... no-launch [FAIL]  ||0
 START test-10.sh                                                           ||1
-END   test-10.sh .......................................... killed [FAIL]  ||0
+END   test-10.sh ....................................... no-device [FAIL]  ||0
 START test-11.sh                                                           ||1
-END   test-11.sh ...................................... no-session [FAIL]  ||0
+END   test-11.sh .......................................... killed [FAIL]  ||0
 START test-12.sh                                                           ||1
-END   test-12.sh .......................................... killed [FAIL]  ||0
+END   test-12.sh ...................................... no-session [FAIL]  ||0
 START test-13.sh                                                           ||1
 END   test-13.sh .......................................... killed [FAIL]  ||0
 START test-14.sh                                                           ||1
@@ -38,9 +38,9 @@ END   test-16.sh .......................................... killed [FAIL]  ||0
 START test-17.sh                                                           ||1
 END   test-17.sh .......................................... killed [FAIL]  ||0
 START test-18.sh                                                           ||1
-END   test-18.sh ......................................... no-disk [FAIL]  ||0
+END   test-18.sh .......................................... killed [FAIL]  ||0
 START test-19.sh                                                           ||1
-END   test-19.sh ....................................... no-output [FAIL]  ||0
+END   test-19.sh ......................................... no-disk [FAIL]  ||0
 START test-20.sh                                                           ||1
 END   test-20.sh ....................................... no-output [FAIL]  ||0
 START test-21.sh                                                           ||1
@@ -48,27 +48,27 @@ END   test-21.sh ....................................... no-output [FAIL]  ||0
 START test-22.sh                                                           ||1
 END   test-22.sh ....................................... no-output [FAIL]  ||0
 START test-23.sh                                                           ||1
-END   test-23.sh .................................... no GOOD file [FAIL]  ||0
+END   test-23.sh ....................................... no-output [FAIL]  ||0
 START test-24.sh                                                           ||1
-END   test-24.sh ....................................... cut-short [FAIL]  ||0
+END   test-24.sh .................................... no GOOD file [FAIL]  ||0
 START test-25.sh                                                           ||1
-END   test-25.sh ............................ no <hwut-end> marker [FAIL]  ||0
+END   test-25.sh ....................................... cut-short [FAIL]  ||0
 START test-26.sh                                                           ||1
-END   test-26.sh .......................................... stderr [FAIL]  ||0
+END   test-26.sh ............................ no <hwut-end> marker [FAIL]  ||0
 START test-27.sh                                                           ||1
-END   test-27.sh .......................................... region [FAIL]  ||0
+END   test-27.sh .......................................... stderr [FAIL]  ||0
 START test-28.sh                                                           ||1
 END   test-28.sh .......................................... region [FAIL]  ||0
 START test-29.sh                                                           ||1
-END   test-29.sh ......................................... compare [FAIL]  ||0
+END   test-29.sh .......................................... region [FAIL]  ||0
 START test-30.sh                                                           ||1
-END   test-30.sh ...................................... constraint [FAIL]  ||0
+END   test-30.sh ......................................... compare [FAIL]  ||0
 START test-31.sh                                                           ||1
 END   test-31.sh ...................................... constraint [FAIL]  ||0
 START test-32.sh                                                           ||1
-END   test-32.sh .......................................... stderr [FAIL]  ||0
+END   test-32.sh ...................................... constraint [FAIL]  ||0
 START test-33.sh                                                           ||1
-END   test-33.sh ............................................ pype [FAIL]  ||0
+END   test-33.sh .......................................... stderr [FAIL]  ||0
 START test-34.sh                                                           ||1
 END   test-34.sh ............................................ pype [FAIL]  ||0
 START test-35.sh                                                           ||1
@@ -78,7 +78,7 @@ END   test-36.sh ............................................ pype [FAIL]  ||0
 START test-37.sh                                                           ||1
 END   test-37.sh ............................................ pype [FAIL]  ||0
 START test-38.sh                                                           ||1
-END   test-38.sh ........................................ no-build [FAIL]  ||0
+END   test-38.sh ............................................ pype [FAIL]  ||0
 START test-39.sh                                                           ||1
 END   test-39.sh ........................................ no-build [FAIL]  ||0
 START test-40.sh                                                           ||1
@@ -86,16 +86,24 @@ END   test-40.sh ........................................ no-build [FAIL]  ||0
 START test-41.sh                                                           ||1
 END   test-41.sh ........................................ no-build [FAIL]  ||0
 START test-42.sh                                                           ||1
-END   test-42.sh .......................................... no-dep [FAIL]  ||0
+END   test-42.sh ........................................ no-build [FAIL]  ||0
 START test-43.sh                                                           ||1
-END   test-43.sh ...................................... no-display [FAIL]  ||0
+END   test-43.sh ....................................... no-deploy [FAIL]  ||0
 START test-44.sh                                                           ||1
-END   test-44.sh .......................................... failed [FAIL]  ||0
+END   test-44.sh ....................................... no-deploy [FAIL]  ||0
+START test-45.sh                                                           ||1
+END   test-45.sh ....................................... no-deploy [FAIL]  ||0
+START test-46.sh                                                           ||1
+END   test-46.sh .......................................... no-dep [FAIL]  ||0
+START test-47.sh                                                           ||1
+END   test-47.sh ...................................... no-display [FAIL]  ||0
+START test-48.sh                                                           ||1
+END   test-48.sh .......................................... failed [FAIL]  ||0
 
 ==============================================================================
-DIRECTORIES                                            0 ok, 45 fail, 00:00:45
+DIRECTORIES                                            0 ok, 49 fail, 00:00:49
 ------------------------------------------------------------------------------
-   suite/TEST . . . . . . . . . . . . . . . . . . . . . . .    [FAIL]     0/45
+   suite/TEST . . . . . . . . . . . . . . . . . . . . . . .    [FAIL]     0/49
 
 ==============================================================================
 HINTS
@@ -103,20 +111,23 @@ HINTS
 NOMINAL -- error in GOOD file
     suite/TEST
         test-02.sh   GOOD file carries unaccepted lines
-        test-23.sh   GOOD missing
-        test-25.sh   GOOD file does not end in <hwut-end>
-        test-27.sh   broken region framing
-        test-30.sh   constraint violated
+        test-24.sh   GOOD missing
+        test-26.sh   GOOD file does not end in <hwut-end>
+        test-28.sh   broken region framing
+        test-31.sh   constraint violated
 
 BUILD -- build or launch error
     suite/TEST
         test-00.sh   source file missing
         test-01.sh   interpreter missing
         test-09.sh   application launch failed
-        test-38.sh   build tool missing
-        test-39.sh   build killed by supervisor
-        test-40.sh   build failed
-        test-41.sh   target not built
+        test-39.sh   build tool missing
+        test-40.sh   build killed by supervisor
+        test-41.sh   build failed
+        test-42.sh   target not built
+        test-43.sh   deploy tool missing
+        test-44.sh   deploy killed by supervisor
+        test-45.sh   deploy failed
 
 BOOK -- book and tree disagree
     suite/TEST
@@ -124,42 +135,43 @@ BOOK -- book and tree disagree
 
 EXECUTION -- application invocation error
     suite/TEST
-        test-10.sh   killed by supervisor
-        test-11.sh   not run; process already dead
-        test-12.sh   killed; wall-clock cap exceeded
-        test-13.sh   killed; cpu-time cap exceeded
-        test-14.sh   killed; memory cap exceeded
-        test-15.sh   killed; file-size cap exceeded
-        test-16.sh   killed; process cap exceeded
-        test-17.sh   killed; disk cap exceeded
-        test-19.sh   no output
-        test-20.sh   stalled; no output
-        test-21.sh   no recording to replay
-        test-22.sh   output file missing
-        test-24.sh   output cut short; no <hwut-end>
-        test-26.sh   unexpected stderr
-        test-28.sh   broken region framing in output
-        test-29.sh   the comparison failed
-        test-31.sh   constraint violated by the output
-        test-32.sh   stderr undecided
-        test-33.sh   pype interpreter missing
-        test-34.sh   pype script missing
-        test-35.sh   pype script syntax error
-        test-36.sh   pype killed by supervisor
-        test-37.sh   pype failed
+        test-11.sh   killed by supervisor
+        test-12.sh   not run; process already dead
+        test-13.sh   killed; wall-clock cap exceeded
+        test-14.sh   killed; cpu-time cap exceeded
+        test-15.sh   killed; memory cap exceeded
+        test-16.sh   killed; file-size cap exceeded
+        test-17.sh   killed; process cap exceeded
+        test-18.sh   killed; disk cap exceeded
+        test-20.sh   no output
+        test-21.sh   stalled; no output
+        test-22.sh   no recording to replay
+        test-23.sh   output file missing
+        test-25.sh   output cut short; no <hwut-end>
+        test-27.sh   unexpected stderr
+        test-29.sh   broken region framing in output
+        test-30.sh   the comparison failed
+        test-32.sh   constraint violated by the output
+        test-33.sh   stderr undecided
+        test-34.sh   pype interpreter missing
+        test-35.sh   pype script missing
+        test-36.sh   pype script syntax error
+        test-37.sh   pype killed by supervisor
+        test-38.sh   pype failed
 
 ENVIRONMENT -- error around the test
     suite/TEST
         test-08.sh   disk has no room; not run
-        test-18.sh   disk below its floor
-        test-42.sh   dependency not acquired
-        test-43.sh   display target unreachable
-        test-44.sh   a token nobody taught
+        test-10.sh   device not reachable
+        test-19.sh   disk below its floor
+        test-46.sh   dependency not acquired
+        test-47.sh   display target unreachable
+        test-48.sh   a token nobody taught
 
 HINT: use 'hwut.help' for explanation of subtle issues.
 ==============================================================================
 
-RESULTS: 0 ok, 45 fail, 45.00 [sec]
+RESULTS: 0 ok, 49 fail, 49.00 [sec]
 |                                    fail                                    |
-[fold: good_f=False fail_n=45 verdict_n=45 fault_n=0]
+[fold: good_f=False fail_n=49 verdict_n=49 fault_n=0]
 <hwut-end>

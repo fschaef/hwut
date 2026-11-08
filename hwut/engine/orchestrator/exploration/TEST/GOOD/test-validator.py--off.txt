@@ -2,7 +2,7 @@
 --- build named alone; analogy and constraints switched off ---
 title    'T'  language None  origin HEADER  at 1:8
 root:
-    build = Build(framework='make', executable=None, caps=None)
+    build = Build(framework='make', target=None, caps=None)
     tolerance = Tolerance(numeric_ratio=None, whitespace=None, regions=None, eq_pattern=None, nothing=None, analogy=(), constraints=(), comment=None, stderr_ignored=None)
 choice -:
     (nothing stated)

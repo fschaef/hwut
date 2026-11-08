@@ -1,0 +1,27 @@
+$ -p linux
+    not-run  linux          linux      reachable linux/: platform 'linux' not reachable: image 'hwut-dev' absent and recipe '<root>/Containerfile' not found
+    PLANNED: TEST, both/TEST, linux/inner/TEST, none/TEST
+    EXPLORED TEST               1
+    EXPLORED none/TEST          1
+    EXPLORED linux/TEST         0
+    EXPLORED linux/inner/TEST   1
+    EXPLORED both/TEST          1
+$ -p linux
+    not-run  both           linux      reachable both/: platform 'linux' not reachable: image 'hwut-dev' absent and recipe '<root>/Containerfile' not found
+    not-run  linux          linux      reachable linux/: platform 'linux' not reachable: image 'hwut-dev' absent and recipe '<root>/Containerfile' not found
+    PLANNED: TEST, linux/inner/TEST, none/TEST
+    EXPLORED TEST               1
+    EXPLORED none/TEST          1
+    EXPLORED linux/TEST         0
+    EXPLORED linux/inner/TEST   1
+    EXPLORED both/TEST          0
+$ (no -p)
+    not-run  linux          ''         available linux/: requires ghdl, held by linux; specified local
+    PLANNED: TEST, both/TEST, linux/inner/TEST, none/TEST
+    EXPLORED TEST               1
+    EXPLORED none/TEST          1
+    EXPLORED linux/TEST         0
+    EXPLORED linux/inner/TEST   1
+    EXPLORED both/TEST          1
+SUCCESS: the first defined of those specified.
+<hwut-end>

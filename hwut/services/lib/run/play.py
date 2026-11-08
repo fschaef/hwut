@@ -248,7 +248,9 @@ def main(argv=None, write=None):
     #  AN UNENFORCEABLE CAP REFUSES THE PLAY (exploration R-80): a play
     #  RUNS the application, as unconfined as a run would.
     reason = confinement.refusal_of(result.app_set, case.source_file,
-                                    choice_name)
+                                    choice_name) \
+             or _requires_refusal(directory, wish, result.app_set,
+                                  case.source_file, choice_name)
     if reason is not None:
         for line in confinement.refusal_line_list(
                         case.source_file if choice_name is None
@@ -279,8 +281,9 @@ def main(argv=None, write=None):
 def _decided_elsewhere(directory, wish, arguments, word_list, write):
     """
     RETURN: E_ExitCode where the play is not played HERE -- REFUSED where
-            the bubble meets more than one specified platform, EMPTY where
-            it is not run (its NOTE said), the far play's own status where
+            the confs are refused (PlatformRefused), EMPTY where the
+            bubble is not run or the directory not entered (its NOTE
+            said), the far play's own status where
             it is handed to its platform (its lines relayed).
             None, else: the bubble runs here, as ever.
     """
@@ -299,7 +302,13 @@ def _decided_elsewhere(directory, wish, arguments, word_list, write):
         write("NOTE  %s" % decision.text)
         write("nothing played: the bubble is not run here")
         return E_ExitCode.EMPTY
-    if decision.state != HANDED: return None
+    if decision.state != HANDED:
+        #  A DIRECTORY REQUIRING MORE THAN ITS BUBBLE (intend/26 o-57).
+        text = _entry_refused_text(directory, decision)
+        if text is None: return None
+        write(text)
+        write("nothing played: the directory is not entered here")
+        return E_ExitCode.EMPTY
     name, spec = decision.platform, decision.spec
     ready_f, why = platforms.start(name, spec, write)
     if not ready_f:
@@ -319,6 +328,39 @@ def _decided_elsewhere(directory, wish, arguments, word_list, write):
         return E_ExitCode(status)
     except ValueError:
         return E_ExitCode.FAULT
+
+
+def _requires_refusal(directory, wish, app_set, test, choice):
+    """
+    RETURN: str, why the case may not play here -- its header requires a
+            tool the platform of its bubble does not announce (intend/26
+            o-59); None, where it may, or where no root bounds it.
+    """
+    from ....engine.orchestrator.plan.bubble import (case_refusal,
+                                                     governing_decision)
+    try:
+        decision = governing_decision(directory, wish)
+    except Exception:                       # refused or unbounded: said
+        return None                         # where the play decides
+    return case_refusal(decision, app_set, test, choice)
+
+
+def _entry_refused_text(directory, decision):
+    """
+    RETURN: str, the NOTE that 'directory' is not entered -- the platform
+            its bubble runs on does not announce every tool the directory
+            requires, from the confs above and its own (intend/26 o-57);
+            None, else.
+    """
+    from ....engine.orchestrator.exploration.tree_explorer import (
+        ascended_spec, own_requires)
+    from ....engine.orchestrator.plan.bubble import entry_refusal
+    required = tuple(dict.fromkeys(
+                   tuple(ascended_spec(directory)[0].requires_tuple or ())
+                   + own_requires(directory)))
+    if not required: return None
+    path = os.path.abspath(directory)
+    return entry_refusal({decision.path: decision}, path, path, required)
 
 
 def _faults_spare(fault_tuple, app_set, wanted_tuple, write):
@@ -406,7 +448,7 @@ def _play_all(directory, wish, word_list, plain_f, stderr_f, raw_f,
         return E_ExitCode.REFUSED
     try:
         worst = _play_each(case_tuple, result, found, directory,
-                           plain_f, stderr_f, raw_f, pyped_f, write)
+                           plain_f, stderr_f, raw_f, pyped_f, write, wish)
     finally:
         asyncio.run(frame(directory_spec, here, "on_exit", write))
     if worst is E_ExitCode.REFUSED: return worst
@@ -415,7 +457,7 @@ def _play_all(directory, wish, word_list, plain_f, stderr_f, raw_f,
 
 
 def _play_each(case_tuple, result, found, directory,
-               plain_f, stderr_f, raw_f, pyped_f, write):
+               plain_f, stderr_f, raw_f, pyped_f, write, wish=None):
     """
     RETURN: E_ExitCode, OK where every case played; FAULT where one was
             refused by its caps or did not play; REFUSED where the
@@ -426,7 +468,10 @@ def _play_each(case_tuple, result, found, directory,
         name = case.source_file if case.choice is None \
                else "%s %s" % (case.source_file, case.choice)
         reason = confinement.refusal_of(result.app_set, case.source_file,
-                                        case.choice)
+                                        case.choice) \
+                 or (_requires_refusal(directory, wish, result.app_set,
+                                       case.source_file, case.choice)
+                     if wish is not None else None)
         if reason is not None:
             for line in confinement.refusal_line_list(name, reason):
                 write(line)

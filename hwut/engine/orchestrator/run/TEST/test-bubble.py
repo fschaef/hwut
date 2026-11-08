@@ -5,6 +5,9 @@
 #     choices {
 #         local     { features = ["bubble-decided", "bubble-inner-decided-alone"] }
 #         refused   { features = ["bubble-refused"] }
+#         first     { features = ["bubble-decided"] }
+#         below     { features = ["bubble-decided"] }
+#         header    { features = ["bubble-decided"] }
 #         excluded  { features = ["bubble-decided", "bubble-not-run-untouched"] }
 #         handed    { features = ["bubble-handed-hides-inner"] }
 #         untouched { features = ["bubble-not-run-untouched"] }
@@ -21,26 +24,40 @@
 ______________________________________________________________________________
 
 PURPOSE: THE DECISION OF adm/WORK/spec/42-platforms.txt section 3 (plan/42
-         P-4; intend/42 rulings 10, 12, 19, 21) on one tree:
+         P-4; intend/42 rulings 12, 19, 21; intend/26 o-50 .. o-58) on one
+         tree:
 
-    .                 hwut-root.conf, no 'platform'          Q = {local}
+    .                 platform = [ { local  tools = [iverilog] },
+                                   { linux  tools = [iverilog, ghdl] } ]
+                      no 'requires'                          C = {local}
     ./TEST            test-top.sh
-    none/             hwut-root.conf, no 'platform'          Q = {local}
-    linux/            platform = [ linux ]                   Q = {linux}
-    linux/inner/      hwut-root.conf, no 'platform'          Q = {local}
-    both/             platform = [ "local", linux ]          Q = {local, linux}
+    none/             hwut-root.conf, no 'requires'          C = {local}
+    linux/            requires = [ ghdl ]                    C = {linux}
+    linux/inner/      hwut-root.conf, no 'requires'          C = {local}
+    both/             requires = [ iverilog ]                C = {local, linux}
 
-CHOICES: local, refused, excluded, handed, untouched, stream, sigterm,
-         play, book;
+CHOICES: local, refused, first, below, header, excluded, handed,
+         untouched, stream, sigterm, play, book;
 
 local      S = {local}: '.', none/, both/ run here; linux/ NOT RUN,
            'available'; its inner bubble runs here (ruling 19).
-refused    '-p linux', S = {local, linux}: both/ meets two -- REFUSED at
-           the call, named, with the remedy; nothing explored.
+refused    REFUSED at the call, named, nothing explored: a 'platform' in
+           an inner root (o-53); a tool 'hwut-tools.rst' beside the root
+           does not explain (o-52).
+first      the FIRST DEFINED wins, '-p' narrows and never orders (o-58):
+           '-p linux' -- both/ runs here, 'local' defined first; the
+           definitions swapped -- both/ goes to linux.
+below      a 'hwut.conf' below none/ requires ghdl, which 'local' does
+           not announce: that directory is not entered, the NOTE says why
+           (o-57); its sibling runs.
+header     a test's header requires ghdl, a choice's iverilog, another
+           choice's ghdl (o-59): 'hwut.run' refuses the cases 'local'
+           cannot hold, named in REFUSED, uncounted; the rest run;
+           'hwut.play' of a refused one says the same, REFUSED.
 excluded   '--exclude-local -p linux', S = {linux}, a podman stand-in
            first on PATH answering 1 -- the image absent, no recipe:
            linux/ and both/ NOT RUN, 'reachable'; every bubble requiring
-           'local' NOT RUN, 'available'; nothing explored.
+           no tool NOT RUN, 'available'; nothing explored.
 handed     the same, the stand-in answering 0 -- the image stands:
            linux/ and both/ HANDED, each with the far run's words ('--as-
            platform=linux': over there its 'local' IS linux); linux/inner/
@@ -61,8 +78,8 @@ play       'hwut.play' decides its directory's bubble as 'hwut.run' does
            (ruled 2026-11-03, "yes to play"): in linux/TEST without '-p',
            not run -- the NOTE, EMPTY; with '--exclude-local -p linux',
            handed -- the far play's lines relayed, its recording on this
-           disk; in both/TEST with '-p linux', refused; in none/TEST, as
-           ever.
+           disk; in both/TEST with '-p linux', played here ('local' is
+           defined first, o-58); in none/TEST, as ever.
 far-empty  a wish that selects NOTHING over there (the author's run,
            2026-11-04): 'hwut.run --exclude-local -p linux --dir
            linux/nowhere' -- the far run ends EMPTY (3), and that is no
@@ -95,7 +112,7 @@ from hwut.engine.orchestrator.exploration.task_list import \
                                               SelectionError      # noqa E402
 
 LINUX = ('{ name = "linux", kind = "container", image = "hwut-dev", '
-         'recipe = "Containerfile" }')
+         'recipe = "Containerfile", tools = ["iverilog", "ghdl"] }')
 BIN   = os.path.join(config.HWUT_DIRECTORY, "bin")
 
 
@@ -105,13 +122,20 @@ def seconds_cut(line):
     return re.sub(r", [0-9.]+ \[sec\].*$", "", line)
 
 
-def tree():
-    """RETURN: str, the root of a new tree as the PURPOSE draws it."""
+LOCAL = '{ name = "local", tools = ["iverilog"] }'
+
+
+def tree(definitions=None, none_text=""):
+    """RETURN: str, the root of a new tree as the PURPOSE draws it --
+    'definitions' the root's 'platform' list where given, 'none_text'
+    what none/'s root conf says."""
     root = tempfile.mkdtemp(prefix="hwut_bubble_")
-    conf_db = {"": "", "none/": "",
-               "linux/": "platform = [ %s ]" % LINUX,
+    conf_db = {"": "platform = [ %s ]"
+                   % (definitions or "%s, %s" % (LOCAL, LINUX)),
+               "none/": none_text,
+               "linux/": 'requires = ["ghdl"]',
                "linux/inner/": "",
-               "both/": 'platform = [ "local", %s ]' % LINUX}
+               "both/": 'requires = ["iverilog"]'}
     test_db = {"TEST": "test-top.sh", "none/TEST": "test-a.sh",
                "linux/TEST": "test-b.sh", "linux/inner/TEST": "test-c.sh",
                "both/TEST": "test-d.sh"}
@@ -213,14 +237,104 @@ def test_local():
 
 
 def test_refused():
-    """RETURN: None. |F(B)| > 1."""
-    root = tree()
+    """RETURN: None. Confs refused at the start."""
+    root = tree(none_text="platform = [ %s ]" % LOCAL)
     try:
-        decided(root, ["-p", "linux"])
-        decided(root, ["-p", "linux", "-p", "win11"])
+        decided(root, [])
     finally:
         shutil.rmtree(root)
-    print("SUCCESS: refused at the call, every such bubble named.")
+    root = tree()
+    try:
+        with open(os.path.join(root, "hwut-tools.rst"), "w") as fh:
+            fh.write("[[iverilog]]\n    Icarus Verilog.\n")
+        decided(root, [])
+    finally:
+        shutil.rmtree(root)
+    print("SUCCESS: refused at the call, every such conf named.")
+
+
+def test_first():
+    """RETURN: None. The first defined, '-p' narrowing."""
+    bin_dir = podman_bin(1)          # the image absent: never handed
+    root = tree()
+    try:
+        decided(root, ["-p", "linux"], first_on_path(bin_dir))
+    finally:
+        shutil.rmtree(root)
+    root = tree(definitions="%s, %s" % (LINUX, LOCAL))
+    try:
+        decided(root, ["-p", "linux"], first_on_path(bin_dir))
+        decided(root, [])
+    finally:
+        shutil.rmtree(root); shutil.rmtree(bin_dir)
+    print("SUCCESS: the first defined of those specified.")
+
+
+def test_below():
+    """RETURN: None. A directory requiring more than its platform holds."""
+    root = tree()
+    try:
+        for where in ("none/deep", "none/shallow"):
+            os.makedirs(os.path.join(root, where, "TEST", "GOOD"))
+            path = os.path.join(root, where, "TEST", "test-e.sh")
+            with open(path, "w") as fh:
+                fh.write('#! /bin/sh\n# @hwut { title = "E" }\n'
+                         'echo e\necho "<hwut-end>"\n')
+            os.chmod(path, 0o755)
+        with open(os.path.join(root, "none/deep/hwut.conf"), "w") as fh:
+            fh.write('hwut { requires = ["ghdl"] }\n')
+        decided(root, [])
+    finally:
+        shutil.rmtree(root)
+    print("SUCCESS: the directory not entered, its sibling run.")
+
+
+def test_header():
+    """RETURN: None. A test's header requiring a tool."""
+    root, bin_dir = tree(), podman_bin(1)
+    environment = dict(os.environ, PATH=first_on_path(bin_dir),
+                       PYTHONPATH=os.path.dirname(config.HWUT_DIRECTORY))
+    try:
+        where = os.path.join(root, "none", "TEST")
+        for name, header, good in (
+                ("test-g.sh", 'title = "G"  requires = ["ghdl"]', "g"),
+                ("test-h.sh", 'title = "H"  choices { one { requires = '
+                              '["iverilog"] } two { requires = ["ghdl"] } }',
+                 None)):
+            path = os.path.join(where, name)
+            with open(path, "w") as fh:
+                fh.write('#! /bin/sh\n# @hwut { %s }\necho "$1"\n'
+                         'echo "<hwut-end>"\n' % header)
+            os.chmod(path, 0o755)
+            for stem in ([name] if good else
+                         ["%s--one" % name, "%s--two" % name]):
+                with open(os.path.join(where, "GOOD", stem + ".txt"),
+                          "w") as fh:
+                    fh.write("%s\n<hwut-end>\n"
+                             % (good or stem.rsplit("--", 1)[1]))
+        done = subprocess.run([sys.executable, "-m", "hwut.services.run",
+                               "--plain", "--jobs=1"], cwd=root,
+                              env=environment, capture_output=True,
+                              text=True)
+        print("$ hwut.run   [exit %i]" % done.returncode)
+        show_f = False
+        for line in done.stdout.splitlines():
+            if line.startswith("REFUSED"): show_f = True
+            if show_f and line.strip() and not line.startswith("="):
+                print("    %s" % seconds_cut(line.replace(root, "<root>")))
+            if line.startswith("RESULTS"): show_f = False
+        done = subprocess.run([sys.executable, "-m",
+                               "hwut.services.lib.run.play", "--plain",
+                               "test-h.sh", "two"], cwd=where,
+                              env=environment, capture_output=True,
+                              text=True)
+        print("$ (none/TEST) hwut.play test-h.sh two   [exit %i]"
+              % done.returncode)
+        for line in (done.stdout + done.stderr).splitlines():
+            print("    %s" % line.replace(root, "<root>"))
+    finally:
+        shutil.rmtree(root); shutil.rmtree(bin_dir)
+    print("SUCCESS: the cases this platform cannot hold refused, named.")
 
 
 def test_excluded():
@@ -521,6 +635,9 @@ if __name__ == "__main__":
     HwutRunner(sys.argv,
                "Which bubble runs where;", {
         "local":     test_local,
+        "first":     test_first,
+        "below":     test_below,
+        "header":    test_header,
         "refused":   test_refused,
         "excluded":  test_excluded,
         "handed":    test_handed,

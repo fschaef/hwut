@@ -30,7 +30,7 @@ libc, libm and, for 'hwut_vterm', libdl and libutil.
 A C test starts:
 
     /* @hwut {
-     *     build   { framework = "make", executable = "%.exe" }
+     *     build   { framework = "make", target = "%.exe" }
      *     choices = ["plain", "tricky"]
      * } */
     #include "hwut_runner.h"

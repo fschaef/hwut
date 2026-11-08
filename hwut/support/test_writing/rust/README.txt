@@ -32,7 +32,7 @@ functions the crate calls ('fork', 'dup2', 'waitpid', 'openpty', 'ioctl',
 A Rust test starts:
 
     // @hwut {
-    //     build   { framework = "make", executable = "%.exe" }
+    //     build   { framework = "make", target = "%.exe" }
     //     choices = ["plain", "tricky"]
     //     interactive = true
     // }

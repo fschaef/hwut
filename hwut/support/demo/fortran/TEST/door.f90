@@ -1,6 +1,6 @@
 ! @hwut {
 !     title   = "Demo: a door's state machine, watched by a pype"
-!     build   { framework = "make", executable = "%.exe" }
+!     build   { framework = "make", target = "%.exe" }
 !     pype    = "door.pype"
 !     choices {
 !         kept   { features = ["demo-passes-on-every-run", "fsm-law-kept"] }

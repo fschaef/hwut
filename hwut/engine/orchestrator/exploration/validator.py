@@ -27,7 +27,7 @@ from ...bookkeeper.api import BOOK_FORBIDDEN_IN_NAME
 from ...compare.api import constraint_fault_of
 from ...              import platforms
 from .configuration_tree import (TestParameters, TestAppSpec, DirectorySpec,
-                            LanguageSetup, Build, Caps, Tolerance, DiffDisplayParameters, Target, E_Origin,
+                            LanguageSetup, Build, Deploy, Caps, Tolerance, DiffDisplayParameters, Target, E_Origin,
                             KEY_TO_FIELD, ROOT_ONLY_KEY_SET, Variant,
                             BUILD_FRAMEWORK_TUPLE)
 
@@ -47,7 +47,7 @@ _CONF_KEY_SET       = ("on_entry", "on_exit", "on_before_test",
                        "ignore", "admit", "collision",
                        "dependency", "app_defaults", "language-setup",
                        "apps", "procsitter", "free_disk_min_mb",
-                       "platform")
+                       "platform", "requires")
 
 
 #  THE BOOK'S NAME LAW (bookkeeper B-7, B-8), ASKED FOR AND NOT COPIED.
@@ -209,9 +209,21 @@ def validate_conf(hwut_node, file):
             elif value is not None:
                 field_db["free_disk_min_mb"] = int(value)
         elif entry.key == "platform":
-            #  WHERE THE BUBBLE RUNS (intend/42): the root's alone.
+            #  THE PLATFORMS DEFINED (intend/26 o-51, o-53): the outermost
+            #  root's alone -- 'plan/bubble.py' refuses them in an inner one.
             value = _platform(entry, file, fault_list)
             if value is not None: field_db["platform_tuple"] = value
+        elif entry.key == "requires":
+            #  THE TOOLS A SUBTREE NEEDS (intend/26 o-51, o-54, o-57).
+            value = _string_list_or_empty(entry, file, fault_list)
+            if value is not None:
+                if any(not name.strip() for name in value):
+                    fault_list.append(Fault(
+                        E_FaultKind.VOCABULARY, file,
+                        _position_of(entry.node, entry),
+                        "'requires' names tools; a name is empty"))
+                else:
+                    field_db["requires_tuple"] = tuple(dict.fromkeys(value))
         elif entry.key == "variant_group":
             value = _variant_group(entry, file, fault_list)
             if value is not None: field_db["variant_db"] = value
@@ -332,7 +344,7 @@ def _parameter(entry, parameter_db, file, fault_list, position_db=None):
     if position_db is not None:
         position_db[key] = entry.key_position
         if isinstance(entry.node, ObjectNode) \
-           and key in ("caps", "build", "tolerance",
+           and key in ("caps", "build", "deploy", "tolerance",
                        "diff_display_parameters"):
             for inner in entry.node.entry_list:
                 position_db["%s.%s" % (key, inner.key)] = \
@@ -373,6 +385,19 @@ def _parameter(entry, parameter_db, file, fault_list, position_db=None):
     elif key == "build":
         value = _build(entry, file, fault_list)
         if value is not None: parameter_db["build"] = value
+    elif key == "deploy":
+        value = _deploy(entry, file, fault_list)
+        if value is not None: parameter_db["deploy"] = value
+    elif key == "requires":
+        #  THE TOOLS ONE TEST NEEDS (intend/26 o-59): the header's, or a
+        #  choice's, added to its directory's.
+        value = _string_list_or_empty(entry, file, fault_list)
+        if value is not None and any(not t.strip() for t in value):
+            fault_list.append(Fault(
+                E_FaultKind.VOCABULARY, file, _position_of(entry.node, entry),
+                "'requires' names tools; a name is empty"))
+        elif value is not None:
+            parameter_db["requires"] = tuple(dict.fromkeys(value))
     elif key == "caps":
         value = _caps(entry, file, fault_list)
         if value is not None: parameter_db["caps"] = value
@@ -486,7 +511,7 @@ def _build(entry, file, fault_list):
         fault_list.append(Fault(
             E_FaultKind.TYPE, file, _position_of(node, entry),
             "'build' is a framework name or a scope of 'framework', "
-            "'executable' and 'caps'"))
+            "'target' and 'caps'"))
         return None
 
     field_db = {}
@@ -498,7 +523,14 @@ def _build(entry, file, fault_list):
                 "'coverage_target' is not a 'build' key: it stands in "
                 "'language-setup.<language>' of 'hwut-root.conf' "
                 "(R-73), '%' the source file's stem"))
-        elif inner.key in ("framework", "executable"):
+        elif inner.key == "executable":
+            #  RENAMED (intend/26 o-48, 2026-11-07): build, deploy, execute
+            #  -- and what the build makes is its 'target'.
+            fault_list.append(Fault(
+                E_FaultKind.VOCABULARY, file, inner.key_position,
+                "'executable' is now 'target': build { framework = ...  "
+                "target = ... } (o-48)"))
+        elif inner.key in ("framework", "target"):
             value = _string(inner, file, fault_list)
             if value is None: continue
             if inner.key == "framework" \
@@ -515,6 +547,43 @@ def _build(entry, file, fault_list):
                 E_FaultKind.VOCABULARY, file, inner.key_position,
                 "unknown key '%s' in 'build'" % inner.key))
     return Build(**field_db)
+
+
+def _deploy(entry, file, fault_list):
+    """
+    RETURN: Deploy, from the command named alone -- the short form of
+            'deploy { flash = "<command>" }' (intend/26 o-41) -- or from
+            the scope of 'flash' and 'caps'.
+            None, the value is neither (fault recorded).
+    """
+    node = entry.node
+    if isinstance(node, ScalarNode) and isinstance(node.value, str):
+        if not node.value.strip():
+            fault_list.append(Fault(
+                E_FaultKind.TYPE, file, _position_of(node, entry),
+                "'deploy' names a command; it is empty"))
+            return None
+        return Deploy(flash=node.value)
+    if not isinstance(node, ObjectNode):
+        fault_list.append(Fault(
+            E_FaultKind.TYPE, file, _position_of(node, entry),
+            "'deploy' is a command or a scope of 'flash' and 'caps'"))
+        return None
+
+    field_db = {}
+    for inner in node.entry_list:
+        if inner.key == "flash":
+            value = _string(inner, file, fault_list)
+            if value is not None: field_db["flash"] = value
+        elif inner.key == "caps":
+            value = _caps(inner, file, fault_list)
+            if value is not None: field_db["caps"] = value
+        else:
+            fault_list.append(Fault(
+                E_FaultKind.VOCABULARY, file, inner.key_position,
+                "unknown key '%s' in 'deploy'; known: flash, caps"
+                % inner.key))
+    return Deploy(**field_db)
 
 
 #  THE SCOPE'S VOCABULARY, in one string, for both messages that name it.
@@ -942,17 +1011,18 @@ def _platform(entry, file, fault_list):
     """
     RETURN: tuple of (str, dict), the platforms of 'platform = [ ... ]'
             in their order -- (name, spec) per entry, 'spec' the entry's
-            keys as written ('{}' for the bare "local") -- if the list
-            reads (spec/42 section 1).
+            keys as written ('{}' for the bare "local"), its 'tools' a
+            tuple of str -- if the list reads (spec/42 section 1).
             None, else: every fault recorded by name, nothing run.
 
-    hwut reads 'name' and 'kind'; every other key is the kind's, and the
-    kind checks it ('platforms.check', ruling 14).
+    hwut reads 'name', 'kind' and 'tools' (intend/26 o-50); every other
+    key is the kind's, and the kind checks it ('platforms.check', ruling
+    14). 'local' takes 'tools' alone (o-56).
     """
     if not isinstance(entry.node, ListNode):
         fault_list.append(Fault(
             E_FaultKind.TYPE, file, _position_of(entry.node, entry),
-            "'platform' is a list: [ \"local\", { name = ... kind = ... } ]"))
+            "'platform' is a list: [ { name = ... kind = ... tools = [...] } ]"))
         return None
     if not entry.node.item_list:
         fault_list.append(Fault(
@@ -997,6 +1067,17 @@ def _platform_entry(item, file, fault_list):
     spec, position_db, ok_f = {}, {}, True
     for inner in item.entry_list:
         position_db[inner.key] = inner.key_position
+        if inner.key == "tools":
+            tool_tuple = _string_list_or_empty(inner, file, fault_list)
+            if tool_tuple is None or any(not t.strip() for t in tool_tuple):
+                if tool_tuple is not None:
+                    fault_list.append(Fault(
+                        E_FaultKind.VOCABULARY, file, inner.key_position,
+                        "'tools' names tools; a name is empty"))
+                ok_f = False
+            else:
+                spec["tools"] = tuple(dict.fromkeys(tool_tuple))
+            continue
         if isinstance(inner.node, ScalarNode) and inner.node.value is not None:
             spec[inner.key] = inner.node.value
             continue
@@ -1011,11 +1092,15 @@ def _platform_entry(item, file, fault_list):
             "a 'platform' entry without 'name'"))
         return None
     if name == platforms.LOCAL:
-        fault_list.append(Fault(
-            E_FaultKind.VOCABULARY, file, item.position,
-            "platform 'local' takes no keys -- write the bare name "
-            "\"local\" (intend/42 ruling 16)"))
-        return None
+        other_tuple = tuple(k for k in spec if k not in ("name", "tools"))
+        if other_tuple:
+            fault_list.append(Fault(
+                E_FaultKind.VOCABULARY, file,
+                position_db.get(other_tuple[0], item.position),
+                "platform 'local' takes 'tools' alone -- it is this "
+                "machine, called as ever (intend/26 o-56)"))
+            return None
+        return (name, spec) if ok_f else None
     kind = spec.get("kind")
     if kind is None:
         fault_list.append(Fault(
@@ -1029,7 +1114,8 @@ def _platform_entry(item, file, fault_list):
             "platform '%s': kind '%s' is not known -- known: %s"
             % (name, kind, ", ".join(platforms.kind_tuple()))))
         return None
-    for key, text in platforms.check(name, spec):
+    for key, text in platforms.check(name, {k: v for k, v in spec.items()
+                                            if k != "tools"}):
         fault_list.append(Fault(E_FaultKind.VOCABULARY, file,
                                 position_db.get(key, item.position), text))
         ok_f = False

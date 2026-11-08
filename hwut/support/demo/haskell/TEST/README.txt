@@ -19,7 +19,7 @@ anyway. The GOOD files are the Python demonstration's, by '.link', but
 where the output names a Haskell file ('../RATIONALE.txt', DEMO-HASKELL-3).
 
 BUILT, NOT INTERPRETED: each test's header says 'build { framework = "make",
-executable = "%.exe" }'; hwut runs 'make demo.exe' HERE, where the
+target = "%.exe" }'; hwut runs 'make demo.exe' HERE, where the
 'Makefile' stands, and runs 'demo.exe <choice>'. 'on_entry' builds the
 helpers no header builds. GHC with its boot packages, make, a C compiler
 (for 'screen.hs'), libsqlite3 and libvterm -- no cabal, no Hackage.

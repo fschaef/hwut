@@ -13,7 +13,7 @@ DECISION  One '.cpp' per Python application, the same stem, the same
           choices, printing the same text: demo, chamber, door, build,
           garage, screen (+ viewer), shop (+ fixture), protocol (protocol.sh
           and its producer, one program: DEMO-CPP-3). Every header carries
-          'build { framework = "make", executable = "%.exe" }'; the
+          'build { framework = "make", target = "%.exe" }'; the
           'Makefile' in TEST is run there (services E-210) and builds each
           target WHOLE, its C objects in '<target>.o.d' -- no shared file.
           WHAT NO HEADER BUILDS IS BUILT ONCE, BY ITS ONE USER:

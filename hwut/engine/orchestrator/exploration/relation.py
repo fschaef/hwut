@@ -43,6 +43,7 @@ from ...procsitter.api             import ProcsitterConfig
 from ...compare.api                import ConfigurationDiffDisplayParameters
 from ...bookkeeper.api             import CAPS_FIELD_DB
 from .owner_faces_provisional import (ConfigBuild, ConfigCaps,
+                                      ConfigDeploy, ConfigRequires,
                                       ConfigCanonicalise, ConfigCompare,
                                       ConfigFeatures, ConfigRunner,
                                       ConfigStore)
@@ -118,7 +119,8 @@ COMMENT     = Adapter(_comment_forward,     _comment_backward)
 #  our grammar, the members are the owner's.
 RELATION = {
     "build.framework":           (ConfigBuild, "framework"),
-    "build.executable":          (ConfigBuild, "executable"),
+    "build.target":              (ConfigBuild, "target"),
+    "deploy.flash":              (ConfigDeploy, "flash"),
 
     #  THE SUPERVISOR'S OWN DOOR ANSWERS FOR WHAT IT ENFORCES (R-78):
     #  the default 'hwut.config.show' prints is the default the kill obeys,
@@ -177,6 +179,10 @@ RELATION = {
     #  WHICH FEATURES THE RUN PROVES. Read by the faces that report and
     #  sanitize the feature relation; 'hwut.run' does not read it.
     "features":        (ConfigFeatures, "feature_name_tuple"),
+
+    #  WHICH TOOLS THE CASE NEEDS (intend/26 o-59): read where the plan
+    #  admits the case on its bubble's platform.
+    "requires":        (ConfigRequires, "tool_tuple"),
 }
 
 

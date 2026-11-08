@@ -1,6 +1,6 @@
 ! @hwut {
 !     title      = "A terminal's screen read by a test: libvterm through ISO_C_BINDING."
-!     build      { framework = "make", executable = "%.exe" }
+!     build      { framework = "make", target = "%.exe" }
 !     choices {
 !         attributes { features = ["fortran-vterm"] }
 !         colours    { features = ["fortran-vterm"] }

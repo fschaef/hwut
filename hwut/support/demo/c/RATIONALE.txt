@@ -17,7 +17,7 @@ DECISION  One C program per Python program, choice for choice, the same stems
           a '.py' renamed. Every GOOD is a '.link' to the Python GOOD but the
           four of DEMO-C-2.
           BUILT BY ONE 'Makefile' in TEST (services E-210): each test's header
-          says 'build { framework = "make", executable = "%.exe" }'; each
+          says 'build { framework = "make", target = "%.exe" }'; each
           target compiles its source WHOLE with the support '.c' files it
           uses -- no shared object, so hwut's parallel builds cannot collide.
           THE HELPERS no header builds ('fixture.exe', 'producer.exe', and

@@ -32,8 +32,9 @@ from ...bookkeeper.api       import Bookkeeper
 from ..exploration.task_list_query import dir_wanted_f
 from ..exploration.tree_explorer   import (explore_tree, GATE_RUN,
                                            test_directory_name_tuple)
-from ..plan.bubble                 import (HANDED, NOT_RUN,
-                                           decision_tuple)
+from ..plan.bubble                 import (HANDED, NOT_RUN, case_refusal,
+                                           decision_tuple, entry_refusal,
+                                           owner_of)
 from ...                           import platforms
 from ..plan.wish                   import unrequired_platform_note_tuple
 from ..plan.form                   import E_NodeKind
@@ -65,6 +66,7 @@ def _verdict(state, node_kind):
         case _:
             return {E_NodeKind.TEST:    "test-failed",
                     E_NodeKind.BUILD:   "build-failed",
+                    E_NodeKind.DEPLOY:  "deploy-failed",
                     E_NodeKind.SESSION: "launch-failed"}[node_kind]
 
 
@@ -658,10 +660,12 @@ def orchestrate(root, wish, build_interview=None, label_view=None):
     label knowledge reaches the selection (disc-8).
 
     WHICH BUBBLE RUNS WHERE is decided first, from the confs alone
-    ('plan/bubble.py', spec/42 section 3): a command meeting more than one
-    platform a bubble requires raises PlatformRefused HERE; a bubble not
-    run here is not walked for tests -- nothing of it interviewed, nothing
-    written -- and stands in the plan's 'not_run_tuple'.
+    ('plan/bubble.py', spec/42 section 3): confs refused raise
+    PlatformRefused HERE; a bubble not run here is not walked for tests --
+    nothing of it interviewed, nothing written -- and stands in the
+    plan's 'not_run_tuple'. A directory below requiring a tool its
+    bubble's platform does not announce is not entered (o-57), its NOTE
+    among the plan's warnings.
     """
     decision_db = {decision.path: decision
                    for decision in decision_tuple(root, wish)}
@@ -672,6 +676,11 @@ def orchestrate(root, wish, build_interview=None, label_view=None):
         decision = decision_db.get(os.path.abspath(path))
         return GATE_RUN if decision is None else decision.state
 
+    def entry_gate(directory, required):
+        """RETURN: str, the NOTE that 'directory' is not entered, its
+        bubble's platform not holding all of 'required'; None, else."""
+        return entry_refusal(decision_db, root, directory, required)
+
     #  WHAT THE WISH NEVER ASKED ABOUT IS NOT WALKED (2026-11-04): the
     #  directory rules ('--dir', '--exclude-dir') reach the WALK, as they
     #  do in 'hwut.execute' -- a directory they rule out is not explored,
@@ -680,19 +689,28 @@ def orchestrate(root, wish, build_interview=None, label_view=None):
     #  said 'the selection is empty' of the other 128.
     tree = explore_tree(root, boundary_f=wish.no_bubbles_f,
                         bubble_gate=gate,
-                        wanted_f=dir_wanted_f(wish, root))
+                        wanted_f=dir_wanted_f(wish, root),
+                        entry_gate=entry_gate)
     factory = None
     if wish.asks_base_f():
         def factory(directory):
             return Bookkeeper(os.path.normpath(os.path.join(root, directory)))
+    def case_gate(directory, app_set):
+        """RETURN: callable, 'admit(test, choice)' refusing a case whose
+        header requires a tool its bubble's platform does not announce."""
+        owner = owner_of(decision_db, directory)
+        return lambda test, choice: case_refusal(owner, app_set, test,
+                                                 choice)
+
     tree_plan = determine_tree(tree, wish,
                                bookkeeper_factory = factory,
                                build_interview    = build_interview,
-                               label_view         = label_view)
+                               label_view         = label_view,
+                               case_gate          = case_gate)
     #  A '-p' NO BUBBLE REQUIRES (spec/42 section 2): one NOTE each, asked
     #  of every bubble decided -- a bubble not walked requires all the same.
     note_tuple = unrequired_platform_note_tuple(
-                     wish, (d.platform_tuple for d in decision_db.values()))
+                     wish, (d.required_tuple for d in decision_db.values()))
     #  A BUBBLE HANDED carries the far run's words: the wish re-rooted at
     #  it ('Wish.far_argv'); one the wish wants nothing of is not handed.
     handed_list = []

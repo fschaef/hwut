@@ -37,7 +37,7 @@ HOCON, libvterm and the pseudo-terminal -- it calls by VHPIDIRECT in
 A VHDL test starts:
 
     -- @hwut {
-    --     build   { framework = "make", executable = "%.exe" }
+    --     build   { framework = "make", target = "%.exe" }
     --     choices = ["plain", "tricky"]
     --     interactive = true
     -- }

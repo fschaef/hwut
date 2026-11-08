@@ -36,7 +36,7 @@ too.
 A Haskell test starts:
 
     -- @hwut {
-    --     build   { framework = "make", executable = "%.exe" }
+    --     build   { framework = "make", target = "%.exe" }
     --     choices = ["plain", "tricky"]
     --     interactive = true
     -- }
