@@ -104,37 +104,8 @@ short form can never mean what the long form cannot say.
                         has NOT observed is NOT selected -- silence is
                         not selected, and a fresh checkout selects
                         nothing here, which is the correct answer.
-    THE FEATURE WISH IS THE FEATURE WORLD'S (intend/three-worlds): only
-    'hwut.report.features' reads '-F', '-e', '-k' ('feature_f'); a face
-    selecting RUNS refuses them by name -- a feature reaches the run
-    world as the label 'f/<id>'.
-    -F, --feature <id-glob>
-                        the runs linked to the FEATURES the glob names
-                        (R-96): a glob over the TREE PATHS of
-                        'hwut-root-features.conf', '<aggregate>/
-                        <aggregate>/<external id>' -- '*' any part of one
-                        level, '**' any depth (none included), '{a,b}'
-                        alternatives; a bare word is '**/word'. An
-                        AGGREGATE brings its whole subtree; a line of
-                        'hwut.features.tree --list' fits as it stands; a
-                        word with ':' is an INTERNAL id '<directory
-                        id>:<name>'. A retired one is refused by name.
-                        SEVERAL ARE A UNION among themselves and NARROW
-                        against the rest of the wish, as '--dir'.
-    -e, --feature-ext <id>
-                        the runs linked to the feature whose EXTERNAL id
-                        (the left side of its line in the central file) is
-                        <id>; '*' matches any characters. An id that names
-                        no feature, or a RETIRED one, is refused by name.
-                        With '-F' a union.
-    -k, --keys <expr>   the runs linked to features whose EFFECTIVE keys
-                        (their own and those of every claim above them)
-                        satisfy the expression -- the grammar of '-l':
-                        'AND', 'OR', 'NOT', brackets, ',' for 'OR'. A
-                        key no feature carries is refused by name. With
-                        '-F', ONE feature must satisfy both. Labels and
-                        keys are separate: '-l' names sets of RUNS, '-k'
-                        categories of FEATURES.
+    '-F', '-e' AND '-k' ARE GONE from every face (spec 43, T-t): the
+    runs of a feature are the label 'f/<id>'; each is refused by name.
     --language=<name>   the runs whose test application is of that
                         LANGUAGE -- the header's word, or the one its
                         extension selects in 'language-setup' (R-73).
@@ -206,11 +177,6 @@ USAGE_TOKEN_TUPLE = ("[--fail]", "[--pass]", "[--since=<point>]",
                      "[--wishlist <file>]...", "[-l|--label <expr>]",
                      "[--language=<name>]...", "[--faster-than=<sec>]",
                      "[--no-bubbles]")
-
-#  THE FEATURE WISH'S WORDS: 'hwut.report.features' alone reads them.
-FEATURE_USAGE_TOKEN_TUPLE = ("[-F|--feature <id-glob>]...",
-                             "[-e|--feature-ext <id>]...",
-                             "[-k|--keys <expr>]")
 
 #  THE PLATFORM WORDS (spec/42 section 2): WHERE the selected runs run.
 #  Read by the faces that run a test -- 'hwut.run', 'hwut.play' -- and by
@@ -336,12 +302,6 @@ class Wish:
     #  '--dir' and '--exclude-dir' IN COMMAND-LINE ORDER, as ('+', glob)
     #  and ('-', glob): the order decides (grep's rule, see HELP).
     dir_rule_tuple:    tuple = ()
-    #  THE FEATURES WANTED (R-95): id globs, a union, and an expression
-    #  over the keys of the features. Both narrow against the rest.
-    feature_tuple:     tuple = ()
-    keys_spec:         str | None = None
-    #  FEATURES BY THEIR EXTERNAL ID (R-96): what a customer holds.
-    feature_ext_tuple: tuple = ()
     #  THE WALK STAYS OUT OF INNER BUBBLES (RQ-9, E-202): '--no-bubbles',
     #  or '!<hwut-root>' in a wishlist. By default a walk that selects
     #  enters every inner 'hwut-root.conf'. A word about the WALK: it
@@ -435,18 +395,7 @@ class Wish:
                     or self.exclude_dir_tuple or self.dir_tuple) \
                and self.since_spec is None and self.until_spec is None \
                and self.label_spec is None and not self.language_tuple \
-               and self.faster_than_ms is None \
-               and not self.feature_tuple and self.keys_spec is None \
-               and not self.feature_ext_tuple
-
-    def asks_feature_f(self):
-        """
-        RETURN: bool, True where the wish names features or keys -- a
-                question only the feature relation of the tree can
-                answer.
-        """
-        return bool(self.feature_tuple) or self.keys_spec is not None \
-               or bool(self.feature_ext_tuple)
+               and self.faster_than_ms is None
 
     def asks_glob_f(self):
         """
@@ -507,12 +456,6 @@ class Wish:
         if self.faster_than_ms is not None:
             part_list.append("--faster-than=%g"
                              % (self.faster_than_ms / 1000.0))
-        part_list.extend('--feature "%s"' % text
-                         for text in self.feature_tuple)
-        part_list.extend('--feature-ext "%s"' % text
-                         for text in self.feature_ext_tuple)
-        if self.keys_spec is not None:
-            part_list.append('--keys "%s"' % self.keys_spec)
         if self.as_platform is not None:
             part_list.append("--as-platform=%s" % self.as_platform)
         if self.exclude_local_f:        part_list.append("--exclude-local")
@@ -520,16 +463,12 @@ class Wish:
         return " ".join(part_list)
 
 
-def parse_wish(argv, digest_f=False, feature_f=False, take_tuple=None,
+def parse_wish(argv, digest_f=False, take_tuple=None,
                operand_ends_f=False, platform_f=False):
     """
     RETURN: [0] Wish, what the selection keywords of 'argv' state.
             [1] list[str], the arguments that are none of them, in
                 order -- the caller's own.
-
-    'feature_f' is the feature world's face ('hwut.report.features'): it
-    alone reads '-F', '-e', '-k'; any other face is refused them by name
-    and pointed at 'f/<id>' (intend/three-worlds).
 
     'platform_f' is a face that RUNS (spec/42 section 2): it alone reads
     '-p <platform>' and '--exclude-local'; any other face that reads the
@@ -575,9 +514,6 @@ def parse_wish(argv, digest_f=False, feature_f=False, take_tuple=None,
     label_spec       = None
     language_list    = []
     faster_than_ms   = None
-    feature_list     = []
-    feature_ext_list = []
-    keys_spec        = None
     platform_list    = []
     exclude_local_f  = False
     as_platform      = None
@@ -726,59 +662,10 @@ def parse_wish(argv, digest_f=False, feature_f=False, take_tuple=None,
                 raise WishError("'--label %s' cannot be read -- %s"
                                 % (text, error)) from None
             label_spec = text
-        elif not feature_f and (argument in FEATURE_WORD_TUPLE
-                                or argument.startswith(("--feature=",
-                                                        "--feature-ext=",
-                                                        "--keys="))):
+        elif argument in FEATURE_WORD_TUPLE \
+                or argument.startswith(("--feature=", "--feature-ext=",
+                                        "--keys=")):
             raise WishError(_feature_retired_text(argument))
-        elif argument in ("--feature", "-F") \
-                or argument.startswith("--feature="):
-            if argument in ("--feature", "-F"):
-                if index >= len(argv):
-                    raise WishError("'%s' stands without an id glob"
-                                    % argument)
-                text   = argv[index]
-                index += 1
-            else:
-                text = argument[len("--feature="):]
-            if not text.strip():
-                raise WishError("'--feature' names no id")
-            if text.strip() not in feature_list:
-                feature_list.append(text.strip())
-        elif argument in ("--feature-ext", "-e") \
-                or argument.startswith("--feature-ext="):
-            if argument in ("--feature-ext", "-e"):
-                if index >= len(argv):
-                    raise WishError("'%s' stands without an external id"
-                                    % argument)
-                text   = argv[index]
-                index += 1
-            else:
-                text = argument[len("--feature-ext="):]
-            if not text.strip():
-                raise WishError("'--feature-ext' names no id")
-            if text.strip() not in feature_ext_list:
-                feature_ext_list.append(text.strip())
-        elif argument in ("--keys", "-k") or argument.startswith("--keys="):
-            if argument in ("--keys", "-k"):
-                if index >= len(argv):
-                    raise WishError("'%s' stands without an expression"
-                                    % argument)
-                text   = argv[index]
-                index += 1
-            else:
-                text = argument[len("--keys="):]
-            if keys_spec is not None:
-                raise WishError(
-                    "'--keys' stands twice; one expression holds the "
-                    "whole question -- write '--keys \"%s OR %s\"'"
-                    % (keys_spec, text))
-            try:
-                parse_expression(text)
-            except LabelExprError as error:
-                raise WishError("'--keys %s' cannot be read -- %s"
-                                % (text, error)) from None
-            keys_spec = text
         elif argument == "--faster-than" \
              or argument.startswith("--faster-than="):
             text = argument[len("--faster-than="):] \
@@ -827,7 +714,6 @@ def parse_wish(argv, digest_f=False, feature_f=False, take_tuple=None,
                  tuple(exclude_list), tuple(exclude_dir_list),
                  tuple(dir_list), label_spec, tuple(language_list),
                  faster_than_ms, unaccepted_f, tuple(dir_rule_list),
-                 tuple(feature_list), keys_spec, tuple(feature_ext_list),
                  digest_tuple=tuple(digest_list),
                  no_bubbles_f=no_bubbles_f,
                  platform_tuple=tuple(platform_list),
@@ -906,8 +792,7 @@ FEATURE_WORD_TUPLE  = ("--feature", "-F", "--feature-ext", "-e",
 
 #  THE SHORT SPELLINGS OF THE WISH, each to its long one: a face's
 #  'take_tuple' names the long one, and takes both.
-_LONG_OF_SHORT_DB = {"-l": "--label", "-F": "--feature",
-                     "-e": "--feature-ext", "-k": "--keys"}
+_LONG_OF_SHORT_DB = {"-l": "--label"}
 
 
 def _long_word_of(argument):
@@ -946,18 +831,13 @@ def label_mix_text(label_spec, word):
 
 def _feature_retired_text(argument):
     """
-    RETURN: str, the refusal of a feature option on a face that selects
-            runs: a feature reaches the run world as the label
-            'f/<id>' (intend/three-worlds).
+    RETURN: str, the refusal of '-F', '-e' or '-k' on any face: they are
+            gone (spec 43, T-t); the runs of a feature are the label
+            'f/<id>'.
     """
-    word = argument.split("=", 1)[0]
-    if word in ("--keys", "-k"):
-        return ("'%s' is the feature world's: keys select features, not "
-                "runs => 'hwut.report.features -k <expr>'; the runs of a "
-                "feature are the label '--label f/<id>'" % word)
-    return ("'%s' is retired on this face: a feature is the label "
-            "'f/<id>' -- its external id or aggregate key => "
-            "'--label f/<id>'" % word)
+    return ("'%s' is gone: the runs of a feature are the label "
+            "'f/<id>' => '--label f/<id>'; the ids stand in "
+            "'hwut.features.tree --list'" % argument.split("=", 1)[0])
 
 
 def _label_remedy(first, second, either_form):

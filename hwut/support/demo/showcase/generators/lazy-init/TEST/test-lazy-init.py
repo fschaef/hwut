@@ -3,9 +3,9 @@
 #     title    = "Double-checked lazy init: one digit of a timeline decides whether a reader sees half an object"
 #     features = ["priority-drawn"]
 #     choices {
-#         publish-late  { features = ["priority-drawn", "all-schedules", "whole-object", "built-once"]
+#         publish-late  { features = ["priority-drawn", "lazy-init-all-schedules", "whole-object", "built-once"]
 #                         tolerance { constraints = ["breaches == 0"] } }
-#         publish-early { features = ["priority-drawn", "all-schedules", "half-object-named", "built-once"]
+#         publish-early { features = ["priority-drawn", "lazy-init-all-schedules", "half-object-named", "built-once"]
 #                         tolerance { constraints = ["breaches > 0"] } }
 #     }
 # }

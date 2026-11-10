@@ -3,9 +3,9 @@
 !     build     { framework = "make", target = "%.exe" }
 !     tolerance { stderr_ignored = true }
 !     choices {
-!         sell   { features = ["unordered-table", "stderr-ignored", "collision"] }
-!         report { features = ["output-file", "keyed-table-separator", "dependency",
-!                              "frame-scripts", "test-scripts", "stderr-ignored"]
+!         sell   { features = ["demo-fortran+cover-unordered-table", "demo-fortran+cover-stderr-ignored", "demo-fortran+cover-collision"] }
+!         report { features = ["demo-fortran+cover-output-file", "demo-fortran+cover-keyed-table-separator", "demo-fortran+cover-dependency",
+!                              "demo-fortran+cover-frame-scripts", "demo-fortran+cover-test-scripts", "demo-fortran+cover-stderr-ignored"]
 !                  output   = ["<stdout>", "stock.csv"] }
 !     }
 ! }

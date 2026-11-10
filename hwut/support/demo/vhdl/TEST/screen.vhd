@@ -5,8 +5,8 @@
 --                 comment    = false
 --                 whitespace = false }
 --     choices {
---         open   { features = ["terminal-screen", "screen-as-seen"] }
---         scroll { features = ["terminal-screen", "screen-as-seen"] }
+--         open   { features = ["demo-vhdl+cover-terminal-screen", "demo-vhdl+cover-screen-as-seen"] }
+--         scroll { features = ["demo-vhdl+cover-terminal-screen", "demo-vhdl+cover-screen-as-seen"] }
 --     }
 -- }
 --

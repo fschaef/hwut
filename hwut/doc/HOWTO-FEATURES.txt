@@ -7,79 +7,68 @@ TEST RUN is one test application run with one choice; its verdict stands
 in 'GOOD/book.csv'. A test run is LINKED to the features it proves. From
 the links and the verdicts every feature has a state, on two axes:
 
-    IMPLEMENTED    one linked test run or more        ok        every one passes
-                                                      fail      one fails
+    IMPLEMENTED    runs of its own or children,       ok        every one passes
+                   no child OPEN                      fail      one fails
                                                       untested  none fails, one
                                                                 never ran
-    OPEN           no linked test run                 untested
+    OPEN           neither, or a child OPEN           untested
     RETIRED        no longer claimed (section 6)      no verdict
 
-The axes are independent: OPEN says nothing proves the claim, and that is
-no failure. An aggregate is OPEN where a claim below it is; its verdict is
-the worst below it -- fail, then untested, then ok.
+A feature FOLDS ITS OWN RUNS AND ITS CHILDREN'S: its verdict is the worst
+below it -- fail, then untested, then ok. The axes are independent: OPEN
+says nothing proves the claim, and that is no failure.
 
-TWO kinds of file carry it. Each TEST directory DEFINES its features in its
-'hwut-features.conf'. ONE file at the top, 'hwut-root-features.conf' beside
-'hwut-root.conf', REGISTERS them: it gives each the id the world knows it
-by, and groups them the way a reader thinks of them -- which need not be
-the way the directories are laid out.
+ONE ID PER FEATURE, AND THREE FILES beside 'hwut-root.conf', each with one
+job (spec 43):
+
+    hwut-feature-forest.csv        WHERE a feature stands: its parent
+    hwut-feature-doc.dat           WHAT it is: its sentence, its documents,
+                                   whom it concerns; the retired
+    hwut-feature-external-map.csv  what SOMEBODY ELSE calls it
+
+and the test headers, which LINK by the id. Nothing encodes a directory:
+a directory that moves changes no file.
 
     gateway/
       hwut-root.conf
-      hwut-root-features.conf          ids, the tree of features, the retired
-      router/TEST/hwut-features.conf   the router's features
-                  test-route.sh        features = ["forward"]
+      hwut-feature-forest.csv        gateway : forwarding, buses ...
+      hwut-feature-doc.dat           [[forward]] A CAN frame is ...
+      hwut-feature-external-map.csv  keep-order ; REQ-4711
+      router/TEST/test-route.sh      features = ["forward"]
                   test-restart.sh
-      can/TEST/hwut-features.conf      the CAN side's features
-               test-frame.sh           features = ["decode"]
+      can/TEST/test-frame.sh         features = ["decode"]
 
 The example is a CAN-MOST gateway; every excerpt is the output of that tree.
 
+
+CONTENTS
+______________________________________________________________________________
+
 1   Features and links
-2   The central file
+2   The forest and the doc file
 3   The report
-4   Keys
-5   Keeping the central file in order
-6   Ids that stay, and retiring
+4   Audiences, and the outside's names
+5   Keeping the files in order
+6   Renaming, and retiring
 7   Choosing runs by feature: the label 'f/<id>'
 8   The table
 9   The code a feature's runs reached
 10  The feature document
-11  What hwut.run does with all this
-12  Reference
+11  One branch, many owners: prototypes
+12  What hwut.run does with all this
+13  Reference
 
 
 1  FEATURES AND LINKS
 ______________________________________________________________________________
 
-The feature file of a TEST directory lists its features under 'childs'.
-The KEY of a feature is its name; it is what a test writes to link to it.
-'router/TEST/hwut-features.conf':
+A FEATURE ID is a word of '[A-Za-z0-9_-]' -- the author picks it, an
+intuitive shorthand: 'forward', 'keep-order'. Case counts. There is no
+path in it, no dot, no colon: the place of a feature is the forest's, its
+sentence the doc file's. One namespace for the tree.
 
-    features {
-        childs {
-            forward      { title = "A CAN frame is forwarded to its MOST address."
-                           keys  = ["latency"] }
-            keep-order   { title = "Frames leave in the order they arrived." }
-            drop-unknown { title = "A frame without a route is dropped and counted." }
-        }
-    }
-
-    key           the feature's name, unique in the file: letters, digits,
-                  '_' and '-', no dot. Digits may lead ('007').
-    title         one sentence: what the software does.
-    doc           what more there is to say, optional: as many lines as it
-                  takes, between three double quotes.
-    documents     where more is said of the feature, optional: a list of
-                  paths from this file's directory ('#<anchor>' may
-                  follow), or URLs --
-                      documents = ["../README.txt", "../spec.txt#3"]
-                  The report prints each as 'see <path>' under the
-                  feature and names one that does not stand; the feature
-                  document makes each a link.
-    keys          categories the feature belongs to (section 4), optional.
-
-A test links to features by name, in its block. 'router/TEST/test-route.sh':
+A test run LINKS to features in its '@hwut { }' block -- for the whole
+test, or per choice, where the choice's list replaces the test's:
 
     # @hwut {
     #     title    = "Routing"
@@ -90,329 +79,210 @@ A test links to features by name, in its block. 'router/TEST/test-route.sh':
     #     }
     # }
 
-'features' at the root of the block holds for every choice. 'features' in
-a choice REPLACES the root's list for that choice; '[]' links the choice
-to nothing. A name is looked up in the feature file of the test's own
-TEST directory only.
-
-A FEATURE OF ANOTHER DIRECTORY is linked by its INTERNAL ID, '<directory
-id>:<name>' -- what the report's 'internal' line and the leaf line of the
-central file show. An end-to-end test at the top, say, proving a sentence
-of 'router':
-
-    #     features = ["Qm9xB_2a:forward"]
-
-The run is listed under that leaf beside router's own. The external id
-('router.forward') is the name for the world and no link: a test writing
-it is said under OUTSIDE THE RELATION, with the internal id to write. An
-internal id survives a move of its directory; where it does change -- a
-rename, a repoint, a fold, a test carrying a feature away -- every link by
-it is rewritten in that step, each file named.
+A link names a feature id, from any directory: the feature need not be
+written down near the test. A conf's application links the same way
+('apps { delivery.json { ... features = ["..."] } }'). A run that links
+nothing, in a TEST directory whose other runs link, is NONSENSE? -- no
+failure, a question ('hwut.help' asks it, section 11).
 
 
-2  THE CENTRAL FILE
+2  THE FOREST AND THE DOC FILE
 ______________________________________________________________________________
 
-'hwut.features.init' writes it, once, at the top of the tree. Its header
-says in comments what follows here. As written by 'init' every feature
-stands unplaced; the author then groups the lines. 'gateway/
-hwut-root-features.conf':
+'hwut.features.init' begins them: an empty forest and an empty doc file,
+each opening with comments that say how it is written. Then the author
+writes them.
 
-    features {
-        directory_map {
-            "Zk3aT-7c" = "can"
-            "Qm9xB_2a" = "router"
-        }
-        tree {
-            gateway {
-                title = "CAN-MOST gateway"
-                doc   = "Carries frames between a CAN bus and a MOST ring."
-                childs {
-                    forwarding {
-                        title = "Frames reach their destination."
-                        keys  = ["routing"]
-                        childs {
-                            "router.forward"      = "Qm9xB_2a:forward"
-                            "router.keep-order"   = "Qm9xB_2a:keep-order"
-                            "router.drop-unknown" = "Qm9xB_2a:drop-unknown"
-                        }
-                    }
-                    buses {
-                        title  = "Both buses are served."
-                        childs { "can.decode" = "Zk3aT-7c:decode" }
-                    }
-                }
-            }
-        }
-        retired {
-        }
-    }
+THE FOREST, one line per feature that has children:
 
-    directory_map   a generated id for each directory whose TEST directory
-                    defines features -> where it stands, below the top.
-                    Never edit an id. A directory that moves changes ONE
-                    line.
-    tree            AGGREGATES group LEAVES. An aggregate is a block:
-                    title, doc, documents, keys, childs. A leaf is one
-                    line:
-                        "<external id>" = "<directory id>:<feature name>"
-                    A leaf stands under ONE aggregate, or at the top of
-                    'tree', unplaced; keys say the other categories
-                    (section 4).
-    retired         what is no longer claimed, kept as it was (section 6).
+    gateway    : forwarding, buses
+    forwarding : forward, keep-order, drop-unknown
+    buses      : decode
 
-THE EXTERNAL ID, left of a leaf line, is what customers, documents and
-tickets refer to. The INTERNAL id, right of it, is where the feature is
-defined: the directory's id and the feature's name. External ids and
-aggregate keys form ONE namespace: each stands once. An id is a word of
-letters, digits, '_' and '-' -- words joined by '.' for an external id;
-any script, in NFC. The tree is the author's to reshape at will: no id
-depends on it.
+An id that stands as no child is a ROOT ('gateway'); roots are not
+declared, they are what is left -- several roots make a forest. Every id
+stands ONCE as a child: a second parent is a FAULT, and so is a circle.
+Whitespace and '#' comments are free.
 
-    $ hwut.features.tree
-    gateway  CAN-MOST gateway
+THE DOC FILE, one block per feature, headed by its id:
+
+    [[forwarding]]
+    documents: router/README.txt
+    Frames reach their destination.
+
+    [[forward]]
+    A CAN frame is forwarded to its MOST address.
+
+The first prose line is the TITLE, the rest the DOC. 'documents:' names
+where more is said -- paths from the doc file's directory, ',' between,
+'#<anchor>' may follow, or URLs. A feature with children may have runs of
+its own; one without children and without runs is OPEN.
+
+A feature in a forest line needs no block -- a child may lean on its
+parent's sentence. A documented feature in NO forest line is UNPLACED: it
+stands, the report lists it apart, and 'register' notes it (section 5).
+
+ONE FOREST FOR THE TREE: a bubble below (an inner 'hwut-root.conf')
+without a forest of its own belongs to the forest above, and is judged
+there whichever directory a face is called in. A bubble WITH its own
+forest begins its own features -- the showcase does, a tree meant to be
+copied, root and all -- and is not walked from above.
+
+'hwut.features.tree' prints the forest:
+
+    $ hwut.features.tree -e
+    gateway  A CAN-MOST gateway.
       forwarding  Frames reach their destination.
-        forward  (router)  A CAN frame is forwarded to its MOST address.
-        keep-order  (router)  Frames leave in the order they arrived.
-        drop-unknown  (router)  A frame without a route is dropped and counted.
-      buses  Both buses are served.
-        decode  (can)  A CAN frame is decoded into its signals.
+        forward  A CAN frame is forwarded to its MOST address.
+        keep-order  Frames of one sender leave in the order they came.  = REQ-4711
+        drop-unknown  A frame with no route is dropped and counted.
+      buses
+        decode  A CAN frame is decoded.
 
-'-e' adds the external ids, '-b' prints the aggregates only, '--list' one
-tree path per leaf, its place; the last word is the id 'f/<id>' names (section 7):
-
-    $ hwut.features.tree --list
-    gateway/forwarding/router.forward
-    gateway/forwarding/router.keep-order
-    gateway/forwarding/router.drop-unknown
-    gateway/buses/can.decode
+'<id>' prints its subtree only; '--list' one id per line, to paste into
+'f/<id>' or the report.
 
 
 3  THE REPORT
 ______________________________________________________________________________
 
-'hwut.report.features' prints the tree of the central file below the
-current directory ('--directory=<path>' names another). It runs nothing;
-it reads the texts and the verdicts.
-
     $ hwut.report.features
-    AGGREGATE gateway -- CAN-MOST gateway      3 implemented, 1 open; 3 ok, 0 fail, 1 untested
+    AGGREGATE gateway -- A CAN-MOST gateway. 3 implemented, 1 open; 3 ok, 0 fail, 1 untested
         state      OPEN untested
-        doc        Carries frames between a CAN bus and a MOST ring.
+        audience   integrator
         AGGREGATE gateway/forwarding -- Frames reach their destination. 2 implemented, 1 open; 2 ok, 0 fail, 1 untested
             state      OPEN untested
-            keys       routing
-            [IMPLEMENTED ok]   router.forward -- A CAN frame is forwarded to its MOST address.
-                internal    Qm9xB_2a:forward  (router)
-                keys        latency, routing
+            audience   integrator
+            see        router/README.txt
+            [IMPLEMENTED ok]   forward -- A CAN frame is forwarded to its MOST address.
+                audience    integrator
                 [PASS] router/TEST/test-route.sh [single]
                 [PASS] router/TEST/test-route.sh [burst]
-            [IMPLEMENTED ok]   router.keep-order -- Frames leave in the order they arrived.
-                internal    Qm9xB_2a:keep-order  (router)
-                keys        routing
+            [IMPLEMENTED ok]   keep-order -- Frames of one sender leave in the order they came.
+                audience    integrator
+                names       REQ-4711
                 [PASS] router/TEST/test-route.sh [burst]
-            [OPEN untested]    router.drop-unknown -- A frame without a route is dropped and counted.
-                internal    Qm9xB_2a:drop-unknown  (router)
-                keys        routing
-        AGGREGATE gateway/buses -- Both buses are served. 1 implemented, 0 open; 1 ok, 0 fail, 0 untested
+            [OPEN untested]    drop-unknown -- A frame with no route is dropped and counted.
+                audience    integrator
+        AGGREGATE gateway/buses    1 implemented, 0 open; 1 ok, 0 fail, 0 untested
             state      IMPLEMENTED ok
-            [IMPLEMENTED ok]   can.decode -- A CAN frame is decoded into its signals.
-                internal    Zk3aT-7c:decode  (can)
+            audience   integrator
+            [IMPLEMENTED ok]   decode -- A CAN frame is decoded.
+                audience    integrator
                 [PASS] can/TEST/test-frame.sh
 
     OUTSIDE THE RELATION
         NONSENSE? test run, links to no feature => hwut.help
             router/TEST/test-restart.sh
 
-A leaf is addressed by its external id. An aggregate folds what stands
-below it: IMPLEMENTED where everything below is, the verdict ok where
-every verdict below is; an aggregate with nothing below is OPEN. Its
-counts are the sum of its leaves. Leaves in no aggregate follow under
-UNPLACED, the retired under RETIRED. Asked below the top, only the leaves
-whose directory stands below, under the aggregates that hold them.
+A feature with children is an AGGREGATE line, its tree path, its counts
+(those of the features below it with no children) and its state. UNPLACED
+and RETIRED follow the forest. OUTSIDE THE RELATION names a link to an id
+that stands nowhere ('did you mean' where one is near), a link to a
+retired feature, NONSENSE?, a document that does not stand, and what the
+files disagree on (section 5).
 
-'OUTSIDE THE RELATION' names what the tree says too little or too much
-of:
+THE WHOLE TREE IS READ, whichever directory the face is called in
+('--directory=<path>' says only where from): a feature has no directory.
+Every path is written from where the face was called.
 
-    what is named                               what it means
-    ---------------------------------------------------------------------
-    test run, names a feature its TEST          a misspelt name, or a
-    directory does not define                   feature not yet written
-    test run, names an external id -- no        link the internal id named
-    link; link the internal id                  behind '=>'
-    test run, links by internal id what does    an id in no 'directory_map'
-    not resolve                                 line, a name its directory
-                                                does not define, a retired
-                                                leaf
-    NONSENSE? test run, links to no feature     a test run that proves
-                                                nothing its directory
-                                                claims. NO FAILURE: its
-                                                verdict stands. 'hwut.help'
-                                                says what to do with it.
-    claim, names a document that does not       'documents' of a feature
-    stand
-    statement, not read                         a file with a fault; the
-                                                position and the fault
-    feature, defined and not registered         section 5
-    central file and tree, not as they          section 5
-    should stand
+A BARE ID CUTS THE PAGE -- its subtree, the features above it as headers,
+counted over what is kept; several ids are a union:
 
-The exit status is 0 whatever is listed; 3 where no TEST directory stands
-below; 2 where no central file stands at the top (=> hwut.features.init)
-or it states a fault.
+    $ hwut.report.features forwarding
 
-Feature files are not mandatory. A TEST directory without one is named
-nowhere, and its tests are nobody's nonsense.
+An id that stands nowhere, or a retired one, is refused by name. '-F', '-e'
+and '-k' are gone (section 7).
 
 
-4  KEYS
+4  AUDIENCES, AND THE OUTSIDE'S NAMES
 ______________________________________________________________________________
 
-The tree says WHERE a feature belongs. A KEY says WHAT KIND it is: a
-category that cuts across the tree -- 'latency', 'safety', 'slow'.
+AUDIENCES are documentation, nothing else: no face selects by one, no
+verdict depends on one. The doc file declares them, and a heading assigns
+them:
 
-    keys = ["routing"]            on an aggregate: applies to it and to
-                                  everything below it
-    keys = ["latency"]            on a feature (its TEST file): applies to it
-    keys = [...] at the top of    applies to every feature of the file
-    a TEST file
+    [[CUSTOMERS]]
+    integrator: the engineer who builds the gateway into a car
 
-Keys travel DOWNWARD only. In the report a leaf lists its EFFECTIVE keys --
-its own, those of its TEST file and those of every aggregate above it:
+    [[gateway to integrator]]
+    [[keep-order not integrator]]
 
-    router.forward    keys   latency, routing
+'to' adds the audiences to the feature AND EVERYTHING BELOW IT in the
+forest; 'not' takes inherited ones off. An audience not declared is a
+FAULT, with 'did you mean'. A set of runs is a label (section 7).
 
-    hwut.features.key.add <id> <key>       on a leaf (written into its TEST
-                                           file) or an aggregate
-    hwut.features.key.remove <id> <key>    the key it states itself
-    hwut.features.key.remove --all <key>   the key off every claim
+THE OUTSIDE'S NAMES: a customer, a ticket system, a standard has its own
+name for one of our promises. 'hwut-feature-external-map.csv' says so,
+one pair per line:
 
-Keys are not labels. A label (hwut.run -l) marks a set of test runs and is
-ephemeral; a key is a durable category of features.
+    keep-order ; REQ-4711
+
+Our id must stand in the forest; their name is a free string, never
+checked. The file starts absent, and its first line is written the day
+somebody outside is told a name of their own. Because the outside's name
+lives here, OUR id may change (section 6).
 
 
-5  KEEPING THE CENTRAL FILE IN ORDER
+5  KEEPING THE FILES IN ORDER
 ______________________________________________________________________________
 
-The DIRECTORIES and the TEST files are the fact; the central file is held
-against them. A feature written today has no line yet. 'hwut.run' ends
-with one line where that is so -- its verdicts are untouched:
+'hwut.features.register' names what the files and the links disagree
+about -- one NOTE each, never a fault, and it adds nothing:
 
-    2 feature(s) not registered => hwut.features.register
+    NOTE  'spare' is documented and stands in no forest line => hwut.features.tree
+    NOTE  the root 'gateway' stands in no block of the doc file => '[[gateway]]'
+    NOTE  'decod' is linked by bus/TEST/test-bus.sh and stands in no forest line and no doc block -- did you mean 'decode'?
+    NOTE  'gone' is linked by bus/TEST/test-bus.sh and is a retired feature
+    NOTE  'old/TEST/hwut-features.conf' is a file of the past, read by nothing => ...
 
-'hwut.features.register [dir]' adds what is new below the current
-directory (or the one named): an id for a new directory, a line for each
-new feature, unplaced under a first external id -- move the line into an
-aggregate. It names every other disagreement, and where it is CERTAIN of
-the remedy, the line that heals it. After 'mv can bus/can' and the
-feature 'keep-order' renamed 'in-order':
-
-    $ hwut.features.register
-    NOT AS IT SHOULD STAND -- read, then heal by hand or by the lines after '=>':
-        dir-gone   Zk3aT-7c   'can' stands no more
-                       => redirect Zk3aT-7c bus/can  # from can
-        leaf-gone  router.keep-order   Qm9xB_2a:keep-order is defined no more
-                       => repoint router.keep-order Qm9xB_2a:in-order  # from Qm9xB_2a:keep-order
-
-'hwut.sanitize' does such lines one at a time, or a file of them:
-
-    $ hwut.sanitize.propose --relations -o heal.txt
-    $ hwut.sanitize.apply heal.txt
-     redirect Zk3aT-7c bus/can ............................................ [DONE]
-          Zk3aT-7c now stands for bus/can
-     repoint router.keep-order Qm9xB_2a:in-order .......................... [DONE]
-          router.keep-order now binds Qm9xB_2a:in-order
-    Done 2/2
-
-    register <dir>                  the id and the lines <dir> lacks
-    redirect <id> <path>            a directory moved: its ONE line follows;
-                                    every external id below stays valid
-    repoint <external> <internal>   a feature renamed or moved: the
-                                    external id is bound to what it became
-    fold <id> <first id>            one path under two ids (two branches
-                                    merged): the later goes
-
-A PAIRING IS PROPOSED ONLY WHERE IT IS CERTAIN: a directory by the names
-of its features (the best match both ways, at least half); a feature as
-the ONLY one gone and the ONLY one new of its directory, or by its name
-elsewhere. Where it cannot tell, it says 'unpaired' with the candidates
-and does nothing -- so move ONE directory, then register. A new name in a
-directory whose gone feature it cannot pair is HELD: no line is written for
-it until the gone one is repointed or retired, and each side names the
-other. It never retires (section 6). Every command judges again before it
-acts.
-
-The faces that change the tree keep the central file themselves:
-
-    hwut.features.move <dir> <new>  moves the directory and its line (and
-                                    every line below it)
-    hwut.features.rename <external> <new name>
-                                    renames a feature: its definition, the
-                                    links of its TEST directory's tests,
-                                    the leaf's internal id; the external id
-                                    stays
-    hwut.move <test> <dir>          carries the features the test links to
-                                    into the target's TEST file, and takes
-                                    them out of the source's; the leaf
-                                    follows to the target's directory id
-                                    (one is registered where none stands),
-                                    and every link by its old internal id
-                                    follows. A feature a test that stays
-                                    still links is not copied: the moved
-                                    test links it by internal id.
-    hwut.rename                     adapts nothing: the link stands in the
-                                    test's block.
-    hwut.remove                     names the features left without a
-                                    linked test run.
+A tree that agrees says 'nothing disagrees'. 'hwut.sanitize.propose
+--relations' gives the same notes. What a file states that cannot be read
+-- a second parent, a circle, an id twice in the doc file, a retired id in
+a forest line, a map line naming an id the forest does not hold -- is a
+FAULT, and no face of the features runs until it is mended.
 
 
-6  IDS THAT STAY, AND RETIRING
+6  RENAMING, AND RETIRING
 ______________________________________________________________________________
 
-A customer who refers to 'router.keep-order' still means the same feature
-after the directory moved and the feature was renamed: the external id
-stays; only the right side of its line changed. When what a customer holds
-must change, edit the left side -- there, and nowhere else. A rename
-REPLACES the old id; there is no alias.
+OUR ID IS OURS: what the outside holds stands in the map. A rename follows
+every reference in one step:
 
-A feature that is no longer claimed is RETIRED, never deleted:
+    $ hwut.features.rename keep-order keeporder
+    renamed  keep-order -> keeporder
+        hwut-feature-forest.csv
+        hwut-feature-doc.dat
+        hwut-feature-external-map.csv
+        link renamed in router/TEST/test-route.sh
 
-    $ hwut.features.retire router.drop-unknown
-    retired  router.drop-unknown  (Qm9xB_2a:drop-unknown)
-        definition taken out of router/TEST/hwut-features.conf
+-- both sides of the forest's lines, the doc heading (its audiences kept),
+the map's left column, every 'features = [...]' of the headers and confs.
+An id that stands already, or is no id, is refused; nothing is written.
 
-Its line and its definition move into 'retired', as they were. An
-aggregate retires with everything below it. A retired id is never given
-again: register refuses to bind it, and a name defined again under a
-retired internal id is named. Revival is by hand: the block back into the
-tree, the definition back into its TEST file.
+A claim no longer made is RETIRED:
 
-The file holds the CURRENT state only. Who retired what, and when, is
-version control's: keep 'hwut-root-features.conf' under it, and never
-delete it -- 'register' will not make a new one where features stand.
+    $ hwut.features.retire drop-unknown
+
+Its block takes the heading '[[drop-unknown:retired]]' -- the claim kept as
+it was -- and its id leaves every forest line. It has no verdict and counts
+nowhere; 'f/drop-unknown' refuses it, and a test still linking it is named.
+A feature with children is refused (retire them first), and so is one the
+map names: the outside was told it. REVIVAL is by hand: ':retired' struck,
+the id back in a forest line.
 
 
 7  CHOOSING RUNS BY FEATURE: THE LABEL 'f/<id>'
 ______________________________________________________________________________
 
-A feature reaches the runs as a LABEL (intend/three-worlds, ruled
-2026-10-31): 'f/<id>' names the runs linked to that feature, in every
+A feature reaches the runs as a LABEL (intend/three-worlds): 'f/<id>' names
+the runs linked to that feature AND to every feature below it, in every
 face that takes '-l':
 
     $ hwut.report.list -l f/forwarding
     ./router/TEST/test-route.sh burst
     ./router/TEST/test-route.sh single
-    $ hwut.report.list -l f/router.keep-order
-    ./router/TEST/test-route.sh burst
     $ hwut.run -l "f/gateway AND NOT slow"
-
-<id> is the feature's ID, alone: an external id ('router.keep-order') or an
-aggregate key ('forwarding', which brings its subtree). Ids are UNIQUE --
-external ids and aggregate keys share one namespace, and the central file
-refuses what stands twice (section 2) -- so the id names the feature, and
-the tree gives its place. No path, no internal id ('X:name' is the
-registry's word, not the author's), no glob: each is refused by name.
-'hwut.features.tree -e' prints the ids.
 
 'f/' is LIVE: the links decide at the time of use. It combines as every
 label does -- AND, OR, NOT, brackets -- and may stand in a derived label of
@@ -427,47 +297,42 @@ A frozen copy is a label of its own: 'hwut.labels.create forwarding_today
 '-l' STANDS ALONE: beside a target, '--dir', '--fail' or any other word of a
 wish it is refused, and so the runs of a feature that failed are a label
 and an expression ('hwut.labels.create failing --fail', then
-'-l "f/gateway AND failing"'). Refused by name: a feature named nowhere, a
-retired one, a glob -- a misspelt word that silently selected nothing
-would let an author believe the set is empty:
+'-l "f/gateway AND failing"'). Refused by name: an id that stands nowhere,
+a retired one, a word that is no id -- a misspelt word that silently
+selected nothing would let an author believe the set is empty:
 
-    $ hwut.report.list -l f/router.gone
-    REFUSED: 'f/router.gone' names no feature: no external id or aggregate key of 'hwut-root-features.conf' is 'router.gone' => hwut.features.tree -e
+    $ hwut.report.list -l f/keep-ordr
+    REFUSED: 'f/keep-ordr' names no feature: 'keep-ordr' stands in no line of 'hwut-feature-forest.csv' and no block of the doc file => hwut.features.tree --list -- did you mean 'keep-order'?
 
-An aggregate with no leaf yet is legal: the selection is empty. Without a
-central file every feature label is refused => hwut.features.init.
-
-'-F', '-e' and '-k' are the FEATURE WORLD'S words: 'hwut.report.features'
-alone reads them (section 3), and a face that selects runs refuses them by
-name. Keys select FEATURES, a property of a promise; a name for a set of
-runs is a label.
+A feature with no run yet is legal: the selection is empty. Without a
+forest every feature label is refused => hwut.features.init. '-F', '-e'
+and '-k' are gone from every face: the runs of a feature are 'f/<id>'.
 
 
 8  THE TABLE
 ______________________________________________________________________________
 
 'hwut.report.features --matrix' prints the links as a table, one per TEST
-directory that carries a feature file, in place of the tree. A row is a
-test run, a column a feature (#1 .. by position), a cell the run's verdict
-where it links; a column is named with its leaf's state.
+directory whose runs link a feature, in place of the tree. A row is a test
+run, a column a feature linked there (#1 .. in the order it is first
+linked), a cell the run's verdict where it links; a column is named with
+the feature's state -- 'stands nowhere' or 'retired' where it has none.
 
-    $ hwut.report.features --matrix --directory=router
-    TEST                    #1    #2    #3
-    test-restart.sh         .     .     .     <- NONSENSE?
-    test-route.sh [single]  PASS  .     .
-    test-route.sh [burst]   PASS  PASS  .
-                                        ^     no test run
-      #1 forward       IMPLEMENTED ok
-      #2 keep-order    IMPLEMENTED ok
-      #3 drop-unknown  OPEN untested
+    $ hwut.report.features --matrix
+    can/TEST       #1
+    test-frame.sh  PASS
+      #1 decode  IMPLEMENTED ok
 
-    an empty row      a test run that proves nothing stated
-                      ('<- NONSENSE?'; '<- no feature defined' where it
-                      names only features the directory does not define)
-    an empty column   a feature no test run proves ('^ ... no test run')
-    'not registered'  in place of a state: no line names the feature
+    router/TEST             #1    #2
+    test-restart.sh         .     .     <- NONSENSE?
+    test-route.sh [single]  PASS  .
+    test-route.sh [burst]   PASS  PASS
+      #1 forward     IMPLEMENTED ok
+      #2 keep-order  IMPLEMENTED ok
 
-'OUTSIDE THE RELATION' follows the tables as it follows the tree.
+An empty row is a test run that proves nothing stated ('<- NONSENSE?'). A
+feature nobody proves has no column: the tree shows it OPEN. 'OUTSIDE THE
+RELATION' follows the tables as it follows the tree.
 
 
 9  THE CODE A FEATURE'S RUNS REACHED
@@ -507,18 +372,18 @@ ______________________________________________________________________________
 self-contained HTML page; '--ods=<file>' as an OpenDocument spreadsheet.
 Both hold four tabs:
 
-    Matrix     a row per leaf: external id, brief (its title), state, and
+    Matrix     a row per feature: id, brief (its title), state, and
                the test runs that implement it, with their verdicts
-    Tree       the aggregates and their leaves, as the central file has
-               them; each aggregate with its title, state and counts
-    Features   a row per leaf: external id, name, title, doc, aggregate,
-               state, internal id, effective keys, documents
+    Tree       the forest, roots first; each feature with children with
+               its title, state and counts
+    Features   a row per feature: id, title, doc, the feature above it,
+               state, the outside's names, audiences, documents
     Tests      a row per test application: file, title, doc, test runs
                with their verdicts, features
 
-    an external id in 'Matrix'   leads to its row in 'Features'
+    an id in 'Matrix'            leads to its row in 'Features'
     a test run in 'Matrix'       leads to its test's row in 'Tests'
-    a leaf in 'Tree'             leads to its row in 'Features'
+    a feature in 'Tree'          leads to its row in 'Features'
     a document of a feature      opens from its row in 'Features'
 
 The tree is interactive. On the page: 'Expand all', 'Collapse all', a box
@@ -566,55 +431,124 @@ directory of pages travel together. '--code' alone gives the column
 without links.
 
 
-11  WHAT hwut.run DOES WITH ALL THIS
+11  ONE BRANCH, MANY OWNERS: PROTOTYPES
+______________________________________________________________________________
+
+The gateway has two ports, and each does the same: receive, send, and
+handle the errors of its bus. Written out, the forest says it twice, and
+every new word has to be added in two places. A PROTOTYPE says it once:
+
+    gateway   : can-port, most-port
+    can-port  : +port
+    most-port : +port
+    +port     : receive, send, +errors
+    +errors   : bus-off, overrun
+
+A line headed '+<name>' declares a prototype; its right side holds its
+MEMBERS and, written with '+', other prototypes it aggregates. '+port' in
+an owner's line AGGREGATES it: the owner HAS what the prototype holds. The
+forest expands each aggregation into an INSTANCE named '<owner>+<id>':
+
+    $ hwut.features.tree
+    gateway  The gateway forwards what reaches it.
+      can-port
+        can-port+port  What every port does.
+          can-port+receive  A frame is received.
+          can-port+send  What every port does.
+          can-port+errors  What every port does.
+            can-port+bus-off  What every port does.
+            can-port+overrun  What every port does.
+      most-port
+        most-port+port  What every port does.
+          most-port+receive  A MOST frame is received, in its slot.
+          ...
+    (prototypes)
+      +port  What every port does.
+        receive  A frame is received.
+        send
+        +errors
+          bus-off
+          overrun
+
+An instance is a feature like any other: a test links it, it folds its
+runs and its children's, it is selected and reported. A prototype and a
+member are no feature -- the stuff instances are made of: a link to
+'receive' stands outside ("a member of a prototype -- link
+'<owner>+<id>'"), and so does one to '+port'.
+
+THE DOC FILE documents a member once for every instance, '[[receive]]',
+and a prototype, '[[+port]]'. An instance's own block wins for that one:
+'[[most-port+receive]]'. What has no block takes the one of the
+prototype it stands in, or of a prototype around that. Audiences fold
+down the instances as down any branch.
+
+THE LABEL takes a glob, in any position: 'f/*+receive' is every port's
+receiving, 'f/can-port+*' everything the CAN port has, 'f/*' every
+feature. A glob that matches nothing is refused by name, as an id that
+stands nowhere is. 'f/+port' is refused: a prototype names no instance.
+
+RULES the forest holds a prototype to, each a FAULT with file and line:
+it is declared once and aggregated with '+'; a member stands in one
+prototype, and its id is no feature's; no circle among prototypes; an
+owner reaches a prototype once. 'register' NOTEs a prototype nobody
+aggregates and a member that nothing documents.
+
+RENAMING a member or a prototype renames every instance and every link to
+one, in one step; renaming the owner carries its instances. RETIRING a
+member takes it out of its prototype's line and retires its block -- in
+every instance at once. A prototype, an instance, a prototype's last
+member are not retired: strike the '+<prototype>' from the owner's line.
+
+
+12  WHAT hwut.run DOES WITH ALL THIS
 ______________________________________________________________________________
 
 Nothing that changes a verdict. A test runs and is judged whether or not
-its links resolve and its features are registered. Where features below
-the run's directory stand in no line of the central file, its last line
+its links name a feature that stands. Where runs below the run's
+directory link an id that stands nowhere, or a retired one, its last line
 says how many => hwut.features.register; 'hwut.help' says more. The
-relation is read by 'hwut.report.features', 'hwut.help', 'hwut.sanitize'
-and the 'hwut.features.*' faces.
+relation is read by 'hwut.report.features', 'hwut.help', 'hwut.sanitize',
+the label 'f/<id>' and the 'hwut.features.*' faces.
 
 
-12  REFERENCE
+13  REFERENCE
 ______________________________________________________________________________
 
-    hwut.features.init                    writes the central file, every
-                                          feature unplaced
-    hwut.features.register [dir]          adds what is new; names the rest
-    hwut.features.tree [<base>] [--list] [-b] [-e]
-    hwut.features.retire <id>             a leaf, or an aggregate and all
-                                          below it
-    hwut.features.move <dir> <new dir>
-    hwut.features.key.add <id> <key>
-    hwut.features.key.remove <id> <key> | --all <key>
-    hwut.report.features [--matrix] [--code] [--cov-dir=<dir>]
+    hwut.features.init                    an empty forest and doc file
+    hwut.features.register                names what disagrees
+    hwut.features.tree [<id>] [--list] [-e]
+    hwut.features.rename <old id> <new id>
+    hwut.features.retire <id>             a feature without children
+    hwut.report.features [<id>]... [--matrix] [--code] [--cov-dir=<dir>]
                          [--html=<file>] [--ods=<file>] [--cov-html=<dir>]
                          [--directory=<path>]
-    hwut.help                             explains 'NONSENSE?' and what is
-                                          not registered
+    hwut.help                             explains 'NONSENSE?' and the
+                                          links to no feature
     hwut.sanitize.propose --relations [-o <file>]
-    hwut.sanitize.apply <file>
-    hwut.sanitize register <dir> | redirect <id> <path>
-                | repoint <external> <internal> | fold <id> <first id>
-    <any face with a wish> -l f/<id>   the runs of a feature (a label)
-    hwut.report.features   [-F|--feature <id-glob>]...
-                           [-e|--feature-ext <id>]... [-k|--keys <expr>]
+    <any face with a wish> -l f/<id>      the runs of a feature (a label)
+                           -l 'f/*+<id>'  a glob: every instance of a member
 
-    hwut-root-features.conf   features { directory_map { "<id>" = "<path>" }
-                                         tree { <key> { title doc
-                                                        documents keys
-                                                        childs { ... } }
-                                                "<external>" = "<id>:<name>" }
-                                         retired { ... } }
-    hwut-features.conf        features { keys
-                              (TEST)                childs { <name> { title doc
-                                                  documents keys } } }
-    '@hwut { }' block         features = ["<name>", ...]
-                              doc      = """<text>"""
+    hwut-feature-forest.csv        <id> : <child-id>, <child-id>, ...
+                                   <id> : +<prototype>, ...
+                                   +<prototype> : <member>, +<prototype>
+    hwut-feature-doc.dat           [[CUSTOMERS]]
+                                   <audience>: <who that is>
+                                   [[<id>]] | [[+<prototype>]]
+                                            | [[<owner>+<id>]]
+                                            | [[<id> to <audience>, ...]]
+                                            | [[<id> not <audience>, ...]]
+                                            | [[<id>:retired]]
+                                   documents: <path>, ...
+                                   <title>
+                                   <doc>
+    hwut-feature-external-map.csv  <our id> ; <their name>
+    '@hwut { }' block              features = ["<id>", ...]
+                                   doc      = """<text>"""
 
-A 'hwut-features.conf' outside a TEST directory, and 'hwut-feature-map.conf',
-are the vocabulary of an earlier HWUT: nothing reads them, 'register' names
-them. Every face answers '--help' with its full text. The complete
-statement, with what is still open, is 'adm/WORK/spec/23-features.txt'.
+'hwut-features.conf' in a TEST directory, 'hwut-root-features.conf' and
+'hwut-feature-map.conf' are the vocabulary of an earlier HWUT: nothing
+reads them, 'register' names them. 'hwut.features.move' and
+'hwut.features.key.*' are gone with them -- no file holds a directory, and
+keys are left out. Every face answers '--help' with its full text. The
+complete statement is 'adm/WORK/spec/43-feature-id-space.txt'; the
+prototypes are 'adm/WORK/intend/44-feature-prototypes.txt'.

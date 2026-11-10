@@ -8327,3 +8327,126 @@ CHECKED   services/TEST test-book-defects-6.sh: 'dir-slash',
           'dir-walked', 'silent-events'; engine/orchestrator/run/TEST
           test-bubble.py 'far-empty'. Moved: the GOOD files of the suites
           whose pages counted the directories a wish passed over.
+
+E-222  ONE ID, THREE FILES: THE FOREST, THE DOC FILE, THE EXTERNAL MAP
+       (spec 43, intend/43 T-a..T-u)                               (2026-11-08)
+------------------------------------------------------------------------------
+PROBLEM   One promise carried four names and a place: its name in a TEST
+          directory's 'hwut-features.conf', a generated directory id, the
+          internal id '<dirid>:<name>', the dotted external id -- and the
+          aggregate it stood under in 'hwut-root-features.conf'. Three of
+          them encoded a place, and the places disagreed; the word
+          'external' named our own id. MEASURED on 1ca38dd: 1358 leaves,
+          69 directory ids, 19 names colliding, 251 demo leaves naming
+          promises their components already state.
+DECISION  Built as spec 43 VERSION 3 states it, the rulings T-a..T-u
+          cited there: 'hwut-feature-forest.csv' (the place),
+          'hwut-feature-doc.dat' (the explanation, the retired, the
+          audiences), 'hwut-feature-external-map.csv' (the outside's
+          names); one flat id; the test headers link it unchanged (T-d).
+          '-F', '-e', '-k' leave every face (T-t); a bare id cuts the
+          feature report (T-u). 'hwut.features.move' and 'key.add',
+          'key.remove' are gone; 'rename' follows every reference;
+          'retire' writes a ':retired' heading. The sanitizer's verbs
+          'register', 'redirect', 'repoint', 'fold' are gone; what is left
+          of '--relations' are the detector's notes. A move or a removal
+          carries nothing: an id resolves wherever the test stands.
+          RULED BY THE AUTHOR, 2026-11-08, where the spec did not reach:
+            1 THE SHOWCASE KEEPS ITS OWN FILES (an exception to T-m): a
+              tree meant to be copied, root and all. A bubble WITH a forest
+              begins its own features; one without is the forest's above.
+            2 A COLLIDING NAME BECOMES '<component>-<name>': the four of
+              the tree ('display-exit-status', 'pype-exit-status',
+              'bin-pype-shebang', 'services-pype-shebang',
+              'display-report-width', 'services-report-width',
+              'bookkeeper-unaccepted-region',
+              'compare-unaccepted-region'), and the showcase's own twelve
+              alike ('token-bucket-window-law', ...); renamed later with
+              'hwut.features.rename' where a better word is found.
+            3 THE UNPLACED BY THE SIBLING RULE: a leaf in no aggregate
+              went under the aggregate holding the other leaves of its
+              directory, where exactly one did (56); the rest stay
+              unplaced (107 here, 364 in the showcase) and are NOTEd.
+            4 ONE DOC FILE beside each forest (t-7 struck).
+          READ OUT OF THE RULINGS, said here because no ruling names them:
+            NONSENSE? is a run linking nothing in a TEST directory whose
+            other runs link -- a directory states no features any more.
+            A KNOWN ID is one of the forest's lines or of a doc block, not
+            retired: 'f/<id>', the links and 'hwut.features.tree' accept an
+            unplaced feature; the map is checked against the forest alone.
+            A feature with no parent and no children can stand in no
+            forest line: it is always unplaced, and always NOTEd.
+            'did you mean' moved to 'engine/orchestrator/exploration/
+            suggestion.py' (cmdline re-exports it), so the engine's
+            refusals of a name -- 'f/<id>', the files' faults -- say it.
+            The hint at the end of 'hwut.run' counts the links below the
+            directory to no feature, read from the runs below only.
+MIGRATED  by a one-off script, deleted after it ran: the forest from the
+          central file's 'tree', the doc file from the TEST definitions
+          ('documents' made relative to the doc file), the seven retired
+          claims of each top as ':retired' blocks; the demo ports' 251
+          leaves to one each, 'demo-<language>' (T-j, T-k), the ports'
+          headers and confs linking it; the one 'keys' line dropped (t-11).
+          The feature report from the top equals the old one but for the
+          demo leaves and the four renames (1099 childless features
+          against 1100 leaves -- 'demo-green' of 'adm/packaging' counted
+          with the demos by the filter, not lost).
+CHECKED   engine/orchestrator/exploration/TEST test-feature_forest.py,
+          test-feature_doc.py, test-feature_external.py,
+          test-feature_view.py, test-feature_detector.py,
+          test-feature_relation.py; services/lib/features/TEST
+          test-faces.py, test-acts.py; services/TEST
+          test-report-features.py and the pages whose fixtures wrote the
+          old files. Gone with their subject: test-feature_registry.py,
+          test-feature_carry.py, test-wish.py, test-proposals.py,
+          test-span.py, test-report.py (features), test-features-follow.py,
+          test-features-cross.sh.
+
+
+------------------------------------------------------------------------------
+E-223  A PROTOTYPE OF FEATURES, AGGREGATED BY '+'
+       (intend/44 P-a..P-g, p-1..p-9)                               (2026-11-09)
+------------------------------------------------------------------------------
+PROBLEM   The demo ports collapsed to one feature each (E-222, T-k) said
+          that a demonstration works, no longer WHAT it demonstrates.
+          MEASURED on 1b5288c: the headers of all 17 ports linked the same
+          55 names. Written out per port, the forest says one branch
+          seventeen times.
+DECISION  Built as intend/44 rules it: '+P : <member>, +Q' in the forest
+          declares a prototype; '<owner> : +P' aggregates it (has-a);
+          the forest expands each aggregation into instances
+          '<owner>+<id>', two parts always (P-c). A prototype and a member
+          are no feature: a link to either stands outside, 'f/' refuses
+          them. Instances fold, are linked, selected and reported as any
+          feature. The doc file documents a member once ('[[m]]'), a
+          prototype ('[[+P]]'), an instance where it differs
+          ('[[owner+m]]'); what has no block takes its prototype's, or one
+          around it. 'f/' takes any glob in any position (P-g, overturning
+          E-214 for 'f/'); one matching nothing is refused by name, not
+          strict it selects nothing. Rename of a member, a prototype or an
+          owner follows every instance, block, map line and link (p-7);
+          retire takes a member out of its prototype's line and retires
+          its block. 'hwut.features.tree' prints the instances with their
+          effective titles and the prototypes under '(prototypes)'.
+          'support' copies a port's 'demo-<lang>' with its prototype lines
+          and their blocks.
+READ OUT, said here because no ruling names it: retiring a prototype,
+          an instance or a prototype's last member is REFUSED, with the
+          remedy (strike '+P' by hand) -- p-7 asks for one step, and what
+          that step would do to the owners' lines is not ruled. A member
+          retired leaves its instances' links naming a retired claim.
+DRAFT     o-2 and o-4 are open: development's words are '+cover' over
+          five themes ('+cover-compare', '-region', '-pype', '-conf',
+          '-screen') and members 'cover-<name>'; renamed in one step.
+MIGRATED  by a one-off script on 3f1f988 together with E-222's: the 54
+          demonstrated names of each port became '<port>+cover-<name>'
+          links, 'demo-passes-on-every-run' became 'demo-<lang>' itself;
+          'demo : <17 ports>', each 'demo-<lang> : +cover'. 6 prototypes,
+          54 members, 1020 instances; 11 member blocks and 6 prototype
+          blocks carried from the python port's definitions. 20 ids of the
+          old registry retired, 20 claims of spec 43's machinery written.
+CHECKED   engine/orchestrator/exploration/TEST test-feature_forest.py
+          [prototypes, prototype-faults], test-feature_doc.py
+          [prototypes], test-feature_view.py [prototypes],
+          test-feature_detector.py [prototypes]; services/lib/features/TEST
+          test-faces.py [prototypes], test-acts.py [prototypes].

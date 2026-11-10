@@ -29,16 +29,16 @@ DESCRIPTION
        The explanations stand in ONE table, 'engine/display/failure.py'.
 
        TEST RUNS WITHOUT A FEATURE, LAST: 'NONSENSE?' -- every test run
-       that links to no feature while its TEST directory states
-       features ('hwut-features.conf'). No failure: the run's verdict
-       stands. What the word means, and how it is resolved. A tree that
-       states no features says nothing here.
-
-       FEATURES DEFINED AND NOT REGISTERED, AFTER IT (R-96): where
-       'hwut-root-features.conf' stands, every feature defined in a TEST
-       directory below that it has no line for -- the line 'hwut.run'
-       ends with, said out. No failure. A tree without the file says
+       that links to no feature while other runs of its TEST directory
+       link one. No failure: the run's verdict stands. What the word
+       means, and how it is resolved. A tree that links no features says
        nothing here.
+
+       LINKS TO NO FEATURE, AFTER IT (spec 43 section 6): where a forest
+       stands, every link of a test run below to an id that stands in no
+       forest line and no doc block, or a retired one -- the line
+       'hwut.run' ends with, said out. No failure. A tree without a
+       forest says nothing here.
 
        THE LAST COVERAGE RUN, AFTER THAT (coverage D-41): every selected
        case it left WITHOUT A RECORD, read from the local trace
@@ -348,10 +348,10 @@ NONSENSE_WORD_STR    = "NONSENSE?"
 def nonsense_case_list_of(root):
     """
     RETURN: list of (directory, file, choice), every test run below
-            'root' that links to NO feature while its TEST directory
-            states features ('hwut-features.conf') -- walk order. Empty
-            where no directory states features: features are not
-            mandatory, and a tree without them holds no nonsense.
+            'root' that links to NO feature while other runs of its TEST
+            directory link one -- walk order. Empty where no run links
+            a feature: features are not mandatory, and a tree without
+            them holds no nonsense.
     """
     from hwut.engine.orchestrator.exploration.feature_relation \
                                         import relation_of_tree
@@ -363,55 +363,50 @@ def nonsense_case_list_of(root):
         return []
     return [(path, test, choice)
             for path in sorted(relation.test_directory_db)
-            if relation.test_directory_db[path].feature_file is not None
+            if relation.test_directory_db[path].linking_f()
             for test, choice
             in relation.test_directory_db[path].unlinked_tuple]
 
 
-UNREGISTERED_HEADING_STR = "FEATURES -- defined, not registered"
+UNREGISTERED_HEADING_STR = "FEATURES -- linked, standing nowhere"
 
 
 def unregistered_of(directory):
     """
-    RETURN: list of (str, str), (directory path, name) of every feature
-            defined at or below 'directory' that the central file of
-            features does not register; [] where no central file stands
-            ('feature_detector.unregistered_list').
+    RETURN: list of (str, str), ('<directory>/<test> [<choice>]', id) of
+            every link of a test run at or below 'directory' to an id that
+            stands in no forest line and no doc block, or a retired one;
+            [] where no forest stands ('feature_view.outside_link_list').
     """
-    from hwut.engine.orchestrator.exploration.feature_detector \
-                                        import unregistered_list
-    from hwut.engine.orchestrator.exploration.tree_explorer \
-                                        import RootConfMissing, \
-                                               registry_top
+    from hwut.engine.orchestrator.exploration.feature_view \
+                                        import outside_link_list
     try:
-        root = registry_top(directory)
-    except RootConfMissing:
+        return [("%s/%s%s" % (path, test, "" if choice is None
+                              else " [%s]" % choice), feature_id)
+                for path, test, choice, feature_id
+                in outside_link_list(directory)]
+    except Exception:                                   # noqa: BLE001
         return []
-    below = os.path.relpath(os.path.abspath(directory), root)
-    return unregistered_list(root, below.replace(os.sep, "/"))
 
 
 def unregistered_explanation_line_list(pair_list):
     """
-    RETURN: list of str, what 'hwut.help' says of features defined and not
-            registered: the head, what it means, how it is resolved, then
-            'CONCERNED:' and the features, '<directory>  <name>'.
+    RETURN: list of str, what 'hwut.help' says of links to no feature:
+            the head, what it means, how it is resolved, then 'CONCERNED:'
+            and the links, '<test run>  <id>'.
     """
     paragraph_list = [
-        "Each feature below is defined in its TEST directory's "
-        "'hwut-features.conf', and 'hwut-root-features.conf' -- the one "
-        "place where features are registered -- has no line for it: it "
-        "is new, it was renamed, or its directory moved. It is NOT a "
-        "failure: the test runs and is judged. But a feature that is not "
-        "registered has no external id, and nothing a customer holds can "
-        "name it.",
-        HEAL_OPENER_STR + "run 'hwut.features.register'. It adds what is "
-        "new -- an id for a directory, a line for a feature, unplaced -- "
-        "and names what was renamed or moved, with the line that heals it "
-        "('repoint', 'redirect'), for 'hwut.sanitize' to do. Then move the "
-        "new lines into aggregates of the tree."]
-    line_list = ["not registered -- defined, in no line  [%i feature(s)]"
-                 % len(pair_list)]
+        "Each test run below links, in its '@hwut { }' block, a feature "
+        "id that stands in no line of 'hwut-feature-forest.csv' and no "
+        "block of 'hwut-feature-doc.dat' -- a misspelt id, a feature "
+        "never written down, or one that was retired. It is NOT a "
+        "failure: the test runs and is judged. But the link proves "
+        "nothing anybody can find.",
+        HEAL_OPENER_STR + "correct the id in the test's header, or write "
+        "the feature down: a '[[<id>]]' block in the doc file, and its "
+        "place in a forest line. 'hwut.features.register' names every "
+        "such link, with the id that was probably meant."]
+    line_list = ["linked, standing nowhere  [%i link(s)]" % len(pair_list)]
     for paragraph in paragraph_list:
         line_list.append("")
         line_list.extend("    " + line for line in
@@ -430,16 +425,16 @@ def nonsense_explanation_line_list(case_list):
             is resolved, then 'CONCERNED:' and the cases.
     """
     paragraph_list = [
-        "Each test run below stands in a TEST directory that states its "
-        "features in 'hwut-features.conf', and links to none of them. "
+        "Each test run below stands in a TEST directory whose other runs "
+        "link features, and links to none. "
         "It is NOT a failure: a test run that shows acceptable behaviour "
         "is OK, and its verdict stands. The question is what it is for "
         "-- a test run that proves nothing anybody claimed is either a "
         "claim nobody wrote down, or a test nobody needs.",
         HEAL_OPENER_STR + "write the feature the test run proves into "
-        "'hwut-features.conf' and name it under 'features' in the "
-        "test's '@hwut { }' block; or link the test run to a feature "
-        "that stands there already; or remove the test "
+        "'hwut-feature-doc.dat' and the forest, and name it under "
+        "'features' in the test's '@hwut { }' block; or link the test "
+        "run to a feature that stands already; or remove the test "
         "('hwut.remove')."]
     line_list = ["%s -- links to no feature  [%i case(s)]"
                  % (NONSENSE_WORD_STR, len(case_list))]
@@ -648,8 +643,8 @@ def main(argv=None, write=None):
         write("")
         for line in nonsense_explanation_line_list(nonsense_list):
             write("    " + line)
-    #  NOT REGISTERED, after it (R-96): the line 'hwut.run' ends with,
-    #  said out.
+    #  LINKS TO NO FEATURE, after it (spec 43): the line 'hwut.run' ends
+    #  with, said out.
     if unregistered:
         if occurrence_db or coverage_db or uncapped_db or nonsense_list:
             write("")

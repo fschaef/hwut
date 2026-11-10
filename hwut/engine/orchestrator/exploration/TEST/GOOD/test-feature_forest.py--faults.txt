@@ -1,0 +1,14 @@
+no colon        FAULT: hwut-feature-forest.csv:1: 'gateway forwarding' is no forest line -- '<feature-id> : <child-id>, ...'
+no child        FAULT: hwut-feature-forest.csv:1: 'gateway' names no child -- a feature with no children stands in no line's left side
+dotted id       FAULT: hwut-feature-forest.csv:1: 'a.b' is no feature id -- '[A-Za-z0-9_-]+'
+colon in child  FAULT: hwut-feature-forest.csv:1: 'b:c' is no feature id -- '[A-Za-z0-9_-]+'
+slash           FAULT: hwut-feature-forest.csv:1: 'x/y' is no feature id -- '[A-Za-z0-9_-]+'
+glob            FAULT: hwut-feature-forest.csv:1: 'b*' is no feature id -- '[A-Za-z0-9_-]+'
+blank inside    FAULT: hwut-feature-forest.csv:1: 'b c' is no feature id -- '[A-Za-z0-9_-]+'
+empty child     FAULT: hwut-feature-forest.csv:1: '' is no feature id -- '[A-Za-z0-9_-]+'
+left twice      FAULT: hwut-feature-forest.csv:2: 'a' stands twice on a left side (line 1) -- one line per feature
+two parents     FAULT: hwut-feature-forest.csv:2: 'x' stands under two parents: 'a', 'b' -- a feature has one parent
+twice under one FAULT: hwut-feature-forest.csv:1: 'x' stands twice under 'a'
+circle          FAULT: hwut-feature-forest.csv:1: the forest closes a circle: a -> b -> c -> a
+circle of one   FAULT: hwut-feature-forest.csv:1: the forest closes a circle: a -> a
+<hwut-end>

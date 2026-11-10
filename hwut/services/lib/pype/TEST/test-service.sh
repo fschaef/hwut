@@ -4,8 +4,8 @@
 # @hwut {
 #     title      = "The pype service called as a shell citizen -- its natural habitat."
 #     choices {
-#         absent_script { features = ["exit-status"] }
-#         exit_code     { features = ["exit-status", "script-faults-located"] }
+#         absent_script { features = ["pype-exit-status"] }
+#         exit_code     { features = ["pype-exit-status", "script-faults-located"] }
 #         filter        { features = ["pipe-filter", "file-boundaries"] }
 #     }
 #     #  THE PLATFORM'S WORDS ARE NOT PYPE'S. After 'pype: ' the line

@@ -5,7 +5,7 @@
 #     choices {
 #         zoneinfo { features = ["wall-time", "one-per-day", "month-end"]
 #                    tolerance { constraints = ["breaches == 0"] } }
-#         gnu-date { features = ["violation-shown"]
+#         gnu-date { features = ["dst-schedule-violation-shown"]
 #                    tolerance { constraints = ["breaches > 0"] } }
 #     }
 # }

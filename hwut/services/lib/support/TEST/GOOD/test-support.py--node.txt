@@ -8,7 +8,7 @@
        (cd <dir>/node && npm install)
    A TEST THEN WRITES:
        const { HwutRunner } = require('hwut_runner');
-   <dir>: TEST hwut-root.conf node
+   <dir>: TEST hwut-feature-doc.dat hwut-feature-forest.csv hwut-root.conf node
 -- as written, the MAKE IT IMPORTABLE lines applied
    RESULTS: 27 ok, 0 fail
 -- the marked line pointing nowhere; unset: NODE_PATH; then only the MAKE IT IMPORTABLE lines

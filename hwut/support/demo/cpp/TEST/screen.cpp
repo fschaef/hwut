@@ -5,8 +5,8 @@
  *                 comment    = false
  *                 whitespace = false }
  *     choices {
- *         open   { features = ["terminal-screen", "screen-as-seen"] }
- *         scroll { features = ["terminal-screen", "screen-as-seen"] }
+ *         open   { features = ["demo-cpp+cover-terminal-screen", "demo-cpp+cover-screen-as-seen"] }
+ *         scroll { features = ["demo-cpp+cover-terminal-screen", "demo-cpp+cover-screen-as-seen"] }
  *     }
  * }
  *

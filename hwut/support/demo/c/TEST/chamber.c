@@ -5,12 +5,12 @@
  *                                "settle <= 4 min",
  *                                "verdict == 'settled'"] }
  *     choices {
- *         heat { features = ["region-verbatim", "region-table", "region-point-cloud",
- *                            "region-ignore", "laws-in-units", "string-binding",
- *                            "test-level-tolerance", "annotation-lines"] }
- *         cool { features = ["region-verbatim", "region-table", "region-point-cloud",
- *                            "region-ignore", "laws-in-units", "string-binding",
- *                            "test-level-tolerance", "annotation-lines"] }
+ *         heat { features = ["demo-c+cover-region-verbatim", "demo-c+cover-region-table", "demo-c+cover-region-point-cloud",
+ *                            "demo-c+cover-region-ignore", "demo-c+cover-laws-in-units", "demo-c+cover-string-binding",
+ *                            "demo-c+cover-test-level-tolerance", "demo-c+cover-annotation-lines"] }
+ *         cool { features = ["demo-c+cover-region-verbatim", "demo-c+cover-region-table", "demo-c+cover-region-point-cloud",
+ *                            "demo-c+cover-region-ignore", "demo-c+cover-laws-in-units", "demo-c+cover-string-binding",
+ *                            "demo-c+cover-test-level-tolerance", "demo-c+cover-annotation-lines"] }
  *     }
  * }
  *

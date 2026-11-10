@@ -3,26 +3,26 @@
 //     build   { framework = "make", target = "%.exe"
 //               caps { memory_mb = 2048  file_size_mb = 256  disk_mb = 1024 } }
 //     choices {
-//         plain       { features = ["demo-passes-on-every-run", "exact-comparison"] }
-//         tolerance   { features = ["demo-passes-on-every-run", "equivalence-pattern", "numeric-ratio"]
+//         plain       { features = ["demo-verilog", "demo-verilog+cover-exact-comparison"] }
+//         tolerance   { features = ["demo-verilog", "demo-verilog+cover-equivalence-pattern", "demo-verilog+cover-numeric-ratio"]
 //                       tolerance {
 //                           eq_pattern    = ["(hello|bonjour|hallo|buongiorno|hola|ahoj)"]
 //                           numeric_ratio = 0.01
 //                       } }
-//         constraints { features = ["demo-passes-on-every-run", "constraints"]
+//         constraints { features = ["demo-verilog", "demo-verilog+cover-constraints"]
 //                       tolerance {
 //                           constraints = ["load >= 0 and load <= 100",
 //                                          "even % 2 == 0",
 //                                          "twice == 2 * once"]
 //                       } }
-//         analogies   { features = ["demo-passes-on-every-run", "analogies"] }
-//         race        { features = ["demo-passes-on-every-run", "order-free-block"] }
-//         pool        { features = ["demo-passes-on-every-run", "potpourri-subset-duplicates"] }
-//         progress    { features = ["demo-passes-on-every-run", "visible-nothing"]
+//         analogies   { features = ["demo-verilog", "demo-verilog+cover-analogies"] }
+//         race        { features = ["demo-verilog", "demo-verilog+cover-order-free-block"] }
+//         pool        { features = ["demo-verilog", "demo-verilog+cover-potpourri-subset-duplicates"] }
+//         progress    { features = ["demo-verilog", "demo-verilog+cover-visible-nothing"]
 //                       tolerance { nothing = ["[.]+"] } }
-//         lisp        { features = ["demo-passes-on-every-run", "analogy-markers"]
+//         lisp        { features = ["demo-verilog", "demo-verilog+cover-analogy-markers"]
 //                       tolerance { analogy = ["{", "}"] } }
-//         clusters    { features = ["demo-passes-on-every-run", "point-cloud-pair-distance"] }
+//         clusters    { features = ["demo-verilog", "demo-verilog+cover-point-cloud-pair-distance"] }
 //     }
 // }
 //

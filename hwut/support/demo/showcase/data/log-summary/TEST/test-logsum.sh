@@ -5,7 +5,7 @@
 #     tolerance { eq_pattern  = ["[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}[.][0-9]{3}Z"]
 #                 constraints = ["alert_misses == 0"] }
 #     choices {
-#         normal    { features = ["counts", "restarts", "no-false-alarm"] }
+#         normal    { features = ["log-summary-counts", "restarts", "no-false-alarm"] }
 #         crashloop { features = ["crash-loop-alert"] }
 #         boundary  { features = ["crash-loop-alert", "no-false-alarm"] }
 #         garbled   { features = ["unreadable-lines"] }

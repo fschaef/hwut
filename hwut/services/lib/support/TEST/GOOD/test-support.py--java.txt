@@ -8,7 +8,7 @@
    A TEST THEN WRITES:
        import hwut.HwutRunner;
    NOTE:    built with 'javac --release 21 --enable-preview', run with 'java --enable-preview --enable-native-access=ALL-UNNAMED'
-   <dir>: TEST hwut-root.conf java
+   <dir>: TEST hwut-feature-doc.dat hwut-feature-forest.csv hwut-root.conf java
 -- as written, the MAKE IT IMPORTABLE lines applied
    RESULTS: 27 ok, 0 fail
 -- the marked line pointing nowhere; unset: CLASSPATH; then only the MAKE IT IMPORTABLE lines

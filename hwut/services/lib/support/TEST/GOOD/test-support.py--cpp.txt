@@ -9,7 +9,7 @@
    A TEST THEN WRITES:
        #include "hwut_runner.hpp"
    NOTE:    and compile the support's .cpp files and $HWUT_SUPPORT_CPP/../c/*.c with it
-   <dir>: TEST c cpp hwut-root.conf
+   <dir>: TEST c cpp hwut-feature-doc.dat hwut-feature-forest.csv hwut-root.conf
 -- as written, the MAKE IT IMPORTABLE lines applied
    RESULTS: 27 ok, 0 fail
 -- the marked line pointing nowhere; unset: HWUT_SUPPORT_CPP; then only the MAKE IT IMPORTABLE lines

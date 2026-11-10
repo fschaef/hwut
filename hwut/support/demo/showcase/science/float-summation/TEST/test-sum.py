@@ -7,7 +7,7 @@
 #         parallel  { features = ["partials-any-order", "arrival-total"]
 #                     tolerance { numeric_ratio = 1e-15
 #                                 constraints   = ["partial_mismatch == 0", "known == \"yes\""] } }
-#         fast-math { features = ["orders-shown", "breach-shown"]
+#         fast-math { features = ["orders-shown", "float-summation-breach-shown"]
 #                     tolerance { constraints = ["accurate_units > 2"] } }
 #     }
 # }

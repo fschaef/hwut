@@ -5,12 +5,12 @@
 !                                "settle <= 4 min",
 !                                "verdict == 'settled'"] }
 !     choices {
-!         heat { features = ["region-verbatim", "region-table", "region-point-cloud",
-!                            "region-ignore", "laws-in-units", "string-binding",
-!                            "test-level-tolerance", "annotation-lines"] }
-!         cool { features = ["region-verbatim", "region-table", "region-point-cloud",
-!                            "region-ignore", "laws-in-units", "string-binding",
-!                            "test-level-tolerance", "annotation-lines"] }
+!         heat { features = ["demo-fortran+cover-region-verbatim", "demo-fortran+cover-region-table", "demo-fortran+cover-region-point-cloud",
+!                            "demo-fortran+cover-region-ignore", "demo-fortran+cover-laws-in-units", "demo-fortran+cover-string-binding",
+!                            "demo-fortran+cover-test-level-tolerance", "demo-fortran+cover-annotation-lines"] }
+!         cool { features = ["demo-fortran+cover-region-verbatim", "demo-fortran+cover-region-table", "demo-fortran+cover-region-point-cloud",
+!                            "demo-fortran+cover-region-ignore", "demo-fortran+cover-laws-in-units", "demo-fortran+cover-string-binding",
+!                            "demo-fortran+cover-test-level-tolerance", "demo-fortran+cover-annotation-lines"] }
 !     }
 ! }
 !

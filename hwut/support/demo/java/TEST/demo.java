@@ -2,26 +2,26 @@
  *     title   = "Demo: what hwut tolerates, and where it is said"
  *     build   { framework = "make", target = "%.exe" }
  *     choices {
- *         plain       { features = ["demo-passes-on-every-run", "exact-comparison"] }
- *         tolerance   { features = ["demo-passes-on-every-run", "equivalence-pattern", "numeric-ratio"]
+ *         plain       { features = ["demo-java", "demo-java+cover-exact-comparison"] }
+ *         tolerance   { features = ["demo-java", "demo-java+cover-equivalence-pattern", "demo-java+cover-numeric-ratio"]
  *                       tolerance {
  *                           eq_pattern    = ["(hello|bonjour|hallo|buongiorno|hola|ahoj)"]
  *                           numeric_ratio = 0.01
  *                       } }
- *         constraints { features = ["demo-passes-on-every-run", "constraints"]
+ *         constraints { features = ["demo-java", "demo-java+cover-constraints"]
  *                       tolerance {
  *                           constraints = ["load >= 0 and load <= 100",
  *                                          "even % 2 == 0",
  *                                          "twice == 2 * once"]
  *                       } }
- *         analogies   { features = ["demo-passes-on-every-run", "analogies"] }
- *         race        { features = ["demo-passes-on-every-run", "order-free-block"] }
- *         pool        { features = ["demo-passes-on-every-run", "potpourri-subset-duplicates"] }
- *         progress    { features = ["demo-passes-on-every-run", "visible-nothing"]
+ *         analogies   { features = ["demo-java", "demo-java+cover-analogies"] }
+ *         race        { features = ["demo-java", "demo-java+cover-order-free-block"] }
+ *         pool        { features = ["demo-java", "demo-java+cover-potpourri-subset-duplicates"] }
+ *         progress    { features = ["demo-java", "demo-java+cover-visible-nothing"]
  *                       tolerance { nothing = ["[.]+"] } }
- *         lisp        { features = ["demo-passes-on-every-run", "analogy-markers"]
+ *         lisp        { features = ["demo-java", "demo-java+cover-analogy-markers"]
  *                       tolerance { analogy = ["{", "}"] } }
- *         clusters    { features = ["demo-passes-on-every-run", "point-cloud-pair-distance"] }
+ *         clusters    { features = ["demo-java", "demo-java+cover-point-cloud-pair-distance"] }
  *     }
  * }
  * ______________________________________________________________________________

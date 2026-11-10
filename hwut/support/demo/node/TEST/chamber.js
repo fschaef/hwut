@@ -6,12 +6,12 @@
 //                                "settle <= 4 min",
 //                                "verdict == 'settled'"] }
 //     choices {
-//         heat { features = ["region-verbatim", "region-table", "region-point-cloud",
-//                            "region-ignore", "laws-in-units", "string-binding",
-//                            "test-level-tolerance", "annotation-lines"] }
-//         cool { features = ["region-verbatim", "region-table", "region-point-cloud",
-//                            "region-ignore", "laws-in-units", "string-binding",
-//                            "test-level-tolerance", "annotation-lines"] }
+//         heat { features = ["demo-node+cover-region-verbatim", "demo-node+cover-region-table", "demo-node+cover-region-point-cloud",
+//                            "demo-node+cover-region-ignore", "demo-node+cover-laws-in-units", "demo-node+cover-string-binding",
+//                            "demo-node+cover-test-level-tolerance", "demo-node+cover-annotation-lines"] }
+//         cool { features = ["demo-node+cover-region-verbatim", "demo-node+cover-region-table", "demo-node+cover-region-point-cloud",
+//                            "demo-node+cover-region-ignore", "demo-node+cover-laws-in-units", "demo-node+cover-string-binding",
+//                            "demo-node+cover-test-level-tolerance", "demo-node+cover-annotation-lines"] }
 //     }
 // }
 //

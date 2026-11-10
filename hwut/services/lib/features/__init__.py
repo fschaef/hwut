@@ -2,19 +2,20 @@
 ______________________________________________________________________________
 
 THE FEATURE FACES -- 'hwut.features.<verb>' <=> 'services/lib/features/
-<verb>.py' (the naming law's dotted clause, as 'hwut.labels.*'): acts on
-ONE file, 'hwut-root-features.conf', beside 'hwut-root.conf' (spec 23
-VERSION 10, exploration R-96). '_common.py' holds what they share.
+<verb>.py' (the naming law's dotted clause, as 'hwut.labels.*'): they act on
+the three files beside the 'hwut-root.conf' that begins the features of a
+tree (spec 43): 'hwut-feature-forest.csv', 'hwut-feature-doc.dat',
+'hwut-feature-external-map.csv'. '_common.py' holds what they share.
 
-    init        writes the central file: directory ids, leaves unplaced
-    register    adds what is new below a directory; names what disagrees
-    tree        prints the tree of features ('--list', '-b', '-e')
-    retire      a claim into 'retired', as it was
-    move        a directory moved, its 'directory_map' lines following
-    key.add     a key on a leaf or an aggregate      (key/add.py)
-    key.remove  a key taken off; '--all' everywhere  (key/remove.py)
+    init        writes an empty forest and an empty doc file
+    register    names what the files and the links disagree about
+    tree        prints the forest ('--list', '-e')
+    rename      an id changes, every reference follows
+    retire      a claim no longer made: its block retired, out of the forest
 
-The engine reads ('feature_registry.py'), judges ('feature_detector.py')
-and amends ('feature_registry_edit.py'); a face only asks and prints.
+The engine reads ('feature_forest', 'feature_doc', 'feature_external',
+'feature_view'), judges ('feature_detector') and writes ('feature_act'); a
+face only asks and prints. 'hwut.features.move' and 'key.add'/'key.remove'
+are gone: no file holds a directory, keys are left out (T-q).
 ______________________________________________________________________________
 """

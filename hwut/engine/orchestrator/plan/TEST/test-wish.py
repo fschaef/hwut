@@ -29,9 +29,9 @@ DESCRIPTION:
 
 parsing  every keyword read, alone and together, and how the wish
          writes itself back; arguments that are none of them are handed
-         back untouched. '-F', '-e' and '-k' are read where the feature
-         world's face asks for them ('feature_f'); a feature label
-         'f/<feature>' is read as a label.
+         back untouched. A feature label 'f/<feature>' is read as a
+         label; so is an instance 'f/<owner>+<id>' and a glob of either
+         (intend/44 P-g).
 
 anchors  the instant every anchor names, reckoned in UTC off a stated
          clock: a Thursday in May.
@@ -40,8 +40,10 @@ refused  a point that cannot be read, a keyword standing without its
          value, '--fail' beside '--pass', an empty window: refused at
          the door, by name. And the three worlds (intend/three-worlds):
          '-l' beside any wishlist argument -- a word, a bare target --,
-         a feature option on a face that selects runs, a feature label
-         with a glob, a wishlist's 'label:' line.
+         '-F', '-e' and '-k', gone from every face (spec 43, T-t), a
+         feature label that is no id -- a dot, nothing, a prototype
+         ('f/+net': it names no instance, intend/44 P-f) --, a
+         wishlist's 'label:' line. A glob in 'f/' is read (P-g).
 
 globs    globs over both members of the target form; several globs hold
          one question and are OR'ed; an empty match is legal.
@@ -196,15 +198,10 @@ def test_parsing():
                   "--glob", "quick-[0-9].py"],
                  ["--fail", "--directory=x", "some-file.py"],
                  ["-l", "f/display AND NOT slow"],
-                 ["-l", "mine", "--no-bubbles"],
-                 ["-F", "display.**"],
-                 ["--feature=scroll", "-F", "{a,b}.x", "-F", "scroll"],
-                 ["-k", "gui AND NOT slow"],
-                 ["-F", "scroll", "-k", "gui"]):
-        feature_f  = argv[:1] in (["-F"], ["--feature=scroll"], ["-k"])
-        wish, rest = parse_wish(argv, feature_f=feature_f)
-        banner(" ".join(argv) or "(nothing)"
-               + ("   (the feature world's face)" if feature_f else ""))
+                 ["-l", "f/demo-*+cover-* OR f/port+receive"],
+                 ["-l", "mine", "--no-bubbles"]):
+        wish, rest = parse_wish(argv)
+        banner(" ".join(argv) or "(nothing)")
         print("    wish : %s" % wish)
         print("    rest : %s" % (", ".join(rest) or "-"))
         print("    asks nothing: %s" % wish.states_nothing_f())
@@ -233,19 +230,12 @@ def test_refused():
             print("NOT REFUSED -- a law is broken")
         except WishError as error:
             print("REFUSED: %s" % error)
-    for argv in (["-F"], ["--feature="], ["-k"], ["--keys="],
-                 ["-k", "gui AND"], ["-k", "gui", "--keys", "net"]):
-        banner(" ".join(argv) + "   (the feature world's face)")
-        try:
-            parse_wish(argv, feature_f=True)
-            print("NOT REFUSED -- a law is broken")
-        except WishError as error:
-            print("REFUSED: %s" % error)
     #  THE THREE WORLDS (intend/three-worlds, ruled 2026-10-31).
     for argv in (["-l", "slow", "--fail"], ["--dir", "net", "-l", "slow"],
                  ["--since=2h", "--label=slow"], ["-l", "slow", "--glob", "x"],
                  ["-F", "scroll"], ["-e", "REQ-1"], ["--keys=gui"],
-                 ["-l", "f/net*"], ["-l", "f/"]):
+                 ["--feature=scroll"], ["-k", "gui"],
+                 ["-l", "f/+net"], ["-l", "f/"], ["-l", "f/a.b"]):
         banner(" ".join(argv))
         try:
             parse_wish(argv)

@@ -4,9 +4,9 @@
 --     pype    = "build.pypes"
 --     same    = true
 --     choices = ["serial", "parallel"]
---     features = ["pype-in-header", "pype-system", "same-nominal", "choices-as-list",
---                 "pype-push-pop", "pype-entry-exit", "pype-import", "pype-repeat-group",
---                 "pype-quantity", "pype-anchors-globs-flush"]
+--     features = ["demo-vhdl+cover-pype-in-header", "demo-vhdl+cover-pype-system", "demo-vhdl+cover-same-nominal", "demo-vhdl+cover-choices-as-list",
+--                 "demo-vhdl+cover-pype-push-pop", "demo-vhdl+cover-pype-entry-exit", "demo-vhdl+cover-pype-import", "demo-vhdl+cover-pype-repeat-group",
+--                 "demo-vhdl+cover-pype-quantity", "demo-vhdl+cover-pype-anchors-globs-flush"]
 --     tolerance { constraints = ["compile < 5 s", "breaches == 0"] }
 -- }
 --

@@ -1,0 +1,49 @@
+>>> hwut.features.tree
+    gateway  The gateway forwards what reaches it.
+      can-port
+        can-port+port  What every port does.
+          can-port+receive  A frame is received.
+          can-port+send  What every port does.
+          can-port+errors  What every port does.
+            can-port+bus-off  What every port does.
+            can-port+overrun  What every port does.
+      most-port
+        most-port+port  What every port does.
+          most-port+receive  A MOST frame is received, in its slot.
+          most-port+send  What every port does.
+          most-port+errors  What every port does.
+            most-port+bus-off  What every port does.
+            most-port+overrun  What every port does.
+    (prototypes)
+      +port  What every port does.
+        receive  A frame is received.
+        send
+        +errors
+          bus-off
+          overrun
+      +spare
+        idle
+    exit 0
+>>> --list
+    gateway
+    can-port
+    can-port+port
+    can-port+receive
+    can-port+send
+    can-port+errors
+    can-port+bus-off
+    can-port+overrun
+    most-port
+    most-port+port
+    most-port+receive
+    most-port+send
+    most-port+errors
+    most-port+bus-off
+    most-port+overrun
+    exit 0
+>>> hwut.features.register
+    NOTE  'receive' is linked by can/TEST/test-rx.sh and a member of a prototype -- link '<owner>+<id>'
+    NOTE  the prototype '+spare' is aggregated by no feature => '<feature> : +spare'
+    NOTE  the member 'idle' of '+spare' stands in no block, nor does a prototype around it => '[[idle]]'
+    exit 0
+<hwut-end>

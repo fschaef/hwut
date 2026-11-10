@@ -1,0 +1,14 @@
+text before       FAULT: hwut-feature-doc.dat:1: text before the first heading -- '[[<id>]]' opens a block
+heading shape     FAULT: hwut-feature-doc.dat:1: '[[a b c]]' is no heading -- '[[<id>]]', '[[<id> to <audience>, ...]]', '[[<id> not <audience>, ...]]', '[[<id>:retired]]', '[[CUSTOMERS]]'
+to nothing        FAULT: hwut-feature-doc.dat:1: '[[a to]]' is no heading -- '[[<id>]]', '[[<id> to <audience>, ...]]', '[[<id> not <audience>, ...]]', '[[<id>:retired]]', '[[CUSTOMERS]]'
+not an id         FAULT: hwut-feature-doc.dat:1: 'a.b' is no feature id -- '[A-Za-z0-9_-]+', '+<prototype>' or '<owner>+<id>'
+audience no id    FAULT: hwut-feature-doc.dat:4: '[[a to x.y]]': an audience is a word '[A-Za-z0-9_-]+', ',' between
+CUSTOMERS id      FAULT: hwut-feature-doc.dat:1: 'CUSTOMERS' is reserved and no feature id
+CUSTOMERS retired FAULT: hwut-feature-doc.dat:1: 'CUSTOMERS' is reserved and no feature id
+twice             FAULT: hwut-feature-doc.dat:3: 'a' is documented twice (line 1)
+plain, retired    FAULT: hwut-feature-doc.dat:3: 'a' is documented twice (line 1)
+retired in forest FAULT: hwut-feature-doc.dat:1: 'keeporder' is retired and stands in a forest line (hwut-feature-forest.csv:2) -- strike one
+audience unknown  FAULT: hwut-feature-doc.dat:4: 'gateway': the audience 'integeng' is not declared in '[[CUSTOMERS]]' -- did you mean 'integreng'?
+audience line     FAULT: hwut-feature-doc.dat:2: 'manager the one' is no audience line -- '<audience>: <who that is>'
+CUSTOMERS twice   FAULT: hwut-feature-doc.dat:4: '[[CUSTOMERS]]' stands twice (line 1)
+<hwut-end>

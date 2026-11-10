@@ -4,8 +4,8 @@
 %%                 comment    = false
 %%                 whitespace = false }
 %%     choices {
-%%         open   { features = ["terminal-screen", "screen-as-seen"] }
-%%         scroll { features = ["terminal-screen", "screen-as-seen"] }
+%%         open   { features = ["demo-erlang+cover-terminal-screen", "demo-erlang+cover-screen-as-seen"] }
+%%         scroll { features = ["demo-erlang+cover-terminal-screen", "demo-erlang+cover-screen-as-seen"] }
 %%     }
 %% }
 %%

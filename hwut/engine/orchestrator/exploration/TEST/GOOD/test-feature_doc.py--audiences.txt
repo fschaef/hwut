@@ -1,0 +1,7 @@
+gateway     ('integreng', 'manager')
+forwarding  ('integreng',)
+fwd         ('integreng', 'intern')
+keeporder   ('integreng',)
+buses       ('integreng', 'manager')
+lonely      ('intern',)
+<hwut-end>

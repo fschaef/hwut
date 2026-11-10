@@ -3,8 +3,8 @@
 # @hwut {
 #     title      = "The one test for an 'unaccepted' region (B-26)"
 #     choices {
-#         lines  { features = ["unaccepted-region"] }
-#         booked { features = ["unaccepted-region"] }
+#         lines  { features = ["bookkeeper-unaccepted-region"] }
+#         booked { features = ["bookkeeper-unaccepted-region"] }
 #     }
 #     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true

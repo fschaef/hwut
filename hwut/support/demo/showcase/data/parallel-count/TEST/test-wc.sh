@@ -3,9 +3,9 @@
 # @hwut {
 #     title   = "Parallel word count: the law of map and reduce, any order"
 #     choices {
-#         four-at-once { features = ["counts", "order-law", "parallel-cap"]
+#         four-at-once { features = ["parallel-count-counts", "order-law", "parallel-cap"]
 #                        tolerance { constraints = ["in_flight_max >= 1 and in_flight_max <= 4"] } }
-#         v1           { features = ["violation-shown"]
+#         v1           { features = ["parallel-count-violation-shown"]
 #                        tolerance { constraints = ["in_flight_max > 4"] } }
 #     }
 # }

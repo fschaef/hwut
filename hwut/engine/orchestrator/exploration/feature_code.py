@@ -5,8 +5,8 @@ PURPOSE: WHERE A FEATURE IS EXERCISED IN THE CODE -- the source ranges
          its linked test runs executed, read from the output of a
          'hwut.cov.run'.
 
-    code_db_of(relation, root, output_directory)
-        -> {(TEST directory path, feature key): CFeatureCode}
+    code_db_of(relation, root, output_directory, run_db)
+        -> {feature id: CFeatureCode}
 
 DESCRIPTION
        A coverage output says, for every range of every source file,
@@ -55,17 +55,14 @@ class CFeatureCode:
     unmeasured_n:  int   = 0       # linked runs it does not
 
 
-def code_db_of(relation, root, output_directory, run_db=None):
+def code_db_of(relation, root, output_directory, run_db):
     """
-    RETURN: dict, (TEST directory path, feature key) -> CFeatureCode,
-            for every feature of 'relation' that has a linked run --
-            'root' the directory the relation was asked in,
+    RETURN: dict, feature id -> CFeatureCode, for every feature of
+            'run_db' (feature id -> its linked runs, CRun, each with its
+            TEST directory 'path' as 'relation' addresses it) that has a
+            run -- 'root' the directory the relation was asked in,
             'output_directory' a coverage run's output
             None, the output names no root it measured
-
-    'run_db' (TEST directory path, feature key) -> the runs of a feature
-    where they are more than its own directory's: a link by internal id
-    from another one (the book's D-8), the run carrying its 'path'.
 
     Raises OutputRefused where the output cannot be read.
     """
@@ -91,24 +88,17 @@ def code_db_of(relation, root, output_directory, run_db=None):
     source_list.sort(key=lambda triple: triple[0])
 
     result = {}
-    for path, test_directory in relation.test_directory_db.items():
-        directory = os.path.relpath(
-            os.path.normpath(os.path.join(root, path)),
-            coverage_root).replace(os.sep, "/")
-        for state in test_directory.state_tuple:
-            run_tuple = state.run_tuple if run_db is None \
-                        else run_db.get((path, state.feature.key),
-                                        state.run_tuple)
-            if not run_tuple: continue
-            id_set = set()
-            for run in run_tuple:
-                where = directory if run.path is None else os.path.relpath(
-                    os.path.normpath(os.path.join(root, run.path)),
-                    coverage_root).replace(os.sep, "/")
-                run_id = output.run_db.get((where, run.test, run.choice))
-                if run_id is not None: id_set.add(run_id)
-            result[(path, state.feature.key)] = _code_of(
-                source_list, id_set, len(run_tuple) - len(id_set))
+    for feature_id, run_tuple in run_db.items():
+        if not run_tuple: continue
+        id_set = set()
+        for run in run_tuple:
+            where = os.path.relpath(
+                os.path.normpath(os.path.join(root, run.path)),
+                coverage_root).replace(os.sep, "/")
+            run_id = output.run_db.get((where, run.test, run.choice))
+            if run_id is not None: id_set.add(run_id)
+        result[feature_id] = _code_of(source_list, id_set,
+                                      len(run_tuple) - len(id_set))
     return result
 
 

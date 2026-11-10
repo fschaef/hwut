@@ -3,13 +3,13 @@
  *     build    { framework = "make", target = "%.exe" }
  *     interactive = true
  *     choices {
- *         space       { features = ["space-from-hocon", "space-iterator", "hwut-runner"]
+ *         space       { features = ["demo-c+cover-space-from-hocon", "demo-c+cover-space-iterator", "demo-c+cover-hwut-runner"]
  *                       tolerance { constraints = ["mismatches == 0"] } }
- *         random      { features = ["deterministic-stream", "hwut-runner"]
+ *         random      { features = ["demo-c+cover-deterministic-stream", "demo-c+cover-hwut-runner"]
  *                       tolerance { constraints = ["mismatches == 0"] } }
- *         race-naive  { features = ["deterministic-timeline", "space-iterator", "hwut-runner"]
+ *         race-naive  { features = ["demo-c+cover-deterministic-timeline", "demo-c+cover-space-iterator", "demo-c+cover-hwut-runner"]
  *                       tolerance { constraints = ["overbooked > 0"] } }
- *         race-atomic { features = ["deterministic-timeline", "space-iterator", "hwut-runner"]
+ *         race-atomic { features = ["demo-c+cover-deterministic-timeline", "demo-c+cover-space-iterator", "demo-c+cover-hwut-runner"]
  *                       tolerance { constraints = ["overbooked == 0"] } }
  *     }
  * }

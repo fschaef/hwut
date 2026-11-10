@@ -2,33 +2,30 @@
 ______________________________________________________________________________
 
 PURPOSE: THE 'hwut.features.retire' COMMAND LINE -- a claim is no longer
-         made (spec 23 VERSION 10 section 3, R-96).
+         made (spec 43 section 5; intend/43 T-s).
 
     hwut.features.retire <id> [--directory=<path>]
 
-<id> is a leaf's external id or an aggregate's key. The claim moves into
-the section 'retired' of 'hwut-root-features.conf' AS IT WAS: a leaf with
-its internal id and the definition its TEST directory stated (taken out
-of that TEST directory's 'hwut-features.conf'); an aggregate with every
-claim below it. A retired id is never given again; it has no verdict and
-counts nowhere.
+The feature's block in 'hwut-feature-doc.dat' takes the heading
+'[[<id>:retired]]' -- the claim kept as it was -- and the id leaves every
+line of 'hwut-feature-forest.csv'. A retired claim has no verdict, counts
+nowhere, and 'f/<id>' refuses it. An id with children is refused: retire
+them first, a retired claim has nothing below it.
 
-REVIVAL is by hand: the block back into 'tree', the definition back into
-its TEST directory. A test that still links a retired feature is named by
+REVIVAL is by hand: ':retired' struck from the heading, the id entered in
+a forest line. A test that still links a retired feature is named by
 'hwut.report.features'.
-
-Only this face retires. 'hwut.features.register' and the sanitizer report
-what has disappeared; they never retire it.
 
 EXIT STATUS (E-1, services/_exit.py):
     0  OK       retired
-    2  REFUSED  no root, no central file, an id that is no claim of the
-                tree, or an edit that would leave a file with a fault
+    2  REFUSED  no root, no forest, an id that stands nowhere or is retired
+                already, an id with children or named in the map, or a
+                file that states a fault
 ______________________________________________________________________________
 """
 import sys
 
-from hwut.engine.orchestrator.exploration.feature_registry_act import retire
+from hwut.engine.orchestrator.exploration.feature_act import retire
 from ..._core                            import usage_line
 from .                                   import _common
 

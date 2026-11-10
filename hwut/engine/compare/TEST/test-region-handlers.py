@@ -8,7 +8,7 @@
 #         ignore               { features = ["ignore-region", "region-framing-must-match"] }
 #         params               { features = ["region-parameter-precedence"] }
 #         verbatim             { features = ["verbatim-region", "comments-and-blanks-insignificant"] }
-#         unaccepted           { features = ["unaccepted-region", "region-framing-must-match"] }
+#         unaccepted           { features = ["compare-unaccepted-region", "region-framing-must-match"] }
 #     }
 # }
 #

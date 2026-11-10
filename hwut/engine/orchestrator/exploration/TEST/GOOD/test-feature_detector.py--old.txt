@@ -1,4 +1,0 @@
---- a component file, a map file, a TEST file -------------------
-  old-vocabulary gw/hwut-features.conf   no longer read; migrate
-  old-vocabulary hwut-feature-map.conf   no longer read; migrate
-<hwut-end>

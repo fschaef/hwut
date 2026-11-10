@@ -8,7 +8,7 @@
        export PATH="<dir>/bash:$PATH"
    A TEST THEN WRITES:
        source hwut_runner.sh
-   <dir>: TEST bash c hwut-root.conf
+   <dir>: TEST bash c hwut-feature-doc.dat hwut-feature-forest.csv hwut-root.conf
 -- as written, the MAKE IT IMPORTABLE lines applied
    RESULTS: 27 ok, 0 fail
 -- the marked line pointing nowhere; unset: nothing; then only the MAKE IT IMPORTABLE lines

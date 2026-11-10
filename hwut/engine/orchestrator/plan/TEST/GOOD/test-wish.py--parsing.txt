@@ -54,28 +54,13 @@
     rest : -
     asks nothing: False
 
+--- -l f/demo-*+cover-* OR f/port+receive ---
+    wish : --label "f/demo-*+cover-* OR f/port+receive"
+    rest : -
+    asks nothing: False
+
 --- -l mine --no-bubbles ---
     wish : --no-bubbles --label "mine"
-    rest : -
-    asks nothing: False
-
---- -F display.** ---
-    wish : --feature "display.**"
-    rest : -
-    asks nothing: False
-
---- --feature=scroll -F {a,b}.x -F scroll ---
-    wish : --feature "scroll" --feature "{a,b}.x"
-    rest : -
-    asks nothing: False
-
---- -k gui AND NOT slow ---
-    wish : --keys "gui AND NOT slow"
-    rest : -
-    asks nothing: False
-
---- -F scroll -k gui ---
-    wish : --feature "scroll" --keys "gui"
     rest : -
     asks nothing: False
 <hwut-end>

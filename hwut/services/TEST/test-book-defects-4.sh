@@ -308,14 +308,13 @@ PYEOF2
             ran above  --label slow
             ran above  --label fast ;;
         bubble-features)
-            printf 'features {\n    childs {\n        flow { title = "a flow" }\n    }\n}\n' \
-                   > "$W/TEST/hwut-features.conf"
-            ( cd world && "$BIN/hwut.features.init" > /dev/null 2>&1 \
-                && "$BIN/hwut.features.register" > /dev/null 2>&1 \
-                && "$BIN/hwut.run" --plain > /dev/null 2>&1 )
+            #  THE BUBBLE BEGINS FEATURES OF ITS OWN (spec 43; the
+            #  showcase's case, ruled 2026-11-08): its forest and doc file.
+            ( cd world && "$BIN/hwut.features.init" > /dev/null 2>&1 )
+            printf 'flows : flow\n' >> "$W/hwut-feature-forest.csv"
+            printf '[[flow]]\na flow\n' >> "$W/hwut-feature-doc.dat"
             sed -i 's/choices = \["x", "y"\]/features = ["flow"] choices = ["x", "y"]/' "$W/TEST/test-w.sh"
-            ( cd world && "$BIN/hwut.features.register" > /dev/null 2>&1 \
-                && "$BIN/hwut.run" --plain > /dev/null 2>&1 )
+            ( cd world && "$BIN/hwut.run" --plain > /dev/null 2>&1 )
             #  A FEATURE IS THE LABEL 'f/<feature>' (intend/three-worlds).
             ran inside --label f/flow
             ran above  --label f/flow ;;

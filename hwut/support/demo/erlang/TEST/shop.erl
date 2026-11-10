@@ -2,9 +2,9 @@
 %%     title     = "Demo: a shop's stock -- what the directory's hwut.conf arranges"
 %%     tolerance { stderr_ignored = true }
 %%     choices {
-%%         sell   { features = ["unordered-table", "stderr-ignored", "collision"] }
-%%         report { features = ["output-file", "keyed-table-separator", "dependency",
-%%                              "frame-scripts", "test-scripts", "stderr-ignored"]
+%%         sell   { features = ["demo-erlang+cover-unordered-table", "demo-erlang+cover-stderr-ignored", "demo-erlang+cover-collision"] }
+%%         report { features = ["demo-erlang+cover-output-file", "demo-erlang+cover-keyed-table-separator", "demo-erlang+cover-dependency",
+%%                              "demo-erlang+cover-frame-scripts", "demo-erlang+cover-test-scripts", "demo-erlang+cover-stderr-ignored"]
 %%                  output   = ["<stdout>", "stock.csv"] }
 %%     }
 %% }

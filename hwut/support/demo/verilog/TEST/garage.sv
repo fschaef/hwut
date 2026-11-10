@@ -4,13 +4,13 @@
 //                caps { memory_mb = 2048  file_size_mb = 256  disk_mb = 1024 } }
 //     interactive = true
 //     choices {
-//         space       { features = ["space-from-hocon", "space-iterator", "hwut-runner"]
+//         space       { features = ["demo-verilog+cover-space-from-hocon", "demo-verilog+cover-space-iterator", "demo-verilog+cover-hwut-runner"]
 //                       tolerance { constraints = ["mismatches == 0"] } }
-//         random      { features = ["deterministic-stream", "hwut-runner"]
+//         random      { features = ["demo-verilog+cover-deterministic-stream", "demo-verilog+cover-hwut-runner"]
 //                       tolerance { constraints = ["mismatches == 0"] } }
-//         race-naive  { features = ["deterministic-timeline", "space-iterator", "hwut-runner"]
+//         race-naive  { features = ["demo-verilog+cover-deterministic-timeline", "demo-verilog+cover-space-iterator", "demo-verilog+cover-hwut-runner"]
 //                       tolerance { constraints = ["overbooked > 0"] } }
-//         race-atomic { features = ["deterministic-timeline", "space-iterator", "hwut-runner"]
+//         race-atomic { features = ["demo-verilog+cover-deterministic-timeline", "demo-verilog+cover-space-iterator", "demo-verilog+cover-hwut-runner"]
 //                       tolerance { constraints = ["overbooked == 0"] } }
 //     }
 // }

@@ -5,7 +5,7 @@
 #     choices {
 #         current { features = ["check-value", "exit-codes", "streams", "keeps-going"]
 #                   tolerance { constraints = ["breaches == 0"] } }
-#         v1      { features = ["violation-shown"]
+#         v1      { features = ["cli-matrix-violation-shown"]
 #                   tolerance { constraints = ["breaches > 0"] } }
 #     }
 # }

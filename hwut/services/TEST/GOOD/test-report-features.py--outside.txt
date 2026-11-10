@@ -1,26 +1,17 @@
 
---- no feature file, a central file that registers nothing ---
+--- an empty forest and doc file: the links stand outside ---
     
     OUTSIDE THE RELATION
-        test run, names a feature its TEST directory does not define
+        test run, links an id that stands in no forest line and no doc block
             a/b/TEST/test-b.sh   'wanted'
 status: OK
 
---- a feature file the central file does not register: named ---
+--- a file of the past beside them: named ---
     
     OUTSIDE THE RELATION
-        feature, defined and not registered => hwut.features.register
-            a/b   'wanted'
-status: OK
-
---- the same file in the vocabulary of the past: named ---
-    
-    OUTSIDE THE RELATION
-        test run, names a feature its TEST directory does not define
+        test run, links an id that stands in no forest line and no doc block
             a/b/TEST/test-b.sh   'wanted'
-        statement, not read
-            a/b/TEST/hwut-features.conf:2:5: VOCABULARY: unknown key 'parent' in 'features': 'keys', 'childs'
-            a/b/TEST/hwut-features.conf:3:5: VOCABULARY: unknown key 'issued' in 'features': 'keys', 'childs'
-            a/b/TEST/hwut-features.conf:4:5: VOCABULARY: unknown key '1' in 'features': 'keys', 'childs'
+        feature files, not as they should stand => hwut.features.register
+            'a/b/TEST/hwut-features.conf' is a file of the past, read by nothing => its content belongs in the forest and the doc file (spec 43)
 status: OK
 <hwut-end>

@@ -1,6 +1,7 @@
-The Feature Faces -- the Central File of Features
--------------------------------------------------
+The Feature Faces -- the Forest, the Doc File, the Map
+------------------------------------------------------
 
 coverage run --omit ./*.py -a *.py
 
 --not config.py
+--not _fixture.py

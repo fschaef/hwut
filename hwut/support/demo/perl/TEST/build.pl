@@ -5,9 +5,9 @@
 #     pype    = "build.pypes"
 #     same    = true
 #     choices = ["serial", "parallel"]
-#     features = ["pype-in-header", "pype-system", "same-nominal", "choices-as-list",
-#                 "pype-push-pop", "pype-entry-exit", "pype-import", "pype-repeat-group",
-#                 "pype-quantity", "pype-anchors-globs-flush"]
+#     features = ["demo-perl+cover-pype-in-header", "demo-perl+cover-pype-system", "demo-perl+cover-same-nominal", "demo-perl+cover-choices-as-list",
+#                 "demo-perl+cover-pype-push-pop", "demo-perl+cover-pype-entry-exit", "demo-perl+cover-pype-import", "demo-perl+cover-pype-repeat-group",
+#                 "demo-perl+cover-pype-quantity", "demo-perl+cover-pype-anchors-globs-flush"]
 #     tolerance { constraints = ["compile < 5 s", "breaches == 0"] }
 # }
 #

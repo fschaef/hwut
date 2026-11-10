@@ -6,12 +6,12 @@
 #                                "settle <= 4 min",
 #                                "verdict == 'settled'"] }
 #     choices {
-#         heat { features = ["region-verbatim", "region-table", "region-point-cloud",
-#                            "region-ignore", "laws-in-units", "string-binding",
-#                            "test-level-tolerance", "annotation-lines"] }
-#         cool { features = ["region-verbatim", "region-table", "region-point-cloud",
-#                            "region-ignore", "laws-in-units", "string-binding",
-#                            "test-level-tolerance", "annotation-lines"] }
+#         heat { features = ["demo-python+cover-region-verbatim", "demo-python+cover-region-table", "demo-python+cover-region-point-cloud",
+#                            "demo-python+cover-region-ignore", "demo-python+cover-laws-in-units", "demo-python+cover-string-binding",
+#                            "demo-python+cover-test-level-tolerance", "demo-python+cover-annotation-lines"] }
+#         cool { features = ["demo-python+cover-region-verbatim", "demo-python+cover-region-table", "demo-python+cover-region-point-cloud",
+#                            "demo-python+cover-region-ignore", "demo-python+cover-laws-in-units", "demo-python+cover-string-binding",
+#                            "demo-python+cover-test-level-tolerance", "demo-python+cover-annotation-lines"] }
 #     }
 # }
 #

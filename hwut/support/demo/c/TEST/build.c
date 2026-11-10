@@ -4,9 +4,9 @@
  *     pype    = "build.pypes"
  *     same    = true
  *     choices = ["serial", "parallel"]
- *     features = ["pype-in-header", "pype-system", "same-nominal", "choices-as-list",
- *                 "pype-push-pop", "pype-entry-exit", "pype-import", "pype-repeat-group",
- *                 "pype-quantity", "pype-anchors-globs-flush"]
+ *     features = ["demo-c+cover-pype-in-header", "demo-c+cover-pype-system", "demo-c+cover-same-nominal", "demo-c+cover-choices-as-list",
+ *                 "demo-c+cover-pype-push-pop", "demo-c+cover-pype-entry-exit", "demo-c+cover-pype-import", "demo-c+cover-pype-repeat-group",
+ *                 "demo-c+cover-pype-quantity", "demo-c+cover-pype-anchors-globs-flush"]
  *     tolerance { constraints = ["compile < 5 s", "breaches == 0"] }
  * }
  *

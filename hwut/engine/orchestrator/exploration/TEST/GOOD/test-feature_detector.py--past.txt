@@ -1,0 +1,4 @@
+past-file     NOTE  'gw/TEST/hwut-features.conf' is a file of the past, read by nothing => its content belongs in the forest and the doc file (spec 43)
+past-file     NOTE  'gw/hwut-feature-map.conf' is a file of the past, read by nothing => its content belongs in the forest and the doc file (spec 43)
+past-file     NOTE  'inner/x/TEST/hwut-features.conf' is a file of the past, read by nothing => its content belongs in the forest and the doc file (spec 43)
+<hwut-end>

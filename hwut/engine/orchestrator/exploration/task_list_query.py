@@ -207,7 +207,6 @@ class CTestTaskListQuery(CTestTaskList):
         self.label_tree = None
         self.label_settled_f = False
         self.language_db     = {}       # source_file -> language | None
-        self.feature_case_set = None    # (absolute file, choice) wanted
         #  THE FEATURE LABELS (intend/three-worlds): 'f/<id>' -> the
         #  runs linked to it, for every one the wish or a derived label
         #  of the view names. Settled with the label question.
@@ -220,7 +219,6 @@ class CTestTaskListQuery(CTestTaskList):
         """
         self._settle_label()
         self._settle_language(app_set)
-        self._settle_feature()
         every = CTestTaskListAll().get_test_cases(app_set)
         #  A wish stating nothing takes ALL AVAILABLE -- unless a
         #  standard label stands somewhere, for then 'available' is
@@ -262,7 +260,6 @@ class CTestTaskListQuery(CTestTaskList):
         """
         if self._dir_ruled_out_f():                         return False
         if self._outside_language_f(case):                  return False
-        if self._outside_feature_f(case):                   return False
         if self._excluded_f(case):                          return False
         if self.wish.asks_glob_f() and not self._glob_hit_f(case):
             return False
@@ -398,37 +395,6 @@ class CTestTaskListQuery(CTestTaskList):
         return self.language_db.get(case.source_file) \
                not in self.wish.language_tuple
 
-    def _settle_feature(self):
-        """
-        RETURN: None. Settles the wish's feature question for this
-                query: the runs '-F' and '-k' want, from the feature
-                relation of the tree below the run's root
-                (feature_wish.case_set_of).
-
-        Raises SelectionError where the wish asks features and the query
-        does not know the run's root, and what 'case_set_of' raises: a
-        retired id, a key no feature carries, a glob that cannot be
-        read -- by name.
-        """
-        if not self.wish.asks_feature_f() or self.feature_case_set is not None:
-            return
-        if self.root is None:
-            raise SelectionError(
-                "'--feature' and '--keys' ask the feature relation of "
-                "the tree, and no root reaches this selection")
-        from .feature_wish import case_set_of
-        self.feature_case_set = case_set_of(self.root, self.wish)
-
-    def _outside_feature_f(self, case):
-        """
-        RETURN: bool, True where the wish names features or keys and no
-                feature it names is linked to the case.
-        """
-        if self.feature_case_set is None: return False
-        where = os.path.normpath(os.path.join(
-                    self.root, self.directory or ".", case.source_file))
-        return (where, case.choice) not in self.feature_case_set
-
     def _settle_label(self):
         """
         RETURN: None. Settles the wish's label question, once, at the
@@ -462,14 +428,14 @@ class CTestTaskListQuery(CTestTaskList):
         """
         RETURN: None. Fills 'feature_label_db' with the runs of every
                 feature label ('f/<id>') the wish names -- strictly:
-                a feature no central file holds is refused by name -- or
+                a feature no forest or doc file knows is refused by name -- or
                 a derived label of the view names, leniently: there an
                 unknown feature holds no run.
 
-        Raises SelectionError as 'feature_wish.feature_label_case_set'
+        Raises SelectionError as 'feature_view.feature_label_case_set'
         does.
         """
-        from .feature_wish import feature_label_case_set
+        from .feature_view import feature_label_case_set
         wanted = set()
         if self.wish.label_spec is not None:
             wanted = {name for name in label_name_tuple(

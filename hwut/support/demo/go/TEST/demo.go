@@ -3,26 +3,26 @@
 //     build   { framework = "make", target = "%.exe"
 //               caps { file_size_mb = 256 } }
 //     choices {
-//         plain       { features = ["demo-passes-on-every-run", "exact-comparison"] }
-//         tolerance   { features = ["demo-passes-on-every-run", "equivalence-pattern", "numeric-ratio"]
+//         plain       { features = ["demo-go", "demo-go+cover-exact-comparison"] }
+//         tolerance   { features = ["demo-go", "demo-go+cover-equivalence-pattern", "demo-go+cover-numeric-ratio"]
 //                       tolerance {
 //                           eq_pattern    = ["(hello|bonjour|hallo|buongiorno|hola|ahoj)"]
 //                           numeric_ratio = 0.01
 //                       } }
-//         constraints { features = ["demo-passes-on-every-run", "constraints"]
+//         constraints { features = ["demo-go", "demo-go+cover-constraints"]
 //                       tolerance {
 //                           constraints = ["load >= 0 and load <= 100",
 //                                          "even % 2 == 0",
 //                                          "twice == 2 * once"]
 //                       } }
-//         analogies   { features = ["demo-passes-on-every-run", "analogies"] }
-//         race        { features = ["demo-passes-on-every-run", "order-free-block"] }
-//         pool        { features = ["demo-passes-on-every-run", "potpourri-subset-duplicates"] }
-//         progress    { features = ["demo-passes-on-every-run", "visible-nothing"]
+//         analogies   { features = ["demo-go", "demo-go+cover-analogies"] }
+//         race        { features = ["demo-go", "demo-go+cover-order-free-block"] }
+//         pool        { features = ["demo-go", "demo-go+cover-potpourri-subset-duplicates"] }
+//         progress    { features = ["demo-go", "demo-go+cover-visible-nothing"]
 //                       tolerance { nothing = ["[.]+"] } }
-//         lisp        { features = ["demo-passes-on-every-run", "analogy-markers"]
+//         lisp        { features = ["demo-go", "demo-go+cover-analogy-markers"]
 //                       tolerance { analogy = ["{", "}"] } }
-//         clusters    { features = ["demo-passes-on-every-run", "point-cloud-pair-distance"] }
+//         clusters    { features = ["demo-go", "demo-go+cover-point-cloud-pair-distance"] }
 //     }
 // }
 //

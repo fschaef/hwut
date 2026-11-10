@@ -1,0 +1,6 @@
+unplaced      NOTE  'keeporder' is documented and stands in no forest line => hwut.features.tree -- did you mean 'keep-order'?
+undocumented  NOTE  the root 'gateway' stands in no block of the doc file => '[[gateway]]'
+undocumented  NOTE  the root 'spare' stands in no block of the doc file => '[[spare]]'
+outside       NOTE  'fwdd' is linked by a/TEST/test-a.sh [one] and stands in no forest line and no doc block -- did you mean 'fwd'?
+outside       NOTE  'gone' is linked by a/TEST/test-a.sh [one] and is a retired feature
+<hwut-end>

@@ -1,0 +1,5 @@
+no forest no 'hwut-feature-forest.csv' stands at '<root>' => hwut.features.init
+forest    FAULT: hwut-feature-forest.csv:1: the forest closes a circle: a -> b -> a
+doc       FAULT: hwut-feature-doc.dat:1: 'b' is retired and stands in a forest line (hwut-feature-forest.csv:1) -- strike one
+map       FAULT: hwut-feature-external-map.csv:1: 'c' stands in no forest line -- did you mean 'a' or 'b'?
+<hwut-end>

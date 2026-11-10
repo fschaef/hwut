@@ -168,7 +168,7 @@ help-outside)
     ;;
 
 refused-remedy)
-    echo "--- no 'hwut-root-features.conf': the remedy is another command"
+    echo "--- no 'hwut-feature-forest.csv': the remedy is another command"
     said hwut.report.features | sed "s|$WORK|<tree>|"
     page a/TEST/test-r.py 'one { }' <<'EOF2'
 print("x")

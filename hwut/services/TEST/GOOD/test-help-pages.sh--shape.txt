@@ -22,9 +22,6 @@ hwut.dev.podman.enter        -          ok
 hwut.diff                    -          ok
 hwut.execute                 -          ok
 hwut.features.init           -          ok
-hwut.features.key.add        -          ok
-hwut.features.key.remove     -          ok
-hwut.features.move           -          ok
 hwut.features.register       -          ok
 hwut.features.rename         -          ok
 hwut.features.retire         -          ok

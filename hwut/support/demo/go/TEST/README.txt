@@ -5,8 +5,8 @@ program, held against its GOOD files
 ==============================================================================
 
     hwut --plain                    every test here: 27 ok
-    hwut.report.features            every feature below, and the run that
-                                    proves it ('hwut-features.conf')
+    hwut.report.features            every feature, and the run that proves
+                                    it -- this port's one is 'demo-go'
     hwut.play <file> <choice>       one choice, run and shown
     hwut.config.show <file>         what hwut read, and from where
 

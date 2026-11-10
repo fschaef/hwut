@@ -1,4 +1,4 @@
-# vut-register 5 generation:506 apps:58 marks:0=7,1=8,2=13,3=5,4=8,5=7,6=12,7=5,8=9,9=2,10=2,11=5,12=6,13=6,14=8,15=5,16=6,17=10,18=3,19=5,20=7,21=13,22=4,23=15,24=8,25=11,26=5,27=13,28=10,29=3,30=8,31=4,32=1,33=4,34=3,35=4,36=8,37=18,38=13,39=3,40=2,41=12,42=9,44=3,45=12,46=3,47=5,48=5,49=5,50=7,51=19,52=20,53=30,54=8,55=2,56=3,57=3
+# vut-register 5 generation:510 apps:58 marks:0=7,1=8,2=13,3=5,4=8,5=7,6=12,7=5,8=9,9=2,10=2,11=5,12=6,13=6,14=8,15=5,16=6,17=10,18=3,19=5,20=7,21=13,22=4,23=15,24=8,25=11,26=5,27=13,28=10,29=3,30=8,31=4,32=1,33=4,34=3,35=4,36=8,37=18,38=13,39=3,40=2,41=12,42=10,45=12,46=3,48=5,49=5,50=7,51=19,52=20,53=30,54=8,55=2,56=3,57=3
 test;choice;verdict;report;stain;test_id;choice_id;platform
 test-about.sh;page;true;ok;;39;0
 ;refused;true;ok;;39;1
@@ -82,7 +82,7 @@ test-book-defects-5.sh;accept-first;true;ok;;53;0
 ;conf-unread;true;ok;;53;13
 ;cov-remedy;true;ok;;53;21
 ;currencies;true;ok;;53;22
-;demo-documents;false;not-equivalent-with-nominal;stderr-untolerated;53;1
+;demo-documents;true;ok;;53;1
 ;exponent-law;true;ok;;53;2
 ;genomics;true;ok;;53;14
 ;header-once;true;ok;;53;3
@@ -229,14 +229,6 @@ test-face-words.sh;book;true;ok;;38;8
 ;strategy;true;ok;;38;10
 ;tiers;true;ok;;38;9
 ;yes_gone;true;ok;;38;6
-test-features-cross.sh;external;true;ok;;47;4
-;link;true;ok;;47;3
-;move;true;ok;;47;0
-;repoint;true;ok;;47;1
-;unresolved;true;ok;;47;2
-test-features-follow.py;move;true;ok;;44;0
-;move_inside;true;ok;;44;2
-;remove;true;ok;;44;1
 test-gate.py;backup_shaped;true;ok;;11;0
 ;new_choice;true;ok;;11;1
 ;not_accepted;true;ok;;11;2
@@ -350,6 +342,7 @@ test-report-details.sh;bare;true;ok;;20;0
 ;raw;true;ok;;20;5
 ;wish;true;ok;;20;6
 test-report-features.py;code;true;ok;;42;5
+;cut;true;ok;;42;9
 ;document;true;ok;;42;7
 ;empty;true;ok;;42;0
 ;matrix;true;ok;;42;6
@@ -357,7 +350,6 @@ test-report-features.py;code;true;ok;;42;5
 ;refused;true;ok;;42;2
 ;test_directory;true;ok;;42;3
 ;tree;true;ok;;42;4
-;wish;true;ok;;42;8
 test-report-timings.py;empty;true;ok;;26;0
 ;file;true;ok;;26;1
 ;refused;true;ok;;26;2

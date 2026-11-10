@@ -46,12 +46,8 @@ WHAT MOVES, each step announced:
     THE REGISTER within the directory the name follows and the id
                  stands; across, retired here and issued there
     THE LABELS   the boundary records ('services/_follow.py')
-    THE FEATURES across a directory: each feature the test links to
-                 that the source's 'hwut-features.conf' defines and the
-                 target's does not is CARRIED into the target's, and
-                 taken out of the source's unless a test that stays
-                 still links to it; its leaf in 'hwut-root-features.conf'
-                 is repointed to the target ('exploration/feature_carry.py')
+    THE FEATURES are not touched: a link names a feature id, which
+                 resolves wherever the test stands (spec 43, t-1)
 
 WHAT IS NOT TOUCHED: the test application file, its '@hwut' block,
 and any 'hwut.conf' 'apps' section naming it. Renaming or moving the
@@ -370,42 +366,7 @@ class Rename:
                               write,
                               target_directory=str(self.target.directory)):
             good_f = False
-        if self.across_f and self.whole_test_f:
-            self._features_followed()
         return good_f
-
-    def _features_followed(self) -> None:
-        """RETURN: None. The features the test links to, carried into
-        the target directory's feature file, the central file following
-        ('feature_carry.test_moved') -- each edit announced; nothing
-        where the test links to no feature the source defines."""
-        from ..engine.orchestrator.exploration import feature_carry
-        from ..engine.orchestrator.exploration.tree_explorer \
-            import root_conf_directory, RootConfMissing
-        source_dir = str(self.source.directory)
-        target_dir = str(self.target.directory)
-        #  THE APPLICATION IS READ WHERE IT STANDS: the author's 'git mv'
-        #  may have been made, or not yet.
-        if (Path(target_dir) / self.fresh_test).is_file():
-            test_path = str(Path(target_dir) / self.fresh_test)
-            name_set = feature_carry.linked_name_set(target_dir,
-                                                     test=self.fresh_test)
-        else:
-            test_path = str(Path(source_dir) / self.test)
-            name_set = feature_carry.linked_name_set(source_dir,
-                                                     test=self.test)
-        try:
-            root = root_conf_directory(source_dir)
-        except RootConfMissing:
-            return
-        adapted = feature_carry.test_moved(
-            root, source_dir, target_dir, name_set,
-            feature_carry.linked_name_set(source_dir, without=self.test),
-            test_path)
-        for line in adapted.said_tuple:
-            self.write(f"    {line}")
-        if adapted.reason:
-            self.write(f"    NOTE  {adapted.reason}")
 
     def _files_followed(self) -> bool:
         """RETURN: bool, True where every artefact moved."""

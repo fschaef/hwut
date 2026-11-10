@@ -5,9 +5,9 @@
 //     pype    = "build.pypes"
 //     same    = true
 //     choices = ["serial", "parallel"]
-//     features = ["pype-in-header", "pype-system", "same-nominal", "choices-as-list",
-//                 "pype-push-pop", "pype-entry-exit", "pype-import", "pype-repeat-group",
-//                 "pype-quantity", "pype-anchors-globs-flush"]
+//     features = ["demo-rust+cover-pype-in-header", "demo-rust+cover-pype-system", "demo-rust+cover-same-nominal", "demo-rust+cover-choices-as-list",
+//                 "demo-rust+cover-pype-push-pop", "demo-rust+cover-pype-entry-exit", "demo-rust+cover-pype-import", "demo-rust+cover-pype-repeat-group",
+//                 "demo-rust+cover-pype-quantity", "demo-rust+cover-pype-anchors-globs-flush"]
 //     tolerance { constraints = ["compile < 5 s", "breaches == 0"] }
 // }
 //

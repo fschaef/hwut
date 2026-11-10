@@ -82,17 +82,13 @@ candidates.
                 file beyond its root -- or the case's own '.txt' stands
                 beside it. Healed by 'unlink': the link goes, the text
                 it named is never touched.
-    --relations THE CENTRAL FILE OF FEATURES AGAINST THE TREE
-                ('hwut-root-features.conf', R-96), judged by the one
-                detector that 'hwut.features.register' asks: a directory
-                or feature not registered -- 'register'; a directory
-                that moved -- 'redirect <id> <path>'; a feature renamed
-                or moved -- 'repoint <external> <internal>'; one path
-                under two ids -- 'fold <id> <first id>'. The old value
-                stands in the note. What it cannot pair, a retired name
-                defined again and files of the past are said on stderr;
-                so is a tree that defines features and has no central
-                file => hwut.features.init.
+    --relations THE FEATURE FILES AGAINST THE LINKS (spec 43 section 6),
+                judged by the one detector that 'hwut.features.register'
+                asks, and said on stderr as NOTEs -- nothing is proposed:
+                the forest and the doc file are the author's to write. A
+                documented feature in no forest line, an undocumented
+                root, a link to an id that stands nowhere or is retired,
+                a file of the past.
     (no option) A TREE WITHOUT A BOUNDARY (E-25): where no
                 'hwut-root.conf' stands in or above the directory, the
                 proposal is 'root <dir>' and nothing else -- nothing

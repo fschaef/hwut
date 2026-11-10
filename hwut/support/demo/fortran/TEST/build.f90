@@ -4,9 +4,9 @@
 !     pype    = "build.pypes"
 !     same    = true
 !     choices = ["serial", "parallel"]
-!     features = ["pype-in-header", "pype-system", "same-nominal", "choices-as-list",
-!                 "pype-push-pop", "pype-entry-exit", "pype-import", "pype-repeat-group",
-!                 "pype-quantity", "pype-anchors-globs-flush"]
+!     features = ["demo-fortran+cover-pype-in-header", "demo-fortran+cover-pype-system", "demo-fortran+cover-same-nominal", "demo-fortran+cover-choices-as-list",
+!                 "demo-fortran+cover-pype-push-pop", "demo-fortran+cover-pype-entry-exit", "demo-fortran+cover-pype-import", "demo-fortran+cover-pype-repeat-group",
+!                 "demo-fortran+cover-pype-quantity", "demo-fortran+cover-pype-anchors-globs-flush"]
 !     tolerance { constraints = ["compile < 5 s", "breaches == 0"] }
 ! }
 !

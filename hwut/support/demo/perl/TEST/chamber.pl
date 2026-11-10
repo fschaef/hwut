@@ -6,12 +6,12 @@
 #                                "settle <= 4 min",
 #                                "verdict == 'settled'"] }
 #     choices {
-#         heat { features = ["region-verbatim", "region-table", "region-point-cloud",
-#                            "region-ignore", "laws-in-units", "string-binding",
-#                            "test-level-tolerance", "annotation-lines"] }
-#         cool { features = ["region-verbatim", "region-table", "region-point-cloud",
-#                            "region-ignore", "laws-in-units", "string-binding",
-#                            "test-level-tolerance", "annotation-lines"] }
+#         heat { features = ["demo-perl+cover-region-verbatim", "demo-perl+cover-region-table", "demo-perl+cover-region-point-cloud",
+#                            "demo-perl+cover-region-ignore", "demo-perl+cover-laws-in-units", "demo-perl+cover-string-binding",
+#                            "demo-perl+cover-test-level-tolerance", "demo-perl+cover-annotation-lines"] }
+#         cool { features = ["demo-perl+cover-region-verbatim", "demo-perl+cover-region-table", "demo-perl+cover-region-point-cloud",
+#                            "demo-perl+cover-region-ignore", "demo-perl+cover-laws-in-units", "demo-perl+cover-string-binding",
+#                            "demo-perl+cover-test-level-tolerance", "demo-perl+cover-annotation-lines"] }
 #     }
 # }
 #

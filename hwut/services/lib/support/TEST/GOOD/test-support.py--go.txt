@@ -8,7 +8,7 @@
    A TEST THEN WRITES:
        import "hwut/support/test_writing/go/hwutrunner"
    NOTE:    in your test's own module, once: go mod edit -require=hwut/support/test_writing/go@v0.0.0 -replace=hwut/support/test_writing/go=$HWUT_SUPPORT_GO
-   <dir>: TEST go hwut-root.conf
+   <dir>: TEST go hwut-feature-doc.dat hwut-feature-forest.csv hwut-root.conf
 -- as written, the MAKE IT IMPORTABLE lines applied
    RESULTS: 27 ok, 0 fail
 -- the marked line pointing nowhere; unset: HWUT_SUPPORT_GO; then only the MAKE IT IMPORTABLE lines

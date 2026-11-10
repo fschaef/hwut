@@ -10,7 +10,7 @@
 #         mixed    { features = ["flow-line", "flow-elision", "two-modes", "reason-word", "directories-roll-call", "hints-by-category"] }
 #         tiers    { features = ["tiers"] }
 #         unknown  { features = ["stream-stability"] }
-#         width    { features = ["report-width"] }
+#         width    { features = ["display-report-width"] }
 #         words    { features = ["phrase-table", "reason-word", "no-good-file-fails", "stream-stability"] }
 #     }
 #     interactive = true

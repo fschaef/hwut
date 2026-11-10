@@ -4,9 +4,9 @@
 //                 caps { timeout_sec = 900 } }
 //     tolerance { stderr_ignored = true }
 //     choices {
-//         sell   { features = ["unordered-table", "stderr-ignored", "collision"] }
-//         report { features = ["output-file", "keyed-table-separator", "dependency",
-//                              "frame-scripts", "test-scripts", "stderr-ignored"]
+//         sell   { features = ["demo-rust+cover-unordered-table", "demo-rust+cover-stderr-ignored", "demo-rust+cover-collision"] }
+//         report { features = ["demo-rust+cover-output-file", "demo-rust+cover-keyed-table-separator", "demo-rust+cover-dependency",
+//                              "demo-rust+cover-frame-scripts", "demo-rust+cover-test-scripts", "demo-rust+cover-stderr-ignored"]
 //                  output   = ["<stdout>", "stock.csv"] }
 //     }
 // }

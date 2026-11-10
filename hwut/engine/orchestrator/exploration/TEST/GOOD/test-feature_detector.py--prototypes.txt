@@ -1,0 +1,6 @@
+outside       NOTE  'ask' is linked by a/TEST/test-a.sh and a member of a prototype -- link '<owner>+<id>'
+prototype     NOTE  the prototype '+bare' is aggregated by no feature => '<feature> : +bare'
+prototype     NOTE  the prototype '+lone' is aggregated by no feature => '<feature> : +lone'
+undocumented  NOTE  the member 'ask' of '+talk' stands in no block, nor does a prototype around it => '[[ask]]'
+undocumented  NOTE  the member 'thing' of '+bare' stands in no block, nor does a prototype around it => '[[thing]]'
+<hwut-end>

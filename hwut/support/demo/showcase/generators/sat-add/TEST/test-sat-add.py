@@ -4,7 +4,7 @@
 #     features = ["exact-in-range", "clamped"]
 #     choices {
 #         checked    { tolerance { constraints = ["wrong == 0"] } }
-#         wrapcheck  { features = ["exact-in-range", "clamped", "wrong-named"]
+#         wrapcheck  { features = ["exact-in-range", "clamped", "sat-add-wrong-named"]
 #                      tolerance { constraints = ["wrong > 0"] } }
 #     }
 # }

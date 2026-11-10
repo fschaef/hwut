@@ -4,13 +4,13 @@
 //                caps { timeout_sec = 900 } }
 //     interactive = true
 //     choices {
-//         space       { features = ["space-from-hocon", "space-iterator", "hwut-runner"]
+//         space       { features = ["demo-rust+cover-space-from-hocon", "demo-rust+cover-space-iterator", "demo-rust+cover-hwut-runner"]
 //                       tolerance { constraints = ["mismatches == 0"] } }
-//         random      { features = ["deterministic-stream", "hwut-runner"]
+//         random      { features = ["demo-rust+cover-deterministic-stream", "demo-rust+cover-hwut-runner"]
 //                       tolerance { constraints = ["mismatches == 0"] } }
-//         race-naive  { features = ["deterministic-timeline", "space-iterator", "hwut-runner"]
+//         race-naive  { features = ["demo-rust+cover-deterministic-timeline", "demo-rust+cover-space-iterator", "demo-rust+cover-hwut-runner"]
 //                       tolerance { constraints = ["overbooked > 0"] } }
-//         race-atomic { features = ["deterministic-timeline", "space-iterator", "hwut-runner"]
+//         race-atomic { features = ["demo-rust+cover-deterministic-timeline", "demo-rust+cover-space-iterator", "demo-rust+cover-hwut-runner"]
 //                       tolerance { constraints = ["overbooked == 0"] } }
 //     }
 // }

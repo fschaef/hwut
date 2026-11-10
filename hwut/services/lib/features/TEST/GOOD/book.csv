@@ -1,27 +1,11 @@
-# vut-register 5 generation:31 apps:6 marks:0=6,1=3,2=4,3=5,4=4,5=3
+# vut-register 5 generation:48 apps:8 marks:6=5,7=4
 test;choice;verdict;report;stain;test_id;choice_id;platform
-test-acts.py;held;true;ok;;0;4
-;keys;true;ok;;0;0
-;move;true;ok;;0;1
-;rename;true;ok;;0;3
-;retire;true;ok;;0;2
-;root;true;ok;;0;5
-test-faces.py;init;true;ok;;1;0
-;register;true;ok;;1;1
-;tree;true;ok;;1;2
-test-proposals.py;apply;true;ok;;2;0
-;hint;true;ok;;2;1
-;propose;true;ok;;2;2
-;verbs;true;ok;;2;3
-test-report.py;below;true;ok;;3;0
-;document;true;ok;;3;1
-;matrix;true;ok;;3;2
-;outside;true;ok;;3;3
-;tree;true;ok;;3;4
-test-span.py;begin;true;ok;;5;0
-;register;true;ok;;5;1
-;view;true;ok;;5;2
-test-wish.py;ext;true;ok;;4;0
-;keys;true;ok;;4;1
-;path;true;ok;;4;2
-;together;true;ok;;4;3
+test-acts.py;prototypes;true;ok;;7;3
+;refused;true;ok;;7;2
+;rename;true;ok;;7;0
+;retire;true;ok;;7;1
+test-faces.py;bubbles;true;ok;;6;3
+;init;true;ok;;6;0
+;prototypes;true;ok;;6;4
+;register;true;ok;;6;1
+;tree;true;ok;;6;2

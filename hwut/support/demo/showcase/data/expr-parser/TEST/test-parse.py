@@ -9,7 +9,7 @@
 #                       tolerance { constraints = ["mismatches == 0", "failures == 0",
 #                                                  "n_plus >= 500", "n_minus >= 500", "n_times >= 500",
 #                                                  "n_power >= 200", "n_neg >= 200", "depth_max >= 4"] } }
-#         minus-right { features = ["violation-shown"]
+#         minus-right { features = ["expr-parser-violation-shown"]
 #                       tolerance { constraints = ["mismatches > 0"] } }
 #     }
 # }

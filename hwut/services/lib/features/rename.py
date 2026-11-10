@@ -1,38 +1,33 @@
 """SPDX-License: MIT; Project HWUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 
-PURPOSE: THE 'hwut.features.rename' COMMAND LINE -- a feature gets a new
-         name and keeps its external id (spec 23 VERSION 10, R-96;
-         services E-157).
+PURPOSE: THE 'hwut.features.rename' COMMAND LINE -- a feature id changes,
+         and every reference follows IN ONE STEP (spec 43 section 5, t-4).
 
-    hwut.features.rename <external id> <new name> [--directory=<path>]
+    hwut.features.rename <old id> <new id> [--directory=<path>]
 
-The feature behind the leaf <external id> is renamed in the three places
-that name it: its definition in its TEST directory's 'hwut-features.conf',
-every link to it in that directory's test headers ('features = [...]'),
-and the leaf's internal id in 'hwut-root-features.conf'. The external id
--- what customers, documents and tickets name -- stays as it was.
-
-A rename by hand in the feature file is no rename: 'hwut.features.register'
-then sees a feature gone and one new, and pairs them only where that is
-certain.
+The id is written anew on both sides of every line of
+'hwut-feature-forest.csv', in the headings of 'hwut-feature-doc.dat', in
+the left column of 'hwut-feature-external-map.csv', and in every
+'features = [...]' of the test headers and the confs below the top. The
+outside's names are untouched: that is what the map is for (T-e).
 
 EXIT STATUS (E-1, services/_exit.py):
     0  OK       renamed
-    2  REFUSED  no root, no central file, an id that is no leaf, a new name
-                that is no word, stands already or was retired, or an edit
-                that would leave a file with a fault
+    2  REFUSED  no root, no forest, an old id that stands nowhere, a new
+                one that is no id or stands already, or a file that states
+                a fault
 ______________________________________________________________________________
 """
 import sys
 
-from hwut.engine.orchestrator.exploration.feature_registry_act import rename
+from hwut.engine.orchestrator.exploration.feature_act import rename
 from ..._core                            import usage_line
 from .                                   import _common
 
 NAME  = "hwut.features.rename"
 USAGE = usage_line("usage: %s" % NAME,
-                   ("<external id>", "<new name>", "[--directory=<path>]"))
+                   ("<old id>", "<new id>", "[--directory=<path>]"))
 HELP  = __doc__.split("\n", 2)[2].rsplit("_" * 10, 1)[0].rstrip() \
         + "\n" + USAGE
 
@@ -42,8 +37,8 @@ def main(argv=None, write=None):
     RETURN: E_ExitCode, the exit status (see the module purpose).
     """
     return _common.act_main(NAME, HELP, USAGE, argv, write, 2,
-                            lambda root, directory, write, external, new:
-                            rename(root, external, new))
+                            lambda root, directory, write, old, new:
+                            rename(root, old, new))
 
 
 if __name__ == "__main__":

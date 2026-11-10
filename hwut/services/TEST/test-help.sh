@@ -24,8 +24,8 @@
 #           failures, once each, and not the deviation.
 # empty     a run whose only failure is a deviation: no pointer in the
 #           run; 'hwut.help' has nothing to explain (exit 3).
-# nonsense  the TEST directory states features and the one test links to
-#           none: no failure, the run says nothing of it; 'hwut.help'
+# nonsense  one test of the TEST directory links a feature and the other
+#           links none: no failure, the run says nothing of it; 'hwut.help'
 #           explains 'NONSENSE?' and names the test run (exit 0). Once
 #           the test links to a feature there is nothing to explain.
 # refused   an unknown option; a directory that does not exist.
@@ -101,8 +101,11 @@ empty)
 nonsense)
     tree
     printf 'what the run says\n<hwut-end>\n' > tree/TEST/GOOD/test-dev.sh.txt
-    printf 'features {\n    1 { name = "says" }\n}\n' \
-        > tree/TEST/hwut-features.conf
+    #  THE DIRECTORY TAKES PART: another of its runs links a feature.
+    name=test-proof.sh; app "Proof" 'echo "proven"' 'echo "<hwut-end>"'
+    sed -i 's|title = "Proof"|title = "Proof" features = ["says"]|' \
+        tree/TEST/test-proof.sh
+    printf 'proven\n<hwut-end>\n' > tree/TEST/GOOD/test-proof.sh.txt
     ( cd tree/TEST && $RUN --jobs=1 > run.txt 2>&1 )
     echo "--- the run: $(grep '^RESULTS' tree/TEST/run.txt | cut -d, -f1-2)"
     echo "--- hwut.help:"

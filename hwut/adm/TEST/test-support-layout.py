@@ -15,7 +15,7 @@ PURPOSE: THE PORTS OF THE TEST WRITING SUPPORT, AND WHERE EACH LIVES.
          'this-tree' -- the layout holds on this tree: every port listed,
          Python the one reference with 'home = "hwut"'.
          'bites' -- a made-up tree with one of each fault, and the records
-         and the feature registry, which name a departing port without
+         and the feature files, which name a departing port without
          a fault.
 ______________________________________________________________________________
 """
@@ -73,8 +73,8 @@ def test_bites():
             "# reads %s/x.pl\n" % PERL_PATH)
         put(os.path.join(root, "engine", "RATIONALE.txt"),
             "E-1 once lived in %s\n" % PERL_PATH)
-        put(os.path.join(root, "hwut-root-features.conf"),
-            '"aBcD1234" = "%s"\n' % PERL_PATH)
+        put(os.path.join(root, "hwut-feature-doc.dat"),
+            '[[perl-port]]\ndocuments: %s/README.txt\nThe port.\n' % PERL_PATH)
         put(os.path.join(root, "services", "y.txt"),
             "uses support/test_writing/python only\n")
         call(root)

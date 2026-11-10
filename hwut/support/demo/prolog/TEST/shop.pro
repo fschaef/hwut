@@ -2,9 +2,9 @@
 %     title     = "Demo: a shop's stock -- what the directory's hwut.conf arranges"
 %     tolerance { stderr_ignored = true }
 %     choices {
-%         sell   { features = ["unordered-table", "stderr-ignored", "collision"] }
-%         report { features = ["output-file", "keyed-table-separator", "dependency",
-%                              "frame-scripts", "test-scripts", "stderr-ignored"]
+%         sell   { features = ["demo-prolog+cover-unordered-table", "demo-prolog+cover-stderr-ignored", "demo-prolog+cover-collision"] }
+%         report { features = ["demo-prolog+cover-output-file", "demo-prolog+cover-keyed-table-separator", "demo-prolog+cover-dependency",
+%                              "demo-prolog+cover-frame-scripts", "demo-prolog+cover-test-scripts", "demo-prolog+cover-stderr-ignored"]
 %                  output   = ["<stdout>", "stock.csv"] }
 %     }
 % }

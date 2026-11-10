@@ -4,9 +4,9 @@
 #     choices {
 #         steady      { features = ["under-rate-all-pass"]
 #                       tolerance { constraints = ["breaches == 0"] } }
-#         storm       { features = ["window-law", "burst-after-quiet"]
+#         storm       { features = ["token-bucket-window-law", "burst-after-quiet"]
 #                       tolerance { constraints = ["breaches == 0"] } }
-#         storm-nocap { features = ["breach-named"]
+#         storm-nocap { features = ["token-bucket-breach-named"]
 #                       tolerance { constraints = ["breaches > 0"] } }
 #     }
 # }

@@ -3,9 +3,9 @@
 #     title    = "Two withdrawals race on one account: interleavings drawn as timeline strings"
 #     features = ["drawn-interleaving"]
 #     choices {
-#         locked   { features = ["drawn-interleaving", "all-schedules", "money-conserved"]
+#         locked   { features = ["drawn-interleaving", "bank-race-all-schedules", "bank-race-money-conserved"]
 #                    tolerance { constraints = ["breaches == 0"] } }
-#         unlocked { features = ["drawn-interleaving", "all-schedules", "lost-update-named"]
+#         unlocked { features = ["drawn-interleaving", "bank-race-all-schedules", "lost-update-named"]
 #                    tolerance { constraints = ["breaches > 0"] } }
 #     }
 # }

@@ -7,7 +7,7 @@
 #                     tolerance { constraints = ["abs(worst) <= 0.15 K"] } }
 #         lab       { features = ["fit-within-spec", "noise-tolerated"]
 #                     tolerance { constraints = ["abs(worst) <= 0.15 K"] } }
-#         typo      { features = ["violation-shown"]
+#         typo      { features = ["ntc-fit-violation-shown"]
 #                     tolerance { constraints = ["abs(worst) > 0.15 K"] } }
 #     }
 # }

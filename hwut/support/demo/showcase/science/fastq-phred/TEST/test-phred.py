@@ -8,7 +8,7 @@
 #                    tolerance { constraints = ["negative_q == 0", "mismatch == 0"] } }
 #         detection { features = ["detected", "ambiguous-said"]
 #                     tolerance { constraints = ["misdetected == 0"] } }
-#         assume64 { features = ["bars", "breach-shown"]
+#         assume64 { features = ["bars", "fastq-phred-breach-shown"]
 #                    tolerance { constraints = ["negative_q > 0"] } }
 #     }
 # }

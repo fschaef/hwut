@@ -1,0 +1,26 @@
+--- forwarding
+gateway      IMPLEMENTED fail       runs=0  counts=IMPLEMENTED:2,OPEN:0,fail:1,ok:1,untested:0  audience=manager
+  forwarding   IMPLEMENTED fail       runs=1  counts=IMPLEMENTED:2,OPEN:0,fail:1,ok:1,untested:0  audience=manager
+    fwd          IMPLEMENTED fail       runs=2  audience=manager
+    keeporder    IMPLEMENTED ok         runs=1  audience=manager
+count     IMPLEMENTED:2,OPEN:0,fail:1,ok:1,untested:0
+--- decode, fwd
+gateway      IMPLEMENTED fail       runs=0  counts=IMPLEMENTED:2,OPEN:0,fail:1,ok:1,untested:0  audience=manager
+  forwarding   IMPLEMENTED fail       runs=0  counts=IMPLEMENTED:1,OPEN:0,fail:1,ok:0,untested:0  audience=manager
+    fwd          IMPLEMENTED fail       runs=2  audience=manager
+  buses        IMPLEMENTED ok         runs=0  counts=IMPLEMENTED:1,OPEN:0,fail:0,ok:1,untested:0  audience=manager
+    decode       IMPLEMENTED ok         runs=1  audience=manager
+count     IMPLEMENTED:2,OPEN:0,fail:1,ok:1,untested:0
+--- lonely
+unplaced  lonely  IMPLEMENTED ok
+count     IMPLEMENTED:1,OPEN:0,fail:0,ok:1,untested:0
+--- gateway
+gateway      OPEN fail              runs=0  counts=IMPLEMENTED:3,OPEN:1,fail:1,ok:2,untested:1  audience=manager
+  forwarding   IMPLEMENTED fail       runs=1  counts=IMPLEMENTED:2,OPEN:0,fail:1,ok:1,untested:0  audience=manager
+    fwd          IMPLEMENTED fail       runs=2  audience=manager
+    keeporder    IMPLEMENTED ok         runs=1  audience=manager
+  buses        OPEN untested          runs=0  counts=IMPLEMENTED:1,OPEN:1,fail:0,ok:1,untested:1  audience=manager
+    decode       IMPLEMENTED ok         runs=1  audience=manager
+    encode       OPEN untested          runs=0  audience=manager
+count     IMPLEMENTED:3,OPEN:1,fail:1,ok:2,untested:1
+<hwut-end>

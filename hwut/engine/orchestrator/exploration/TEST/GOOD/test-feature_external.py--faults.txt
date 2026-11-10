@@ -1,0 +1,5 @@
+no semicolon  FAULT: hwut-feature-external-map.csv:1: 'gateway REQ-1' is no map line -- '<our feature id> ; <their name>'
+empty ours    FAULT: hwut-feature-external-map.csv:1: '; REQ-1' is no map line -- '<our feature id> ; <their name>'
+empty theirs  FAULT: hwut-feature-external-map.csv:1: 'gateway ;' is no map line -- '<our feature id> ; <their name>'
+unknown id    FAULT: hwut-feature-external-map.csv:1: 'keeporder' stands in no forest line -- did you mean 'keep-order'?
+<hwut-end>

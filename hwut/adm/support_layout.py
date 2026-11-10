@@ -22,8 +22,9 @@ is none, 1 else. A fault is:
 
 NOT COUNTED in the last check: the records, which keep the paths of their
 day (the numbered RATIONALE of 'engine' and 'services', 'adm/WORK',
-DISCUSSIONS), the feature registry 'hwut-root-features.conf', whose
-entries for a departing port a split removes, and 'GOOD/' directories: a
+DISCUSSIONS), the feature files 'hwut-feature-forest.csv' and
+'hwut-feature-doc.dat', whose entries for a departing port a split
+removes, and 'GOOD/' directories: a
 nominal prints what its test does, and a test that reaches a port names it
 in its own source, which is read.
 ______________________________________________________________________________
@@ -42,7 +43,7 @@ LANGUAGE_FILE = os.path.join(SUPPORT, "LANGUAGES.conf")
 HOME_SET      = ("hwut", "support")
 SKIP_DIR_SET  = {".git", "node_modules", "__pycache__", "OUT", "TMP",
                  ".ruff_cache"}
-REGISTRY      = "hwut-root-features.conf"
+REGISTRY      = ("hwut-feature-forest.csv", "hwut-feature-doc.dat")
 
 
 def language_db(hwut_dir=HWUT):
@@ -139,7 +140,7 @@ def _naming_fault_list(hwut_dir, departing_list):
         for f in sorted(filenames):
             path     = os.path.join(dirpath, f)
             relative = os.path.relpath(path, hwut_dir)
-            if relative == REGISTRY or _is_record(relative): continue
+            if relative in REGISTRY or _is_record(relative): continue
             try:
                 with open(path, encoding="utf-8") as fh: text = fh.read()
             except (UnicodeDecodeError, OSError):

@@ -1,0 +1,18 @@
+>>> from the top
+    NOTE  'spare' is documented and stands in no forest line => hwut.features.tree
+    NOTE  'fwdd' is linked by inner/x/TEST/test-x.sh and stands in no forest line and no doc block -- did you mean 'fwd'?
+    NOTE  own/: own root, not walked => do it inside it
+    exit 0
+>>> inside the bubble without a forest
+    NOTE  'spare' is documented and stands in no forest line => hwut.features.tree
+    NOTE  'fwdd' is linked by inner/x/TEST/test-x.sh and stands in no forest line and no doc block -- did you mean 'fwd'?
+    NOTE  own/: own root, not walked => do it inside it
+    exit 0
+>>> inside the bubble with one
+    NOTE  'nix' is linked by y/TEST/test-y.sh and stands in no forest line and no doc block
+    exit 0
+>>> its forest
+    show  The showcase.
+      case
+    exit 0
+<hwut-end>

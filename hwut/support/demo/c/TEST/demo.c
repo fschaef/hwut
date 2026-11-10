@@ -2,26 +2,26 @@
  *     title   = "Demo: what hwut tolerates, and where it is said"
  *     build   { framework = "make", target = "%.exe" }
  *     choices {
- *         plain       { features = ["demo-passes-on-every-run", "exact-comparison"] }
- *         tolerance   { features = ["demo-passes-on-every-run", "equivalence-pattern", "numeric-ratio"]
+ *         plain       { features = ["demo-c", "demo-c+cover-exact-comparison"] }
+ *         tolerance   { features = ["demo-c", "demo-c+cover-equivalence-pattern", "demo-c+cover-numeric-ratio"]
  *                       tolerance {
  *                           eq_pattern    = ["(hello|bonjour|hallo|buongiorno|hola|ahoj)"]
  *                           numeric_ratio = 0.01
  *                       } }
- *         constraints { features = ["demo-passes-on-every-run", "constraints"]
+ *         constraints { features = ["demo-c", "demo-c+cover-constraints"]
  *                       tolerance {
  *                           constraints = ["load >= 0 and load <= 100",
  *                                          "even % 2 == 0",
  *                                          "twice == 2 * once"]
  *                       } }
- *         analogies   { features = ["demo-passes-on-every-run", "analogies"] }
- *         race        { features = ["demo-passes-on-every-run", "order-free-block"] }
- *         pool        { features = ["demo-passes-on-every-run", "potpourri-subset-duplicates"] }
- *         progress    { features = ["demo-passes-on-every-run", "visible-nothing"]
+ *         analogies   { features = ["demo-c", "demo-c+cover-analogies"] }
+ *         race        { features = ["demo-c", "demo-c+cover-order-free-block"] }
+ *         pool        { features = ["demo-c", "demo-c+cover-potpourri-subset-duplicates"] }
+ *         progress    { features = ["demo-c", "demo-c+cover-visible-nothing"]
  *                       tolerance { nothing = ["[.]+"] } }
- *         lisp        { features = ["demo-passes-on-every-run", "analogy-markers"]
+ *         lisp        { features = ["demo-c", "demo-c+cover-analogy-markers"]
  *                       tolerance { analogy = ["{", "}"] } }
- *         clusters    { features = ["demo-passes-on-every-run", "point-cloud-pair-distance"] }
+ *         clusters    { features = ["demo-c", "demo-c+cover-point-cloud-pair-distance"] }
  *     }
  * }
  *

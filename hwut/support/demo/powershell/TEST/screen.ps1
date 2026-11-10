@@ -6,8 +6,8 @@
 #                 comment    = false
 #                 whitespace = false }
 #     choices {
-#         open   { features = ["terminal-screen", "screen-as-seen"] }
-#         scroll { features = ["terminal-screen", "screen-as-seen"] }
+#         open   { features = ["demo-powershell+cover-terminal-screen", "demo-powershell+cover-screen-as-seen"] }
+#         scroll { features = ["demo-powershell+cover-terminal-screen", "demo-powershell+cover-screen-as-seen"] }
 #     }
 # }
 #

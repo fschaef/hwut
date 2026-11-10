@@ -1,58 +1,63 @@
 
 --- hwut.report.features --matrix ---
     engine/compare/TEST    #1          #2
-    test-fresh.sh          .           NO VERDICT
-    test-pages.sh [small]  PASS        .
-    test-pages.sh [large]  PASS        .
-      #1 whole-page  IMPLEMENTED ok
-      #2 never-run   IMPLEMENTED untested
+    test-fresh.sh          NO VERDICT  .
+    test-pages.sh [small]  .           PASS
+    test-pages.sh [large]  .           PASS
+      #1 never-run   IMPLEMENTED untested
+      #2 whole-page  IMPLEMENTED ok
     
-    engine/compare/core/TEST  #1    #2    #3    #4
-    test-pair.sh [plain]      PASS  .     .     .
-    test-pair.sh [gap]        FAIL  FAIL  .     .
-    test-pair.sh [odd]        .     .     .     .     <- NONSENSE?
-    test-stray.sh             .     .     .     .     <- no feature defined
-                                          ^     ^     no test run
+    engine/compare/core/TEST  #1          #2          #3          #4
+    test-pair.sh [plain]      PASS        .           .           .
+    test-pair.sh [gap]        FAIL        FAIL        .           .
+    test-pair.sh [odd]        .           .           .           .           <- NONSENSE?
+    test-stray.sh             .           .           NO VERDICT  NO VERDICT
       #1 line-pairing  IMPLEMENTED fail
       #2 missing-side  IMPLEMENTED fail
-      #3 untested      OPEN untested
-      #4 not-numbered  OPEN untested
+      #3 line-pairng   stands nowhere
+      #4 old-pairing   retired
     
     OUTSIDE THE RELATION
-        test run, names a feature its TEST directory does not define
-            engine/compare/core/TEST/test-stray.sh   'no-such'
+        test run, links an id that stands in no forest line and no doc block
+            engine/compare/core/TEST/test-stray.sh   'line-pairng' -- did you mean 'line-pairing'?
+        test run, links a retired feature
+            engine/compare/core/TEST/test-stray.sh   'old-pairing'
         NONSENSE? test run, links to no feature => hwut.help
             engine/compare/core/TEST/test-pair.sh [odd]
         claim, names a document that does not stand
-            engine/compare/core/TEST/line-pairing   '../absent.txt'
-        statement, not read
-            engine/compare/core/TEST/hwut-features.conf:12:20: VOCABULARY: 'documents' is a list of file names: documents = ["README.txt", ...]
+            line-pairing   'engine/compare/core/absent.txt'
 status: OK
 
 --- --matrix inside engine/compare/core/TEST ---
-    .                     #1    #2    #3    #4
-    test-pair.sh [plain]  PASS  .     .     .
-    test-pair.sh [gap]    FAIL  FAIL  .     .
-    test-pair.sh [odd]    .     .     .     .     <- NONSENSE?
-    test-stray.sh         .     .     .     .     <- no feature defined
-                                      ^     ^     no test run
+    ../../TEST             #1          #2
+    test-fresh.sh          NO VERDICT  .
+    test-pages.sh [small]  .           PASS
+    test-pages.sh [large]  .           PASS
+      #1 never-run   IMPLEMENTED untested
+      #2 whole-page  IMPLEMENTED ok
+    
+    .                     #1          #2          #3          #4
+    test-pair.sh [plain]  PASS        .           .           .
+    test-pair.sh [gap]    FAIL        FAIL        .           .
+    test-pair.sh [odd]    .           .           .           .           <- NONSENSE?
+    test-stray.sh         .           .           NO VERDICT  NO VERDICT
       #1 line-pairing  IMPLEMENTED fail
       #2 missing-side  IMPLEMENTED fail
-      #3 untested      OPEN untested
-      #4 not-numbered  OPEN untested
+      #3 line-pairng   stands nowhere
+      #4 old-pairing   retired
     
     OUTSIDE THE RELATION
-        test run, names a feature its TEST directory does not define
-            test-stray.sh   'no-such'
+        test run, links an id that stands in no forest line and no doc block
+            test-stray.sh   'line-pairng' -- did you mean 'line-pairing'?
+        test run, links a retired feature
+            test-stray.sh   'old-pairing'
         NONSENSE? test run, links to no feature => hwut.help
             test-pair.sh [odd]
         claim, names a document that does not stand
-            ./line-pairing   '../absent.txt'
-        statement, not read
-            hwut-features.conf:12:20: VOCABULARY: 'documents' is a list of file names: documents = ["README.txt", ...]
+            line-pairing   'engine/compare/core/absent.txt'
 status: OK
 
---- --matrix where no TEST directory states features ---
-    no TEST directory carries 'hwut-features.conf'
+--- --matrix where no test run links a feature ---
+    no test run links a feature
 status: OK
 <hwut-end>

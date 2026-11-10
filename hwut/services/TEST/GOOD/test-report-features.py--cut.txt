@@ -1,0 +1,85 @@
+
+--- hwut.report.features core ---
+    AGGREGATE engine -- Engine     2 implemented, 2 open; 0 ok, 2 fail, 2 untested
+        state      OPEN fail
+        doc        Runs tests and judges them.
+        audience   reviewer
+        AGGREGATE engine/compare -- Compare 2 implemented, 2 open; 0 ok, 2 fail, 2 untested
+            state      OPEN fail
+            doc        Decides whether an output is equivalent to its nominal.
+            audience   reviewer
+            AGGREGATE engine/compare/core -- Core 2 implemented, 2 open; 0 ok, 2 fail, 2 untested
+                state      OPEN fail
+                doc        Pairs lines.
+                [IMPLEMENTED fail] line-pairing -- Two streams are aligned line by line.
+                    names       pairing
+                    [PASS] engine/compare/core/TEST/test-pair.sh [plain]
+                    [FAIL] engine/compare/core/TEST/test-pair.sh [gap]
+                    see          engine/compare/core/README.txt#pairing
+                    see          https://example.org/pairing
+                    see          engine/compare/core/absent.txt
+                [IMPLEMENTED fail] missing-side -- A line present on one side only is shown whole.
+                    [FAIL] engine/compare/core/TEST/test-pair.sh [gap]
+                [OPEN untested]    untested
+                [OPEN untested]    not-numbered
+status: OK
+
+--- hwut.report.features whole-page ---
+    AGGREGATE engine -- Engine     1 implemented, 0 open; 1 ok, 0 fail, 0 untested
+        state      IMPLEMENTED ok
+        doc        Runs tests and judges them.
+        audience   reviewer
+        AGGREGATE engine/compare -- Compare 1 implemented, 0 open; 1 ok, 0 fail, 0 untested
+            state      IMPLEMENTED ok
+            doc        Decides whether an output is equivalent to its nominal.
+            audience   reviewer
+            [IMPLEMENTED ok]   whole-page -- A whole page is judged.
+                audience    reviewer
+                [PASS] engine/compare/TEST/test-pages.sh [small]
+                [PASS] engine/compare/TEST/test-pages.sh [large]
+status: OK
+
+--- hwut.report.features line-pairing whole-page ---
+    AGGREGATE engine -- Engine     2 implemented, 0 open; 1 ok, 1 fail, 0 untested
+        state      IMPLEMENTED fail
+        doc        Runs tests and judges them.
+        audience   reviewer
+        AGGREGATE engine/compare -- Compare 2 implemented, 0 open; 1 ok, 1 fail, 0 untested
+            state      IMPLEMENTED fail
+            doc        Decides whether an output is equivalent to its nominal.
+            audience   reviewer
+            AGGREGATE engine/compare/core -- Core 1 implemented, 0 open; 0 ok, 1 fail, 0 untested
+                state      IMPLEMENTED fail
+                doc        Pairs lines.
+                [IMPLEMENTED fail] line-pairing -- Two streams are aligned line by line.
+                    names       pairing
+                    [PASS] engine/compare/core/TEST/test-pair.sh [plain]
+                    [FAIL] engine/compare/core/TEST/test-pair.sh [gap]
+                    see          engine/compare/core/README.txt#pairing
+                    see          https://example.org/pairing
+                    see          engine/compare/core/absent.txt
+            [IMPLEMENTED ok]   whole-page -- A whole page is judged.
+                audience    reviewer
+                [PASS] engine/compare/TEST/test-pages.sh [small]
+                [PASS] engine/compare/TEST/test-pages.sh [large]
+status: OK
+
+--- hwut.report.features line-pairng ---
+    REFUSED: 'line-pairng' stands in no forest line and no doc block -- did you mean 'line-pairing'?
+    usage: hwut.report.features [<id>]... [--matrix] [--code] [--cov-dir=<dir>] [--html=<file>] [--ods=<file>] [--cov-html=<dir>] [--directory=<path>] [--help]
+status: REFUSED
+
+--- hwut.report.features old-pairing ---
+    REFUSED: 'old-pairing' is a RETIRED feature: it stands in no forest line
+    usage: hwut.report.features [<id>]... [--matrix] [--code] [--cov-dir=<dir>] [--html=<file>] [--ods=<file>] [--cov-html=<dir>] [--directory=<path>] [--help]
+status: REFUSED
+
+--- hwut.report.features -F core ---
+    REFUSED: '-F' is gone: the runs of a feature are the label 'f/<id>' -- here a bare id cuts the page: 'hwut.report.features <id>'
+    usage: hwut.report.features [<id>]... [--matrix] [--code] [--cov-dir=<dir>] [--html=<file>] [--ods=<file>] [--cov-html=<dir>] [--directory=<path>] [--help]
+status: REFUSED
+
+--- hwut.report.features core --matrix ---
+    REFUSED: '--matrix' shows every link of each TEST directory; an id cuts the tree => without '--matrix'
+status: REFUSED
+<hwut-end>

@@ -4,9 +4,9 @@
 //     title     = "Demo: a shop's stock -- what the directory's hwut.conf arranges"
 //     tolerance { stderr_ignored = true }
 //     choices {
-//         sell   { features = ["unordered-table", "stderr-ignored", "collision"] }
-//         report { features = ["output-file", "keyed-table-separator", "dependency",
-//                              "frame-scripts", "test-scripts", "stderr-ignored"]
+//         sell   { features = ["demo-node+cover-unordered-table", "demo-node+cover-stderr-ignored", "demo-node+cover-collision"] }
+//         report { features = ["demo-node+cover-output-file", "demo-node+cover-keyed-table-separator", "demo-node+cover-dependency",
+//                              "demo-node+cover-frame-scripts", "demo-node+cover-test-scripts", "demo-node+cover-stderr-ignored"]
 //                  output   = ["<stdout>", "stock.csv"] }
 //     }
 // }

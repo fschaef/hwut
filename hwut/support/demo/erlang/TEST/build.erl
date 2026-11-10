@@ -3,9 +3,9 @@
 %%     pype    = "build.pypes"
 %%     same    = true
 %%     choices = ["serial", "parallel"]
-%%     features = ["pype-in-header", "pype-system", "same-nominal", "choices-as-list",
-%%                 "pype-push-pop", "pype-entry-exit", "pype-import", "pype-repeat-group",
-%%                 "pype-quantity", "pype-anchors-globs-flush"]
+%%     features = ["demo-erlang+cover-pype-in-header", "demo-erlang+cover-pype-system", "demo-erlang+cover-same-nominal", "demo-erlang+cover-choices-as-list",
+%%                 "demo-erlang+cover-pype-push-pop", "demo-erlang+cover-pype-entry-exit", "demo-erlang+cover-pype-import", "demo-erlang+cover-pype-repeat-group",
+%%                 "demo-erlang+cover-pype-quantity", "demo-erlang+cover-pype-anchors-globs-flush"]
 %%     tolerance { constraints = ["compile < 5 s", "breaches == 0"] }
 %% }
 %%

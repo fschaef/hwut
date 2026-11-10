@@ -7,7 +7,7 @@
 #     choices {
 #         help    { features = ["face-help-page"] }
 #         filter  { }
-#         shebang { features = ["pype-shebang"] }
+#         shebang { features = ["services-pype-shebang"] }
 #         refused { features = ["pype-door", "face-refusal-by-name"] }
 #         fault   { features = ["pype-door"] }
 #         exit    { features = ["pype-exit-passes"] }

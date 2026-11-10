@@ -1,11 +1,11 @@
 #! /usr/bin/env node
 // @hwut {
 //     title    = "Dirty COW (CVE-2016-5195) as a race model: a write that forgets to re-check its private copy"
-//     features = ["all-interleavings", "recheck-guard"]
+//     features = ["dirty-cow-race-all-interleavings", "recheck-guard"]
 //     choices {
-//         fixed       { features = ["all-interleavings", "recheck-guard"]
+//         fixed       { features = ["dirty-cow-race-all-interleavings", "recheck-guard"]
 //                       tolerance { constraints = ["unfinished == 0", "ro_writes == 0"] } }
-//         vulnerable  { features = ["all-interleavings", "losing-rows-named"]
+//         vulnerable  { features = ["dirty-cow-race-all-interleavings", "losing-rows-named"]
 //                       tolerance { constraints = ["unfinished == 0", "ro_writes > 0"] } }
 //     }
 // }

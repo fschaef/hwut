@@ -4,12 +4,12 @@
 %                                "settle <= 4 min",
 %                                "verdict == 'settled'"] }
 %     choices {
-%         heat { features = ["region-verbatim", "region-table", "region-point-cloud",
-%                            "region-ignore", "laws-in-units", "string-binding",
-%                            "test-level-tolerance", "annotation-lines"] }
-%         cool { features = ["region-verbatim", "region-table", "region-point-cloud",
-%                            "region-ignore", "laws-in-units", "string-binding",
-%                            "test-level-tolerance", "annotation-lines"] }
+%         heat { features = ["demo-prolog+cover-region-verbatim", "demo-prolog+cover-region-table", "demo-prolog+cover-region-point-cloud",
+%                            "demo-prolog+cover-region-ignore", "demo-prolog+cover-laws-in-units", "demo-prolog+cover-string-binding",
+%                            "demo-prolog+cover-test-level-tolerance", "demo-prolog+cover-annotation-lines"] }
+%         cool { features = ["demo-prolog+cover-region-verbatim", "demo-prolog+cover-region-table", "demo-prolog+cover-region-point-cloud",
+%                            "demo-prolog+cover-region-ignore", "demo-prolog+cover-laws-in-units", "demo-prolog+cover-string-binding",
+%                            "demo-prolog+cover-test-level-tolerance", "demo-prolog+cover-annotation-lines"] }
 %     }
 % }
 %

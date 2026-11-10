@@ -37,7 +37,7 @@
 #                 the wish -- where the wish asks for 'b/TEST' the conf
 #                 fails its cases besides (E-190).
 # silent-events   A SILENT RUN'S STDOUT CARRIES EVENTS AND NOTHING ELSE
-#                 (display D-5): the registry hint is written under
+#                 (display D-5): the feature hint is written under
 #                 '--plain' and not under '--silent'. MEASURED before:
 #                 the hint reached the far run's event channel
 #                 ('--events /dev/stdout'), and the near run read it as a
@@ -125,16 +125,13 @@ case "$1" in
     silent-events)
         mkdir -p "$WORK/a/TEST"
         page "$WORK/a/TEST/test-t.sh" 'choices = ["x"] features = ["one"]' 'echo "$1"'
-        printf 'features {\n  childs {\n    one { title = "One." }\n  }\n}\n' \
-               > "$WORK/a/TEST/hwut-features.conf"
         ( cd "$WORK/a/TEST" && "$BIN/hwut.play" --all --plain > /dev/null 2>&1 \
                             && "$BIN/hwut.accept" > /dev/null 2>&1 )
         cd "$WORK"
-        #  THE REGISTRY STANDS AND KNOWS NOTHING OF 'one': the hint is due.
-        printf 'features {\n    directory_map {\n    }\n    tree {\n    }\n}\n' \
-               > hwut-root-features.conf
+        #  THE FOREST STANDS AND KNOWS NOTHING OF 'one': the hint is due.
+        : > hwut-feature-forest.csv
         echo "== hwut.run --plain: the hint stands on stdout"
-        "$BIN/hwut.run" --plain 2>&1 | grep -E "feature\(s\) not registered" | shown \
+        "$BIN/hwut.run" --plain 2>&1 | grep -E "link\(s\) to no feature" | shown \
             | sed 's/^/    /'
         echo "== hwut.run --silent: stdout, line by line"
         "$BIN/hwut.run" --silent 2>/dev/null | sed -E 's/^/    |/'

@@ -1,0 +1,27 @@
+port-a       OPEN untested          runs=0  counts=IMPLEMENTED:2,OPEN:1,fail:0,ok:2,untested:1
+  own          OPEN untested          runs=0
+  port-a+show  IMPLEMENTED ok         runs=0  counts=IMPLEMENTED:2,OPEN:0,fail:0,ok:2,untested:0
+    port-a+greet IMPLEMENTED ok         runs=1
+    port-a+talk  IMPLEMENTED ok         runs=0  counts=IMPLEMENTED:1,OPEN:0,fail:0,ok:1,untested:0
+      port-a+ask   IMPLEMENTED ok         runs=1
+port-b       OPEN fail              runs=0  counts=IMPLEMENTED:1,OPEN:1,fail:1,ok:0,untested:1
+  port-b+show  OPEN fail              runs=0  counts=IMPLEMENTED:1,OPEN:1,fail:1,ok:0,untested:1
+    port-b+greet IMPLEMENTED fail       runs=1
+    port-b+talk  OPEN untested          runs=0  counts=IMPLEMENTED:0,OPEN:1,fail:0,ok:0,untested:1
+      port-b+ask   OPEN untested          runs=0
+retired   bye
+outside   b/TEST/test-b.sh None 'greet': a member of a prototype -- link '<owner>+<id>'
+outside   b/TEST/test-b.sh None '+show': a prototype -- no feature, link one of its instances
+outside   b/TEST/test-c.sh None 'port-b+bye': a retired feature
+count     IMPLEMENTED:3,OPEN:2,fail:1,ok:2,untested:2
+f/port-a+greet a/TEST/test-a.sh [None]
+f/*+greet      a/TEST/test-a.sh [None] b/TEST/test-b.sh [None]
+f/port-?       a/TEST/test-a.sh [None] b/TEST/test-b.sh [None]
+f/port-a+*     a/TEST/test-a.sh [None]
+f/*            a/TEST/test-a.sh [None] b/TEST/test-b.sh [None]
+f/*+nothing    REFUSED: 'f/*+nothing' matches no feature: no id of 'hwut-feature-forest.csv' or of the doc file fits the glob => hwut.features.tree --list
+f/greet        REFUSED: 'f/greet' names a member of a prototype, no feature -- 'f/<owner>+greet', or 'f/*+greet' for every instance
+f/+show        REFUSED: 'f/+show': a prototype names no instance -- 'f/*+show', every instance of it
+f/port-b+bye   REFUSED: 'f/port-b+bye' names a RETIRED feature: no longer claimed, no run proves it any more
+f/*+nothing    (none)
+<hwut-end>

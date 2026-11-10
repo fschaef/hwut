@@ -4,252 +4,160 @@
 #     title      = "hwut.features.init, register and tree on scratch trees"
 #     choices {
 #         init     { features = ["init-writes"] }
-#         register { features = ["register-adds"] }
+#         register { features = ["register-notes"] }
 #         tree     { features = ["tree-prints"] }
+#         bubbles  { features = ["forest-spans-bubbles"] }
+#         prototypes { features = ["tree-prints", "register-notes"] }
 #     }
 # }
 #
 """SPDX-License: MIT; Project HWUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 
-PURPOSE: THE FEATURE FACES of the central file (spec 23 VERSION 10 section 8,
-         R-96), each called as a person calls it, on a scratch tree; the
-         random directory ids stand in for counted ones so the pages hold.
+PURPOSE: THE FEATURE FACES that read and begin (spec 43 sections 5, 6),
+         each called as a person calls it, on a scratch tree.
 
-CHOICES: init, register, tree;
+CHOICES: init, register, tree, bubbles, prototypes;
 
-init      the file written -- header, directory ids, leaves unplaced --;
-          refused where it stands, where files of the past stand, where no
+init      an empty forest and doc file written where none stands, their
+          headers saying how they are written, no map; one standing kept
+          and the other written; refused where both stand, where no
           'hwut-root.conf' stands, and for a word it does not take.
 
-register  nothing to register; a new feature; a new directory below a
-          directory named, and the one outside not touched; a directory
-          moved (named, not acted on, exit 1); no central file; a central
-          file with a fault (nothing written); a directory outside the root.
+register  the notes, each with 'did you mean' where an id is near: a
+          documented feature in no forest line, an undocumented root, a
+          link to an id that stands nowhere and one to a retired id, a file
+          of the past; a tree that agrees: 'nothing disagrees'; no forest,
+          refused; a file that states a fault, FAULT.
 
-tree      the tree with titles, '-e', '--list', '-b', a base, a base that is
-          no aggregate, '--list' with '-b'.
+tree      the forest with titles, roots first, children indented, the
+          unplaced after it; '-e' with the outside's names; '--list' one id
+          per line; a subtree; an id that stands nowhere, refused with
+          'did you mean'; a word it does not take.
+
+bubbles   a bubble without a forest of its own is the forest's above: its
+          links are judged there, called inside it too; a bubble with one
+          begins its own features (the showcase, 2026-11-08): not walked
+          from above, NOTEd.
+
+prototypes (intend/44) the tree shows the instances where their owners
+          stand, each with the title that documents it -- its own block,
+          its member's, its prototype's -- and the prototypes as declared
+          under '(prototypes)'; '--list' the instances, no prototype, no
+          member; 'register' notes a prototype nobody aggregates and a
+          member documented by nothing.
 ______________________________________________________________________________
 """
 import os
-import shutil
 import sys
-import tempfile
 
 import config                                                    # noqa F401
 from   config import HwutRunner                                  # noqa F401,E402
 
+import _fixture as fx                                            # noqa E402
 from hwut.services.lib.features import init, register, tree    # noqa E402
 
 
-def banner(label):
-    """RETURN: None. Section heading."""
-    print("--- %s " % label + "-" * (60 - len(label)))
+def run_init():
+    """RETURN: None. 'hwut.features.init'."""
+    root = fx.tree()
+    fx.call("hwut.features.init", init, [], root)
+    for each in ("hwut-feature-forest.csv", "hwut-feature-doc.dat"):
+        print("    [%s]" % each)
+        with open(os.path.join(root, each)) as fh:
+            for line in fh.read().split("\n"):
+                if line: print("    | %s" % line)
+    fx.shown(root, "hwut-feature-external-map.csv")
+    fx.call("again: both stand", init, [], root)
+    os.remove(os.path.join(root, "hwut-feature-doc.dat"))
+    fx.call("the doc file gone: only it is written", init, [], root)
+    fx.call("a word it does not take", init, ["gw"], root)
+    fx.call("no hwut-root.conf", init, [], "/")
 
 
-def _write(root, path, text):
-    """RETURN: None. Writes 'text' to 'root/path', directories made."""
-    full = os.path.join(root, path)
-    os.makedirs(os.path.dirname(full), exist_ok=True)
-    with open(full, "w", encoding="utf-8") as fh:
-        fh.write(text)
+def run_register():
+    """RETURN: None. 'hwut.features.register'."""
+    root = fx.gateway()
+    fx.test(root, "bus/TEST/test-bus.sh",
+            ['features = ["decod", "gone"]'])
+    with open(os.path.join(root, "hwut-feature-doc.dat"), "a") as fh:
+        fh.write("\n[[gone:retired]]\nOnce.\n")
+    fx.write(root, "old/TEST/hwut-features.conf", "features { }\n")
+    fx.call("hwut.features.register", register, [], root)
+    fx.call("called below the top: the same notes", register, [],
+            os.path.join(root, "gw/TEST"))
+    agree = fx.tree({"hwut-feature-forest.csv": "gateway : fwd\n",
+                     "hwut-feature-doc.dat": "[[gateway]]\nThe gateway.\n"})
+    fx.test(agree, "gw/TEST/test-fwd.sh", ['features = ["fwd"]'])
+    fx.call("a tree that agrees", register, [], agree)
+    fx.call("a word it does not take", register, ["gw"], agree)
+    os.remove(os.path.join(agree, "hwut-feature-forest.csv"))
+    fx.call("no forest", register, [], agree)
+    fx.write(agree, "hwut-feature-forest.csv", "a : b\nb : a\n")
+    fx.call("a forest that states a fault", register, [], agree)
 
 
-def _features(root, component, pair_list):
-    """RETURN: None. 'component/TEST/hwut-features.conf' defining the
-    (name, title) pairs."""
-    _write(root, component + "/TEST/hwut-features.conf",
-           "features {\n  childs {\n%s  }\n}\n" % "".join(
-               '    %s { title = "%s" }\n' % pair for pair in pair_list))
+def run_tree():
+    """RETURN: None. 'hwut.features.tree'."""
+    root = fx.gateway()
+    fx.call("hwut.features.tree", tree, [], root)
+    fx.call("-e", tree, ["-e"], root)
+    fx.call("--list", tree, ["--list"], root)
+    fx.call("a subtree", tree, ["forwarding"], root)
+    fx.call("a subtree, --list", tree, ["forwarding", "--list"], root)
+    fx.call("an id that stands nowhere", tree, ["forwardng"], root)
+    fx.call("a word it does not take", tree, ["-b"], root)
+    fx.write(root, "hwut-feature-external-map.csv", "nobody ; X\n")
+    fx.call("a map that names an id the forest does not hold", tree, [],
+            root)
 
 
-def _tree():
-    """RETURN: str, the root of a scratch tree: 'gw/can' (decode, encode),
-    'gw/most' (send)."""
-    root = tempfile.mkdtemp(prefix="hwut-features-")
-    _ROOT_LIST.append(root)
-    _write(root, "hwut-root.conf", "hwut {\n}\n")
-    _features(root, "gw/can", [("decode", "A frame is decoded."),
-                               ("encode", "A frame is encoded.")])
-    _features(root, "gw/most", [("send", "A message is sent.")])
-    return root
+def run_bubbles():
+    """RETURN: None. The forest and the bubbles below its root."""
+    root = fx.gateway()
+    fx.write(root, "inner/hwut-root.conf", "hwut {\n}\n")
+    fx.test(root, "inner/x/TEST/test-x.sh", ['features = ["fwdd"]'])
+    fx.write(root, "own/hwut-root.conf", "hwut {\n}\n")
+    fx.write(root, "own/hwut-feature-forest.csv", "show : case\n")
+    fx.write(root, "own/hwut-feature-doc.dat", "[[show]]\nThe showcase.\n")
+    fx.test(root, "own/y/TEST/test-y.sh", ['features = ["case", "nix"]'])
+    fx.call("from the top", register, [], root)
+    fx.call("inside the bubble without a forest", register, [],
+            os.path.join(root, "inner"))
+    fx.call("inside the bubble with one", register, [],
+            os.path.join(root, "own"))
+    fx.call("its forest", tree, [], os.path.join(root, "own"))
 
 
-class _Counter:
-    """Stands in for the random source: 6 bytes counting up."""
+def run_prototypes():
+    """RETURN: None. Two ports aggregating one prototype."""
+    root = fx.tree({
+        "hwut-feature-forest.csv":
+            "gateway   : can-port, most-port\n"
+            "can-port  : +port\nmost-port : +port\n"
+            "+port     : receive, send, +errors\n"
+            "+errors   : bus-off, overrun\n+spare : idle\n",
+        "hwut-feature-doc.dat":
+            "[[gateway]]\nThe gateway forwards what reaches it.\n"
+            "[[+port]]\nWhat every port does.\n"
+            "[[receive]]\nA frame is received.\n"
+            "[[most-port+receive]]\nA MOST frame is received, in its slot.\n"})
+    fx.test(root, "can/TEST/test-rx.sh",
+            ['features = ["can-port+receive", "receive"]'])
+    fx.call("hwut.features.tree", tree, [], root)
+    fx.call("--list", tree, ["--list"], root)
+    fx.call("hwut.features.register", register, [], root)
 
-    def __init__(self):
-        """RETURN: None."""
-        self.n = 0
-
-    def __call__(self):
-        """RETURN: bytes, the next 6 bytes."""
-        self.n += 1
-        return bytes([65, 65, 65, 65, 65, 64 + self.n])
-
-
-_ROOT_LIST = []
-
-
-def _masked(text):
-    """RETURN: str, 'text' with every scratch root written '<root>': the
-    page must not depend on where the temporary directory lay."""
-    for root in _ROOT_LIST:
-        text = text.replace(os.path.realpath(root), "<root>") \
-                   .replace(root, "<root>")
-    return text
-
-
-def _call(label, face, argv, directory, **kw):
-    """RETURN: None. Calls 'face.main' in 'directory', prints what it wrote
-    and its exit status."""
-    print(">>> %s" % label)
-    here = os.getcwd()
-    os.chdir(directory)
-    try:
-        code = face.main(argv, write=lambda text: print(
-            "    " + _masked(text).replace("\n", "\n    ")), **kw)
-    finally:
-        os.chdir(here)
-    print("    exit %d" % int(code))
-
-
-def _file(root):
-    """RETURN: None. Prints the central file below its header."""
-    with open(os.path.join(root, "hwut-root-features.conf")) as fh:
-        text = fh.read()
-    print("    | " + "\n    | ".join(text[text.index("features {"):]
-                                      .rstrip("\n").split("\n")))
-
-
-ID_LIST = ["Aaaaaaa1", "Bbbbbbb2", "Ccccccc3"]
-
-
-def test_init():
-    """RETURN: None. Prints what 'hwut.features.init' writes and refuses."""
-    root = _tree()
-    try:
-        banner("written")
-        _call("hwut.features.init", init, [], root, id_list=ID_LIST)
-        with open(os.path.join(root, "hwut-root-features.conf")) as fh:
-            text = fh.read()
-        print("    header: %d comment lines, first: %s"
-              % (len([l for l in text.split("\n") if l.startswith("#")]),
-                 text.split("\n")[0]))
-        _file(root)
-        banner("refused")
-        _call("it stands already", init, [], root)
-        _call("a word it does not take", init, ["gw"], root)
-        os.remove(os.path.join(root, "hwut-root-features.conf"))
-        _write(root, "gw/hwut-features.conf", 'features {\n title = "G"\n}\n')
-        _write(root, "hwut-feature-map.conf", "map {\n}\n")
-        _call("files of the past stand", init, [], os.path.join(root, "gw"))
-        print("    written: %s" % os.path.exists(
-            os.path.join(root, "hwut-root-features.conf")))
-    finally:
-        shutil.rmtree(root, ignore_errors=True)
-    #  OUTSIDE EVERY TREE: under 'hwut.run' the temporary directory lies
-    #  inside the tree tested, and its 'hwut-root.conf' would be found.
-    nowhere = tempfile.mkdtemp(prefix="hwut-features-", dir="/tmp")
-    _ROOT_LIST.append(nowhere)
-    try:
-        _call("no hwut-root.conf", init, [], nowhere)
-    finally:
-        shutil.rmtree(nowhere, ignore_errors=True)
-
-
-def test_register():
-    """RETURN: None. Prints what 'hwut.features.register' adds and names."""
-    root = _tree()
-    try:
-        _call("no central file", register, [], root)
-        here = os.getcwd()
-        os.chdir(root)
-        init.main([], write=lambda text: None, id_list=ID_LIST[:2])
-        os.chdir(here)
-        banner("adding")
-        _call("nothing to register", register, [], root)
-        _features(root, "gw/can", [("decode", "A frame is decoded."),
-                                   ("encode", "A frame is encoded."),
-                                   ("reset", "The decoder is reset.")])
-        _features(root, "gw/router", [("forward", "A frame is forwarded.")])
-        _features(root, "misc", [("x", "X.")])
-        _call("below 'gw': a new feature, a new directory; 'misc' not "
-              "touched", register, ["gw"], root, token=_Counter())
-        _call("from 'misc' itself", register, [], os.path.join(root, "misc"),
-              token=_Counter())
-        _file(root)
-        banner("disagreements are named, not acted on")
-        os.rename(os.path.join(root, "gw/can"),
-                  os.path.join(root, "gw/bus-can"))
-        _call("gw/can moved to gw/bus-can", register, [], root)
-        _call("only below 'misc'", register, ["misc"], root)
-        banner("refused")
-        _call("two directories", register, ["gw", "misc"], root)
-        _call("an option it does not take", register, ["--force"], root)
-        _call("a directory outside the root", register, [".."], root)
-        _call("no such directory", register, ["nowhere"], root)
-        with open(os.path.join(root, "hwut-root-features.conf"), "a") as fh:
-            fh.write("extra { }\n")
-        _call("the central file states a fault", register, [], root)
-    finally:
-        shutil.rmtree(root, ignore_errors=True)
-
-
-def test_tree():
-    """RETURN: None. Prints the tree in its forms."""
-    root = _tree()
-    try:
-        _features(root, "gw/router", [("forward", "A frame is forwarded.")])
-        _write(root, "hwut-root-features.conf", """features {
-    directory_map {
-        "Aaaaaaa1" = "gw/can"
-        "Bbbbbbb2" = "gw/most"
-        "Ccccccc3" = "gw/router"
-    }
-    tree {
-        gateway {
-            title  = "CAN-MOST gateway"
-            childs {
-                forwarding {
-                    title  = "Frames reach their destination."
-                    childs {
-                        "router.forward" = "Ccccccc3:forward"
-                        "most.send"      = "Bbbbbbb2:send"
-                    }
-                }
-                buses {
-                    childs { "can.decode" = "Aaaaaaa1:decode" }
-                }
-            }
-        }
-        "can.encode" = "Aaaaaaa1:encode"
-    }
-    retired {
-        "old" { id = "Aaaaaaa1:old"  title = "Gone." }
-    }
-}
-""")
-        for argv in ([], ["-e"], ["--list"], ["-b"],
-                     ["gateway/forwarding"], ["gateway/forwarding", "--list"],
-                     ["gateway/buses", "-b"], ["nope"],
-                     ["--list", "-b"], ["-x"]):
-            _call("hwut.features.tree %s" % " ".join(argv), tree, argv, root)
-        _write(root, "hwut-root-features.conf", "features {\n tree { }\n}\n")
-        _call("an empty tree", tree, [], root)
-    finally:
-        shutil.rmtree(root, ignore_errors=True)
-
-
-# ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    HwutRunner(
-        argv       = sys.argv,
-        title      = "hwut.features.init, register and tree on scratch trees",
-        choice_map = {
-            "init":     test_init,
-            "register": test_register,
-            "tree":     test_tree,
-        },
-    ).run()
+    try:
+        HwutRunner(
+            argv       = sys.argv,
+            title      = "hwut.features.init, register and tree on "
+                         "scratch trees",
+            choice_map = {"init": run_init, "register": run_register,
+                          "prototypes": run_prototypes,
+                          "tree": run_tree, "bubbles": run_bubbles},
+        ).run()
+    finally:
+        fx.removed()

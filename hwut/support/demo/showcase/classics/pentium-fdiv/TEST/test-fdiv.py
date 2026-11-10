@@ -2,7 +2,7 @@
 # @hwut {
 #     title    = "Pentium FDIV (1994): five missing cells of the SRT table, the famous divisions, and a seeded fuzz"
 #     choices {
-#         p5-1994     { features = ["table-drawn", "famous-divisions", "fuzz-against-exact", "wrong-named"]
+#         p5-1994     { features = ["table-drawn", "famous-divisions", "fuzz-against-exact", "pentium-fdiv-wrong-named"]
 #                       tolerance { constraints = ["uniform_wrong == 0", "wrong > 0"] } }
 #         fixed-table { features = ["table-drawn", "famous-divisions", "fuzz-against-exact", "always-right"]
 #                       tolerance { constraints = ["uniform_wrong == 0", "wrong == 0"] } }

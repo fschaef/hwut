@@ -1,0 +1,13 @@
+ids        ['+show', '+talk', 'greet', 'port-b+greet']
+port-a+show   +show           ('user',)
+port-a+greet  greet           ('user',)
+port-b+greet  port-b+greet    ('user',)
+port-a+talk   +talk           ('user',)
+port-b+ask    +talk           ('user',)
+port-a        None            ()
+solo          None            ()
+x+solo        +lone (only '[[+lone]]' stands)
+undeclared    FAULT: hwut-feature-doc.dat:1: '+nothing' heads a block and no prototype '+nothing' is declared
+no instance   FAULT: hwut-feature-doc.dat:1: 'port-c+greet' heads a block and names no instance of the forest -- did you mean 'port-a+greet' or 'port-b+greet'?
+member twice  FAULT: hwut-feature-doc.dat:3: 'greet' is documented twice (line 1)
+<hwut-end>

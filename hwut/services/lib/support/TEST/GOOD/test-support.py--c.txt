@@ -9,7 +9,7 @@
    A TEST THEN WRITES:
        #include "hwut_runner.h"
    NOTE:    and compile $HWUT_SUPPORT_C/hwut_runner.c $HWUT_SUPPORT_C/hwut_pytext.c with it
-   <dir>: TEST c hwut-root.conf
+   <dir>: TEST c hwut-feature-doc.dat hwut-feature-forest.csv hwut-root.conf
 -- as written, the MAKE IT IMPORTABLE lines applied
    RESULTS: 27 ok, 0 fail
 -- the marked line pointing nowhere; unset: CPATH HWUT_SUPPORT_C; then only the MAKE IT IMPORTABLE lines

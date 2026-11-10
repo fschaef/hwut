@@ -5,7 +5,7 @@
 #         metric      { features = ["sheet-shown", "density-plausible", "fuel-enough"]
 #                       tolerance { constraints = ["density >= 0.775 kg/L", "density <= 0.840 kg/L",
 #                                                  "on_board >= 22300 kg"] } }
-#         pounds      { features = ["sheet-shown", "density-plausible", "unit-converted", "fuel-enough"]
+#         pounds      { features = ["sheet-shown", "density-plausible", "gimli-glider-unit-converted", "fuel-enough"]
 #                       tolerance { constraints = ["density >= 0.775 kg/L", "density <= 0.840 kg/L",
 #                                                  "on_board >= 22300 kg"] } }
 #         gimli-1983  { features = ["sheet-shown", "shortfall-named"]

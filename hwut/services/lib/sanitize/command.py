@@ -88,10 +88,6 @@ ARITY_DB = {
     "remark": (1, 2, "<dir>/<test> [<choice>]"),
     "unlink": (1, 1, "<dir>/GOOD/<case>.link"),
     "run":    (2, 2, "<dir> <target>"),
-    "register": (1, 1, "<dir>"),
-    "redirect": (2, 2, "<id> <path below the root>"),
-    "repoint":  (2, 2, "<external id> <internal id>"),
-    "fold":     (2, 2, "<id> <first id>"),
     "root":   (1, 1, "<dir>"),
     "sub-root": (1, 1, "<dir>"),
 }
@@ -267,74 +263,6 @@ class CContext:
         except OSError as error:
             return CDone(E_Done.FAULT, str(error))
         return CDone(E_Done.DONE)
-
-    def _relation_root(self, directory):
-        """
-        RETURN: [0] str, the root of the tree 'directory' stands in --
-                    where a detected move is looked for
-                [1] CDone, the refusal where no tree bounds it, or it
-                    is no directory; None else
-        """
-        if not os.path.isdir(directory):
-            return None, CDone(E_Done.NOTHING, "nothing stands there")
-        try:
-            return root_conf_directory(directory), None
-        except RootConfMissing:
-            return None, CDone(E_Done.REFUSED,
-                               "no 'hwut-root.conf' stands in or above it: "
-                               "not a tree of hwut's")
-
-    def _do_register(self, word_tuple):
-        """RETURN: CDone -- what the directory defines added to the central
-                   file ('feature_registry_act.register'): an id, a line per
-                   feature; NOTHING where all of it is registered, REFUSED
-                   where no central file stands or the edit would leave a
-                   fault."""
-        from ....engine.orchestrator.exploration import feature_registry_act
-        directory     = self.path_of(word_tuple[0])
-        root, refusal = self._relation_root(directory)
-        if refusal is not None: return refusal
-        below = os.path.relpath(directory, root).replace(os.sep, "/")
-        try:
-            directory_list, leaf_list, _ = feature_registry_act.register(
-                root, below)
-        except feature_registry_act.ActRefused as error:
-            return CDone(E_Done.REFUSED, str(error).split("\n")[0])
-        said = tuple("registered  %s  %s" % (p, i) for i, p in directory_list) \
-               + tuple("registered  %s = %s" % pair for pair in leaf_list)
-        if said: return CDone(E_Done.DONE, "", said)
-        return CDone(E_Done.NOTHING, "everything below it is registered")
-
-    def _registry_proposal(self, verb, word_tuple):
-        """RETURN: CDone -- the detector's proposal '<verb> <words>' done
-                   ('feature_registry_act.apply_proposal'), judged again
-                   first: NOTHING where it is proposed no more, REFUSED
-                   where no central file stands or the edit would leave a
-                   fault."""
-        from ....engine.orchestrator.exploration import feature_registry_act
-        root, refusal = self._relation_root(self.base)
-        if refusal is not None: return refusal
-        try:
-            said = feature_registry_act.apply_proposal(root, verb,
-                                                       word_tuple)
-        except feature_registry_act.ActRefused as error:
-            return CDone(E_Done.REFUSED, str(error).split("\n")[0])
-        if said is None:
-            return CDone(E_Done.NOTHING, "not proposed now: the detector "
-                                         "proposes no such line")
-        return CDone(E_Done.DONE, "", tuple(said))
-
-    def _do_redirect(self, word_tuple):
-        """RETURN: CDone -- a directory id pointed at where it moved."""
-        return self._registry_proposal("redirect", word_tuple)
-
-    def _do_repoint(self, word_tuple):
-        """RETURN: CDone -- an external id bound to the feature it became."""
-        return self._registry_proposal("repoint", word_tuple)
-
-    def _do_fold(self, word_tuple):
-        """RETURN: CDone -- a twin id folded into the first."""
-        return self._registry_proposal("fold", word_tuple)
 
     def _do_remove(self, word_tuple):
         """RETURN: CDone -- a session, a dead lock, 'OUT/' or 'TMP/' gone."""

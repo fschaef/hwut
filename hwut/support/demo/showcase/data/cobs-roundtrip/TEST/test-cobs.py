@@ -3,10 +3,10 @@
 # @hwut {
 #     title   = "COBS framing: encode, decode, the same bytes -- on any frame"
 #     choices {
-#         current { features = ["examples", "round-trip", "no-zero", "overhead"]
+#         current { features = ["examples", "cobs-roundtrip-round-trip", "no-zero", "overhead"]
 #                   tolerance { constraints = ["err_short == 0", "err_long == 0", "err_edge == 0",
 #                                              "zeros == 0", "over == 0"] } }
-#         v1      { features = ["violation-shown"]
+#         v1      { features = ["cobs-roundtrip-violation-shown"]
 #                   tolerance { constraints = ["err_short == 0", "err_long > 0", "err_edge > 0"] } }
 #     }
 # }

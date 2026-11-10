@@ -15,9 +15,9 @@
 #         stain_last_ok { features = ["report-stain-fails"] }
 #         tap           { features = ["report-machine-formats"] }
 #         traditional   { }
-#         width         { features = ["report-width"] }
+#         width         { features = ["services-report-width"] }
 #         run_agrees    { features = ["report-agrees-with-run"] }
-#         run_width     { features = ["report-width"] }
+#         run_width     { features = ["services-report-width"] }
 #     }
 # }
 #

@@ -1,121 +1,79 @@
 """SPDX-License: MIT; Project HWUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 
-PURPOSE: THE 'hwut.features.register' COMMAND LINE -- add what is new to
-         the central file, below a directory, and name every disagreement
-         (spec 23 VERSION 10 sections 7, 8; R-96).
+PURPOSE: THE 'hwut.features.register' COMMAND LINE -- what the feature
+         files and the links disagree about (spec 43 section 6; intend/43
+         T-h). It adds nothing by itself: there is no position to read an
+         id out of; the author writes the forest and the doc file.
 
-    hwut.features.register [<directory>] [--directory=<path>]
+    hwut.features.register [--directory=<path>]
 
-Below <directory> -- the directory it is called in where none is named --
-every directory whose TEST directory defines features and has no id gets
-one, and every feature not yet registered becomes an UNPLACED leaf under
-its first external id. Each line added is printed: read them -- a familiar
-name registered afresh is a line that went missing.
+NAMES, one NOTE each, with 'did you mean' where a known id is near:
 
-What disagrees is NAMED, with what would heal it, and not acted on: a
-directory that stands no more, one that moved ('redirect'), a feature
-renamed ('repoint'), a twin ('fold'), a name that was retired and is
-defined again. Pairings are proposed only where they are certain; else
-'unpaired' lists the candidates. Nothing is ever retired here: that is
-'hwut.features.retire'.
+    a feature documented and standing in no forest line
+    a ROOT of the forest that no doc block explains
+    a link of a test run to an id that stands nowhere, or a retired one
+    a file of the past ('hwut-features.conf', 'hwut-root-features.conf',
+    'hwut-feature-map.conf'), read by nothing
 
-Run it after each structural step: a move, a rename, a regrouping.
+A non-root with no documentation is silent: a child may lean on its
+parent's sentence. A rename is 'hwut.features.rename'.
 
 EXIT STATUS (E-1, services/_exit.py):
-    0  OK       everything below the directory is registered and agrees
-    1  FAULT    disagreements are named; or the central file states a
-                fault, and nothing was written
-    2  REFUSED  no 'hwut-root.conf', no central file ('hwut.features.init'),
-                or the command line cannot be read
+    0  OK       nothing disagrees, or only notes are named
+    1  FAULT    a feature file states a fault; it is named
+    2  REFUSED  no 'hwut-root.conf', no forest ('hwut.features.init'), or
+                the command line cannot be read
 ______________________________________________________________________________
 """
-import os
 import sys
 
-from hwut.engine.orchestrator.exploration.feature_detector \
-                                         import UNPLACED
-from hwut.engine.orchestrator.exploration.feature_registry_act \
-                                         import (register, ActRefused,
-                                                 ActFault)
-from hwut.engine.orchestrator.exploration.finder import REGISTRY_FILE_NAME
-from hwut.engine.orchestrator.exploration.tree_explorer import registry_note_tuple
+from hwut.engine.orchestrator.exploration.feature_detector import detect
+from hwut.engine.orchestrator.exploration.feature_view \
+                                         import view_of, ViewRefused
+from hwut.engine.orchestrator.exploration.tree_explorer \
+                                         import forest_note_tuple
 from ..._core                            import usage_line
 from ..._exit                            import E_ExitCode
 from .                                   import _common
 
 NAME  = "hwut.features.register"
-USAGE = usage_line("usage: %s" % NAME,
-                   ("[<directory>]", "[--directory=<path>]"))
+USAGE = usage_line("usage: %s" % NAME, ("[--directory=<path>]",))
 HELP  = __doc__.split("\n", 2)[2].rsplit("_" * 10, 1)[0].rstrip() \
         + "\n" + USAGE
 
 
-def main(argv=None, write=None, token=None):
+def main(argv=None, write=None):
     """
     RETURN: E_ExitCode, the exit status (see the module purpose).
-    'token' stands in for the random source of directory ids (a test).
     """
     try:
         write, directory, rest = _common.opened(NAME, argv, write, HELP)
-        option_list = [each for each in rest if each.startswith("-")]
-        if option_list or len(rest) > 1:
-            write("REFUSED: '%s' %s: %s"
-                  % (NAME, "does not take" if option_list
-                     else "takes one directory at most",
-                     ", ".join(option_list or rest)))
+        if rest:
+            write("REFUSED: '%s' does not take: %s"
+                  % (NAME, ", ".join(rest)))
             write(USAGE)
             return E_ExitCode.REFUSED
-        root  = _common.root_of(directory, write)
-        below = _common.below_of(root, directory, rest[0] if rest else None,
-                                 write)
+        root = _common.root_of(directory, write)
     except _common.Refused as refusal:
         return refusal.exit_code
     try:
-        directory_list, leaf_list, found = register(root, below, token)
-    except ActFault as error:
-        write("FAULT: '%s' states what is not read; nothing written:"
-              % REGISTRY_FILE_NAME)
-        for fault in error.fault_list:
-            write("    %s" % fault)
-        return E_ExitCode.FAULT
-    except ActRefused as error:
-        #  An edit that would leave a fault is the file's matter: FAULT.
-        #  No central file is the caller's: REFUSED.
-        if os.path.exists(_common.registry_path(root)):
-            write("FAULT: %s" % error)
-            return E_ExitCode.FAULT
-        write("REFUSED: %s" % error)
-        return E_ExitCode.REFUSED
-    for directory_id, directory_path in directory_list:
-        write("registered  %s  %s" % (directory_path, directory_id))
-    for external, internal in leaf_list:
-        write("registered  %s = %s" % (external, internal))
-
-    left = [each for each in found if not each.hint_f]
-    hint = [each for each in found if each.hint_f and each.kind != UNPLACED]
-    unplaced_n = len([each for each in found if each.kind == UNPLACED])
-    if left:
-        write("NOT AS IT SHOULD STAND -- read, then heal by hand or by the "
-              "lines after '=>':")
-        for line in _common.finding_lines(left):
-            write(line)
-    if hint or unplaced_n:
-        write("HINTS")
-        for line in _common.finding_lines(hint):
-            write(line)
-        if unplaced_n:
-            #  ONE LINE, NOT ONE PER LEAF: after 'init' every leaf is
-            #  unplaced, and a page of them would bury what disagrees.
-            write("    %d leaf(s) in no aggregate => %s"
-                  % (unplaced_n, "hwut.features.tree"))
-    if not (left or directory_list or leaf_list):
-        write("nothing to register below '%s'" % below)
-    #  A BUBBLE BELOW WITH A REGISTRY OF ITS OWN (E-200): named, not
-    #  passed in silence (book D-76); one without is this registry's.
-    for note in registry_note_tuple(os.path.join(root, below)):
+        view = view_of(root)
+    except ViewRefused as refusal:
+        text = str(refusal)
+        write(text if text.startswith("FAULT") else "REFUSED: %s" % text)
+        return E_ExitCode.FAULT if text.startswith("FAULT") \
+               else E_ExitCode.REFUSED
+    note_list = detect(view)
+    for each in note_list:
+        write(each.text)
+    if not note_list:
+        write("nothing disagrees")
+    #  A BUBBLE BELOW WITH A FOREST OF ITS OWN (E-200): named, not passed
+    #  in silence (book D-76); one without is this forest's.
+    for note in forest_note_tuple(root):
         write(note)
-    return E_ExitCode.FAULT if left else E_ExitCode.OK
+    return E_ExitCode.OK
 
 
 if __name__ == "__main__":

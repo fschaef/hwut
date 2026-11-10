@@ -1,0 +1,14 @@
+roots       ('port-a', 'port-b')
+children   port-a       ('own', 'port-a+show')
+children   port-a+show  ('port-a+greet', 'port-a+talk')
+children   port-b+show  ('port-b+greet', 'port-b+talk')
+children   port-b+talk  ('port-b+ask', 'port-b+answer')
+parent     port-a+answer port-a+talk
+prototypes  [('show', ('greet', '+talk')), ('talk', ('ask', 'answer'))]
+member_of   [('answer', 'talk'), ('ask', 'talk'), ('greet', 'show'), ('talk', 'show')]
+prototype_f show         True
+prototype_f greet        True
+prototype_f port-a       False
+prototype_f port-a+greet False
+in id_set   greet False, port-b+ask True
+<hwut-end>

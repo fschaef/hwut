@@ -4,7 +4,7 @@
 #     choices {
 #         rk4         { features = ["curves-drawn", "curve-recorded", "population-kept", "peak-on-time", "final-size"]
 #                       tolerance { constraints = ["drift <= 1e-9", "s_min >= 0", "peak_shift <= 0.25 d", "final_size_err <= 1e-4"] } }
-#         euler-daily { features = ["curves-drawn", "curve-recorded", "breach-shown"]
+#         euler-daily { features = ["curves-drawn", "curve-recorded", "sir-model-breach-shown"]
 #                       tolerance { constraints = ["peak_shift > 0.25 d"] } }
 #     }
 # }

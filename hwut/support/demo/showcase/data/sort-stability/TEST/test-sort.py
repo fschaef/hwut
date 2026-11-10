@@ -9,7 +9,7 @@
 #                   tolerance { constraints = ["unsorted == 0", "reordered == 0"] } }
 #         qsort-c { features = ["by-key"]
 #                   tolerance { constraints = ["unsorted == 0", "reordered == 0"] } }
-#         sort-k  { features = ["violation-shown"]
+#         sort-k  { features = ["sort-stability-violation-shown"]
 #                   tolerance { constraints = ["unsorted == 0", "reordered > 0"] } }
 #     }
 # }

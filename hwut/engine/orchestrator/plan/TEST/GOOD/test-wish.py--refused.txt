@@ -29,24 +29,6 @@ REFUSED: '--fail' beside '--pass' can want nothing
 --- --since=1h --until=2h ---
 REFUSED: '--since=1h --until=2h': the window is empty -- 'until' must lie further back than 'since'
 
---- -F   (the feature world's face) ---
-REFUSED: '-F' stands without an id glob
-
---- --feature=   (the feature world's face) ---
-REFUSED: '--feature' names no id
-
---- -k   (the feature world's face) ---
-REFUSED: '-k' stands without an expression
-
---- --keys=   (the feature world's face) ---
-REFUSED: '--keys ' cannot be read -- the expression is empty
-
---- -k gui AND   (the feature world's face) ---
-REFUSED: '--keys gui AND' cannot be read -- the expression ends where a label must stand
-
---- -k gui --keys net   (the feature world's face) ---
-REFUSED: '--keys' stands twice; one expression holds the whole question -- write '--keys "gui OR net"'
-
 --- -l slow --fail ---
 REFUSED: '--label slow' beside '--fail': a label expression or wishlist arguments, never both -- sets are combined in labels => 'hwut.labels.create <name> --fail ...', then '--label "slow AND <name>"'
 
@@ -60,19 +42,28 @@ REFUSED: '--label slow' beside '--since=2h': a label expression or wishlist argu
 REFUSED: '--label slow' beside '--glob': a label expression or wishlist arguments, never both -- sets are combined in labels => 'hwut.labels.create <name> --glob ...', then '--label "slow AND <name>"'
 
 --- -F scroll ---
-REFUSED: '-F' is retired on this face: a feature is the label 'f/<id>' -- its external id or aggregate key => '--label f/<id>'
+REFUSED: '-F' is gone: the runs of a feature are the label 'f/<id>' => '--label f/<id>'; the ids stand in 'hwut.features.tree --list'
 
 --- -e REQ-1 ---
-REFUSED: '-e' is retired on this face: a feature is the label 'f/<id>' -- its external id or aggregate key => '--label f/<id>'
+REFUSED: '-e' is gone: the runs of a feature are the label 'f/<id>' => '--label f/<id>'; the ids stand in 'hwut.features.tree --list'
 
 --- --keys=gui ---
-REFUSED: '--keys' is the feature world's: keys select features, not runs => 'hwut.report.features -k <expr>'; the runs of a feature are the label '--label f/<id>'
+REFUSED: '--keys' is gone: the runs of a feature are the label 'f/<id>' => '--label f/<id>'; the ids stand in 'hwut.features.tree --list'
 
---- -l f/net* ---
-REFUSED: '--label f/net*' cannot be read -- 'f/net*': a feature label names ONE feature by its id -- 'f/<id>': an external id or an aggregate key; no path, no internal id, no glob
+--- --feature=scroll ---
+REFUSED: '--feature' is gone: the runs of a feature are the label 'f/<id>' => '--label f/<id>'; the ids stand in 'hwut.features.tree --list'
+
+--- -k gui ---
+REFUSED: '-k' is gone: the runs of a feature are the label 'f/<id>' => '--label f/<id>'; the ids stand in 'hwut.features.tree --list'
+
+--- -l f/+net ---
+REFUSED: '--label f/+net' cannot be read -- 'f/+net': a prototype names no instance -- 'f/*+net', every instance of it
 
 --- -l f/ ---
-REFUSED: '--label f/' cannot be read -- 'f/': a feature label names ONE feature by its id -- 'f/<id>': an external id or an aggregate key; no path, no internal id, no glob
+REFUSED: '--label f/' cannot be read -- 'f/': '' is no feature id -- 'f/<id>', the id '[A-Za-z0-9_-]+', an instance '<owner>+<id>', a glob of either
+
+--- -l f/a.b ---
+REFUSED: '--label f/a.b' cannot be read -- 'f/a.b': 'a.b' is no feature id -- 'f/<id>', the id '[A-Za-z0-9_-]+', an instance '<owner>+<id>', a glob of either
 
 --- -l slow test-route.sh   (a bare target) ---
 REFUSED: '--label slow' beside 'test-route.sh': a label expression or wishlist arguments, never both -- sets are combined in labels => 'hwut.labels.create <name> test-route.sh ...', then '--label "slow AND <name>"'

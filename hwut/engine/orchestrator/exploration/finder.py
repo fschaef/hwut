@@ -40,19 +40,21 @@ ROOT_CONF_NAME     = "hwut-root.conf"
 #  and the traces stand in every TEST directory (X-INTERVIEW): they were
 #  MEASURED interviewed on every walk, two programs run per directory
 #  to answer nothing.
-#  THE FEATURES A TEST DIRECTORY PROVES ('feature_relation.py'), and the
-#  map of published ids of the past (R-94): read by nothing, named by the
-#  detector as old vocabulary (R-96).
-FEATURE_FILE_NAME     = "hwut-features.conf"
-MAP_FILE_NAME         = "hwut-feature-map.conf"
-#  THE CENTRAL FILE (R-96, spec 23 VERSION 10), beside 'hwut-root.conf':
-#  directory ids, the tree of features, the retired ones.
-REGISTRY_FILE_NAME    = "hwut-root-features.conf"
+#  THE FEATURE FILES (spec 43), beside the 'hwut-root.conf' that begins
+#  the features of a tree: the forest, the explanation, the map to the
+#  outside's names. The files of the past -- a TEST directory's feature
+#  file, the central registry, the map of published ids -- are read by
+#  nothing; they stay framework files, never source file candidates.
+FOREST_FILE_NAME      = "hwut-feature-forest.csv"
+DOC_FILE_NAME         = "hwut-feature-doc.dat"
+EXTERNAL_FILE_NAME    = "hwut-feature-external-map.csv"
+PAST_FILE_TUPLE       = ("hwut-features.conf", "hwut-feature-map.conf",
+                         "hwut-root-features.conf")
 
 OWN_FILE_TUPLE     = (CONF_NAME, ROOT_CONF_NAME, "hwut-info.dat",
                       "hwut-traces.csv", "hwut-root.labels",
-                      FEATURE_FILE_NAME, MAP_FILE_NAME,
-                      REGISTRY_FILE_NAME)
+                      FOREST_FILE_NAME, DOC_FILE_NAME,
+                      EXTERNAL_FILE_NAME) + PAST_FILE_TUPLE
 #  A PYPE IS A CANONICALISER, NOT A TEST. It stands beside the test
 #  that names it ('pype = "strip.pype"') and filters that test's
 #  output -- and so does a SYSTEM of pypes ('pype = "flow.pypes"'); it

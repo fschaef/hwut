@@ -6,7 +6,7 @@
 #                         tolerance { constraints = ["lockstep == 0"] } }
 #         herd-nojitter { features = ["herd-named"]
 #                         tolerance { constraints = ["lockstep > 0"] } }
-#         law           { features = ["window-law", "jitter-spread"]
+#         law           { features = ["retry-backoff-window-law", "jitter-spread"]
 #                         tolerance { constraints = ["spread >= 0.8", "sequences == 1000"] } }
 #     }
 # }

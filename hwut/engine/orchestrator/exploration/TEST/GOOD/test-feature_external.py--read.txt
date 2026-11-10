@@ -1,0 +1,4 @@
+gateway     ('Gateway (customer spec 2.1) ; with a semicolon',)
+keep-order  ('REQ-4711', 'Kundenanforderung 12')
+no file    None
+<hwut-end>

@@ -45,7 +45,6 @@ EXIT STATUS (E-1, services/_exit.py):
 ______________________________________________________________________________
 """
 import os
-import re
 import shutil
 import sys
 import tarfile
@@ -227,35 +226,88 @@ def _marked_line_set(test_dir, language, replacement):
     return count
 
 
-def _documents_repointed(path, source_test_dir, language, target):
+def _demo_features_written(language, target):
     """
-    RETURN: int, the number of document paths rewritten in the feature file
-            'path': each relative one, as it resolved from the demonstration
-            in hwut's own layout, made to point at its copy in 'target'
-            (the support, the demonstration) or, where nothing was copied,
-            absolute into hwut; 0 where the file does not stand.
+    RETURN: int, the number of document paths the copy's doc file names:
+            'target/hwut-feature-doc.dat' written with the block of the
+            demonstration's one promise, 'demo-<language>' (intend/43
+            T-k), and the blocks of the prototypes it aggregates and of
+            their members (intend/44 p-8), taken from this installation's
+            doc file; 'target/hwut-feature-forest.csv' beside it stating
+            'demo-<language> : +<prototype>, ...' and every prototype line
+            reached from there -- each relative document, as it resolved
+            from hwut's top, made to point at its copy in 'target' (the
+            support, the demonstration) or, where nothing was copied,
+            absolute into hwut; 0, and nothing written, where this
+            installation carries no doc file or no such block.
 
     A COPY KEEPS ITS REFERENCES (ND1).
     """
-    if not os.path.isfile(path): return 0
+    from ....engine.orchestrator.exploration.feature_doc \
+        import read_doc, doc_text, CDocEntry
+    from ....engine.orchestrator.exploration.feature_forest \
+        import read_forest, forest_text
+    from ....engine.orchestrator.exploration.feature_act import (FOREST_HEAD,
+                                                                 DOC_HEAD)
+    from ....engine.orchestrator.exploration.finder import (FOREST_FILE_NAME,
+                                                            DOC_FILE_NAME)
+    try:
+        forest = read_forest(HWUT)
+        doc    = read_doc(HWUT, forest)
+    except Exception:                                   # noqa: BLE001
+        return 0
+    demo_id = "demo-" + language
+    entry   = None if doc is None else doc.entry_db.get(demo_id)
+    if entry is None: return 0
     home_test = os.path.join(SUPPORT, "demo", language, "TEST")
     home_port = os.path.join(SUPPORT, "test_writing", language)
-    with open(path, encoding="utf-8") as fh: text = fh.read()
-    count = [0]
-    def repointed(match):
-        """RETURN: str, the quoted path, valid from 'target'."""
-        count[0] += 1
-        resolved = os.path.normpath(os.path.join(home_test, match.group(1)))
+
+    def repointed(document):
+        """RETURN: str, the document valid from 'target'."""
+        if "://" in document or os.path.isabs(document): return document
+        name, mark, anchor = document.partition("#")
+        resolved = os.path.normpath(os.path.join(HWUT, name))
         for home, copy in ((home_test, os.path.join(target, "TEST")),
                            (home_port, os.path.join(target, language))):
             if resolved == home or resolved.startswith(home + os.sep):
-                return '"%s"' % os.path.relpath(
+                return os.path.relpath(
                     os.path.join(copy, os.path.relpath(resolved, home)),
-                    os.path.join(target, "TEST"))
-        return '"%s"' % resolved
-    text = re.sub(r'"((?:\.\./)+[^"]*)"', repointed, text)
-    with open(path, "w", encoding="utf-8") as fh: fh.write(text)
-    return count[0]
+                    target) + mark + anchor
+        return resolved + mark + anchor
+
+    #  The prototypes the demonstration aggregates, and theirs, in the
+    #  order they are reached; the members, in line order.
+    aggregated = tuple(each[len(demo_id):] for each in
+                       (() if forest is None
+                        else forest.children_of.get(demo_id, ()))
+                       if each.startswith(demo_id + "+"))
+    line_list, member_list, reached, stack = [], [], set(), list(aggregated)
+    while stack:
+        name = stack.pop(0)
+        if name in reached or name[1:] not in forest.prototype_db: continue
+        reached.add(name)
+        right = forest.prototype_db[name[1:]]
+        line_list.append((name, tuple(right)))
+        member_list.extend(each for each in right if not each.startswith("+"))
+        stack.extend(each for each in right if each.startswith("+"))
+    entry_list, count = [], 0
+    for name in (demo_id,) + tuple(each for each, _ in line_list) \
+                + tuple(member_list):
+        found = doc.entry_db.get(name)
+        if found is None: continue
+        document_tuple = tuple(repointed(each)
+                               for each in found.document_tuple)
+        count += len(document_tuple)
+        entry_list.append(CDocEntry(found.id, found.title, found.doc,
+                                    document_tuple))
+    with open(os.path.join(target, FOREST_FILE_NAME), "w",
+              encoding="utf-8") as fh:
+        fh.write(forest_text(([(demo_id, aggregated)] if aggregated else [])
+                             + line_list, head_comment=FOREST_HEAD))
+    with open(os.path.join(target, DOC_FILE_NAME), "w",
+              encoding="utf-8") as fh:
+        fh.write(doc_text(entry_list, head_comment=DOC_HEAD))
+    return count
 
 
 def written(language, target, replacement=None):
@@ -283,8 +335,7 @@ def written(language, target, replacement=None):
         _links_resolved(test, source_test)
         _marked_line_set(test, language,
                          replacement or "../%s" % language)
-        _documents_repointed(os.path.join(test, "hwut-features.conf"),
-                             source_test, language, target)
+        _demo_features_written(language, target)
         #  THE ROOT IS THE TEMPLATE (services E-25, D-43).
         from ..._boundary import written as root_written
         root_written(target)

@@ -18,13 +18,14 @@ No globs on label names, no counts, no arithmetic. A grammar that
 grows is a language nobody documents.
 
 'f/<id>' IS THE LABEL THAT TIES TO A FEATURE (intend/three-worlds,
-ruled 2026-10-31): the runs linked to the feature of
-'hwut-root-features.conf' whose id is <id> -- an external id, or an
-aggregate key, which brings its subtree. Ids are UNIQUE, external ids and
-aggregate keys in ONE namespace (feature_registry: what stands twice is a
-fault), so the id alone names the feature and the tree gives its place:
-no path, no internal id ('X:<name>' is the registry's, not the
-author's -- ruled 2026-10-31), no glob.
+ruled 2026-10-31; spec 43): the runs linked to the feature whose id is
+<id>, and to every feature below it in 'hwut-feature-forest.csv'. An id is
+'[A-Za-z0-9_-]+' (T-i) and names ONE feature; the forest gives its place.
+An instance of a prototype is '<owner>+<id>' (intend/44 p-1). A GLOB
+('*', '?', '[...]') may stand anywhere (intend/44 P-g): every feature it
+matches; one that matches none is refused. '+<prototype>' alone names
+no instance and is refused (P-f): 'f/*+<prototype>'. A path, a dotted
+name or an internal id is no id (t-8).
 It is LIVE: the links decide at the time of use, nothing is stored. It
 names no other label, so it is a leaf of the label graph and no circle
 runs through it. The prefix is reserved: no customer label holds a '/'.
@@ -54,11 +55,10 @@ STANDARD_LABEL = "meta"
 #  'and' in lower case is a legal label without ambiguity.
 LABEL_NAME_REGEX = re.compile(r"[A-Za-z0-9_][A-Za-z0-9_.\-]*\Z")
 
-#  THE FEATURE LABEL: 'f/' and ONE id -- an external id or an aggregate
-#  key; no '/' (a path), no ':' (an internal id), no glob, no blank, no
-#  bracket, no comma.
+#  THE FEATURE LABEL: 'f/' and ONE feature id, base64url (spec 43, T-i).
 FEATURE_PREFIX       = "f/"
-FEATURE_LABEL_REGEX  = re.compile(r"f/[^\s(),*?\[\]{}/:]+\Z")
+FEATURE_LABEL_REGEX  = re.compile(r"f/[A-Za-z0-9_\-*?\[\]!]+"
+                                  r"(\+[A-Za-z0-9_\-*?\[\]!]+)?\Z")
 
 
 def feature_label_f(name):
@@ -359,11 +359,15 @@ def _parse_term(token_list, index):
     if token == UNIVERSE_NAME:
         return ("all",), index + 1
     if feature_label_f(token):
+        if token.startswith(FEATURE_PREFIX + "+"):
+            raise LabelExprError("'%s': a prototype names no instance -- "
+                                 "'f/*%s', every instance of it"
+                                 % (token, token[len(FEATURE_PREFIX):]))
         if FEATURE_LABEL_REGEX.match(token) is None:
-            raise LabelExprError("'%s': a feature label names ONE feature "
-                                 "by its id -- 'f/<id>': an external id or "
-                                 "an aggregate key; no path, no internal "
-                                 "id, no glob" % token)
+            raise LabelExprError("'%s': '%s' is no feature id -- 'f/<id>', "
+                                 "the id '[A-Za-z0-9_-]+', an instance "
+                                 "'<owner>+<id>', a glob of either"
+                                 % (token, token[len(FEATURE_PREFIX):]))
         return ("label", token), index + 1
     if LABEL_NAME_REGEX.match(token) is None:
         raise LabelExprError("a label is letters, digits, '_', '-', "

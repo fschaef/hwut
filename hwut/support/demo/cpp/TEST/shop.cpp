@@ -3,9 +3,9 @@
  *     build     { framework = "make", target = "%.exe" }
  *     tolerance { stderr_ignored = true }
  *     choices {
- *         sell   { features = ["unordered-table", "stderr-ignored", "collision"] }
- *         report { features = ["output-file", "keyed-table-separator", "dependency",
- *                              "frame-scripts", "test-scripts", "stderr-ignored"]
+ *         sell   { features = ["demo-cpp+cover-unordered-table", "demo-cpp+cover-stderr-ignored", "demo-cpp+cover-collision"] }
+ *         report { features = ["demo-cpp+cover-output-file", "demo-cpp+cover-keyed-table-separator", "demo-cpp+cover-dependency",
+ *                              "demo-cpp+cover-frame-scripts", "demo-cpp+cover-test-scripts", "demo-cpp+cover-stderr-ignored"]
  *                  output   = ["<stdout>", "stock.csv"] }
  *     }
  * }

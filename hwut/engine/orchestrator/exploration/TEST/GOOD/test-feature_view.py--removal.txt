@@ -1,0 +1,7 @@
+gw/TEST test-fwd.sh None -> ('fwd',)
+gw/TEST test-fwd.sh one -> ()
+gw/TEST test-order.sh None -> ('forwarding',)
+bus/TEST test-bus.sh None -> ('decode', 'lonely')
+bus/TEST test-typo.sh None -> ()
+gw/TEST test-plain.sh None -> ()
+<hwut-end>

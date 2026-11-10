@@ -2,8 +2,8 @@
 %%     title   = "Demo: a door's state machine, watched by a pype"
 %%     pype    = "door.pype"
 %%     choices {
-%%         kept   { features = ["demo-passes-on-every-run", "fsm-law-kept"] }
-%%         broken { features = ["demo-passes-on-every-run", "fsm-law-broken"] }
+%%         kept   { features = ["demo-erlang", "demo-erlang+cover-fsm-law-kept"] }
+%%         broken { features = ["demo-erlang", "demo-erlang+cover-fsm-law-broken"] }
 %%     }
 %% }
 %%

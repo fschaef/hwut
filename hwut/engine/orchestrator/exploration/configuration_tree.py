@@ -222,9 +222,9 @@ class TestParameters(_Scope):
     #  read AFTER the run has ended. '<stderr>' is refused at
     #  validation: STDERR IS NEVER SUBJECT TO TESTING (E-5).
     output:      tuple | None = None
-    #  THE FEATURES THIS TEST RUN PROVES, by the names the TEST
-    #  directory's 'hwut-features.conf' gives them. None: it links to no
-    #  feature. Stated in a choice, the tuple REPLACES the root's.
+    #  THE FEATURES THIS TEST RUN PROVES, by their feature ids (spec 43).
+    #  None: it links to no feature. Stated in a choice, the tuple
+    #  REPLACES the root's.
     features:    tuple | None = None
 
     def overwritten_by(self, other):

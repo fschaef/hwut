@@ -1,23 +1,36 @@
 root name: True
 
---- the TEST directories: features, runs, verdicts ---
-engine/compare/TEST   feature file: True
-    whole-page
-        PASS       test-pages.sh small
-        PASS       test-pages.sh large
-engine/compare/core/TEST   feature file: True
-    line-pairing
-        PASS       test-pair.sh plain
-        FAIL       test-pair.sh gap
-    missing-side
-        FAIL       test-pair.sh gap
-    007
-    untested
-        ASPIRANT   test-stray.sh None
+--- the TEST directories: links, the runs linking nothing ---
+engine/compare/TEST   takes part: True
+    link       test-pages.sh small 'whole-page'
+    link       test-pages.sh small 'line-pairing'
+    link       test-pages.sh large 'whole-page'
+    link       test-pages.sh large 'line-pairing'
+engine/compare/core/TEST   takes part: True
+    link       test-pair.sh plain 'line-pairing'
+    link       test-pair.sh gap 'line-pairing'
+    link       test-pair.sh gap 'missing-side'
+    link       test-stray.sh None 'no-such'
+    link       test-stray.sh None 'untested'
     unlinked   test-pair.sh odd
-    undefined  test-stray.sh None 'no-such'
-engine/compare/patterns/TEST   feature file: False
-    undefined  test-pat.sh None 'glob'
+engine/compare/patterns/TEST   takes part: False
+    unlinked   test-pat.sh None
+
+--- the runs of each id, over the tree ---
+line-pairing
+    PASS       engine/compare/TEST/test-pages.sh small
+    PASS       engine/compare/TEST/test-pages.sh large
+    PASS       engine/compare/core/TEST/test-pair.sh plain
+    FAIL       engine/compare/core/TEST/test-pair.sh gap
+missing-side
+    FAIL       engine/compare/core/TEST/test-pair.sh gap
+no-such
+    ASPIRANT   engine/compare/core/TEST/test-stray.sh None
+untested
+    ASPIRANT   engine/compare/core/TEST/test-stray.sh None
+whole-page
+    PASS       engine/compare/TEST/test-pages.sh small
+    PASS       engine/compare/TEST/test-pages.sh large
 
 --- asked inside one TEST directory ---
 ['.']

@@ -2,13 +2,13 @@
 %%     title    = "Demo: a garage's space counter -- a space, a stream and races, generated"
 %%     interactive = true
 %%     choices {
-%%         space       { features = ["space-from-hocon", "space-iterator", "hwut-runner"]
+%%         space       { features = ["demo-erlang+cover-space-from-hocon", "demo-erlang+cover-space-iterator", "demo-erlang+cover-hwut-runner"]
 %%                       tolerance { constraints = ["mismatches == 0"] } }
-%%         random      { features = ["deterministic-stream", "hwut-runner"]
+%%         random      { features = ["demo-erlang+cover-deterministic-stream", "demo-erlang+cover-hwut-runner"]
 %%                       tolerance { constraints = ["mismatches == 0"] } }
-%%         race-naive  { features = ["deterministic-timeline", "space-iterator", "hwut-runner"]
+%%         race-naive  { features = ["demo-erlang+cover-deterministic-timeline", "demo-erlang+cover-space-iterator", "demo-erlang+cover-hwut-runner"]
 %%                       tolerance { constraints = ["overbooked > 0"] } }
-%%         race-atomic { features = ["deterministic-timeline", "space-iterator", "hwut-runner"]
+%%         race-atomic { features = ["demo-erlang+cover-deterministic-timeline", "demo-erlang+cover-space-iterator", "demo-erlang+cover-hwut-runner"]
 %%                       tolerance { constraints = ["overbooked == 0"] } }
 %%     }
 %% }

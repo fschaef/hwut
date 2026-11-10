@@ -3,26 +3,26 @@
 //     build   { framework = "make", target = "%.exe"
 //               caps { timeout_sec = 900 } }
 //     choices {
-//         plain       { features = ["demo-passes-on-every-run", "exact-comparison"] }
-//         tolerance   { features = ["demo-passes-on-every-run", "equivalence-pattern", "numeric-ratio"]
+//         plain       { features = ["demo-rust", "demo-rust+cover-exact-comparison"] }
+//         tolerance   { features = ["demo-rust", "demo-rust+cover-equivalence-pattern", "demo-rust+cover-numeric-ratio"]
 //                       tolerance {
 //                           eq_pattern    = ["(hello|bonjour|hallo|buongiorno|hola|ahoj)"]
 //                           numeric_ratio = 0.01
 //                       } }
-//         constraints { features = ["demo-passes-on-every-run", "constraints"]
+//         constraints { features = ["demo-rust", "demo-rust+cover-constraints"]
 //                       tolerance {
 //                           constraints = ["load >= 0 and load <= 100",
 //                                          "even % 2 == 0",
 //                                          "twice == 2 * once"]
 //                       } }
-//         analogies   { features = ["demo-passes-on-every-run", "analogies"] }
-//         race        { features = ["demo-passes-on-every-run", "order-free-block"] }
-//         pool        { features = ["demo-passes-on-every-run", "potpourri-subset-duplicates"] }
-//         progress    { features = ["demo-passes-on-every-run", "visible-nothing"]
+//         analogies   { features = ["demo-rust", "demo-rust+cover-analogies"] }
+//         race        { features = ["demo-rust", "demo-rust+cover-order-free-block"] }
+//         pool        { features = ["demo-rust", "demo-rust+cover-potpourri-subset-duplicates"] }
+//         progress    { features = ["demo-rust", "demo-rust+cover-visible-nothing"]
 //                       tolerance { nothing = ["[.]+"] } }
-//         lisp        { features = ["demo-passes-on-every-run", "analogy-markers"]
+//         lisp        { features = ["demo-rust", "demo-rust+cover-analogy-markers"]
 //                       tolerance { analogy = ["{", "}"] } }
-//         clusters    { features = ["demo-passes-on-every-run", "point-cloud-pair-distance"] }
+//         clusters    { features = ["demo-rust", "demo-rust+cover-point-cloud-pair-distance"] }
 //     }
 // }
 //

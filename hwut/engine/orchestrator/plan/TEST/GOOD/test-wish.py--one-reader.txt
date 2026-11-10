@@ -1,6 +1,5 @@
 
 --- Wish(...) built in services/, not read by 'parse_wish' ---
-    lib/report/features.py
 
 --- a planted face that builds its own: named ---
     face.py:2

@@ -5,9 +5,9 @@
 //         standard   { features = ["six-frames", "standard-code", "antiparallel", "involution"]
 //                      tolerance { constraints = ["codon_diffs == 0", "internal_stops == 0", "unpaired == 0",
 //                                                    "roundtrip_errors == 0", "antiparallel_errors == 0"] } }
-//         no-reverse { features = ["six-frames", "involution-blind", "breach-shown"]
+//         no-reverse { features = ["six-frames", "involution-blind", "revcomp-translate-breach-shown"]
 //                      tolerance { constraints = ["unpaired > 0", "roundtrip_errors == 0", "antiparallel_errors > 0"] } }
-//         mito-table { features = ["six-frames", "breach-shown"]
+//         mito-table { features = ["six-frames", "revcomp-translate-breach-shown"]
 //                      tolerance { constraints = ["codon_diffs > 0", "internal_stops > 0"] } }
 //     }
 // }

@@ -5,7 +5,7 @@
 #     choices {
 #         mirror { features = ["same-tree", "untouched", "only-dst"]
 #                  tolerance { constraints = ["breaches == 0"] } }
-#         old-cp { features = ["violation-shown"]
+#         old-cp { features = ["tree-mirror-violation-shown"]
 #                  tolerance { constraints = ["breaches > 0"] } }
 #     }
 # }

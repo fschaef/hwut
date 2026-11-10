@@ -4,7 +4,7 @@
 #     choices {
 #         newton-seconds { features = ["amd-table", "impulse-as-fired", "periapsis-safe"]
 #                          tolerance { constraints = ["abs(total - 10.0 lbf*s) <= 0.01 lbf*s", "periapsis >= 80 km"] } }
-#         tagged-lbf     { features = ["amd-table", "impulse-as-fired", "unit-converted", "periapsis-safe"]
+#         tagged-lbf     { features = ["amd-table", "impulse-as-fired", "mars-climate-orbiter-unit-converted", "periapsis-safe"]
 #                          tolerance { constraints = ["abs(total - 10.0 lbf*s) <= 0.01 lbf*s", "periapsis >= 80 km"] } }
 #         mco-1999       { features = ["amd-table", "underread-named", "periapsis-lost"]
 #                          tolerance { constraints = ["total < 10.0 lbf*s", "periapsis < 80 km"] } }

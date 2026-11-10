@@ -3,10 +3,10 @@
 #
 # @hwut {
 #     title   = "Demo: an order law, stated as modes (a pype)"
-#     features = ["demo-passes-on-every-run", "order-law-by-pype", "pype-owns-terminal-token"]
+#     features = ["demo-haskell", "demo-haskell+cover-order-law-by-pype", "demo-haskell+cover-pype-owns-terminal-token"]
 #     choices { clean  { }
-#               broken { features = ["law-breach-verdict"] }
-#               slow   { features = ["pype-tick", "pype-time-guard"] } }
+#               broken { features = ["demo-haskell+cover-law-breach-verdict"] }
+#               slow   { features = ["demo-haskell+cover-pype-tick", "demo-haskell+cover-pype-time-guard"] } }
 # }
 #
 # Five clients talk to a service at once. The order of the lines is the

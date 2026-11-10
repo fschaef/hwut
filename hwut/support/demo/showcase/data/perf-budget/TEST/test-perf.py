@@ -5,7 +5,7 @@
 #     choices {
 #         current { features = ["correct", "linear", "throughput"]
 #                   tolerance { constraints = ["exponent <= 1.5", "throughput >= 100 MB/s"] } }
-#         v1      { features = ["violation-shown"]
+#         v1      { features = ["perf-budget-violation-shown"]
 #                   tolerance { constraints = ["exponent > 1.5", "throughput < 100 MB/s"] } }
 #     }
 # }

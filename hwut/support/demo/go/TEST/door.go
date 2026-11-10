@@ -4,8 +4,8 @@
 //               caps { file_size_mb = 256 } }
 //     pype    = "door.pype"
 //     choices {
-//         kept   { features = ["demo-passes-on-every-run", "fsm-law-kept"] }
-//         broken { features = ["demo-passes-on-every-run", "fsm-law-broken"] }
+//         kept   { features = ["demo-go", "demo-go+cover-fsm-law-kept"] }
+//         broken { features = ["demo-go", "demo-go+cover-fsm-law-broken"] }
 //     }
 // }
 //

@@ -7,9 +7,9 @@
 #                    tolerance { constraints = ["rms_worst <= 0.18 m",
 #                                               "settle_worst <= 2.5 s",
 #                                               "ratio_median <= 0.45"] } }
-#         sluggish { features = ["violation-shown"]
+#         sluggish { features = ["kalman-baro-violation-shown"]
 #                    tolerance { constraints = ["settle_worst > 2.5 s"] } }
-#         nervous  { features = ["violation-shown"]
+#         nervous  { features = ["kalman-baro-violation-shown"]
 #                    tolerance { constraints = ["ratio_median > 0.45"] } }
 #     }
 # }

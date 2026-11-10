@@ -5,7 +5,7 @@
 #     choices {
 #         orders { features = ["typed", "quoting", "all-or-named"]
 #                  tolerance { constraints = ["rejected == 0"] } }
-#         export { features = ["violation-shown"]
+#         export { features = ["csv-json-violation-shown"]
 #                  tolerance { constraints = ["rejected > 0"] } }
 #     }
 # }

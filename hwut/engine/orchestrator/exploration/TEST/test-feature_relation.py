@@ -1,41 +1,32 @@
 #! /usr/bin/env python3
 #
 # @hwut {
-#     title      = "The feature relation: the feature file, the link, the TEST directories of a tree"
+#     title      = "The feature relation: the link, the TEST directories of a tree"
 #     choices {
-#         block        { features = ["features-linked-in-block"] }
-#         faults       { features = ["statement-faults-named"] }
-#         feature_file { features = ["feature-statements-read"] }
-#         tree         { features = ["feature-states"] }
+#         block { features = ["features-linked-in-block"] }
+#         tree  { features = ["links-read"] }
 #     }
 # }
 #
 """SPDX-License: MIT; Project HWUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 
-PURPOSE: THE FEATURE RELATION, read: what 'hwut-features.conf' states in
-         a TEST directory, what a test's block links, and what these say
-         together per TEST directory of a tree. Where the features stand in
-         the world is the central file's ('test-feature_registry.py').
+PURPOSE: THE FEATURE RELATION, read: what a test's block links, and what the
+         links say per TEST directory of a tree (spec 43 section 4). What
+         a feature is and where it stands is the forest's and the doc
+         file's ('test-feature_forest.py', 'test-feature_doc.py').
 
-CHOICES: feature_file, block, faults, tree;
+CHOICES: block, tree;
 
-feature_file  the features of a TEST directory's file: name = key in
-              'childs', title, 'doc' in triple quotes, documents, own
-              keys, the keys of the whole file; names of digits.
+block   'features' in a test's block: at the root, in a choice (which
+        replaces the root's), the empty list, and what the validator
+        refuses.
 
-block         'features' in a test's block: at the root, in a choice
-              (which replaces the root's), the empty list, and what the
-              validator refuses.
-
-faults        what a feature file states that is not read, each named
-              with its place: the words of an aggregate, a directory
-              reference, the vocabulary of the past.
-
-tree          the relation over a tree: per TEST directory its features,
-              the runs linked to each with the verdict of 'GOOD/book.csv',
-              the runs linking nothing, the links to names not defined; a
-              component file of the past is read by nothing.
+tree    the relation over a tree: per TEST directory every link, (test,
+        choice, id), whatever id it names; the runs linking nothing; whether
+        the directory takes part ('linking_f'); the runs of each id over
+        the tree with the verdict of 'GOOD/book.csv' -- one id linked from
+        two directories; a file of the past is read by nothing.
 ______________________________________________________________________________
 """
 import os
@@ -49,55 +40,13 @@ from   config import HwutRunner                                  # noqa F401,E40
 from hwut.engine.bookkeeper.api import Bookkeeper               # noqa E402
 from hwut.engine.orchestrator.exploration import reader         # noqa E402
 from   hwut.engine.orchestrator.exploration.feature_relation \
-                                 import (feature_file_of_text,   # noqa E402
-                                         relation_of_tree)
+                                 import relation_of_tree         # noqa E402
 
-
-FEATURE_TEXT = """features {
-    keys = ["algorithm"]
-    childs {
-        line-pairing {
-            title = "Two streams are aligned line by line."
-            keys  = ["heavy"]
-            doc   = \"\"\"
-                Each line of the subject meets one of the nominal.
-                The rest is said in the MANUAL.
-                \"\"\"
-            documents = ["../MANUAL.md#pairing"]
-        }
-        missing-side { title = "A line present on one side only is shown whole." }
-        007          { title = "A feature named by digits." }
-        untested     { }
-    }
-}
-"""
 
 def banner(label):
     """RETURN: None. Section heading."""
     print()
     print("--- %s ---" % label)
-
-
-def test_feature_file():
-    """RETURN: None. Prints a TEST directory's feature file as read."""
-    found = feature_file_of_text(FEATURE_TEXT)
-    banner("the keys of the whole file")
-    print("keys:      %s" % (found.key_tuple,))
-    banner("the features, file order")
-    for feature in found.feature_tuple:
-        print("name=%-13s line=%i keys=%s" % (feature.name, feature.line_n,
-                                              feature.key_tuple))
-        print("    title:       %s" % feature.title)
-        print("    doc:         %r" % feature.doc)
-        print("    documents:   %s" % (feature.document_tuple,))
-    banner("asked by name")
-    for name in ("missing-side", "007", "nobody"):
-        feature = found.feature_of_name(name)
-        print("%-13s -> %s" % (name, None if feature is None
-                               else "line %s" % feature.line_n))
-    print("names: %s" % ", ".join(found.name_tuple()))
-    banner("faults")
-    print(len(found.fault_tuple))
 
 
 def _block(body):
@@ -137,45 +86,6 @@ def test_block():
     _block(['features = ["a", 3]'])
 
 
-def test_faults():
-    """RETURN: None. Prints the faults of unreadable statements."""
-    case_list = [
-        ("the outer node is another",
-         feature_file_of_text, 'hwut { }'),
-        ("nothing stands",
-         feature_file_of_text, ''),
-        ("a feature name standing twice",
-         feature_file_of_text,
-         'features {\n childs {\n  a { }\n  a { }\n }\n}'),
-        ("a name that is no key",
-         feature_file_of_text,
-         'features {\n childs {\n  "a.b" { }\n  "-x" { }\n }\n}'),
-        ("an unknown key, and one inside a feature",
-         feature_file_of_text,
-         'features {\n  owner = "me"\n  childs { a { since = "v2" } }\n}'),
-        ("'title', 'doc' and 'documents' in a TEST directory's file",
-         feature_file_of_text,
-         'features {\n  title = "T"\n  doc = "D"\n  documents = ["x"]\n}'),
-        ("a directory reference in a TEST directory's file",
-         feature_file_of_text,
-         'features {\n  childs { a = "./a" }\n}'),
-        ("keys: a dot, twice, a number",
-         feature_file_of_text,
-         'features {\n  keys = ["a.b", "c", "c"]\n'
-         '  childs { x { keys = 3 } }\n}'),
-        ("the vocabulary of the past: 'parent', numbers",
-         feature_file_of_text,
-         'features {\n  parent = "b"\n  issued = 1\n  1 { name = "x" }\n}'),
-    ]
-    for label, function, text in case_list:
-        banner(label)
-        found = function(text)
-        for fault in found.fault_tuple: print("  %s" % fault)
-        if not found.fault_tuple: print("  no fault")
-        kept = getattr(found, "feature_tuple", None)
-        if kept: print("  kept: %s" % ", ".join(f.name for f in kept))
-
-
 def _write(root, path, text):
     """RETURN: None. Writes 'text' to 'root/path', directories made."""
     full = os.path.join(root, path)
@@ -193,16 +103,12 @@ def _test(root, path, body):
 
 
 def _tree(root):
-    """RETURN: None. A tree of three TEST directories below 'root' -- two
-    stating features, one not -- a component file of the past beside one,
+    """RETURN: None. A tree of four TEST directories below 'root' -- one
+    whose tests link nothing -- a feature file of the past beside one,
     and the book verdicts written by the bookkeeper."""
     _write(root, "hwut-root.conf", "hwut {\n}\n")
-    _write(root, "engine/compare/hwut-features.conf",
-           'features {\n  title = "Compare"\n  childs { core = "./core" }\n}\n')
-    _write(root, "engine/compare/core/TEST/hwut-features.conf", FEATURE_TEXT)
-    _write(root, "engine/compare/TEST/hwut-features.conf",
-           'features {\n  childs {\n'
-           '    whole-page { title = "A whole page is judged." }\n  }\n}\n')
+    _write(root, "engine/compare/core/TEST/hwut-features.conf",
+           'features {\n  childs { line-pairing { } }\n}\n')
     _test(root, "engine/compare/core/TEST/test-pair.sh",
           ['title    = "Pairing"', 'features = ["line-pairing"]',
            'choices {', '    plain { }',
@@ -211,10 +117,10 @@ def _tree(root):
     _test(root, "engine/compare/core/TEST/test-stray.sh",
           ['title    = "Stray"', 'features = ["no-such", "untested"]'])
     _test(root, "engine/compare/TEST/test-pages.sh",
-          ['title    = "Pages"', 'features = ["whole-page"]',
+          ['title    = "Pages"', 'features = ["whole-page", "line-pairing"]',
            'choices = ["small", "large"]'])
     _test(root, "engine/compare/patterns/TEST/test-pat.sh",
-          ['title    = "Patterns"', 'features = ["glob"]'])
+          ['title    = "Patterns"'])
 
     core = Bookkeeper(os.path.join(root, "engine/compare/core/TEST"))
     core.note_accept("test-pair.sh", "plain")
@@ -232,20 +138,21 @@ def test_tree():
         _tree(root)
         relation = relation_of_tree(root)
         print("root name: %s" % (relation.root_name == os.path.basename(root)))
-        banner("the TEST directories: features, runs, verdicts")
+        banner("the TEST directories: links, the runs linking nothing")
         for path in sorted(relation.test_directory_db):
             each = relation.test_directory_db[path]
-            print("%s   feature file: %s"
-                  % (path, each.feature_file is not None))
-            for state in each.state_tuple:
-                print("    %s" % state.feature.name)
-                for run in state.run_tuple:
-                    print("        %-10s %s %s"
-                          % (run.verdict, run.test, run.choice))
+            print("%s   takes part: %s" % (path, each.linking_f()))
+            for test, choice, feature_id in each.link_tuple:
+                print("    link       %s %s '%s'" % (test, choice, feature_id))
             for test, choice in each.unlinked_tuple:
                 print("    unlinked   %s %s" % (test, choice))
-            for test, choice, name in each.undefined_tuple:
-                print("    undefined  %s %s '%s'" % (test, choice, name))
+        banner("the runs of each id, over the tree")
+        run_db = relation.run_db()
+        for feature_id in sorted(run_db):
+            print("%s" % feature_id)
+            for run in run_db[feature_id]:
+                print("    %-10s %s/%s %s" % (run.verdict, run.path, run.test,
+                                             run.choice))
         banner("asked inside one TEST directory")
         relation = relation_of_tree(os.path.join(root,
                                                  "engine/compare/TEST"))
@@ -259,12 +166,10 @@ def test_tree():
 if __name__ == "__main__":
     HwutRunner(
         argv       = sys.argv,
-        title      = "The feature relation: the feature file, the link, "
-                     "the TEST directories of a tree",
+        title      = "The feature relation: the link, the TEST "
+                     "directories of a tree",
         choice_map = {
-            "feature_file": test_feature_file,
             "block":        test_block,
-            "faults":       test_faults,
             "tree":         test_tree,
         },
     ).run()

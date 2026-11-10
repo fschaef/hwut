@@ -3,9 +3,9 @@
 # @hwut {
 #     title   = "Pressure units: accurate to 1e-9, round trips to the last bits, gauges agree with pint"
 #     choices {
-#         exact-table  { features = ["accurate", "round-trip"]
+#         exact-table  { features = ["accurate", "unit-convert-round-trip"]
 #                        tolerance { constraints = ["rel_err <= 1e-9", "trip_err <= 1e-14"] } }
-#         legacy-table { features = ["violation-shown"]
+#         legacy-table { features = ["unit-convert-violation-shown"]
 #                        tolerance { constraints = ["rel_err > 1e-9", "trip_err <= 1e-14"] } }
 #         exact-gauges  { features = ["gauges"]
 #                         tolerance { constraints = ["abs(tire - 32 psi) <= 0.001 Pa",

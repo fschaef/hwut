@@ -1,10 +1,10 @@
 /* @hwut {
  *     title   = "Demo: an order law, stated as modes (a pype)"
  *     build   { framework = "make", target = "%.exe" }
- *     features = ["demo-passes-on-every-run", "order-law-by-pype", "pype-owns-terminal-token"]
+ *     features = ["demo-cpp", "demo-cpp+cover-order-law-by-pype", "demo-cpp+cover-pype-owns-terminal-token"]
  *     choices { clean  { }
- *               broken { features = ["law-breach-verdict"] }
- *               slow   { features = ["pype-tick", "pype-time-guard"] } }
+ *               broken { features = ["demo-cpp+cover-law-breach-verdict"] }
+ *               slow   { features = ["demo-cpp+cover-pype-tick", "demo-cpp+cover-pype-time-guard"] } }
  * }
  *
  * SPDX-License: MIT; Project HWUT; (C) Frank-Rene Schaefer

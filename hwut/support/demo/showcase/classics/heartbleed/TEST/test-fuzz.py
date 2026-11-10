@@ -1,11 +1,11 @@
 #! /usr/bin/env python3
 # @hwut {
 #     title    = "Heartbleed (2014): a length field trusted -- caught by a reproducible mutation fuzzer and a guard page"
-#     features = ["reproducible", "operators-spread"]
+#     features = ["heartbleed-reproducible", "operators-spread"]
 #     choices {
-#         bounded         { features = ["reproducible", "operators-spread", "no-overread"]
+#         bounded         { features = ["heartbleed-reproducible", "operators-spread", "no-overread"]
 #                           tolerance { constraints = ["overread == 0"] } }
-#         heartbleed-2014 { features = ["reproducible", "operators-spread", "overread-reproduced"]
+#         heartbleed-2014 { features = ["heartbleed-reproducible", "operators-spread", "overread-reproduced"]
 #                           tolerance { constraints = ["overread > 0"] } }
 #     }
 # }

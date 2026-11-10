@@ -4,9 +4,9 @@
 //                 caps { memory_mb = 2048  file_size_mb = 256  disk_mb = 1024 } }
 //     tolerance { stderr_ignored = true }
 //     choices {
-//         sell   { features = ["unordered-table", "stderr-ignored", "collision"] }
-//         report { features = ["output-file", "keyed-table-separator", "dependency",
-//                              "frame-scripts", "test-scripts", "stderr-ignored"]
+//         sell   { features = ["demo-verilog+cover-unordered-table", "demo-verilog+cover-stderr-ignored", "demo-verilog+cover-collision"] }
+//         report { features = ["demo-verilog+cover-output-file", "demo-verilog+cover-keyed-table-separator", "demo-verilog+cover-dependency",
+//                              "demo-verilog+cover-frame-scripts", "demo-verilog+cover-test-scripts", "demo-verilog+cover-stderr-ignored"]
 //                  output   = ["<stdout>", "stock.csv"] }
 //     }
 // }

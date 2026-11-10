@@ -3,10 +3,10 @@
 #
 # @hwut {
 #     title   = "Demo: an order law, stated as modes (a pype)"
-#     features = ["demo-passes-on-every-run", "order-law-by-pype", "pype-owns-terminal-token"]
+#     features = ["demo-go", "demo-go+cover-order-law-by-pype", "demo-go+cover-pype-owns-terminal-token"]
 #     choices { clean  { }
-#               broken { features = ["law-breach-verdict"] }
-#               slow   { features = ["pype-tick", "pype-time-guard"] } }
+#               broken { features = ["demo-go+cover-law-breach-verdict"] }
+#               slow   { features = ["demo-go+cover-pype-tick", "demo-go+cover-pype-time-guard"] } }
 # }
 #
 # 'protocol.sh' of the Python demonstration; its producer is Go

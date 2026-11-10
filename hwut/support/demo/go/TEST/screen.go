@@ -6,8 +6,8 @@
 //                 comment    = false
 //                 whitespace = false }
 //     choices {
-//         open   { features = ["terminal-screen", "screen-as-seen"] }
-//         scroll { features = ["terminal-screen", "screen-as-seen"] }
+//         open   { features = ["demo-go+cover-terminal-screen", "demo-go+cover-screen-as-seen"] }
+//         scroll { features = ["demo-go+cover-terminal-screen", "demo-go+cover-screen-as-seen"] }
 //     }
 // }
 //

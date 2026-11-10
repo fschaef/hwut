@@ -1,0 +1,13 @@
+roots       ('gateway', 'delivery')
+children   gateway     ('forwarding', 'buses')
+children   forwarding  ('fwd', 'keeporder', 'dropunknown')
+children   buses       ('decode',)
+children   delivery    ('onever', 'Onever')
+parent     keeporder   forwarding
+subtree    gateway     ('gateway', 'forwarding', 'fwd', 'keeporder', 'dropunknown', 'buses', 'decode')
+ancestors  decode      ('gateway', 'buses')
+ancestors  gateway     ()
+id_set     10 ids, 'onever' and 'Onever' both: True
+line_of    dropunknown 3
+no file    None
+<hwut-end>

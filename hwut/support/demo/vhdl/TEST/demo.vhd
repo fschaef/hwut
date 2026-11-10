@@ -2,26 +2,26 @@
 --     title   = "Demo: what hwut tolerates, and where it is said"
 --     build   { framework = "make", target = "%.exe" }
 --     choices {
---         plain       { features = ["demo-passes-on-every-run", "exact-comparison"] }
---         tolerance   { features = ["demo-passes-on-every-run", "equivalence-pattern", "numeric-ratio"]
+--         plain       { features = ["demo-vhdl", "demo-vhdl+cover-exact-comparison"] }
+--         tolerance   { features = ["demo-vhdl", "demo-vhdl+cover-equivalence-pattern", "demo-vhdl+cover-numeric-ratio"]
 --                       tolerance {
 --                           eq_pattern    = ["(hello|bonjour|hallo|buongiorno|hola|ahoj)"]
 --                           numeric_ratio = 0.01
 --                       } }
---         constraints { features = ["demo-passes-on-every-run", "constraints"]
+--         constraints { features = ["demo-vhdl", "demo-vhdl+cover-constraints"]
 --                       tolerance {
 --                           constraints = ["load >= 0 and load <= 100",
 --                                          "even % 2 == 0",
 --                                          "twice == 2 * once"]
 --                       } }
---         analogies   { features = ["demo-passes-on-every-run", "analogies"] }
---         race        { features = ["demo-passes-on-every-run", "order-free-block"] }
---         pool        { features = ["demo-passes-on-every-run", "potpourri-subset-duplicates"] }
---         progress    { features = ["demo-passes-on-every-run", "visible-nothing"]
+--         analogies   { features = ["demo-vhdl", "demo-vhdl+cover-analogies"] }
+--         race        { features = ["demo-vhdl", "demo-vhdl+cover-order-free-block"] }
+--         pool        { features = ["demo-vhdl", "demo-vhdl+cover-potpourri-subset-duplicates"] }
+--         progress    { features = ["demo-vhdl", "demo-vhdl+cover-visible-nothing"]
 --                       tolerance { nothing = ["[.]+"] } }
---         lisp        { features = ["demo-passes-on-every-run", "analogy-markers"]
+--         lisp        { features = ["demo-vhdl", "demo-vhdl+cover-analogy-markers"]
 --                       tolerance { analogy = ["{", "}"] } }
---         clusters    { features = ["demo-passes-on-every-run", "point-cloud-pair-distance"] }
+--         clusters    { features = ["demo-vhdl", "demo-vhdl+cover-point-cloud-pair-distance"] }
 --     }
 -- }
 --

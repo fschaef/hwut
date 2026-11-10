@@ -1,4 +1,0 @@
-test-go.sh    ('differ', 'only', 'same')
-test-stay.sh  ()
-test-none.sh  ()
-<hwut-end>

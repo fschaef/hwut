@@ -5,12 +5,12 @@
 --                                "settle <= 4 min",
 --                                "verdict == 'settled'"] }
 --     choices {
---         heat { features = ["region-verbatim", "region-table", "region-point-cloud",
---                            "region-ignore", "laws-in-units", "string-binding",
---                            "test-level-tolerance", "annotation-lines"] }
---         cool { features = ["region-verbatim", "region-table", "region-point-cloud",
---                            "region-ignore", "laws-in-units", "string-binding",
---                            "test-level-tolerance", "annotation-lines"] }
+--         heat { features = ["demo-haskell+cover-region-verbatim", "demo-haskell+cover-region-table", "demo-haskell+cover-region-point-cloud",
+--                            "demo-haskell+cover-region-ignore", "demo-haskell+cover-laws-in-units", "demo-haskell+cover-string-binding",
+--                            "demo-haskell+cover-test-level-tolerance", "demo-haskell+cover-annotation-lines"] }
+--         cool { features = ["demo-haskell+cover-region-verbatim", "demo-haskell+cover-region-table", "demo-haskell+cover-region-point-cloud",
+--                            "demo-haskell+cover-region-ignore", "demo-haskell+cover-laws-in-units", "demo-haskell+cover-string-binding",
+--                            "demo-haskell+cover-test-level-tolerance", "demo-haskell+cover-annotation-lines"] }
 --     }
 -- }
 --

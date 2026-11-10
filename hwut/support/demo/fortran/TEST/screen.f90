@@ -5,8 +5,8 @@
 !                 comment    = false
 !                 whitespace = false }
 !     choices {
-!         open   { features = ["terminal-screen", "screen-as-seen"] }
-!         scroll { features = ["terminal-screen", "screen-as-seen"] }
+!         open   { features = ["demo-fortran+cover-terminal-screen", "demo-fortran+cover-screen-as-seen"] }
+!         scroll { features = ["demo-fortran+cover-terminal-screen", "demo-fortran+cover-screen-as-seen"] }
 !     }
 ! }
 !

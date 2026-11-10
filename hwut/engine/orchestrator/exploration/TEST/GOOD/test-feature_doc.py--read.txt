@@ -1,0 +1,33 @@
+[gateway] line 10
+    title      'The gateway forwards what reaches it.'
+    doc        'It forwards CAN to MOST,\n  and MOST to CAN.'
+    documents  ('gateway/README.txt', 'spec/routing.txt#3', 'https://example.org/g')
+    to / not   ('manager', 'integreng') / ()
+[forwarding] line 18
+    title      'Frames reach their destination.'
+    doc        ''
+    documents  ()
+    to / not   () / ('manager',)
+[fwd] line 21
+    title      ''
+    doc        ''
+    documents  ()
+    to / not   ('intern',) / ()
+[keeporder] line 22
+    title      'Order is kept per sender.'
+    doc        ''
+    documents  ()
+    to / not   () / ()
+[lonely] line 24
+    title      'A feature in no line.'
+    doc        ''
+    documents  ()
+    to / not   ('intern',) / ()
+[old-thing] retired line 27
+    title      'What was once claimed.'
+    doc        ''
+    documents  ('old.txt',)
+    to / not   () / ()
+customers  {'manager': 'the one who puts us under pressure', 'integreng': 'the integration engineer', 'intern': 'the student'}
+no file    None
+<hwut-end>

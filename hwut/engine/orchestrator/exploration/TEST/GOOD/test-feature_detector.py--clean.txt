@@ -1,7 +1,2 @@
---- a tree that agrees with its file ----------------------------
-  nothing found
---- no central file ---------------------------------------------
-  no central file
---- a TEST directory without a feature file is no component -----
-  nothing found
+no note
 <hwut-end>

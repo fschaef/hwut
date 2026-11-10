@@ -4,3 +4,4 @@ Exploration -- Reading Specifications, Selecting Test Cases
 coverage run --omit ./*.py -a *.py
 
 --not config.py
+--not _feature_tree.py

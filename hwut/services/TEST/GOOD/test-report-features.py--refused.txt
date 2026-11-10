@@ -1,26 +1,26 @@
 
 --- a directory that does not stand ---
     REFUSED: the directory 'nowhere' does not exist
-    usage: hwut.report.features [--matrix] [--code] [--cov-dir=<dir>] [--html=<file>] [--ods=<file>] [--cov-html=<dir>] [-F|--feature <id-glob>]... [-e|--feature-ext <id>]... [-k|--keys <expr>] [--directory=<path>] [--help]
+    usage: hwut.report.features [<id>]... [--matrix] [--code] [--cov-dir=<dir>] [--html=<file>] [--ods=<file>] [--cov-html=<dir>] [--directory=<path>] [--help]
 status: REFUSED
 
 --- an unknown word ---
     REFUSED: 'hwut.report.features' does not take '--verbose'
-    usage: hwut.report.features [--matrix] [--code] [--cov-dir=<dir>] [--html=<file>] [--ods=<file>] [--cov-html=<dir>] [-F|--feature <id-glob>]... [-e|--feature-ext <id>]... [-k|--keys <expr>] [--directory=<path>] [--help]
+    usage: hwut.report.features [<id>]... [--matrix] [--code] [--cov-dir=<dir>] [--html=<file>] [--ods=<file>] [--cov-html=<dir>] [--directory=<path>] [--help]
 status: REFUSED
 
---- no central file at the top ---
-    REFUSED: no 'hwut-root-features.conf' stands at '<tree>' => hwut.features.init
+--- no forest at the top ---
+    REFUSED: no 'hwut-feature-forest.csv' stands at '<tree>' => hwut.features.init
 status: REFUSED
 
---- a central file that states a fault ---
-    REFUSED: 'hwut-root-features.conf' cannot be read: hwut-root-features.conf:1:19: TYPE: 'x' is an aggregate (a block) or a leaf (its internal id)
-    usage: hwut.report.features [--matrix] [--code] [--cov-dir=<dir>] [--html=<file>] [--ods=<file>] [--cov-html=<dir>] [-F|--feature <id-glob>]... [-e|--feature-ext <id>]... [-k|--keys <expr>] [--directory=<path>] [--help]
+--- a forest that states a fault ---
+    REFUSED: FAULT: hwut-feature-forest.csv:2: 'b' stands under two parents: 'a', 'c' -- a feature has one parent
+    usage: hwut.report.features [<id>]... [--matrix] [--code] [--cov-dir=<dir>] [--html=<file>] [--ods=<file>] [--cov-html=<dir>] [--directory=<path>] [--help]
 status: REFUSED
 
 --- a tree no 'hwut-root.conf' bounds ---
     REFUSED: no 'hwut-root.conf' stands in or above '<tree>' -- the tree has no boundary (the climb ends at the transient ground 'TMP/', E-24)
 HINT: use 'hwut.sanitize root [dir]' to place one.
-    usage: hwut.report.features [--matrix] [--code] [--cov-dir=<dir>] [--html=<file>] [--ods=<file>] [--cov-html=<dir>] [-F|--feature <id-glob>]... [-e|--feature-ext <id>]... [-k|--keys <expr>] [--directory=<path>] [--help]
+    usage: hwut.report.features [<id>]... [--matrix] [--code] [--cov-dir=<dir>] [--html=<file>] [--ods=<file>] [--cov-html=<dir>] [--directory=<path>] [--help]
 status: REFUSED
 <hwut-end>

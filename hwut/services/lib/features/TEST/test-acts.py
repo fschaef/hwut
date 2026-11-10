@@ -1,403 +1,204 @@
 #! /usr/bin/env python3
 #
 # @hwut {
-#     title      = "hwut.features.retire, move, key.add, key.remove on scratch trees"
+#     title      = "hwut.features.rename and retire: the files and the links, in one step"
 #     choices {
-#         retire { features = ["retire-moves"] }
-#         move   { features = ["move-follows"] }
-#         keys   { features = ["keys-edited"] }
-#         rename { }
-#         held   { }
-#         root   { }
+#         rename  { features = ["rename-follows"] }
+#         retire  { features = ["retire-moves"] }
+#         refused { features = ["rename-follows", "retire-moves"] }
+#         prototypes { features = ["rename-follows", "retire-moves"] }
 #     }
 # }
 #
 """SPDX-License: MIT; Project HWUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 
-PURPOSE: THE FEATURE FACES THAT TOUCH MORE THAN THE CENTRAL FILE (spec 23
-         VERSION 10 sections 3, 8, 9; R-96), called as a person calls them
-         on a scratch tree; after each act the files it touched are printed.
+PURPOSE: THE FEATURE FACES that write (spec 43 section 5; intend/43 t-4,
+         T-s), each called as a person calls it, on a scratch tree; the
+         files and the links shown before and after.
 
-CHOICES: retire, move, keys, rename, held, root;
+CHOICES: rename, retire, refused, prototypes;
 
-retire  a leaf: its line and its definition leave, a block in 'retired'
-        holds both as they were; an aggregate with everything below it,
-        re-indented to its new place; a leaf whose definition stood
-        nowhere; refused: a retired id, an unknown id, two words. The
-        result is read again: no fault, and the retired ids are never
-        bound again.
+rename   'keep-order' -> 'keeporder': both sides of the forest's lines, the
+         doc file's heading (its audience kept), the map's left column (the
+         outside's name untouched), the links of a test header and of a
+         conf's application -- each file named; then a root renamed; the
+         views agree before and after.
 
-move    a directory and the 'directory_map' lines at and below it; a
-        parent with two registered directories below; a directory without
-        an id; refused: a target that stands, one inside the source, a
-        parent that does not stand, the root, a directory that does not
-        stand, one outside the root.
+retire   a childless feature: its heading '[[<id>:retired]]', its id out
+         of its parent's line, the line dropped where it names no other
+         child; a feature with no block gets one; the label 'f/<id>' then
+         refuses it.
 
-keys    a key added to a leaf (in its TEST directory) and to an aggregate
-        (in the central file); taken off again; a key from above is not
-        taken off the claim below; '--all' over aggregates, definitions
-        and a file's keys for all its features; refused: a key that is no
-        key, a key stated already, '--all' of a key no claim states.
-rename  'hwut.features.rename <external id> <new name>': the definition in
-        its TEST directory, every link in that directory's test headers,
-        the leaf's internal id -- the external id stays; two renames in
-        one directory; afterwards 'register' finds nothing. Refused: a
-        name defined already, an aggregate, no word, an unknown id
-        (the book's D-7).
+refused  rename: an old id that stands nowhere ('did you mean'), a new id
+         that is no id, 'CUSTOMERS', one that stands already, a file with a
+         fault, no forest; retire: an id with children, one named in the
+         map, one retired already, one that stands nowhere. Nothing is
+         written where anything is refused.
 
-held    the same two renames BY HAND: 'register' writes NO line -- the
-        two new names are the candidates of the two gone and are held,
-        each side naming the other (it registered both and said
-        'candidates: none', the book's D-7). One gone retired, still held;
-        both retired, the new are registered.
-
-root    the root's own TEST directory defines 'shot' and 'gateway':
-        'register' gives it a directory id standing for '.', and its
-        leaves bare names -- 'gateway' clashes with the aggregate and
-        is qualified; again, nothing more is registered (the scratch
-        tree's own 'can.ghost' is said); the root is not moved. MEASURED 2026-10-19 before (the book's D-3): nothing
-        registered, the hint 'root-test'.
+prototypes (intend/44 p-7) a member renamed: its prototype's line, its
+         block, the instances' blocks, the map, every link to an instance
+         -- in one step; a prototype renamed: its line, its aggregations,
+         its block, the links of every instance of an inner prototype; an
+         owner renamed carries its instances; a member retired: out of its
+         prototype's line, its block retired, its instances' links then
+         name a retired claim. Refused: retiring the last member, a
+         prototype, an instance, a member whose instance has a block or
+         whose instance the map names.
 ______________________________________________________________________________
 """
 import os
-import shutil
 import sys
-import tempfile
 
 import config                                                    # noqa F401
 from   config import HwutRunner                                  # noqa F401,E402
 
-from hwut.services.lib.features import retire, move, tree       # noqa E402
-from hwut.services.lib.features import rename, register         # noqa E402
-from hwut.services.lib.features.key import add, remove          # noqa E402
-from hwut.engine.orchestrator.exploration.feature_registry \
-                                         import read_registry   # noqa E402
+import _fixture as fx                                            # noqa E402
+from hwut.services.lib.features import rename, retire           # noqa E402
+from hwut.engine.orchestrator.exploration.feature_view \
+    import (feature_label_case_set, forget_views)                 # noqa E402
+from hwut.engine.orchestrator.exploration.task_list \
+    import SelectionError                                          # noqa E402
 
-CENTRAL = """features {
-    directory_map {
-        "Aaaaaaa1" = "gw/can"
-        "Bbbbbbb2" = "gw/most"
-    }
-    tree {
-        gateway {
-            title = "CAN-MOST gateway"
-            keys  = ["product"]
-            childs {
-                can {
-                    childs {
-                        "can.decode" = "Aaaaaaa1:decode"
-                        "can.encode" = "Aaaaaaa1:encode"
-                    }
-                }
-                most {
-                    title = "MOST side"
-                    childs {
-                        "most.send"    = "Bbbbbbb2:send"
-                        "most.receive" = "Bbbbbbb2:receive"
-                    }
-                }
-            }
-        }
-        "can.ghost" = "Aaaaaaa1:ghost"
-    }
-    retired {
-    }
+FILE_TUPLE = ("hwut-feature-forest.csv", "hwut-feature-doc.dat",
+              "hwut-feature-external-map.csv")
+
+
+def _files(root):
+    """RETURN: None. The three files and the links, as they stand."""
+    for each in FILE_TUPLE:
+        fx.shown(root, each)
+    for each in ("gw/TEST/test-fwd.sh", "gw/TEST/hwut.conf"):
+        with open(os.path.join(root, each)) as fh:
+            print("    [%s] %s" % (each, " | ".join(
+                line.strip(" #") for line in fh.read().split("\n")
+                if "features" in line)))
+
+
+def _snapshot(root):
+    """RETURN: dict, path -> text of every file below 'root'."""
+    result = {}
+    for here, _, file_list in os.walk(root):
+        for name in file_list:
+            path = os.path.join(here, name)
+            with open(path, encoding="utf-8", errors="replace") as fh:
+                result[path] = fh.read()
+    return result
+
+
+def run_rename():
+    """RETURN: None. A feature renamed, then a root."""
+    root = fx.gateway()
+    fx.call("hwut.features.rename keep-order keeporder", rename,
+            ["keep-order", "keeporder"], root)
+    _files(root)
+    fx.call("hwut.features.rename gateway gw", rename, ["gateway", "gw"],
+            os.path.join(root, "gw/TEST"))
+    fx.shown(root, "hwut-feature-forest.csv")
+    fx.shown(root, "hwut-feature-external-map.csv")
+
+
+def run_retire():
+    """RETURN: None. Features retired."""
+    root = fx.gateway()
+    fx.write(root, "hwut-feature-external-map.csv", "gateway ; GW\n")
+    fx.call("hwut.features.retire fwd", retire, ["fwd"], root)
+    fx.shown(root, "hwut-feature-forest.csv")
+    fx.call("hwut.features.retire keep-order: its parent's line goes",
+            retire, ["keep-order"], root)
+    fx.call("hwut.features.retire decode: no block of its own", retire,
+            ["decode"], root)
+    for each in FILE_TUPLE[:2]:
+        fx.shown(root, each)
+    forget_views()
+    try:
+        feature_label_case_set(root, "f/fwd")
+    except SelectionError as error:
+        print(">>> f/fwd\n    REFUSED: %s" % error)
+
+
+def run_refused():
+    """RETURN: None. What is refused, and that nothing was written."""
+    root   = fx.gateway()
+    before = _snapshot(root)
+    for label, face, argv in (
+            ("rename an id that stands nowhere", rename, ["keep-ordr", "x"]),
+            ("rename to no id", rename, ["fwd", "f.w.d"]),
+            ("rename to CUSTOMERS", rename, ["fwd", "CUSTOMERS"]),
+            ("rename to an id that stands", rename, ["fwd", "buses"]),
+            ("rename to an unplaced id", rename, ["fwd", "spare"]),
+            ("rename with one word", rename, ["fwd"]),
+            ("retire an id with children", retire, ["forwarding"]),
+            ("retire an id the map names", retire, ["keep-order"]),
+            ("retire an id that stands nowhere", retire, ["fwdd"])):
+        fx.call(label, face, argv, root)
+    print(">>> nothing written: %s" % (_snapshot(root) == before))
+    fx.call("retire, then retire again", retire, ["spare"], root)
+    fx.call("", retire, ["spare"], root)
+    fx.write(root, "hwut-feature-doc.dat", "[[a.b]]\n")
+    fx.call("a doc file that states a fault", rename, ["fwd", "fwd2"], root)
+    os.remove(os.path.join(root, "hwut-feature-forest.csv"))
+    fx.call("no forest", retire, ["fwd"], root)
+
+
+PROTOTYPE_DB = {
+    "hwut-feature-forest.csv": "port : +show, own\n+show : greet, bye, +talk\n"
+                               "+talk : ask\n+lone : solo\n",
+    "hwut-feature-doc.dat": "[[+show]]\nWhat every port shows.\n"
+                            "[[greet]]\nIt says hello.\n"
+                            "[[port+bye]]\nThis port says goodbye.\n",
+    "hwut-feature-external-map.csv": "port+greet ; REQ-1\n",
 }
-"""
-
-CAN = """features {
-  keys = ["bus"]
-  childs {
-    decode { title = "A frame is decoded."
-             keys  = ["latency"] }
-    encode { title = "A frame is encoded."
-             doc   = \"\"\"
-                 Both directions.
-                 \"\"\" }
-  }
-}
-"""
-
-MOST = """features {
-  childs {
-    send    { title = "A message is sent." }
-    receive { title = "A message arrives."  keys = ["bus"] }
-  }
-}
-"""
 
 
-def banner(label):
-    """RETURN: None. Section heading."""
-    print("--- %s " % label + "-" * (60 - len(label)))
+def _prototype_files(root):
+    """RETURN: None. The three files and the test's links."""
+    for each in FILE_TUPLE:
+        fx.shown(root, each)
+    with open(os.path.join(root, "p/TEST/test-p.sh")) as fh:
+        print("    [p/TEST/test-p.sh] %s" % " | ".join(
+            line.strip(" #") for line in fh.read().split("\n")
+            if "features" in line))
 
 
-def _write(root, path, text):
-    """RETURN: None. Writes 'text' to 'root/path', directories made."""
-    full = os.path.join(root, path)
-    os.makedirs(os.path.dirname(full), exist_ok=True)
-    with open(full, "w", encoding="utf-8") as fh:
-        fh.write(text)
-
-
-def _tree():
-    """RETURN: str, the root of a scratch tree with the central file above."""
-    root = tempfile.mkdtemp(prefix="hwut-features-", dir="/tmp")
-    _write(root, "hwut-root.conf", "hwut {\n}\n")
-    _write(root, "gw/can/TEST/hwut-features.conf", CAN)
-    _write(root, "gw/most/TEST/hwut-features.conf", MOST)
-    _write(root, "hwut-root-features.conf", CENTRAL)
-    return root
-
-
-def _call(label, face, argv, root):
-    """RETURN: None. Calls 'face.main' at 'root', prints what it wrote and
-    its exit status."""
-    print(">>> %s" % label)
-    here = os.getcwd()
-    os.chdir(root)
+def run_prototypes():
+    """RETURN: None. Members, prototypes and owners renamed and retired."""
+    root = fx.tree(PROTOTYPE_DB)
+    fx.test(root, "p/TEST/test-p.sh",
+            ['features = ["port+greet", "port+ask", "port+bye", "own"]'])
+    fx.call("hwut.features.rename greet hello: a member", rename,
+            ["greet", "hello"], root)
+    fx.call("hwut.features.rename talk chat: an inner prototype", rename,
+            ["talk", "chat"], root)
+    fx.call("hwut.features.rename port gate: an owner", rename,
+            ["port", "gate"], root)
+    _prototype_files(root)
+    for label, argv in (("the last member", ["solo"]),
+                        ("a prototype", ["show"]),
+                        ("an instance", ["gate+hello"]),
+                        ("a member whose instance has a block", ["bye"])):
+        fx.call("hwut.features.retire: " + label, retire, argv, root)
+    fx.call("hwut.features.retire hello: the map names an instance",
+            retire, ["hello"], root)
+    fx.write(root, "hwut-feature-external-map.csv", "own ; REQ-2\n")
+    fx.call("hwut.features.retire hello: a member", retire, ["hello"], root)
+    _prototype_files(root)
+    forget_views()
     try:
-        code = face.main(argv, write=lambda text: print(
-            "    " + text.replace(root, "<root>").replace("\n", "\n    ")))
-    finally:
-        os.chdir(here)
-    print("    exit %d" % int(code))
+        feature_label_case_set(root, "f/gate+hello")
+    except SelectionError as error:
+        print(">>> f/gate+hello\n    REFUSED: %s" % error)
 
-
-def _show(root, *path_list):
-    """RETURN: None. Prints the files 'path_list' below 'root'."""
-    for path in path_list:
-        print("    %s:" % path)
-        with open(os.path.join(root, path)) as fh:
-            text = fh.read()
-        if path == "hwut-root-features.conf":
-            text = text[text.index("features {"):]
-        print("    | " + "\n    | ".join(text.rstrip("\n").split("\n")))
-
-
-def _sound(root):
-    """RETURN: None. Prints whether the central file is read without a
-    fault, and what it retired."""
-    registry = read_registry(root)
-    print("    read again: %d fault(s); retired: %s"
-          % (len(registry.fault_tuple),
-             ", ".join(each.name for each in registry.retired_tuple)
-             or "none"))
-
-
-def test_retire():
-    """RETURN: None. Prints what retiring does to the files."""
-    root = _tree()
-    try:
-        banner("a leaf")
-        _call("hwut.features.retire can.encode", retire, ["can.encode"], root)
-        _show(root, "hwut-root-features.conf",
-              "gw/can/TEST/hwut-features.conf")
-        _sound(root)
-        banner("an aggregate with everything below it")
-        _call("hwut.features.retire most", retire, ["most"], root)
-        _show(root, "hwut-root-features.conf",
-              "gw/most/TEST/hwut-features.conf")
-        _sound(root)
-        banner("a leaf whose definition stood nowhere")
-        _call("hwut.features.retire can.ghost", retire, ["can.ghost"], root)
-        _sound(root)
-        banner("refused")
-        _call("retired already", retire, ["can.encode"], root)
-        _call("a retired aggregate", retire, ["most"], root)
-        _call("no claim of the tree", retire, ["nothing"], root)
-        _call("two words", retire, ["can.decode", "most"], root)
-        _call("no word", retire, [], root)
-        banner("the tree left")
-        _call("hwut.features.tree -e", tree, ["-e"], root)
-    finally:
-        shutil.rmtree(root, ignore_errors=True)
-
-
-_LINKER = """#! /bin/sh
-# @hwut {
-#     title    = "Codec"
-#     choices {
-#         one { features = ["decode", "encode"] }
-#         two { features = ["encode"] }
-#     }
-# }
-echo x
-"""
-
-
-def _linked_tree():
-    """RETURN: str, the scratch tree with a test in 'gw/can/TEST' linking
-    'decode' and 'encode'."""
-    root = _tree()
-    _write(root, "gw/can/TEST/test-codec.sh", _LINKER)
-    os.chmod(os.path.join(root, "gw/can/TEST/test-codec.sh"), 0o755)
-    return root
-
-
-def test_rename():
-    """RETURN: None. Prints what renaming a feature does to the files."""
-    root = _linked_tree()
-    try:
-        banner("two features of one directory renamed")
-        _call("hwut.features.rename can.decode parse", rename,
-              ["can.decode", "parse"], root)
-        _call("hwut.features.rename can.encode render", rename,
-              ["can.encode", "render"], root)
-        _show(root, "hwut-root-features.conf",
-              "gw/can/TEST/hwut-features.conf", "gw/can/TEST/test-codec.sh")
-        _sound(root)
-        _call("hwut.features.register", register, [], root)
-        banner("refused")
-        _call("defined already", rename, ["can.decode", "render"], root)
-        _call("an aggregate", rename, ["can", "x"], root)
-        _call("no word", rename, ["can.decode", "a b"], root)
-        _call("no claim of the tree", rename, ["nothing", "x"], root)
-        _call("one word", rename, ["can.decode"], root)
-    finally:
-        shutil.rmtree(root, ignore_errors=True)
-
-
-def test_held():
-    """RETURN: None. Prints what 'register' does after two renames by
-    hand."""
-    root = _linked_tree()
-    try:
-        for path, old, new in (
-                ("gw/can/TEST/hwut-features.conf", "decode {", "parse {"),
-                ("gw/can/TEST/hwut-features.conf", "encode {", "render {"),
-                ("gw/can/TEST/test-codec.sh", '"decode"', '"parse"'),
-                ("gw/can/TEST/test-codec.sh", '"encode"', '"render"')):
-            full = os.path.join(root, path)
-            with open(full) as fh: text = fh.read()
-            with open(full, "w") as fh: fh.write(text.replace(old, new))
-        _call("hwut.features.retire can.ghost  (a leaf with no definition)",
-              retire, ["can.ghost"], root)
-        banner("two renames by hand: nothing written")
-        _call("hwut.features.register", register, [], root)
-        _show(root, "hwut-root-features.conf")
-        banner("one gone retired: one gone, two new -- still held")
-        _call("hwut.features.retire can.encode", retire, ["can.encode"],
-              root)
-        _call("hwut.features.register", register, [], root)
-        banner("both retired: the new are registered")
-        _call("hwut.features.retire can.decode", retire, ["can.decode"],
-              root)
-        _call("hwut.features.register", register, [], root)
-    finally:
-        shutil.rmtree(root, ignore_errors=True)
-
-
-def test_root():
-    """RETURN: None. Prints what 'register' makes of the root's own TEST
-    directory."""
-    from hwut.engine.orchestrator.exploration.feature_registry_act \
-        import register as act_register
-    root = _tree()
-    try:
-        _write(root, "TEST/hwut-features.conf", """features {
-  childs {
-    shot    { title = "A held key ends in a rolling ball." }
-    gateway { title = "The whole gateway forwards." }
-  }
-}
-""")
-        banner("register: an id for '.', bare names, a clash qualified")
-        directory_list, leaf_list, found = act_register(
-            root, token=lambda: b"\x00" * 6)
-        for directory_id, path in directory_list:
-            print("    directory  %s = %s" % (directory_id, path))
-        for external, internal in leaf_list:
-            print("    leaf       %s = %s" % (external, internal))
-        print("    then: %s" % (", ".join(each.kind for each in found)
-                                or "nothing found"))
-        _call("hwut.features.register  (again)", register, [], root)
-        _call("hwut.features.move . elsewhere", move, [".", "elsewhere"],
-              root)
-        _sound(root)
-    finally:
-        shutil.rmtree(root, ignore_errors=True)
-
-
-def test_move():
-    """RETURN: None. Prints what moving a directory does."""
-    root = _tree()
-    try:
-        os.makedirs(os.path.join(root, "gw/plain"))
-        banner("moved, the lines follow")
-        _call("hwut.features.move gw/can gw/bus-can", move,
-              ["gw/can", "gw/bus-can"], root)
-        _call("a parent with two registered directories below: gw -> gateway",
-              move, ["gw", "gateway"], root)
-        _call("a directory without an id", move,
-              ["gateway/plain", "gateway/plain-2"], root)
-        _show(root, "hwut-root-features.conf")
-        print("    stands: %s" % ", ".join(sorted(
-            os.listdir(os.path.join(root, "gateway")))))
-        banner("refused")
-        _call("the target stands", move, ["gateway/most", "gateway/bus-can"],
-              root)
-        _call("the target inside the source", move,
-              ["gateway", "gateway/x"], root)
-        _call("its parent does not stand", move, ["gateway/most", "a/b"],
-              root)
-        _call("the root", move, [".", "x"], root)
-        _call("no such directory", move, ["nowhere", "x"], root)
-        _call("outside the root", move, ["gateway", "../x"], root)
-        _call("one word", move, ["gateway"], root)
-    finally:
-        shutil.rmtree(root, ignore_errors=True)
-
-
-def test_keys():
-    """RETURN: None. Prints what adding and removing keys does."""
-    root = _tree()
-    try:
-        banner("added")
-        _call("on a leaf", add, ["can.decode", "safety"], root)
-        _call("on a leaf without keys", add, ["most.send", "slow"], root)
-        _call("on an aggregate", add, ["most", "nightly"], root)
-        _show(root, "gw/can/TEST/hwut-features.conf",
-              "gw/most/TEST/hwut-features.conf")
-        banner("taken off")
-        _call("its own", remove, ["can.decode", "latency"], root)
-        _call("one from above is not its own", remove,
-              ["can.decode", "product"], root)
-        _call("on an aggregate", remove, ["most", "nightly"], root)
-        banner("--all")
-        _call("--all bus: a definition and a whole file", remove,
-              ["--all", "bus"], root)
-        _show(root, "gw/can/TEST/hwut-features.conf",
-              "gw/most/TEST/hwut-features.conf")
-        _call("--all product: an aggregate", remove, ["--all", "product"],
-              root)
-        _sound(root)
-        banner("refused")
-        _call("no key", add, ["can.decode", "a.b"], root)
-        _call("stated already", add, ["can.decode", "safety"], root)
-        _call("a key it does not state", remove, ["can.decode", "zzz"], root)
-        _call("--all of a key no claim states", remove, ["--all", "zzz"],
-              root)
-        _call("--all with two keys", remove, ["--all", "a", "b"], root)
-        _call("an unknown id", add, ["nothing", "k"], root)
-    finally:
-        shutil.rmtree(root, ignore_errors=True)
-
-
-# ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    HwutRunner(
-        argv       = sys.argv,
-        title      = "hwut.features.retire, move, key.add, key.remove on "
-                     "scratch trees",
-        choice_map = {
-            "retire": test_retire,
-            "move":   test_move,
-            "keys":   test_keys,
-            "rename": test_rename,
-            "held":   test_held,
-            "root":   test_root,
-        },
-    ).run()
+    try:
+        HwutRunner(
+            argv       = sys.argv,
+            title      = "hwut.features.rename and retire: the files and "
+                         "the links, in one step",
+            choice_map = {"rename": run_rename, "retire": run_retire,
+                          "refused": run_refused,
+                          "prototypes": run_prototypes},
+        ).run()
+    finally:
+        fx.removed()

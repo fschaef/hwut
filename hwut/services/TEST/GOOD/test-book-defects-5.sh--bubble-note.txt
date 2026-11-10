@@ -1,8 +1,7 @@
 == hwut.features.register
-HINTS
-    1 leaf(s) in no aggregate => hwut.features.tree
-nothing to register below '.'
+NOTE  'empty' is documented and stands in no forest line => hwut.features.tree
 == hwut.sanitize.propose
+NOTE: 'empty' is documented and stands in no forest line => hwut.features.tree
 NOTE  editor/: own root, not walked => do it inside it
 == hwut.renovate
 nothing to renovate below '.'

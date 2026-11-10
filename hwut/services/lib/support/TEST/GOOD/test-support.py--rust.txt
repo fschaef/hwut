@@ -9,7 +9,7 @@
    A TEST THEN WRITES:
        use hwut::hwut_runner::HwutRunner;
    NOTE:    built with 'rustc --edition 2021 -O --extern hwut=<dir>/libhwut.rlib my-test.rs'
-   <dir>: TEST hwut-root.conf rust
+   <dir>: TEST hwut-feature-doc.dat hwut-feature-forest.csv hwut-root.conf rust
 -- as written, the MAKE IT IMPORTABLE lines applied
    RESULTS: 27 ok, 0 fail
 -- the marked line pointing nowhere; unset: HWUT_SUPPORT_RUST; then only the MAKE IT IMPORTABLE lines

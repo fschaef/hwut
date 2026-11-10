@@ -3,8 +3,8 @@
 --     build   { framework = "make", target = "%.exe" }
 --     pype    = "door.pype"
 --     choices {
---         kept   { features = ["demo-passes-on-every-run", "fsm-law-kept"] }
---         broken { features = ["demo-passes-on-every-run", "fsm-law-broken"] }
+--         kept   { features = ["demo-vhdl", "demo-vhdl+cover-fsm-law-kept"] }
+--         broken { features = ["demo-vhdl", "demo-vhdl+cover-fsm-law-broken"] }
 --     }
 -- }
 --

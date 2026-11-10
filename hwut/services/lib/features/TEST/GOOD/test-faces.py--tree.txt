@@ -1,57 +1,50 @@
->>> hwut.features.tree 
-    gateway  CAN-MOST gateway
+>>> hwut.features.tree
+    gateway  The gateway forwards what reaches it.
       forwarding  Frames reach their destination.
-        forward  (gw/router)  A frame is forwarded.
-        send  (gw/most)  A message is sent.
+        fwd  A frame is forwarded.
+        keep-order  Order is kept per sender.
       buses
-        decode  (gw/can)  A frame is decoded.
+        decode
     (unplaced)
-      encode  (gw/can)  A frame is encoded.
+      spare  A promise with no place.
     exit 0
->>> hwut.features.tree -e
-    gateway  CAN-MOST gateway
+>>> -e
+    gateway  The gateway forwards what reaches it.  = GW
       forwarding  Frames reach their destination.
-        forward  (gw/router)  router.forward  A frame is forwarded.
-        send  (gw/most)  most.send  A message is sent.
+        fwd  A frame is forwarded.
+        keep-order  Order is kept per sender.  = REQ-4711
       buses
-        decode  (gw/can)  can.decode  A frame is decoded.
+        decode
     (unplaced)
-      encode  (gw/can)  can.encode  A frame is encoded.
+      spare  A promise with no place.
     exit 0
->>> hwut.features.tree --list
-    gateway/forwarding/router.forward
-    gateway/forwarding/most.send
-    gateway/buses/can.decode
-    can.encode
-    exit 0
->>> hwut.features.tree -b
+>>> --list
     gateway
-    gateway/forwarding
-    gateway/buses
+    forwarding
+    fwd
+    keep-order
+    buses
+    decode
+    spare
     exit 0
->>> hwut.features.tree gateway/forwarding
+>>> a subtree
     forwarding  Frames reach their destination.
-      forward  (gw/router)  A frame is forwarded.
-      send  (gw/most)  A message is sent.
+      fwd  A frame is forwarded.
+      keep-order  Order is kept per sender.
     exit 0
->>> hwut.features.tree gateway/forwarding --list
-    gateway/forwarding/router.forward
-    gateway/forwarding/most.send
+>>> a subtree, --list
+    forwarding
+    fwd
+    keep-order
     exit 0
->>> hwut.features.tree gateway/buses -b
-    gateway/buses
-    exit 0
->>> hwut.features.tree nope
-    REFUSED: no aggregate 'nope' => hwut.features.tree -b lists them
+>>> an id that stands nowhere
+    REFUSED: 'forwardng' stands in no forest line -- did you mean 'forwarding'?
     exit 2
->>> hwut.features.tree --list -b
-    REFUSED: 'hwut.features.tree' does not take: '--list' and '-b' together
-    usage: hwut.features.tree [<base>] [--list] [-b] [-e] [--directory=<path>]
+>>> a word it does not take
+    REFUSED: 'hwut.features.tree' does not take: -b
+    usage: hwut.features.tree [<id>] [--list] [-e] [--directory=<path>]
     exit 2
->>> hwut.features.tree -x
-    REFUSED: 'hwut.features.tree' does not take: -x
-    usage: hwut.features.tree [<base>] [--list] [-b] [-e] [--directory=<path>]
-    exit 2
->>> an empty tree
-    exit 3
+>>> a map that names an id the forest does not hold
+    FAULT: hwut-feature-external-map.csv:1: 'nobody' stands in no forest line
+    exit 1
 <hwut-end>

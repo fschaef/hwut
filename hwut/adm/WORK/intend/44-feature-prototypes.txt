@@ -1,0 +1,156 @@
+==============================================================================
+intend/44-feature-prototypes -- A PROTOTYPE OF FEATURES, AGGREGATED BY '+'
+==============================================================================
+Born 2026-11-09. Picks up intend/43 T-l ("feature classes are a remark":
+noted so that a later case recognises itself). The later case is the
+demos. Builds on spec 43 (E-222, built 2026-11-08).
+
+BUILT 2026-11-09 on 3f1f988 together with spec 43 (services E-223), on
+DEVELOPMENT'S DRAFT of o-2 and o-4: one prototype '+cover' aggregating
+five by theme ('+cover-compare', '+cover-region', '+cover-pype',
+'+cover-conf', '+cover-screen'), the members 'cover-<name>' -- every word
+renameable by 'hwut.features.rename' in one step (p-7). Retire is built
+for members; a prototype, an instance and a prototype's last member are
+refused with a remedy (p-7 reaches no further yet).
+
+Everything marked RULED is Frank-Rene's; everything else is read out of
+it (STRIKE WHAT IS OVER-READ).
+
+COMPONENTS CONCERNED:
+  engine/orchestrator/exploration  feature_forest (the '+' lines),
+                                   feature_view (instances), feature_doc,
+                                   feature_detector, feature_act
+  engine/orchestrator/plan         label.py: 'f/<id>+<id>'
+  services/lib/features            tree, rename, retire
+  services/lib/report              the feature report and document
+  support/demo                     the ports' links
+
+------------------------------------------------------------------------------
+INTENT
+------------------------------------------------------------------------------
+THE SAME BRANCH RECURS. Measured on 1b5288c, before the demo leaves went
+(T-j, T-k): the TEST HEADERS of all 17 ports linked the SAME 55 names --
+not one port more, not one less (CORRECTED 2026-11-09: the earlier "16
+ports 12, python 59" counted the registry's DEFINITIONS, which the
+ports' own feature files stated unevenly; the links never differed).
+'demo-passes-on-every-run' is one of the 55; 54 name what a demo shows.
+Collapsed to one feature per port, 'demo-<language>' says that a
+demonstration works, and no longer WHICH of hwut's features it
+demonstrates.
+
+A PROTOTYPE says it once. It is a branch that is no feature of its own;
+a feature AGGREGATES it (has-a), and so has its members as children of
+its own -- each member a feature of THAT owner, proven by THAT owner's
+runs.
+
+    +demo-compare : cover-exact, cover-numeric-ratio, ..., +demo-pype
+    +demo-pype    : cover-order-law, cover-terminal-token
+    demo-rust     : +demo-compare
+    demo-python   : +demo-compare, fsm-law-kept, fsm-law-broken, ...
+
+    demo-rust
+      demo-rust+demo-compare
+        demo-rust+cover-exact               <- test-*.rs links this
+        demo-rust+cover-numeric-ratio
+        demo-rust+demo-pype
+          demo-rust+cover-order-law
+          demo-rust+cover-terminal-token
+
+T-j stands: 'numeric-ratio' is engine/compare's promise. 'demo-rust+
+cover-numeric-ratio' is the port's: that its demonstration shows it.
+T-k is refined, not overturned: a port promises demonstrations only --
+one per thing it demonstrates instead of one in all.
+
+------------------------------------------------------------------------------
+RULED
+------------------------------------------------------------------------------
+P-a  A PROTOTYPE IS AGGREGATED, A HAS-A RELATION (2026-11-09). A feature
+     may have prototypes and children of its own side by side: python
+     has the general demo prototype PLUS its own.
+
+P-b  A PROTOTYPE MAY AGGREGATE A PROTOTYPE (2026-11-09).
+
+P-c  NO CONCATENATION OF PROTOTYPE IDS (2026-11-09): a combination of
+     prototypes is itself a prototype aggregating them. Hence every
+     composed name has exactly two parts (p-1).
+
+P-d  THE PROTOTYPE IS DECLARED IN THE FOREST (2026-11-09, fork 1 (a)):
+     a line whose left side begins with '+' declares a prototype; a
+     right-side entry '+<id>' aggregates one. One file, one sign, read
+     the same at the declaration and at the use. T-a's three files
+     stand.
+
+P-e  PYTHON'S OWN FEATURES ARE PLAIN CHILDREN of 'demo-python' beside
+     '+demo-compare' (2026-11-09).
+
+P-f  'f/+<prototype>' IS REFUSED (2026-11-09, o-1): it refers to no
+     instance. A GLOB OVER THE OWNERS MAY STAND: 'f/*+<prototype>', the
+     runs of every instance. This amends E-214 / t-8, which refused every
+     glob in 'f/' -- see o-3 for how far it reaches.
+
+P-g  ANY GLOB, IN ANY POSITION OF 'f/' (2026-11-09, o-3 (b)):
+     'f/demo-*+cover-*', 'f/cover-*', 'f/*'. E-214's refusal of a glob,
+     and t-8's "a glob is no id", are OVERTURNED for 'f/'; a plain word
+     without a glob character stays one id, refused by name where it
+     stands nowhere.
+
+------------------------------------------------------------------------------
+CONSEQUENCES READ OUT OF THE RULINGS -- strike what is over-read
+------------------------------------------------------------------------------
+p-1  TWO-PART NAMES. A composed name is '<feature>+<id>', '<id>' a
+     prototype or a member anywhere below the aggregated prototype. The
+     place comes from the prototypes, the name from the owner and the
+     id. '+' lies outside the id alphabet (T-i): no written id collides
+     with a composed one.
+
+p-2  ONE NAME, ONE PLACE. An owner reaching the same prototype or member
+     twice -- directly and through another prototype -- is a FAULT (the
+     one-parent rule of T-o, one level up). So is a circle among
+     prototypes. Both checked where the forest is read (t-3).
+
+p-3  EVERY MEMBER AND EVERY PROTOTYPE STANDS UNDER ONE PROTOTYPE across
+     all of them, so '<id>' alone says which is meant.
+
+p-4  A PROTOTYPE IS NO FEATURE: no runs, no state, no count, never a
+     root, never unplaced. An instance and its members fold as features
+     do (spec 43 section 4). A member no run of the owner links is OPEN
+     -- the honest word for "this port does not demonstrate it".
+
+p-5  THE DOC. '[[cover-exact]]' documents the member in every instance;
+     '[[demo-rust+cover-exact]]' may stand and wins for that one. A
+     prototype's own block, '[[+demo-compare]]', documents its
+     instances. Audiences fold down the instance tree as down any other.
+
+p-6  THE LINKS name the composed form, 'features = ["demo-rust+cover-
+     exact"]'; so does 'f/demo-rust+cover-exact'. A link to a bare member
+     ('cover-exact') stands outside the relation: a member is proven only
+     as an owner's.
+
+p-7  RENAME AND RETIRE of a member or a prototype act on every instance
+     and every link in one step.
+
+p-9  A GLOB THAT MATCHES NO FEATURE IS REFUSED, by name: the reason
+     E-214 had for refusing globs -- a misspelt selection that silently
+     selects nothing -- is kept where it bites. Not strict (a derived
+     label of 'hwut-root.labels'), it selects nothing, as an unknown id
+     does. A glob matches composed names and plain ids alike, never a
+     prototype itself (P-f): 'f/*' is every feature, 'f/+*' is refused.
+
+p-8  THE DETECTOR NOTES a prototype nobody aggregates, and a member
+     without a block in a prototype without a block.
+
+------------------------------------------------------------------------------
+OPEN
+------------------------------------------------------------------------------
+o-2  THE WORDS. The members' names ('cover-exact' was the example) and
+     the prototypes' ('demo-compare'): T-i, the author picks. The
+     material: the 54 names every port links (INTENT).
+
+o-4  ONE PROTOTYPE OF 54, or prototypes by theme aggregated by one
+     ('+demo : +demo-compare, +demo-pype, +demo-region, ...', P-b).
+
+------------------------------------------------------------------------------
+TO MEASURE BEFORE THE SPEC
+------------------------------------------------------------------------------
+- MEASURED 2026-11-09: every port linked the same 55; python has no
+  link of its own, so P-e has, today, nothing to place.

@@ -3,9 +3,9 @@
  *     build     { framework = "make", target = "%.exe" }
  *     tolerance { stderr_ignored = true }
  *     choices {
- *         sell   { features = ["unordered-table", "stderr-ignored", "collision"] }
- *         report { features = ["output-file", "keyed-table-separator", "dependency",
- *                              "frame-scripts", "test-scripts", "stderr-ignored"]
+ *         sell   { features = ["demo-java+cover-unordered-table", "demo-java+cover-stderr-ignored", "demo-java+cover-collision"] }
+ *         report { features = ["demo-java+cover-output-file", "demo-java+cover-keyed-table-separator", "demo-java+cover-dependency",
+ *                              "demo-java+cover-frame-scripts", "demo-java+cover-test-scripts", "demo-java+cover-stderr-ignored"]
  *                  output   = ["<stdout>", "stock.csv"] }
  *     }
  * }

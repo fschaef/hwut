@@ -1,0 +1,16 @@
+gateway      OPEN fail              runs=0  counts=IMPLEMENTED:3,OPEN:1,fail:1,ok:2,untested:1  audience=manager  names=GW-1
+  forwarding   IMPLEMENTED fail       runs=1  counts=IMPLEMENTED:2,OPEN:0,fail:1,ok:1,untested:0  audience=manager
+    fwd          IMPLEMENTED fail       runs=2  audience=manager
+    keeporder    IMPLEMENTED ok         runs=1  audience=manager  names=REQ-4711
+  buses        OPEN untested          runs=0  counts=IMPLEMENTED:1,OPEN:1,fail:0,ok:1,untested:1  audience=manager
+    decode       IMPLEMENTED ok         runs=1  audience=manager
+    encode       OPEN untested          runs=0  audience=manager
+unplaced  lonely  IMPLEMENTED ok
+retired   old
+outside   bus/TEST/test-typo.sh None 'decod': stands in no forest line and no doc block -- did you mean 'decode'?
+outside   bus/TEST/test-typo.sh None 'old': a retired feature
+count     IMPLEMENTED:4,OPEN:1,fail:1,ok:3,untested:1
+--- asked in bus/TEST: the same features, paths from there
+./test-bus.sh
+whole view: True
+<hwut-end>

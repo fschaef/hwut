@@ -2,11 +2,11 @@
 # @hwut {
 #     title    = "Peterson's mutual exclusion, proved over every reachable state -- and two broken locks"
 #     choices {
-#         peterson         { features = ["all-schedules", "state-closure", "exclusion-holds"]
+#         peterson         { features = ["peterson-dekker-all-schedules", "state-closure", "exclusion-holds"]
 #                            tolerance { constraints = ["reentered > 0", "bad_states == 0"] } }
-#         turn-first       { features = ["all-schedules", "state-closure", "violation-drawn"]
+#         turn-first       { features = ["peterson-dekker-all-schedules", "state-closure", "violation-drawn"]
 #                            tolerance { constraints = ["reentered > 0", "bad_states > 0"] } }
-#         flag-after-check { features = ["all-schedules", "state-closure", "violation-drawn"]
+#         flag-after-check { features = ["peterson-dekker-all-schedules", "state-closure", "violation-drawn"]
 #                            tolerance { constraints = ["reentered > 0", "bad_states > 0"] } }
 #     }
 # }

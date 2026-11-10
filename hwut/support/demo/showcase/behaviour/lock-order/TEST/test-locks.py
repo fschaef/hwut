@@ -2,9 +2,9 @@
 # @hwut {
 #     title    = "Account locks: one global lock order, checked lockdep-style over real threads"
 #     choices {
-#         ordered { features = ["money-conserved", "one-order"]
+#         ordered { features = ["lock-order-money-conserved", "one-order"]
 #                   tolerance { constraints = ["total == 300", "cycles == 0"] } }
-#         naive   { features = ["money-conserved", "cycle-named"]
+#         naive   { features = ["lock-order-money-conserved", "cycle-named"]
 #                   tolerance { constraints = ["total == 300", "cycles > 0"] } }
 #     }
 # }

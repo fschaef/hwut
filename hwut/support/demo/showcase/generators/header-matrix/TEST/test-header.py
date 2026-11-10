@@ -5,7 +5,7 @@
 #     choices {
 #         release-1.0 { features = ["first-rule", "space-from-file", "every-rule"]
 #                       tolerance { constraints = ["unreached == 0", "mismatches == 0"] } }
-#         release-0.9 { features = ["first-rule", "space-from-file", "every-rule", "wrong-named"]
+#         release-0.9 { features = ["first-rule", "space-from-file", "every-rule", "header-matrix-wrong-named"]
 #                       tolerance { constraints = ["unreached == 0", "mismatches > 0"] } }
 #     }
 # }

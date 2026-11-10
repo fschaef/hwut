@@ -6,9 +6,9 @@
 #                         tolerance { constraints = ["breaches == 0"] } }
 #         torus         { features = ["torus-returns", "rule-pinned"]
 #                         tolerance { constraints = ["breaches == 0"] } }
-#         rule-mistyped { features = ["breach-shown"]
+#         rule-mistyped { features = ["game-of-life-breach-shown"]
 #                         tolerance { constraints = ["breaches > 0"] } }
-#         wrap-bug      { features = ["breach-shown"]
+#         wrap-bug      { features = ["game-of-life-breach-shown"]
 #                         tolerance { constraints = ["breaches > 0"] } }
 #     }
 # }

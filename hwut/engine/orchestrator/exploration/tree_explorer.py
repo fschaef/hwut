@@ -235,38 +235,37 @@ def inner_root_note_tuple(directory):
                  for path in found)
 
 
-#  THE FEATURES' REGISTRY SPANS BUBBLES THAT HAVE NONE OF THEIR OWN
-#  (2026-11-03, ruled for plan/42 P-8 against 'hwut.features.split'): a
-#  bubble without a 'hwut-root-features.conf' belongs to the nearest
-#  registry above it; only a bubble WITH one is a registry of its own.
-#  The walks that read or maintain the registry enter the first kind and
-#  stop at the second -- with their NOTE.
+#  THE FEATURES' FOREST SPANS BUBBLES THAT HAVE NONE OF THEIR OWN
+#  (2026-11-03, ruled for plan/42 P-8 against 'hwut.features.split';
+#  spec 43 T-m): a bubble without a 'hwut-feature-forest.csv' belongs to
+#  the nearest forest above it. A bubble WITH one begins features of its
+#  own -- the one exception the author ruled, 2026-11-08: the showcase,
+#  a tree meant to be copied, root and all. The walks that read the
+#  features enter the first kind and stop at the second, with their NOTE.
 
 
-def registry_owner_f(path):
+def forest_owner_f(path):
     """
     RETURN: bool, True where the directory 'path' is a bubble ('hwut-
-            root.conf') holding a features registry of its own
-            ('hwut-root-features.conf') -- where a registry walk from
-            above stops.
+            root.conf') holding a forest of its own ('hwut-feature-
+            forest.csv') -- where a walk of the features from above stops.
     """
     return inner_root_f(path) \
-           and os.path.isfile(os.path.join(path, finder.REGISTRY_FILE_NAME))
+           and os.path.isfile(os.path.join(path, finder.FOREST_FILE_NAME))
 
 
-def registry_top(start):
+def forest_top(start):
     """
-    RETURN: str, the ABSOLUTE directory whose features registry governs
-            the tree 'start' stands in: climbing bubble by bubble from
-            the nearest 'hwut-root.conf', the first that holds a
-            'hwut-root-features.conf'; the nearest bubble's directory
-            where none above holds one (its faces then say that none
-            stands).
+    RETURN: str, the ABSOLUTE directory whose forest governs the tree
+            'start' stands in: climbing bubble by bubble from the nearest
+            'hwut-root.conf', the first that holds a 'hwut-feature-
+            forest.csv'; the nearest bubble's directory where none above
+            holds one (its faces then say that none stands).
 
     Raises RootConfMissing where no 'hwut-root.conf' bounds 'start'.
     """
     nearest = here = root_conf_directory(start)
-    while not os.path.isfile(os.path.join(here, finder.REGISTRY_FILE_NAME)):
+    while not os.path.isfile(os.path.join(here, finder.FOREST_FILE_NAME)):
         parent = os.path.dirname(here)
         if parent == here: return nearest
         try:
@@ -276,40 +275,40 @@ def registry_top(start):
     return here
 
 
-def registry_gate_of(root):
+def forest_gate_of(root):
     """
-    RETURN: function, the bubble gate of a registry walk from 'root': the
-            bubble 'root' stands in, GATE_RUN; an inner bubble, GATE_HANDED
-            -- not walked here -- where it holds a registry of its own,
-            GATE_RUN, entered, else.
+    RETURN: function, the bubble gate of a walk of the features from
+            'root': the bubble 'root' stands in, GATE_RUN; an inner bubble,
+            GATE_HANDED -- not walked here -- where it holds a forest of
+            its own, GATE_RUN, entered, else.
 
     Raises RootConfMissing where no 'hwut-root.conf' bounds 'root'.
     """
     own = os.path.normpath(root_conf_directory(root))
     return lambda path: GATE_RUN \
-           if os.path.normpath(path) == own or not registry_owner_f(path) \
+           if os.path.normpath(path) == own or not forest_owner_f(path) \
            else GATE_HANDED
 
 
-def registry_inner_tuple(directory):
+def forest_inner_tuple(directory):
     """
     RETURN: tuple[str], the ABSOLUTE bubbles below 'directory' holding a
-            features registry of their own, walk order; a bubble without
-            one is part of the registry above it.
+            forest of their own, walk order; a bubble without one is part
+            of the forest above it.
     """
     return tuple(path for path in inner_root_tuple(directory)
-                 if registry_owner_f(path))
+                 if forest_owner_f(path))
 
 
-def registry_note_tuple(directory):
+def forest_note_tuple(directory):
     """
-    RETURN: tuple[str], 'inner_root_note_tuple' for the registry walks:
-            one NOTE per OUTERMOST bubble below 'directory' that holds a
-            registry of its own; empty where there is none.
+    RETURN: tuple[str], 'inner_root_note_tuple' for the walks of the
+            features: one NOTE per OUTERMOST bubble below 'directory' that
+            holds a forest of its own; empty where there is none.
     """
     top = os.path.abspath(directory)
     found = []
-    for path in registry_inner_tuple(top):
+    for path in forest_inner_tuple(top):
         if any(path.startswith(outer + os.sep) for outer in found): continue
         found.append(path)
     return tuple(inner_root_note(os.path.relpath(path, top).replace(os.sep, "/"))

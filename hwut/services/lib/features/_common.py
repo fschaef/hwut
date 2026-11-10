@@ -2,17 +2,17 @@
 ______________________________________________________________________________
 
 PURPOSE: WHAT THE FEATURE FACES SHARE -- '--help', '--directory=<path>',
-         the root of the tree, the directory asked below it, and the way a
-         finding of the detector is printed. One place, so the faces cannot
-         drift apart.
+         the top whose forest governs the tree, the directory asked below
+         it, and the run of a face that acts. One place, so the faces
+         cannot drift apart.
 ______________________________________________________________________________
 """
 import os
 import sys
 
 from hwut.engine.orchestrator.exploration.tree_explorer \
-                                     import RootConfMissing, registry_top, root_conf_directory
-from hwut.engine.orchestrator.exploration.finder import REGISTRY_FILE_NAME
+                                     import (RootConfMissing, forest_top,
+                                             root_conf_directory)
 from ..._exit                        import E_ExitCode
 
 
@@ -48,14 +48,14 @@ def opened(name, argv, write, help_text):
 
 
 def root_of(directory, write, nearest_f=False):
-    """RETURN: str, the absolute directory whose features registry governs
-    'directory' ('tree_explorer.registry_top': a bubble without one is the
-    registry's above) -- or, 'nearest_f', the nearest bubble's, where a
-    registry is to be begun ('hwut.features.init'). Raises Refused
+    """RETURN: str, the absolute directory whose forest governs
+    'directory' ('tree_explorer.forest_top': a bubble without one is the
+    forest's above) -- or, 'nearest_f', the nearest bubble's, where the
+    features are to be begun ('hwut.features.init'). Raises Refused
     (REFUSED) where no 'hwut-root.conf' stands; the reason is written."""
     try:
         return root_conf_directory(directory) if nearest_f \
-               else registry_top(directory)
+               else forest_top(directory)
     except RootConfMissing as error:
         write("REFUSED: %s" % error)
         raise Refused(E_ExitCode.REFUSED) from None
@@ -78,25 +78,6 @@ def below_of(root, directory, path, write):
     return relative.replace(os.sep, "/")
 
 
-def registry_path(root):
-    """RETURN: str, the path of the central file of the tree at 'root'."""
-    return os.path.join(root, REGISTRY_FILE_NAME)
-
-
-def finding_lines(found):
-    """RETURN: list of str, the detector's findings as printed: one line per
-    finding, its kind first, '(hint)' behind a hint, each proposal below it
-    after '=>'."""
-    width = max((len(each.kind) for each in found), default=0)
-    result = []
-    for each in found:
-        result.append("    %-*s  %s%s" % (width, each.kind, each.text,
-                                          "   (hint)" if each.hint_f else ""))
-        for line in each.proposal:
-            result.append("    %-*s      => %s" % (width, "", line))
-    return result
-
-
 def path_below(root, directory, path, write):
     """RETURN: str, 'path' (taken from 'directory') relative to 'root',
     '/'-separated; it need not stand. Raises Refused (REFUSED) where it
@@ -110,16 +91,17 @@ def path_below(root, directory, path, write):
     return relative.replace(os.sep, "/")
 
 
-def act_main(name, help_text, usage, argv, write, arity, act):
+def act_main(name, help_text, usage, argv, write, arity, act,
+             nearest_f=False):
     """
     RETURN: E_ExitCode, the status of a face that takes exactly 'arity'
             words and hands them to 'act(root, directory, write, *words)',
             which returns the lines to print: OK where it acted; REFUSED
             where the command line cannot be read, no root stands, or the
             act was refused (ActRefused; the reason is printed).
+            'nearest_f': the nearest root, not the forest's top.
     """
-    from hwut.engine.orchestrator.exploration.feature_registry_act \
-        import ActRefused
+    from hwut.engine.orchestrator.exploration.feature_act import ActRefused
     try:
         write, directory, rest = opened(name, argv, write, help_text)
         option_list = [each for each in rest if each.startswith("-")]
@@ -130,7 +112,7 @@ def act_main(name, help_text, usage, argv, write, arity, act):
                 % (arity, ", ".join(rest) or "none given")))
             write(usage)
             return E_ExitCode.REFUSED
-        root = root_of(directory, write)
+        root = root_of(directory, write, nearest_f)
         line_list = act(root, directory, write, *rest)
     except Refused as refusal:
         return refusal.exit_code

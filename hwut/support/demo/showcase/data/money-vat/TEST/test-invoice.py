@@ -6,7 +6,7 @@
 #         decimal   { features = ["exact-cents", "adds-up"]
 #                     tolerance { constraints = ["cent_errors == 0",
 #                                                "unbalanced == 0"] } }
-#         awk-float { features = ["violation-shown"]
+#         awk-float { features = ["money-vat-violation-shown"]
 #                     tolerance { constraints = ["cent_errors > 0"] } }
 #     }
 # }

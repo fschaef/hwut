@@ -998,110 +998,82 @@ ruling stands, the page is evidence of a defect and must not be
 blessed.
 
 
-13  THE FEATURES -- 'feature_relation.py', 'feature_registry*.py',
-    'feature_detector.py', 'feature_view.py', 'feature_wish.py',
-    'feature_carry.py', 'feature_code.py'
+13  THE FEATURES -- 'feature_forest.py', 'feature_doc.py',
+    'feature_external.py', 'feature_relation.py', 'feature_view.py',
+    'feature_detector.py', 'feature_act.py', 'feature_link_edit.py',
+    'feature_code.py'
 ______________________________________________________________________________
 
-Two files and one block say what a tree claims to do and which test runs
-prove it (R-83, R-96; spec 23 VERSION 10). Each TEST directory DEFINES its
-features; ONE central file at the top REGISTERS them -- ids that stay, a
-tree of aggregates, the retired.
+THREE FILES AND ONE BLOCK say what a tree claims to do and which test runs
+prove it (spec 43; intend/43 T-a..T-u). One feature id, '[A-Za-z0-9_-]+',
+names a feature everywhere; nothing encodes a directory (t-1).
 
-    <dir>/TEST/hwut-features.conf   features { keys  childs { <name> {
-                                    title doc documents keys } } }
-    <top>/hwut-root-features.conf   features { directory_map { "<id>" =
-                                    "<path>" }  tree { <aggregate> { ... }
-                                    "<external>" = "<id>:<name>" }
-                                    retired { ... } }
-    a test's '@hwut { }' block      features = ["<name>", ...]
+    <top>/hwut-feature-forest.csv        <id> : <child>, <child>, ...
+    <top>/hwut-feature-doc.dat           [[<id>]] blocks: 'documents:',
+                                         title, doc; '[[<id>:retired]]';
+                                         '[[CUSTOMERS]]' and 'to'/'not'
+    <top>/hwut-feature-external-map.csv  <our id> ; <their name>
+    a test's '@hwut { }' block           features = ["<id>", ...]
+
+'<top>' is the 'hwut-root.conf' that holds the forest, found by
+'tree_explorer.forest_top': a bubble without a forest belongs to the forest
+above (E-220, T-m); a bubble with one begins its own (the showcase, ruled
+2026-11-08) and the walks from above stop at it ('forest_gate_of').
 
 'features' is a test parameter: at the root, in a choice, in
 'app_defaults'. A choice's list replaces the root's; '[]' links the choice
-to nothing. A name is looked up in the feature file of the test's own TEST
-directory. A component file ('hwut-features.conf' outside a TEST directory)
-and 'hwut-feature-map.conf' are the vocabulary of the past (R-94): nothing
-reads them; the detector names them.
+to nothing.
 
-'feature_relation.py' reads the TEST files and joins them with the links
-and the book, per TEST directory, knowing no tree above it:
+'feature_forest.py'    read_forest(top) -> CForest (children_of,
+                       parent_of, root_tuple, id_set, line_of) | None;
+                       ForestFault for a line of no shape, an id that is
+                       no id, a second parent, a circle, a prototype's
+                       fault -- checked here and nowhere else (t-3)
+'feature_doc.py'       read_doc(top, forest) -> CDoc (entry_db,
+                       retired_db, customer_db, audience_db folded down
+                       the forest) | None; DocFault
+'feature_external.py'  read_external(top, forest) -> id -> names | None;
+                       ExternalFault for an id the forest does not hold
+'feature_relation.py'  relation_of_tree(root) -> CRelation: per TEST
+                       directory every link (test, choice, id), the runs
+                       linking nothing; 'run_db()' the runs of each id
+'feature_view.py'      features_of(directory) -> CFeatures (the three
+                       files, checked); view_of(directory) -> CView: the
+                       forest's CNodes -- state folded from own runs and
+                       children's (T-n), counts of the childless --, the
+                       unplaced, the retired, the links outside; the
+                       WHOLE tree below the top, whichever directory asks
+                       (t-13); view_kept(view, ids) the cut of T-u;
+                       feature_label_case_set(root, 'f/<id>') the runs of
+                       the label; outside_link_list, unproven_by_removal
+'feature_detector.py'  detect(view) -> CNote: unplaced, undocumented
+                       root, link outside, file of the past (T-h, t-6)
+'feature_act.py'       init(top), rename(top, old, new), retire(top, id):
+                       every new text checked with the readers before
+                       anything is written
+'feature_link_edit.py' the links of the test headers rewritten, byte for
+                       byte else
+'feature_code.py'      code_db_of(relation, root, output, run_db) per
+                       feature id, the source ranges ONLY its linked runs
+                       executed, the shared ones counted (R-86)
 
-    read_feature_file(directory)   CFeatureFile, or None where no file
-    relation_of_tree(root)         CRelation: TEST directories by path
-                                   relative to root -- features, linked
-                                   runs with their verdicts, runs linking
-                                   nothing, links to undefined names
+'suggestion.py' holds 'did you mean' (moved from 'services/lib/cmdline',
+which re-exports it), so the engine's own refusals of a name can say it.
 
-'feature_registry.py' reads 'hwut-root-features.conf' LAZILY, only when a
-face asks:
+PROTOTYPES (intend/44, services E-223). '+P : <member>, +Q' declares a
+prototype in the forest; '<owner> : +P' aggregates it. 'feature_forest'
+expands every aggregation into instances '<owner>+<id>' -- they stand in
+'children_of', 'parent_of', 'id_set' like any feature -- and keeps the
+declarations in 'prototype_db' (name without '+' -> right side) and
+'member_of' (member or inner prototype -> its prototype); every fault of
+a prototype is checked there. 'feature_doc.effective_entry' is what
+documents an id: its own block, else its member's, else its prototype's
+or one around it. A prototype and a member are no feature: the view puts
+a link to one outside, 'f/' refuses it; 'f/' takes fnmatch globs
+('GLOB_CHARACTER_SET').
 
-    read_registry(root)         CRegistry | None: directory_map (id -> path),
-                                the tree of aggregates and leaves, retired
-    registry_of_text(text)      the same from a text; every fault met in it
-    leaf_list(registry)         (tree path, CLeaf) in file order
-    aggregate_list(registry)    (tree path, CAggregate), parents first
-    aggregate_key_tuple(r, ext) the keys an aggregate passes down to a leaf
-    leaf_state / aggregate_state / retired_state
-                                IMPLEMENTED | OPEN | RETIRED and the verdict
-                                ok | fail beside (o-14)
-    word_valid_f, external_id_valid_f, internal_id_split, path_valid_f
-                                the identifiers of o-10 (UAX #31, NFC)
-
-'feature_detector.py' is the ONE detector for 'hwut.features.register' and
-the sanitizer (spec 23 section 7): detect(root, below=None) judges the
-central file against the tree and returns CDetection records (kind, subject,
-text, proposal lines); it never writes, retires or guesses, and every
-pairing is named ('redirect', 'repoint', 'fold', 'unpaired ... (candidates:
-...)'). A directory is paired by the fingerprint of its feature names
-(mutually best, unique, at least half); a leaf only where it is the one gone
-and the one new of its directory, or of an equal name elsewhere.
-
-'feature_registry_edit.py' writes the central file: 'composed_text' for
-'init'; afterwards text surgery through 'amend' (directory and leaf lines
-added, a directory redirected, a leaf repointed, a twin folded); 'edited'
-refuses an edit that would leave the file with a fault it did not state.
-'feature_registry_act.py' does the acts that touch more than the central
-file -- 'retire' (a leaf or an aggregate into 'retired', the definitions out
-of their TEST directories), 'move' (the directory and its 'directory_map'
-lines), 'key_add', 'key_remove', 'key_remove_all', 'register',
-'apply_proposal' -- computing every new text and holding it against its
-faults before anything is written. The faces are 'services/lib/features/'
-(hwut.features.init, register, tree, retire, move, key.add, key.remove).
-
-'feature_view.py' joins the central file with the relation's TEST
-directories: view_of(directory) -> CView (aggregates with their folded
-state and counts, leaves with their TEST directory, CFeatureState,
-effective keys and state; unplaced; asked below the top, only what stands
-below). Without a central file, or with a fault in it, it raises
-ViewRefused, whose text names the remedy. 'hwut.report.features', the
-feature document and the wish read it.
-
-'feature_wish.py' answers '-F', '-e' and '-k' (R-95, R-96):
-
-    case_set_of(root, wish)     the (absolute test file, choice) pairs the
-                                wish's tree-path globs, internal ids,
-                                external ids and key expression want
-    path_glob_hit_f(glob, parts) a tree-path glob against a leaf's path;
-                                an aggregate brings its subtree
-
-'feature_carry.py' is what follows a test that moves or goes (R-91):
-
-    test_moved(root, source, target, names, staying)
-                                the definitions carried to the target TEST
-                                directory; the leaf repointed to the
-                                target's directory id (registered where it
-                                has none), retired where the target defines
-                                the feature alike
-    unproven_by_removal(directory, test, choice)
-                                features a removal leaves unlinked
-
-'feature_code.py' joins the relation with a coverage output (R-86):
-
-    code_db_of(relation, root, output)  per feature, the source ranges
-                                        ONLY its linked runs executed,
-                                        the shared ones counted
-
-'hwut.report.features' prints the view; 'hwut.sanitize.propose
---relations' proposes the detector's lines ('register', 'redirect',
-'repoint', 'fold'); 'hwut.move' and 'hwut.remove' call 'feature_carry' for
-the test they act on.
+The faces are 'services/lib/features/' (hwut.features.init, register,
+tree, rename, retire) and 'services/lib/report/features.py'. The files of
+the past -- a TEST directory's 'hwut-features.conf', 'hwut-root-
+features.conf', 'hwut-feature-map.conf' -- are read by nothing; the
+detector names them.

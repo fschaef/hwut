@@ -1,113 +1,99 @@
 
 --- hwut.report.features ---
-    AGGREGATE engine -- Engine     4 implemented, 2 open; 1 ok, 2 fail, 3 untested
+    AGGREGATE engine -- Engine     4 implemented, 3 open; 1 ok, 2 fail, 4 untested
         state      OPEN fail
         doc        Runs tests and judges them.
-        keys       engine-part
+        audience   reviewer
         AGGREGATE engine/compare -- Compare 4 implemented, 2 open; 1 ok, 2 fail, 3 untested
             state      OPEN fail
             doc        Decides whether an output is equivalent to its nominal.
+            audience   reviewer
             AGGREGATE engine/compare/core -- Core 2 implemented, 2 open; 0 ok, 2 fail, 2 untested
                 state      OPEN fail
                 doc        Pairs lines.
-                [IMPLEMENTED fail] pairing -- Two streams are aligned line by line.
-                    internal    Core0001:line-pairing  (engine/compare/core)
-                    keys        algorithm, engine-part, heavy
+                [IMPLEMENTED fail] line-pairing -- Two streams are aligned line by line.
+                    names       pairing
                     [PASS] engine/compare/core/TEST/test-pair.sh [plain]
                     [FAIL] engine/compare/core/TEST/test-pair.sh [gap]
                     see          engine/compare/core/README.txt#pairing
                     see          https://example.org/pairing
                     see          engine/compare/core/absent.txt
-                [IMPLEMENTED fail] eng.cmp.core.missing-side -- A line present on one side only is shown whole.
-                    internal    Core0001:missing-side  (engine/compare/core)
-                    keys        algorithm, engine-part
+                [IMPLEMENTED fail] missing-side -- A line present on one side only is shown whole.
                     [FAIL] engine/compare/core/TEST/test-pair.sh [gap]
-                [OPEN untested]    eng.cmp.core.untested
-                    internal    Core0001:untested  (engine/compare/core)
-                    keys        algorithm, engine-part
-                [OPEN untested]    eng.cmp.core.not-numbered
-                    internal    Core0001:not-numbered  (engine/compare/core)
-                    keys        algorithm, engine-part
-            [IMPLEMENTED ok]   eng.cmp.whole-page -- A whole page is judged.
-                internal    Cmp00001:whole-page  (engine/compare)
-                keys        engine-part
+                [OPEN untested]    untested
+                [OPEN untested]    not-numbered
+            [IMPLEMENTED ok]   whole-page -- A whole page is judged.
+                audience    reviewer
                 [PASS] engine/compare/TEST/test-pages.sh [small]
                 [PASS] engine/compare/TEST/test-pages.sh [large]
-            [IMPLEMENTED untested] eng.cmp.never-run -- Linked, and not in the book.
-                internal    Cmp00001:never-run  (engine/compare)
-                keys        engine-part
+            [IMPLEMENTED untested] never-run -- Linked, and not in the book.
+                audience    reviewer
                 [NO VERDICT] engine/compare/TEST/test-fresh.sh
-        AGGREGATE engine/plain -- Plain 0 implemented, 0 open; 0 ok, 0 fail, 0 untested
-            state      OPEN untested  (nothing below it)
+        [OPEN untested]    plain -- Plain
+            audience    reviewer
     
     RETIRED                                                              1 retired
-        [RETIRED]  once-published  (Core0001:old-pairing)
+        [RETIRED]  old-pairing -- Gone.
     
     OUTSIDE THE RELATION
-        test run, names a feature its TEST directory does not define
-            engine/compare/core/TEST/test-stray.sh   'no-such'
+        test run, links an id that stands in no forest line and no doc block
+            engine/compare/core/TEST/test-stray.sh   'line-pairng' -- did you mean 'line-pairing'?
+        test run, links a retired feature
+            engine/compare/core/TEST/test-stray.sh   'old-pairing'
         NONSENSE? test run, links to no feature => hwut.help
             engine/compare/core/TEST/test-pair.sh [odd]
         claim, names a document that does not stand
-            engine/compare/core/TEST/line-pairing   '../absent.txt'
-        statement, not read
-            engine/compare/core/TEST/hwut-features.conf:12:20: VOCABULARY: 'documents' is a list of file names: documents = ["README.txt", ...]
+            line-pairing   'engine/compare/core/absent.txt'
 status: OK
 
 --- the same tree, as a record ---
-    counts: IMPLEMENTED=4, OPEN=2, ok=1, fail=2, untested=3
+    counts: IMPLEMENTED=4, OPEN=3, ok=1, fail=2, untested=4
     not plain: nothing
 
 --- --directory=engine/compare: paths from there ---
-    AGGREGATE engine -- Engine     4 implemented, 2 open; 1 ok, 2 fail, 3 untested
+    AGGREGATE engine -- Engine     4 implemented, 3 open; 1 ok, 2 fail, 4 untested
         state      OPEN fail
         doc        Runs tests and judges them.
-        keys       engine-part
+        audience   reviewer
         AGGREGATE engine/compare -- Compare 4 implemented, 2 open; 1 ok, 2 fail, 3 untested
             state      OPEN fail
             doc        Decides whether an output is equivalent to its nominal.
+            audience   reviewer
             AGGREGATE engine/compare/core -- Core 2 implemented, 2 open; 0 ok, 2 fail, 2 untested
                 state      OPEN fail
                 doc        Pairs lines.
-                [IMPLEMENTED fail] pairing -- Two streams are aligned line by line.
-                    internal    Core0001:line-pairing  (engine/compare/core)
-                    keys        algorithm, engine-part, heavy
+                [IMPLEMENTED fail] line-pairing -- Two streams are aligned line by line.
+                    names       pairing
                     [PASS] core/TEST/test-pair.sh [plain]
                     [FAIL] core/TEST/test-pair.sh [gap]
-                    see          core/README.txt#pairing
+                    see          ../../engine/compare/core/README.txt#pairing
                     see          https://example.org/pairing
-                    see          core/absent.txt
-                [IMPLEMENTED fail] eng.cmp.core.missing-side -- A line present on one side only is shown whole.
-                    internal    Core0001:missing-side  (engine/compare/core)
-                    keys        algorithm, engine-part
+                    see          ../../engine/compare/core/absent.txt
+                [IMPLEMENTED fail] missing-side -- A line present on one side only is shown whole.
                     [FAIL] core/TEST/test-pair.sh [gap]
-                [OPEN untested]    eng.cmp.core.untested
-                    internal    Core0001:untested  (engine/compare/core)
-                    keys        algorithm, engine-part
-                [OPEN untested]    eng.cmp.core.not-numbered
-                    internal    Core0001:not-numbered  (engine/compare/core)
-                    keys        algorithm, engine-part
-            [IMPLEMENTED ok]   eng.cmp.whole-page -- A whole page is judged.
-                internal    Cmp00001:whole-page  (engine/compare)
-                keys        engine-part
+                [OPEN untested]    untested
+                [OPEN untested]    not-numbered
+            [IMPLEMENTED ok]   whole-page -- A whole page is judged.
+                audience    reviewer
                 [PASS] TEST/test-pages.sh [small]
                 [PASS] TEST/test-pages.sh [large]
-            [IMPLEMENTED untested] eng.cmp.never-run -- Linked, and not in the book.
-                internal    Cmp00001:never-run  (engine/compare)
-                keys        engine-part
+            [IMPLEMENTED untested] never-run -- Linked, and not in the book.
+                audience    reviewer
                 [NO VERDICT] TEST/test-fresh.sh
+        [OPEN untested]    plain -- Plain
+            audience    reviewer
     
     RETIRED                                                              1 retired
-        [RETIRED]  once-published  (Core0001:old-pairing)
+        [RETIRED]  old-pairing -- Gone.
     
     OUTSIDE THE RELATION
-        test run, names a feature its TEST directory does not define
-            core/TEST/test-stray.sh   'no-such'
+        test run, links an id that stands in no forest line and no doc block
+            core/TEST/test-stray.sh   'line-pairng' -- did you mean 'line-pairing'?
+        test run, links a retired feature
+            core/TEST/test-stray.sh   'old-pairing'
         NONSENSE? test run, links to no feature => hwut.help
             core/TEST/test-pair.sh [odd]
         claim, names a document that does not stand
-            core/TEST/line-pairing   '../absent.txt'
-        statement, not read
-            core/TEST/hwut-features.conf:12:20: VOCABULARY: 'documents' is a list of file names: documents = ["README.txt", ...]
+            line-pairing   'engine/compare/core/absent.txt'
 status: OK
 <hwut-end>

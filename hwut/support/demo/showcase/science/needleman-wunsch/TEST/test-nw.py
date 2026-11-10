@@ -4,7 +4,7 @@
 #     choices {
 #         correct    { features = ["matrix-shown", "score-recomputes", "optimal"]
 #                      tolerance { constraints = ["rescore_errors == 0", "suboptimal == 0", "invalid == 0"] } }
-#         off-by-one { features = ["matrix-shown", "breach-shown"]
+#         off-by-one { features = ["matrix-shown", "needleman-wunsch-breach-shown"]
 #                      tolerance { constraints = ["rescore_errors > 0", "invalid == 0"] } }
 #     }
 # }

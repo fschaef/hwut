@@ -74,6 +74,10 @@
 #                 at documents that stand -- every relative path made
 #                 absolute from where it was written -- and the copy
 #                 runs green. MEASURED before: 18 paths pointed nowhere.
+#                 Since spec 43 the copy's doc file holds the one promise
+#                 of the demonstration, 'demo-python' (T-k); since
+#                 intend/44 the blocks of the prototypes it aggregates,
+#                 '+cover' and the five below it, and of their members.
 # play-menu       E-189 (ruled 2026-10-24): 'hwut.play' of an application
 #                 with several choices, none named, asks on the terminal
 #                 -- index or name; a word that selects nothing, or the
@@ -334,13 +338,18 @@ PY
         "$BIN/hwut.run" --plain 2>&1 | grep -E "^END|^RESULTS" | shown ;;
     demo-documents)
         "$BIN/hwut.support" python "$WORK/demo" > /dev/null 2>&1; echo "exit $?"
-        python3 - "$WORK/demo/TEST/hwut-features.conf" <<'EOF2'
+        #  SINCE spec 43: the copy carries the demonstration's ONE promise,
+        #  'demo-python', in a doc file of its own (T-k).
+        python3 - "$WORK/demo/hwut-feature-doc.dat" <<'EOF2'
 import os, re, sys
-path_list = re.findall(r'documents *= *\[([^]]*)\]', open(sys.argv[1]).read())
-path_list = [p for group in path_list for p in re.findall(r'"([^"]+)"', group)]
-print("%d document path(s), %d relative, %d point nowhere"
-      % (len(path_list), sum(not os.path.isabs(p) for p in path_list),
-         sum(not os.path.exists(p) for p in path_list)))
+text = open(sys.argv[1]).read()
+path_list = [p.strip() for line in re.findall(r'^documents:(.*)$', text, re.M)
+             for p in line.split(",") if p.strip()]
+here = os.path.dirname(sys.argv[1])
+print("blocks: %s" % ", ".join(re.findall(r'^\[\[(.*)\]\]$', text, re.M)))
+print("%d document path(s), %d point nowhere"
+      % (len(path_list), sum(not os.path.exists(os.path.join(here, p))
+                             for p in path_list)))
 EOF2
         ( cd "$WORK/demo/TEST" && "$BIN/hwut" --plain 2>&1 | grep "^RESULTS" | shown ) ;;
     laws-all)
@@ -565,17 +574,16 @@ EOF2
         #  files names each inner bubble it does not enter (E-200).
         #  MEASURED before: 'nothing to register below '.'' and an empty
         #  proposal, 'editor/' unnamed.
-        #  SINCE E-220 (2026-11-03): 'editor/' has no registry of its own,
-        #  so the features registry spans it -- 'init' and 'register' walk
-        #  it, no NOTE; the other faces still name it.
+        #  SINCE E-220 (2026-11-03) and spec 43 (T-m): 'editor/' has no
+        #  forest of its own, so the forest above spans it -- 'register'
+        #  judges its links, no NOTE; the other faces still name it.
         mkdir -p "$WORK/editor/TEST"
         cp "$WORK/hwut-root.conf" "$WORK/editor/hwut-root.conf"
         page "$WORK/editor/TEST/test-e.sh" 'features = ["empty"] choices = ["x"]' 'echo "$1"'
-        printf 'features {\n    childs {\n        empty { title = "e" }\n    }\n}\n' \
-               > "$WORK/editor/TEST/hwut-features.conf"
         page test-t.sh 'choices = ["x"]' 'echo "$1"'
         cd "$WORK"
         "$BIN/hwut.features.init" > /dev/null 2>&1
+        printf '[[empty]]\ne\n' >> hwut-feature-doc.dat
         echo "== hwut.features.register";   "$BIN/hwut.features.register" 2>&1 | shown
         echo "== hwut.sanitize.propose";    "$BIN/hwut.sanitize.propose" -o f.txt 2>&1 | shown
         echo "== hwut.renovate";            "$BIN/hwut.renovate" 2>&1 | shown
@@ -589,15 +597,15 @@ EOF2
         #  source (still linked there) writes no feature file into the
         #  target. MEASURED before: an empty 'hwut-features.conf', and
         #  'hwut.features.register' gave the target an id for no feature.
+        #  SINCE spec 43 (t-1) a move touches no feature file at all: the
+        #  moved test links the same id, wherever it stands.
         mkdir -p "$WORK/world/TEST" "$WORK/formation/TEST"
         for t in a b; do
             page "$WORK/world/TEST/test-$t.sh" 'features = ["same-seed"] choices = ["x"]' 'echo "$1"'
         done
-        printf 'features {\n    childs {\n        same-seed { title = "s" }\n    }\n}\n' \
-               > "$WORK/world/TEST/hwut-features.conf"
         cd "$WORK"
         "$BIN/hwut.features.init" > /dev/null 2>&1
-        "$BIN/hwut.features.register" > /dev/null 2>&1
+        printf '[[same-seed]]\ns\n' >> hwut-feature-doc.dat
         ( cd world/TEST && record && "$BIN/hwut.accept" --whole > /dev/null 2>&1 )
         ids() { sed -E 's/[A-Za-z0-9_-]{8}:same-seed/<id>:same-seed/g'; }
         if [ "$1" = move-one-base ]; then

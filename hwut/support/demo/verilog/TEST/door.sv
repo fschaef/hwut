@@ -4,8 +4,8 @@
 //               caps { memory_mb = 2048  file_size_mb = 256  disk_mb = 1024 } }
 //     pype    = "door.pype"
 //     choices {
-//         kept   { features = ["demo-passes-on-every-run", "fsm-law-kept"] }
-//         broken { features = ["demo-passes-on-every-run", "fsm-law-broken"] }
+//         kept   { features = ["demo-verilog", "demo-verilog+cover-fsm-law-kept"] }
+//         broken { features = ["demo-verilog", "demo-verilog+cover-fsm-law-broken"] }
 //     }
 // }
 //

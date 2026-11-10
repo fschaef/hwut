@@ -5,12 +5,12 @@
  *                                "settle <= 4 min",
  *                                "verdict == 'settled'"] }
  *     choices {
- *         heat { features = ["region-verbatim", "region-table", "region-point-cloud",
- *                            "region-ignore", "laws-in-units", "string-binding",
- *                            "test-level-tolerance", "annotation-lines"] }
- *         cool { features = ["region-verbatim", "region-table", "region-point-cloud",
- *                            "region-ignore", "laws-in-units", "string-binding",
- *                            "test-level-tolerance", "annotation-lines"] }
+ *         heat { features = ["demo-java+cover-region-verbatim", "demo-java+cover-region-table", "demo-java+cover-region-point-cloud",
+ *                            "demo-java+cover-region-ignore", "demo-java+cover-laws-in-units", "demo-java+cover-string-binding",
+ *                            "demo-java+cover-test-level-tolerance", "demo-java+cover-annotation-lines"] }
+ *         cool { features = ["demo-java+cover-region-verbatim", "demo-java+cover-region-table", "demo-java+cover-region-point-cloud",
+ *                            "demo-java+cover-region-ignore", "demo-java+cover-laws-in-units", "demo-java+cover-string-binding",
+ *                            "demo-java+cover-test-level-tolerance", "demo-java+cover-annotation-lines"] }
  *     }
  * }
  * ______________________________________________________________________________

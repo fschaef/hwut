@@ -4,9 +4,9 @@
 #     title     = "Demo: a shop's stock -- what the directory's hwut.conf arranges"
 #     tolerance { stderr_ignored = true }
 #     choices {
-#         sell   { features = ["unordered-table", "stderr-ignored", "collision"] }
-#         report { features = ["output-file", "keyed-table-separator", "dependency",
-#                              "frame-scripts", "test-scripts", "stderr-ignored"]
+#         sell   { features = ["demo-bash+cover-unordered-table", "demo-bash+cover-stderr-ignored", "demo-bash+cover-collision"] }
+#         report { features = ["demo-bash+cover-output-file", "demo-bash+cover-keyed-table-separator", "demo-bash+cover-dependency",
+#                              "demo-bash+cover-frame-scripts", "demo-bash+cover-test-scripts", "demo-bash+cover-stderr-ignored"]
 #                  output   = ["<stdout>", "stock.csv"] }
 #     }
 # }

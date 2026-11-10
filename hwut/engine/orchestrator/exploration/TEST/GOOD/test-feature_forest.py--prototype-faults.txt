@@ -1,0 +1,11 @@
+undeclared        FAULT: hwut-feature-forest.csv:1: '+p' is aggregated and declared nowhere -- '+p : <member>, ...'
+inner undeclared  FAULT: hwut-feature-forest.csv:2: '+q' is aggregated by '+p' and declared nowhere
+two prototypes    FAULT: hwut-feature-forest.csv:3: 'm' stands under two prototypes: '+p', '+q' -- one
+member feature    FAULT: hwut-feature-forest.csv:2: 'm' is a feature and stands in '+p' -- a member's id is its own
+prototype feature FAULT: hwut-feature-forest.csv:3: '+p' is a prototype and a feature (line 2) -- one name, one thing
+prototype child   FAULT: hwut-feature-forest.csv:1: '+p' is a prototype and a feature -- one name, one thing
+prototype twice   FAULT: hwut-feature-forest.csv:3: '+p' stands twice on a left side (line 2) -- one line per feature
+without plus      FAULT: hwut-feature-forest.csv:2: 'q' is a prototype -- aggregated as '+q'
+circle            FAULT: hwut-feature-forest.csv:2: the prototypes close a circle: +p -> +q -> +p
+reached twice     FAULT: hwut-feature-forest.csv:1: 'a' reaches '+q' twice -- one name, one place
+<hwut-end>

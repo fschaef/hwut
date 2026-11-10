@@ -2,26 +2,26 @@
  *     title   = "Demo: what hwut tolerates, and where it is said"
  *     build   { framework = "make", target = "%.exe" }
  *     choices {
- *         plain       { features = ["demo-passes-on-every-run", "exact-comparison"] }
- *         tolerance   { features = ["demo-passes-on-every-run", "equivalence-pattern", "numeric-ratio"]
+ *         plain       { features = ["demo-cpp", "demo-cpp+cover-exact-comparison"] }
+ *         tolerance   { features = ["demo-cpp", "demo-cpp+cover-equivalence-pattern", "demo-cpp+cover-numeric-ratio"]
  *                       tolerance {
  *                           eq_pattern    = ["(hello|bonjour|hallo|buongiorno|hola|ahoj)"]
  *                           numeric_ratio = 0.01
  *                       } }
- *         constraints { features = ["demo-passes-on-every-run", "constraints"]
+ *         constraints { features = ["demo-cpp", "demo-cpp+cover-constraints"]
  *                       tolerance {
  *                           constraints = ["load >= 0 and load <= 100",
  *                                          "even % 2 == 0",
  *                                          "twice == 2 * once"]
  *                       } }
- *         analogies   { features = ["demo-passes-on-every-run", "analogies"] }
- *         race        { features = ["demo-passes-on-every-run", "order-free-block"] }
- *         pool        { features = ["demo-passes-on-every-run", "potpourri-subset-duplicates"] }
- *         progress    { features = ["demo-passes-on-every-run", "visible-nothing"]
+ *         analogies   { features = ["demo-cpp", "demo-cpp+cover-analogies"] }
+ *         race        { features = ["demo-cpp", "demo-cpp+cover-order-free-block"] }
+ *         pool        { features = ["demo-cpp", "demo-cpp+cover-potpourri-subset-duplicates"] }
+ *         progress    { features = ["demo-cpp", "demo-cpp+cover-visible-nothing"]
  *                       tolerance { nothing = ["[.]+"] } }
- *         lisp        { features = ["demo-passes-on-every-run", "analogy-markers"]
+ *         lisp        { features = ["demo-cpp", "demo-cpp+cover-analogy-markers"]
  *                       tolerance { analogy = ["{", "}"] } }
- *         clusters    { features = ["demo-passes-on-every-run", "point-cloud-pair-distance"] }
+ *         clusters    { features = ["demo-cpp", "demo-cpp+cover-point-cloud-pair-distance"] }
  *     }
  * }
  *

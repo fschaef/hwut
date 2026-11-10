@@ -6,12 +6,12 @@
 #                                "settle <= 4 min",
 #                                "verdict == 'settled'"] }
 #     choices {
-#         heat { features = ["region-verbatim", "region-table", "region-point-cloud",
-#                            "region-ignore", "laws-in-units", "string-binding",
-#                            "test-level-tolerance", "annotation-lines"] }
-#         cool { features = ["region-verbatim", "region-table", "region-point-cloud",
-#                            "region-ignore", "laws-in-units", "string-binding",
-#                            "test-level-tolerance", "annotation-lines"] }
+#         heat { features = ["demo-powershell+cover-region-verbatim", "demo-powershell+cover-region-table", "demo-powershell+cover-region-point-cloud",
+#                            "demo-powershell+cover-region-ignore", "demo-powershell+cover-laws-in-units", "demo-powershell+cover-string-binding",
+#                            "demo-powershell+cover-test-level-tolerance", "demo-powershell+cover-annotation-lines"] }
+#         cool { features = ["demo-powershell+cover-region-verbatim", "demo-powershell+cover-region-table", "demo-powershell+cover-region-point-cloud",
+#                            "demo-powershell+cover-region-ignore", "demo-powershell+cover-laws-in-units", "demo-powershell+cover-string-binding",
+#                            "demo-powershell+cover-test-level-tolerance", "demo-powershell+cover-annotation-lines"] }
 #     }
 # }
 #

@@ -4,13 +4,13 @@
 #     title    = "Demo: a garage's space counter -- a space, a stream and races, generated"
 #     interactive = true
 #     choices {
-#         space       { features = ["space-from-hocon", "space-iterator", "hwut-runner"]
+#         space       { features = ["demo-python+cover-space-from-hocon", "demo-python+cover-space-iterator", "demo-python+cover-hwut-runner"]
 #                       tolerance { constraints = ["mismatches == 0"] } }
-#         random      { features = ["deterministic-stream", "hwut-runner"]
+#         random      { features = ["demo-python+cover-deterministic-stream", "demo-python+cover-hwut-runner"]
 #                       tolerance { constraints = ["mismatches == 0"] } }
-#         race-naive  { features = ["deterministic-timeline", "space-iterator", "hwut-runner"]
+#         race-naive  { features = ["demo-python+cover-deterministic-timeline", "demo-python+cover-space-iterator", "demo-python+cover-hwut-runner"]
 #                       tolerance { constraints = ["overbooked > 0"] } }
-#         race-atomic { features = ["deterministic-timeline", "space-iterator", "hwut-runner"]
+#         race-atomic { features = ["demo-python+cover-deterministic-timeline", "demo-python+cover-space-iterator", "demo-python+cover-hwut-runner"]
 #                       tolerance { constraints = ["overbooked == 0"] } }
 #     }
 # }

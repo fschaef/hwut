@@ -653,27 +653,25 @@ def _main(argv, write, write_error, captured_f, event_sink=None,
 
 def _registry_hint(directory):
     """
-    RETURN: str, ONE LINE where the central file of features stands and
-            features defined below 'directory' are not registered in it
-            -- a renamed feature, a new one, a moved directory:
-            '<n> feature(s) not registered => hwut.features.register'
+    RETURN: str, ONE LINE where a forest stands and test runs below
+            'directory' link an id that stands in no forest line and no
+            doc block, or a retired one -- a misspelt link, a feature never
+            written down:
+            '<n> link(s) to no feature => hwut.features.register'
             None, else, and where anything at all goes wrong: a hint must
             never cost a run its result
     A CONSISTENCY HINT, NOT A FEATURE REPORT (spec 23 o-5, amended
-    2026-10-14); 'hwut.help' says more. The exit status is not touched.
+    2026-10-14; spec 43 section 6); 'hwut.help' says more. The exit
+    status is not touched.
     """
     try:
-        from ..engine.orchestrator.exploration.feature_detector \
-                                         import unregistered_list
-        from ..engine.orchestrator.exploration.tree_explorer \
-                                         import registry_top
-        root  = registry_top(directory)
-        below = os.path.relpath(os.path.abspath(directory), root)
-        found = unregistered_list(root, below.replace(os.sep, "/"))
+        from ..engine.orchestrator.exploration.feature_view \
+                                         import outside_link_list
+        found = outside_link_list(directory)
     except Exception:                                   # noqa: BLE001
         return None
     if not found: return None
-    return "%d feature(s) not registered => hwut.features.register" \
+    return "%d link(s) to no feature => hwut.features.register" \
            % len(found)
 
 

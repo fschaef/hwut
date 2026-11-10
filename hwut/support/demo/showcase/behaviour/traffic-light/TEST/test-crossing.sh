@@ -6,9 +6,9 @@
 #                       tolerance { constraints = ["breaches == 0", "wait <= 20 s"] } }
 #         traffic     { features = ["chart-walk", "min-green", "all-red", "car-served"]
 #                       tolerance { constraints = ["breaches == 0", "wait <= 20 s"] } }
-#         quick-patch { features = ["breach-named"]
+#         quick-patch { features = ["traffic-light-breach-named"]
 #                       tolerance { constraints = ["breaches > 0"] } }
-#         bus-patch   { features = ["breach-named", "two-greens-shown"]
+#         bus-patch   { features = ["traffic-light-breach-named", "two-greens-shown"]
 #                       tolerance { constraints = ["breaches > 0"] } }
 #     }
 # }

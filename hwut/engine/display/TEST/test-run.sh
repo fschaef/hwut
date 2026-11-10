@@ -6,14 +6,14 @@
 #     choices {
 #         busy             { features = ["busy-directory-fault"] }
 #         colour           { features = ["colour-decision"] }
-#         empty            { features = ["exit-status"] }
-#         fail             { features = ["exit-status", "flow-line", "directories-roll-call"] }
-#         green            { features = ["exit-status", "flow-line", "directories-roll-call"] }
+#         empty            { features = ["display-exit-status"] }
+#         fail             { features = ["display-exit-status", "flow-line", "directories-roll-call"] }
+#         green            { features = ["display-exit-status", "flow-line", "directories-roll-call"] }
 #         tree-ink         { features = ["tree-ink"] }
 #         jobs-budget      { features = ["jobs-budget"] }
 #         linear-raw       { features = ["deterministic-flow"] }
 #         nostore          { features = ["store-and-timing-knobs"] }
-#         refused          { features = ["rendering-refused", "exit-status"] }
+#         refused          { features = ["rendering-refused", "display-exit-status"] }
 #         short-form       { features = ["short-form"] }
 #         strategy-refused { features = ["strategy-refused"] }
 #         tiers            { features = ["tiers"] }

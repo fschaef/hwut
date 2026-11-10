@@ -1,0 +1,11 @@
+f/fwd          gw/TEST/test-fwd.sh [one] gw/TEST/test-fwd.sh [two]
+f/forwarding   gw/TEST/test-fwd.sh [one] gw/TEST/test-fwd.sh [two] gw/TEST/test-order.sh [None]
+f/gateway      bus/TEST/test-bus.sh [None] gw/TEST/test-fwd.sh [one] gw/TEST/test-fwd.sh [two] gw/TEST/test-order.sh [None]
+f/buses        bus/TEST/test-bus.sh [None]
+f/encode       (none)
+f/lonely       bus/TEST/test-bus.sh [None]
+f/old          REFUSED: 'f/old' names a RETIRED feature: no longer claimed, no run proves it any more
+f/decod        REFUSED: 'f/decod' names no feature: 'decod' stands in no line of 'hwut-feature-forest.csv' and no block of the doc file => hwut.features.tree --list -- did you mean 'decode'?
+f/decod        (none)
+no forest      REFUSED: 'f/fwd' asks for a feature: no 'hwut-feature-forest.csv' stands at '<root>' => hwut.features.init
+<hwut-end>

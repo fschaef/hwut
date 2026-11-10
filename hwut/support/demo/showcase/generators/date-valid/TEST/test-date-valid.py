@@ -5,7 +5,7 @@
 #     choices {
 #         gregorian { features = ["month-lengths", "out-of-range", "leap-rule"]
 #                     tolerance { constraints = ["disagreements == 0"] } }
-#         four-only { features = ["month-lengths", "out-of-range", "wrong-named"]
+#         four-only { features = ["month-lengths", "out-of-range", "date-valid-wrong-named"]
 #                     tolerance { constraints = ["disagreements > 0"] } }
 #     }
 # }

@@ -1,11 +1,11 @@
 #! /usr/bin/env python3
 # @hwut {
 #     title    = "Last item in stock, two orders: EVERY interleaving enumerated, one verdict per row"
-#     features = ["all-interleavings"]
+#     features = ["interleavings-all-interleavings"]
 #     choices {
-#         conditional    { features = ["all-interleavings", "never-oversold"]
+#         conditional    { features = ["interleavings-all-interleavings", "never-oversold"]
 #                          tolerance { constraints = ["unfinished == 0", "breaches == 0"] } }
-#         check-then-act { features = ["all-interleavings", "oversold-rows-named"]
+#         check-then-act { features = ["interleavings-all-interleavings", "oversold-rows-named"]
 #                          tolerance { constraints = ["unfinished == 0", "breaches > 0"] } }
 #     }
 # }

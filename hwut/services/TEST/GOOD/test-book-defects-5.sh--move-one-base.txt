@@ -15,5 +15,4 @@ world/TEST/test-a.sh -> formation/TEST/test-a.sh:
     world/TEST/TMP/store/test-a.sh--x.stdout.when -> formation/TEST/TMP/store/test-a.sh--x.stdout.when
     book entry: adopted by 'formation/TEST'
     register: retired here; issued 0.0 there
-    feature 'same-seed' stays in the source, still linked there: the moved test links it as '<id>:same-seed'
 <hwut-end>

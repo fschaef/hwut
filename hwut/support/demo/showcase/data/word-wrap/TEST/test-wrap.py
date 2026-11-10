@@ -5,9 +5,9 @@
 #     choices {
 #         awk-justify { features = ["width", "whole-words", "justified"]
 #                       tolerance { constraints = ["breaches == 0"] } }
-#         fmt         { features = ["violation-shown"]
+#         fmt         { features = ["word-wrap-violation-shown"]
 #                       tolerance { constraints = ["breaches > 0"] } }
-#         fold        { features = ["violation-shown"]
+#         fold        { features = ["word-wrap-violation-shown"]
 #                       tolerance { constraints = ["breaches > 0"] } }
 #     }
 # }

@@ -3,9 +3,9 @@
 %     pype    = "build.pypes"
 %     same    = true
 %     choices = ["serial", "parallel"]
-%     features = ["pype-in-header", "pype-system", "same-nominal", "choices-as-list",
-%                 "pype-push-pop", "pype-entry-exit", "pype-import", "pype-repeat-group",
-%                 "pype-quantity", "pype-anchors-globs-flush"]
+%     features = ["demo-prolog+cover-pype-in-header", "demo-prolog+cover-pype-system", "demo-prolog+cover-same-nominal", "demo-prolog+cover-choices-as-list",
+%                 "demo-prolog+cover-pype-push-pop", "demo-prolog+cover-pype-entry-exit", "demo-prolog+cover-pype-import", "demo-prolog+cover-pype-repeat-group",
+%                 "demo-prolog+cover-pype-quantity", "demo-prolog+cover-pype-anchors-globs-flush"]
 %     tolerance { constraints = ["compile < 5 s", "breaches == 0"] }
 % }
 %

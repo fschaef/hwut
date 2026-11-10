@@ -3,10 +3,10 @@
 #
 # @hwut {
 #     title   = "Demo: an order law, stated as modes (a pype)"
-#     features = ["demo-passes-on-every-run", "order-law-by-pype", "pype-owns-terminal-token"]
+#     features = ["demo-java", "demo-java+cover-order-law-by-pype", "demo-java+cover-pype-owns-terminal-token"]
 #     choices { clean  { }
-#               broken { features = ["law-breach-verdict"] }
-#               slow   { features = ["pype-tick", "pype-time-guard"] } }
+#               broken { features = ["demo-java+cover-law-breach-verdict"] }
+#               slow   { features = ["demo-java+cover-pype-tick", "demo-java+cover-pype-time-guard"] } }
 # }
 #
 # Five clients talk to a service at once ('producer.java', five threads).

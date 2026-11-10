@@ -4,12 +4,12 @@
 %%                                "settle <= 4 min",
 %%                                "verdict == 'settled'"] }
 %%     choices {
-%%         heat { features = ["region-verbatim", "region-table", "region-point-cloud",
-%%                            "region-ignore", "laws-in-units", "string-binding",
-%%                            "test-level-tolerance", "annotation-lines"] }
-%%         cool { features = ["region-verbatim", "region-table", "region-point-cloud",
-%%                            "region-ignore", "laws-in-units", "string-binding",
-%%                            "test-level-tolerance", "annotation-lines"] }
+%%         heat { features = ["demo-erlang+cover-region-verbatim", "demo-erlang+cover-region-table", "demo-erlang+cover-region-point-cloud",
+%%                            "demo-erlang+cover-region-ignore", "demo-erlang+cover-laws-in-units", "demo-erlang+cover-string-binding",
+%%                            "demo-erlang+cover-test-level-tolerance", "demo-erlang+cover-annotation-lines"] }
+%%         cool { features = ["demo-erlang+cover-region-verbatim", "demo-erlang+cover-region-table", "demo-erlang+cover-region-point-cloud",
+%%                            "demo-erlang+cover-region-ignore", "demo-erlang+cover-laws-in-units", "demo-erlang+cover-string-binding",
+%%                            "demo-erlang+cover-test-level-tolerance", "demo-erlang+cover-annotation-lines"] }
 %%     }
 %% }
 %%

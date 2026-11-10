@@ -3,9 +3,9 @@
 --     build     { framework = "make", target = "%.exe" }
 --     tolerance { stderr_ignored = true }
 --     choices {
---         sell   { features = ["unordered-table", "stderr-ignored", "collision"] }
---         report { features = ["output-file", "keyed-table-separator", "dependency",
---                              "frame-scripts", "test-scripts", "stderr-ignored"]
+--         sell   { features = ["demo-haskell+cover-unordered-table", "demo-haskell+cover-stderr-ignored", "demo-haskell+cover-collision"] }
+--         report { features = ["demo-haskell+cover-output-file", "demo-haskell+cover-keyed-table-separator", "demo-haskell+cover-dependency",
+--                              "demo-haskell+cover-frame-scripts", "demo-haskell+cover-test-scripts", "demo-haskell+cover-stderr-ignored"]
 --                  output   = ["<stdout>", "stock.csv"] }
 --     }
 -- }
