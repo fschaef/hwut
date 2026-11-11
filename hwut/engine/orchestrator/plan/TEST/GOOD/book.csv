@@ -1,10 +1,11 @@
-# vut-register 5 generation:35 apps:6 marks:0=6,1=5,2=3,3=2,4=9,5=4
+# vut-register 5 generation:36 apps:6 marks:0=7,1=5,2=3,3=2,4=9,5=4
 test;choice;verdict;report;stain;test_id;choice_id;platform
 test-confinement.py;acknowledged;true;ok;;5;0
 ;gate;true;ok;;5;1
 ;reason;true;ok;;5;2
 ;required;true;ok;;5;3
 test-determine.py;closure;true;ok;;0;0
+;deploy;true;ok;;0;6
 ;deterministic;true;ok;;0;1
 ;empty;true;ok;;0;2
 ;misdep;true;ok;;0;3

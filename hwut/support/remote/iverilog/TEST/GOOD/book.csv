@@ -1,0 +1,12 @@
+# vut-register 5 generation:11 apps:1 marks:0=10
+test;choice;verdict;report;stain;test_id;choice_id;platform
+test-agent.py;duplicate;false;unexpected-stderr;stderr-untolerated;0;6
+;kill;false;unexpected-stderr;stderr-untolerated;0;4
+;noise;false;unexpected-stderr;stderr-untolerated;0;0
+;oracle;false;unexpected-stderr;stderr-untolerated;0;2
+;outcome02;false;unexpected-stderr;stderr-untolerated;0;1
+;refusals;false;unexpected-stderr;stderr-untolerated;0;3
+;session;false;unexpected-stderr;stderr-untolerated;0;8
+;timeout;false;unexpected-stderr;stderr-untolerated;0;5
+;uart;false;unexpected-stderr;stderr-untolerated;0;7
+;wait;false;unexpected-stderr;stderr-untolerated;0;9

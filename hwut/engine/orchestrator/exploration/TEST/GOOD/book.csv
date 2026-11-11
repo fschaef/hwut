@@ -1,4 +1,4 @@
-# vut-register 5 generation:174 apps:25 marks:0=5,1=9,2=2,3=6,4=7,5=4,6=7,7=3,8=6,9=9,10=4,11=0,12=4,13=8,19=15,20=4,21=4,22=2,23=6,24=4
+# vut-register 5 generation:178 apps:25 marks:0=5,1=9,2=2,3=6,4=7,5=4,6=7,7=3,8=6,9=10,10=4,11=0,12=4,13=8,19=18,20=4,21=4,22=2,23=6,24=4
 test;choice;verdict;report;stain;test_id;choice_id;platform
 test-amend.py;conf;true;ok;;12;0
 ;languages;true;ok;;12;1
@@ -73,7 +73,10 @@ test-platform.py;bare-name;true;ok;;19;5
 ;name-missing;true;ok;;19;6
 ;not-list;true;ok;;19;3
 ;reads;true;ok;;19;0
+;requires;true;ok;;19;15
 ;root-only;true;ok;;19;2
+;tools;true;ok;;19;16
+;tools-faults;true;ok;;19;17
 ;value-no-string;true;ok;;19;14
 test-printer.py;directory;true;ok;;6;0
 ;faults;true;ok;;6;1
@@ -93,6 +96,7 @@ test-tree.py;inherit;true;ok;;8;0
 ;walk;true;ok;;8;5
 test-validator.py;choiceless;true;ok;;9;0
 ;conf;true;ok;;9;1
+;deploy;true;ok;;9;9
 ;exclusivity;true;ok;;9;2
 ;header;true;ok;;9;3
 ;list_form;true;ok;;9;4

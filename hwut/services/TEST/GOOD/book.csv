@@ -1,4 +1,4 @@
-# vut-register 5 generation:510 apps:58 marks:0=7,1=8,2=13,3=5,4=8,5=7,6=12,7=5,8=9,9=2,10=2,11=5,12=6,13=6,14=8,15=5,16=6,17=10,18=3,19=5,20=7,21=13,22=4,23=15,24=8,25=11,26=5,27=13,28=10,29=3,30=8,31=4,32=1,33=4,34=3,35=4,36=8,37=18,38=13,39=3,40=2,41=12,42=10,45=12,46=3,48=5,49=5,50=7,51=19,52=20,53=30,54=8,55=2,56=3,57=3
+# vut-register 5 generation:518 apps:60 marks:0=7,1=8,2=13,3=5,4=8,5=7,6=12,7=5,8=9,9=2,10=2,11=5,12=6,13=6,14=8,15=5,16=6,17=10,18=3,19=5,20=7,21=13,22=4,23=15,24=8,25=11,26=5,27=13,28=10,29=3,30=8,31=4,32=1,33=4,34=3,35=4,36=8,37=18,38=13,39=3,40=2,41=12,42=10,45=12,46=3,48=5,49=5,50=7,51=19,52=20,53=30,54=8,55=2,56=3,57=3,58=4,59=2
 test;choice;verdict;report;stain;test_id;choice_id;platform
 test-about.sh;page;true;ok;;39;0
 ;refused;true;ok;;39;1
@@ -179,10 +179,16 @@ test-cov_run.py;door;true;ok;;7;0
 test-cov_visitor.py;accounted;true;ok;;34;0
 ;vocabulary;true;ok;;34;1
 ;walk;true;ok;;34;2
+test-deploy.sh;absent;true;ok;;58;3
+;failed;true;ok;;58;2
+;flashed;true;ok;;58;0
+;unbuilt;true;ok;;58;1
 test-dev_podman.py;build;true;ok;;35;0
 ;enter;true;ok;;35;1
 ;help;true;ok;;35;2
 ;refused;true;ok;;35;3
+test-device.sh;other-status;true;ok;;59;1
+;unreachable;true;ok;;59;0
 test-diff.sh;differing;true;ok;;8;0
 ;reading;true;ok;;8;1
 ;regions;true;ok;;8;8

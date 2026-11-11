@@ -1,4 +1,4 @@
-# vut-register 5 generation:19 apps:3 marks:0=9,1=4,2=3
+# vut-register 5 generation:20 apps:3 marks:0=9,1=5,2=3
 test;choice;verdict;report;stain;test_id;choice_id;platform
 test-disk_guard.py;refused;true;ok;;2;0
 ;room;true;ok;;2;1
@@ -13,6 +13,7 @@ test-scheduler.py;budget;true;ok;;0;0
 ;session;true;ok;;0;7
 ;workers;true;ok;;0;8
 test-state.py;admission;true;ok;;1;0
+;chain;true;ok;;1;4
 ;exclusion;true;ok;;1;1
 ;ordering;true;ok;;1;2
 ;supports;true;ok;;1;3
