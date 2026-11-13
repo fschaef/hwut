@@ -3,5 +3,7 @@
 # The launcher of 'hwut.cov.conv.to_lcov': 'services/lib/cov/conv/to_lcov.py' run as a module, from
 # wherever 'hwut.cov.conv.to_lcov' is called, by PATH or by path.
 HERE=$(dirname "$(readlink -f "$0")")
+command -v python3 > /dev/null 2>&1 \
+    || exec "$HERE/../services/_no_python.sh" "$(basename "$0")"
 PYTHONPATH="$HERE/../..${PYTHONPATH:+:$PYTHONPATH}" \
-    exec python3 -m hwut.services.lib.cov.conv.to_lcov "$@"
+    exec python3 -m hwut.services._launch hwut.services.lib.cov.conv.to_lcov "$@"

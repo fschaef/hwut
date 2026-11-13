@@ -1,3 +1,4 @@
+# SPDX-License: MIT; Project HWUT; (C) Frank-Rene Schaefer
 import math
 # from   typeguard import typechecked -- too costly in most applications
 

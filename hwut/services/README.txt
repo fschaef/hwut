@@ -562,6 +562,32 @@ The faces:
                  code, and no traceback -- the interpreter's teardown
                  noise silenced with it.
 
+    _launch.py   EVERY FACE STARTS HERE: a shim of 'bin/' runs 'python3
+                 -m hwut.services._launch <module>', an installed face's
+                 entry point lands in 'main()'. The module runs as
+                 '__main__', in a forked child, under THE URGENCY
+                 REACTION (E-224). A face that cannot run says so on
+                 stderr -- '<face> cannot run: <problem>.', the
+                 '<hwut-system>' block of 'lib/system_report.py' (os,
+                 python, pip, hwut, on PATH, cores, failed, missing),
+                 and the line saying to pass that block to an AI
+                 assistant:
+
+                     Python older than the list's minimum   status 1
+                     a census module absent                 status 1
+                     killed by SEGV, ABRT, BUS, ILL, FPE    the Python
+                                                            stack, then
+                                                            the same
+                                                            signal
+                     no 'python3' ('_no_python.sh')         status 127
+
+                 NOTHING ELSE CHANGES: exit statuses pass as given
+                 (130, 141, 143 are endings, not crashes); a signal the
+                 group delivers reaches the face once; one sent to the
+                 launcher alone is passed on after two seconds; any
+                 other death by signal is passed on unreported.
+                 'hwut.help' prints the same block under its notice.
+
     _cases.py    THE STORE-READING BLOCK every such face runs between
                  its words and its work: entered path, the climb, the
                  wish with its targets, the labels view, the selection

@@ -4,16 +4,19 @@ bin -- THE LAUNCHER ROOF
 
 Every launcher of the tool stands here, and beside them ONE file that is
 not a launcher: '.hwut.conf', the installation's default PREFERENCES
-(services E-78). The launchers are two-line shell shims, nothing
-importable; each resolves its own location ('readlink -f'), so it answers
-by PATH and by path alike.
+(services E-78). The launchers are shell shims, nothing importable; each
+resolves its own location ('readlink -f'), so it answers by PATH and by
+path alike, and runs its face through 'services/_launch.py' -- or, where
+no 'python3' stands on PATH, 'services/_no_python.sh', which says so
+(the urgency reaction, services E-224).
 
     .hwut.conf      how hwut SHOWS things -- colours today. A person's
                     '~/.hwut.conf' is read over it, key by key; its
                     comments list the words a colour may be written
                     with. A project never holds a preference.
 
-    hwut.<name>     runs 'python3 -m hwut.services.<name>' with the
+    hwut.<name>     runs 'python3 -m hwut.services._launch
+                    hwut.services.<name>' with the
                     package root's parent prepended to PYTHONPATH --
                     one shim per service face:
 
@@ -56,7 +59,8 @@ by PATH and by path alike.
                     directory is on PATH.
 
 A launcher holds no logic: no argument is read, no default is chosen,
-no path but its own is resolved. The face behind it owns everything the
+no path but its own is resolved; the one question it asks is whether
+'python3' stands at all. The face behind it owns everything the
 command line means; 'services/README.txt' states the naming law that
 binds the two.
 

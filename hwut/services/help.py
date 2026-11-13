@@ -86,6 +86,12 @@ if __name__ == "__main__":
     _missing_list = _requirements.missing()
     if _missing_list:
         sys.stdout.write(_requirements.missing_text(_missing_list))
+        #  THE SAME BLOCK AS EVERY FACE'S URGENCY REPORT (E-224), for the
+        #  person to pass on as it stands.
+        from .lib import system_report as _system_report
+        sys.stdout.write("\n" + "\n".join(_system_report.block_line_list(
+            "hwut.help", "requirements of hwut are missing"))
+            + "\n\n" + _system_report.ADVICE + "\n")
         if any(row.kind == "python" for row, _ in _missing_list):
             sys.exit(1)
 

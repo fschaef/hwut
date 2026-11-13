@@ -26,5 +26,26 @@ MISSING: the Python module 'pint' (absent) -- quantities with units
     ('quantity(...)' in pype).
     Debian/Ubuntu:  sudo apt install python3-pint
     pip:            pip install 'pint>=0.26.2'
+
+<hwut-system>
+face:    hwut.help
+problem: requirements of hwut are missing
+os: ...
+python: ...
+pip: ...
+hwut: ...
+on PATH: ...
+cores: ...
+missing: python bidict (absent) apt: python3-bidict | pip: bidict>=0.22.1
+         python rapidfuzz (absent) apt: python3-rapidfuzz | pip: rapidfuzz>=3.6.2
+         python regex (absent) apt: python3-regex | pip: regex>=2022.10.31
+         python typeguard (absent) apt: python3-typeguard | pip: typeguard>=4.1.5
+         python pyrsistent (absent) apt: python3-pyrsistent | pip: pyrsistent>=0.20.0
+         python prompt_toolkit (absent) apt: python3-prompt-toolkit | pip: prompt_toolkit>=3.0.43
+         python psutil (absent) apt: python3-psutil | pip: psutil>=5.9.8
+         python pint (absent) apt: python3-pint | pip: pint>=0.26.2
+</hwut-system>
+
+Pass the lines from <hwut-system> to </hwut-system> to your AI assistant: they say what this machine is and what went wrong on it.
     status 1, stderr ''
 <hwut-end>

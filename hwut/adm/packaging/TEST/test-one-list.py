@@ -30,7 +30,9 @@ the census.
                   the census rows of 'adm/requirement-list.txt', read here
                   by a reader of this page's own
     help-missing  'hwut.help' in an interpreter that has none of them:
-                  each named with how to install it, status 1
+                  each named with how to install it, status 1; then the
+                  '<hwut-system>' block of the urgency report (services
+                  E-224), its machine facts masked
     notice-width  the notice of EVERY user requirement, as though each
                   were absent, at 72 columns: one paragraph each, no line
                   wider, the note ending in one '.' (the book's D-10: the
@@ -171,6 +173,32 @@ def test_requirements():
         shutil.rmtree(os.path.dirname(stage))
 
 
+def masked(text):
+    """
+    RETURN: str, 'text' with every value of its '<hwut-system>' block --
+            machine facts (E-224) -- written '...'; 'face' and 'problem'
+            stand, and of 'missing' the 'python' rows, which a bare
+            interpreter lacks on every machine.
+    """
+    import re
+    result, inside, key = [], False, None
+    for line in text.splitlines(keepends=True):
+        if line.startswith("<hwut-system>"):    inside = True
+        elif line.startswith("</hwut-system>"): inside = False
+        elif inside:
+            if not line.startswith(" "):
+                key = line.split(":", 1)[0]
+            row_f = re.search(r"python [A-Za-z_]+ \(", line) is not None
+            if key in ("face", "problem") or (key == "missing" and row_f):
+                pass
+            elif line.startswith(" "):
+                continue
+            else:
+                line = "%s: ...\n" % key
+        result.append(line)
+    return "".join(result)
+
+
 def test_help_missing():
     root = tempfile.mkdtemp(dir="/tmp")
     try:
@@ -183,7 +211,7 @@ def test_help_missing():
         done = subprocess.run([python, "-m", "hwut.services.help"], cwd=root,
                               env=env, capture_output=True, text=True)
         banner("an interpreter without the modules: 'hwut.help'")
-        print(done.stdout, end="")
+        print(masked(done.stdout), end="")
         print("    status %i, stderr %r" % (done.returncode, done.stderr))
     finally:
         shutil.rmtree(root)

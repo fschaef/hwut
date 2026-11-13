@@ -5,8 +5,9 @@ spec/24-installation-packages -- WHEEL, PIPX, DEBIAN PACKAGE, IMAGE: the
 
 VERSION: 1
 
-COMPONENTS: adm/packaging, services (help, _launch, lib/requirements,
-            lib/demo), adm/requirement-list.txt.
+COMPONENTS: adm/packaging, services (help, _launch, _no_python.sh,
+            lib/requirements, lib/system_report, lib/demo), bin (the
+            shims), adm/requirement-list.txt.
 SOURCE:     doc/the_book/dev/INSTRUCTION-installation-packages-2026-10-14.md
             (Projects store); adm/ROLL-OUT.txt R-2.
 
@@ -36,6 +37,10 @@ RULINGS (Frank-Rene, 2026-10-16)
         hwut.run -l "meta AND NOT needs-container"
     What did not run here, 'untested', and 'hwut.run.reset': adm/WORK/
     intend/25-platform-labels-and-untested.txt (its OPEN forks).
+ 9  (2026-11-12, "A plus signals") THE URGENCY REACTION: every face that
+    cannot run says what this machine is, in one block to pass to an AI
+    assistant. On the failure, not by a check before it. Section
+    'THE URGENCY REACTION' below; services E-224.
 
 ONE SOURCE OF TRUTH
 ------------------------------------------------------------------------------
@@ -96,8 +101,37 @@ COMPLETION per form (services E-151): 'hwut --command-line-setup' writes
 the table beside the completer in every form; the deb runs it at install
 and links the scripts into '/usr/share/bash-completion/completions/'.
 
+THE URGENCY REACTION (r-9, services E-224)
+------------------------------------------------------------------------------
+    TRIGGER                          WHO SEES IT          ENDING
+    no 'python3' on PATH             the shim (sh)        127
+    Python older than the list's     '_launch', first,    1
+      'python3' minimum                in old syntax
+    a census module absent           '_launch', child     1
+    death by SEGV ABRT BUS ILL FPE   '_launch', parent    the same signal
+    NOT URGENCY: exit 1 (a fault, a failed test), 130, 141, 143 (endings,
+    E-1), any other signal (passed on unreported), a version too old, a
+    'support:' toolchain absent ('hwut.help' names those).
+
+    THE REPORT, on stderr:
+        <face> cannot run: <problem>.        ('<face> was killed by ...'
+                                              for a crash)
+        <hwut-system>
+        face problem os python pip hwut on PATH cores [failed] missing
+        </hwut-system>
+        Pass the lines from <hwut-system> to </hwut-system> to your AI
+        assistant: they say what this machine is and what went wrong on it.
+    A path below the home directory is written '~'. 'hwut.help' prints
+    the same block under its MISSING notice.
+
+    THE WATCHER: the face runs in a forked child, in the parent's process
+    group; a group signal reaches it once, the parent delivers nothing; a
+    signal to the parent alone is passed on after FORWARD_DELAY (2 s).
+
 PROOF
 ------------------------------------------------------------------------------
+    services/TEST/test-urgency.sh         in the census: module-absent,
+                                          no-python, too-old, crash, endings
     adm/packaging/TEST/test-one-list.py   in the census: the stage against
                                           the tree (version, faces, the
                                           list), 'hwut.help' without the

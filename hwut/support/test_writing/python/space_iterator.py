@@ -1,4 +1,4 @@
-"""
+"""SPDX-License: MIT; Project HWUT; (C) Frank-Rene Schaefer
 PURPOSE:
        Iteration over all possible combinations of parameters of a
        parameter basis. Useful for function argument generation or

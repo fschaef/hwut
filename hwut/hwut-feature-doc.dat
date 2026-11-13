@@ -2943,6 +2943,31 @@ documents: services/README.txt, services/RATIONALE.txt
 A face whose reader hung up goes quiet and ends with status 141.
 README 'EXIT STATUS' (141 SIGPIPE); RATIONALE E-1.
 
+[[face-urgency-module-absent]]
+documents: services/README.txt, services/RATIONALE.txt
+A face that meets a census module absent ends with the urgency report on stderr -- '<face> cannot run: ...', the '<hwut-system>' block, the line saying to pass it to an AI assistant -- and status 1.
+README 'THE URGENCY REACTION'; RATIONALE E-224; 'services/lib/system_report.py'.
+
+[[face-urgency-no-python]]
+documents: services/README.txt, services/RATIONALE.txt, bin/README.txt
+A shim of 'bin/' on a machine without 'python3' says so in the same block, as far as a shell can read the machine, and ends with status 127.
+README 'THE URGENCY REACTION'; RATIONALE E-224; 'services/_no_python.sh'.
+
+[[face-urgency-python-too-old]]
+documents: services/README.txt, services/RATIONALE.txt
+An interpreter older than the requirement list's 'python3' minimum is named in the urgency report before anything newer is compiled; status 1.
+README 'THE URGENCY REACTION'; RATIONALE E-224.
+
+[[face-urgency-crash]]
+documents: services/README.txt, services/RATIONALE.txt
+A face killed by SEGV, ABRT, BUS, ILL or FPE leaves its Python stack and the urgency report, and its launcher dies by the same signal.
+README 'THE URGENCY REACTION'; RATIONALE E-224.
+
+[[face-launch-transparent]]
+documents: services/README.txt, services/RATIONALE.txt
+The watcher every face runs under changes no ending: exit statuses pass as given, a signal the group delivers reaches the face once, a signal sent to the launcher alone is passed on once after two seconds.
+README 'THE URGENCY REACTION'; RATIONALE E-224.
+
 [[face-refusal-by-name]]
 documents: services/README.txt, services/RATIONALE.txt
 A command line a face cannot read -- an unknown option, a surplus word, a directory that does not exist -- is refused at the door by name, with the usage line and status 2.

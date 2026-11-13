@@ -8450,3 +8450,59 @@ CHECKED   engine/orchestrator/exploration/TEST test-feature_forest.py
           [prototypes], test-feature_view.py [prototypes],
           test-feature_detector.py [prototypes]; services/lib/features/TEST
           test-faces.py [prototypes], test-acts.py [prototypes].
+
+E-224  THE URGENCY REACTION: A FACE THAT CANNOT RUN SAYS WHAT THIS MACHINE IS
+       (spec 24, "A plus signals")                                   (2026-11-12)
+------------------------------------------------------------------------------
+PROBLEM   Only 'hwut.help' named what a machine lacked (spec 24 r-6), and
+          only to a person who knew to ask it. Every other face met the
+          same machine with the interpreter's words. MEASURED on ba76377:
+          a face without 'bidict' ended in a traceback through
+          'engine/compare/contract/analogy_db.py'; a machine without
+          'python3' in '/bin/sh: python3: not found', 127; a crash in
+          'Segmentation fault' alone. None of it said the Python, the
+          distribution or the hwut a helper -- a person or an AI -- needs.
+DECISION  (A plus signals, 2026-11-12) EVERY FACE REACTS ON THE FAILURE,
+          not by a check before it: '_launch.py' runs the face's module in
+          a forked child and reports, on stderr, the age of the
+          interpreter (checked first, in old syntax), a census module
+          absent ('ModuleNotFoundError'), and a death by SEGV, ABRT, BUS,
+          ILL or FPE ('faulthandler' prints the Python stack, the parent
+          the report, then dies by the same signal). A shim without
+          'python3' calls '_no_python.sh'. One block, built by
+          'lib/system_report.py', in every report and in 'hwut.help',
+          ending in the line that says to pass it to an AI assistant.
+          Installed faces take the same road: their entry point is
+          '_launch.main'.
+READ OUT, said here because the ruling did not name it:
+          THE WATCHER IS PYTHON, NOT THE SHIM. The ruling's sketch had sh
+          stay the parent. MEASURED: a second SIGTERM during the guard's
+          cleanup (E-55) raises inside its 'except' and prints a
+          traceback, so no signal may arrive twice; sh cannot forward a
+          signal to a foreground child it has no pid of, and an
+          installed face has no shim at all. The forked child stays in
+          the parent's group: Ctrl-C, the procsitter's 'killpg' and
+          'pkill -f' reach it once, directly; the parent delivers nothing
+          then. A signal sent to the parent ALONE is passed on once,
+          two seconds later, where the child still runs.
+          130, 141 AND 143 ARE ENDINGS (E-1): passed through as statuses,
+          never re-raised. A version too old and a missing 'support:'
+          toolchain do not stop a face; they stay with 'hwut.help'.
+COST      THE FORK, AND ONLY THE FORK (the age check measured free). Its
+          price is the child's copy-on-write of the heap it inherits:
+          MEASURED +4.7 ms per face call, the census 693 -> 803 s (meta
+          pass), 'test-help-pages.sh shape' (180 face calls) +1.1..1.6 s.
+          'gc.freeze()' before the fork keeps the collector off that heap:
+          +1..2 ms ('hwut.about' 44.9 -> 45.9 ms, 'hwut.run' on an empty
+          tree 333 -> 332 ms; 60 interleaved calls each), the page within
+          its noise. One process more per face. A lone
+          'kill <pid>' ends a face after 2 s instead of at once. A
+          'kill -9' of the parent alone leaves the face running.
+          Tracebacks of a face carry three frames more ('_launch',
+          runpy).
+GRAVEYARD (B) a check before every start: +118 ms ('requirements.missing'),
+          for versions too old only. (C) a cached check stamp under
+          '~/.cache': state on the machine. The sh watcher: see READ OUT.
+CHECKED   services/TEST test-urgency.sh [module-absent, no-python, too-old,
+          crash, endings]; adm/packaging/TEST test-one-list.py
+          [help-missing] re-recorded: the block, its values masked.
