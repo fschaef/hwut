@@ -1,9 +1,0 @@
-# hwut-feature-forest.csv -- THE FEATURE TREES of this tree (spec 43,
-# intend/43 T-a, T-b). One line per feature that has children:
-#
-#     <feature-id> : <child-id>, <child-id>, ...
-#
-# A feature id is '[A-Za-z0-9_-]+'. An id standing as no child is a ROOT.
-# Every id stands once as a child (one parent); no circle. What a feature
-# is, is said in 'hwut-feature-doc.dat'; a retired one stands in no line.
-
