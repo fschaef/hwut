@@ -560,7 +560,10 @@ The faces:
                  a terminal signal leaves ONE line on stderr,
                  '<face> ended forcefully.', the shell's own 128+n
                  code, and no traceback -- the interpreter's teardown
-                 noise silenced with it.
+                 noise silenced with it. On every other ending the
+                 teardown's unraisables are appended to
+                 'hwut-unraisable-<user>.txt' in the temporary
+                 directory, and one NOTE line names it (E-225).
 
     _launch.py   EVERY FACE STARTS HERE: a shim of 'bin/' runs 'python3
                  -m hwut.services._launch <module>', an installed face's

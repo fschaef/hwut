@@ -1,0 +1,24 @@
+STIMULUS  a face ends well; two objects fail in '__del__'
+          exit code : 0
+          stdout {
+              RESULTS: 1 ok, 0 fail
+          }
+          stderr {
+              NOTE: hwut.run: an object failed to close at exit => "<tmp>/hwut-unraisable-<user>.txt"
+          }
+          tracebacks in stderr : 0
+          the file {
+              entries    : 2
+              tracebacks : 2
+              last line  : RuntimeError: Event loop is closed
+          }
+
+STIMULUS  the same, the guard stood aside (VUT_DEBUG_EXCEPTION=1)
+          exit code : 0
+          NOTE lines in stderr : 0
+          tracebacks in stderr : 2
+
+No traceback reaches the command line where the face ends; the
+evidence is kept in a file the one NOTE line names.
+SUCCESS: the teardown's noise goes to a file, said once.
+<hwut-end>

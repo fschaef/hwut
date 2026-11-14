@@ -3,8 +3,9 @@
 #
 # @hwut {
 #     title      = "The exit status law: one enum, every face relates."
-#     features   = ["face-exit-status-law", "face-signal-ends-quietly"]
-#     choices    = ["law", "signal"]
+#     features   = ["face-exit-status-law", "face-signal-ends-quietly",
+#                   "face-teardown-noise-to-file"]
+#     choices    = ["law", "signal", "unraisable"]
 # }
 #
 # NO TOLERANCE ON NUMBERS: the numbers are the subject. (Measured
@@ -27,7 +28,7 @@ export PYTHONPATH="$ROOT"
 case "$1" in
     --hwut-info)
         echo "The exit status law: one enum, every face relates.;"
-        echo "CHOICES: law, signal;"
+        echo "CHOICES: law, signal, unraisable;"
         exit 0 ;;
 esac
 
@@ -163,6 +164,62 @@ print('exit code : %d' % int(guarded('hwut.run', boom)))" > out.txt 2> err.txt
     echo "One line names the face and the ending; the shell reads the"
     echo "signal's own code; nothing of the innards is shown."
     echo "SUCCESS: a signal ends a face, it does not crash it."
+    ;;
+
+unraisable)
+    #  THE TEARDOWN'S UNRAISABLES GO TO A FILE (E-225, 2026-11-14).
+    #  MEASURED before: a 'hwut.run' that ended well printed, under
+    #  'RESULTS', 'Exception ignored in: <function BaseSubprocessTransport
+    #  .__del__>' and 'RuntimeError: Event loop is closed' (Python 3.12).
+    #  The stimulus is a '__del__' that raises: Python's own leak of a
+    #  transport does not arise on every version, a raising '__del__'
+    #  does. The file's name holds the person: TMPDIR points it here.
+    export TMPDIR="$WORK"
+    cat > leaky.py <<'PYEOF'
+import sys
+from hwut.services._exit import guarded
+
+class Leaky:
+    def __del__(self):
+        raise RuntimeError("Event loop is closed")
+
+def main():
+    first, second = Leaky(), Leaky()
+    print("RESULTS: 1 ok, 0 fail")
+    del first, second            # two unraisables, one NOTE line
+    return 0
+
+sys.exit(int(guarded("hwut.run", main)))
+PYEOF
+    show() {
+        echo "          exit code : $1"
+        echo "          stdout {"; sed 's/^/              /' out.txt; echo "          }"
+        echo "          stderr {"
+        sed -e "s#$WORK#<tmp>#g" -e 's#hwut-unraisable-[^/"]*\.txt#hwut-unraisable-<user>.txt#' \
+            -e 's/at 0x[0-9a-f]*/at <address>/' err.txt | grep -v '^  ' | sed 's/^/              /'
+        echo "          }"
+        echo "          tracebacks in stderr : $(grep -c Traceback err.txt)"
+    }
+
+    echo "STIMULUS  a face ends well; two objects fail in '__del__'"
+    python3 leaky.py > out.txt 2> err.txt; show $?
+    file=$(ls "$WORK"/hwut-unraisable-*.txt)
+    echo "          the file {"
+    echo "              entries    : $(grep -c '^=== hwut.run (pid' "$file")"
+    echo "              tracebacks : $(grep -c '^Traceback' "$file")"
+    echo "              last line  : $(tail -1 "$file")"
+    echo "          }"
+    echo
+    echo "STIMULUS  the same, the guard stood aside (VUT_DEBUG_EXCEPTION=1)"
+    #  Python's own words differ between versions: counted, not shown.
+    VUT_DEBUG_EXCEPTION=1 python3 leaky.py > out.txt 2> err.txt
+    echo "          exit code : $?"
+    echo "          NOTE lines in stderr : $(grep -c '^NOTE' err.txt)"
+    echo "          tracebacks in stderr : $(grep -c Traceback err.txt)"
+    echo
+    echo "No traceback reaches the command line where the face ends; the"
+    echo "evidence is kept in a file the one NOTE line names."
+    echo "SUCCESS: the teardown's noise goes to a file, said once."
     ;;
 
 *)

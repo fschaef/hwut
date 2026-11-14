@@ -2735,6 +2735,10 @@ adm/WORK/spec/42-platforms.txt, section 6; intend/42 rulings 7, 21.
 A bubble handed to a platform whose far wish selects nothing ends EMPTY: no fault of the platform's, no verdict, nothing counted -- the near run answers EMPTY as it does for a wish of its own that selects nothing.
 engine/platforms '_status.py'; services RATIONALE E-221.
 
+[[bubble-local-probed]]
+'local' announces a tool it declares only where the 'probe:' line under that tool in 'hwut-tools.rst' finds every program on PATH; a directory requiring a tool so cut is not entered, its NOTE naming the missing programs. A tool without a 'probe:' line is taken as declared.
+engine/orchestrator/plan 'bubble.py'; services RATIONALE E-226.
+
 [[concurrent-dispatch]]
 documents: engine/orchestrator/scheduler/README.txt, engine/orchestrator/scheduler/RATIONALE.txt
 Nodes nothing stands between start together, and the scheduler acts on the first ending rather than waiting for a wave.
@@ -2937,6 +2941,11 @@ README 'EXIT STATUS'; RATIONALE E-1; README.md 'The commands'.
 documents: services/README.txt, services/RATIONALE.txt
 A terminal signal ends a face with the one line '<face> ended forcefully.' on stderr, the shell's own 128+n status and no traceback.
 README '_exit.py'; RATIONALE E-55.
+
+[[face-teardown-noise-to-file]]
+documents: services/README.txt, services/RATIONALE.txt
+A face that ends on its own records what Python cannot raise in its teardown (a '__del__' failing) in 'hwut-unraisable-<user>.txt' of the temporary directory and says so in one NOTE line on stderr; no traceback reaches the command line.
+README '_exit.py'; RATIONALE E-225.
 
 [[face-sigpipe-quiet]]
 documents: services/README.txt, services/RATIONALE.txt

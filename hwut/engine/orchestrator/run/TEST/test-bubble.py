@@ -16,6 +16,7 @@
 #         play      { features = ["bubble-play-decided"] }
 #         book      { features = ["bubble-book-says-where"] }
 #         far-empty { features = ["bubble-far-empty-no-fault"] }
+#         probe     { features = ["bubble-local-probed"] }
 #     }
 #     tolerance { eq_pattern = ["SUCCESS.*"] }
 # }
@@ -37,7 +38,7 @@ PURPOSE: THE DECISION OF adm/WORK/spec/42-platforms.txt section 3 (plan/42
     both/             requires = [ iverilog ]                C = {local, linux}
 
 CHOICES: local, refused, first, below, header, excluded, handed,
-         untouched, stream, sigterm, play, book;
+         untouched, stream, sigterm, play, book, far-empty, probe;
 
 local      S = {local}: '.', none/, both/ run here; linux/ NOT RUN,
            'available'; its inner bubble runs here (ruling 19).
@@ -92,6 +93,16 @@ book       after 'hwut.run' and 'hwut.run --exclude-local -p linux': each
            'hwut.report', which reads the books and takes no '-p' (ruling
            21): '(linux)' beside a case linux measured; in JSON, its
            'platform'.
+
+probe      'local' announces only what it holds (E-226, 2026-11-14):
+           'hwut-tools.rst' gives iverilog 'probe: hwut-bubble-probe'.
+           Not on PATH: both/ NOT RUN, its NOTE naming the program; a
+           directory below none/ requiring iverilog not entered, the same
+           words. A stand-in first on PATH: both/ runs here, as ever.
+           ghdl has no 'probe:' line: linux/ keeps its words. MEASURED
+           before (4e03ee5, the author's machine): 'local' declaring
+           iverilog without it installed -- 'build failed', 10 cases
+           'unexpected stderr'.
 
 EXPLORED counts the walk's own 'explore' per test directory: zero for a
 directory of a bubble not run -- nothing of it interviewed or read.
@@ -593,6 +604,34 @@ def test_far_empty():
           % ("SUCCESS" if ok_f else "FAILURE"))
 
 
+def test_probe():
+    """RETURN: None. 'local' probed through 'hwut-tools.rst'."""
+    root, bin_dir = tree(), tempfile.mkdtemp(prefix="hwut_bubble_probe_")
+    try:
+        with open(os.path.join(root, "hwut-tools.rst"), "w") as fh:
+            fh.write("[[iverilog]]\n    Icarus Verilog.\n"
+                     "    probe: hwut-bubble-probe\n"
+                     "[[ghdl]]\n    GHDL, no probe line.\n")
+        os.makedirs(os.path.join(root, "none", "deep", "TEST", "GOOD"))
+        path = os.path.join(root, "none", "deep", "TEST", "test-e.sh")
+        with open(path, "w") as fh:
+            fh.write('#! /bin/sh\n# @hwut { title = "E" }\n'
+                     'echo e\necho "<hwut-end>"\n')
+        os.chmod(path, 0o755)
+        with open(os.path.join(root, "none", "deep", "hwut.conf"), "w") as fh:
+            fh.write('hwut { requires = ["iverilog"] }\n')
+        print("--- the probe's program not on PATH")
+        decided(root, [])
+        with open(os.path.join(bin_dir, "hwut-bubble-probe"), "w") as fh:
+            fh.write("#! /bin/sh\nexit 0\n")
+        os.chmod(os.path.join(bin_dir, "hwut-bubble-probe"), 0o755)
+        print("--- a stand-in first on PATH")
+        decided(root, [], first_on_path(bin_dir))
+    finally:
+        shutil.rmtree(root); shutil.rmtree(bin_dir)
+    print("SUCCESS: local announces only what its probe finds.")
+
+
 def test_book():
     """RETURN: None. The books and the report after a run here and one
     handed to linux."""
@@ -647,4 +686,5 @@ if __name__ == "__main__":
         "play":      test_play,
         "book":      test_book,
         "far-empty": test_far_empty,
+        "probe":     test_probe,
     }).run()

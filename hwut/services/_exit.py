@@ -75,6 +75,71 @@ def _debug_wanted_f(argument_tuple):
     return os.environ.get("VUT_DEBUG_EXCEPTION") not in (None, "", "0")
 
 
+def unraisable_file_name():
+    """
+    RETURN: str, the file where the teardown's unraisables are recorded:
+            'hwut-unraisable-<user>.txt' in the temporary directory --
+            outside every tree, one per person, so no run leaves a
+            file in a tree and no person writes over another's.
+    """
+    import getpass
+    import os
+    import tempfile
+    try:
+        user = getpass.getuser()
+    except Exception:
+        user = str(os.getuid()) if hasattr(os, "getuid") else "user"
+    return os.path.join(tempfile.gettempdir(), "hwut-unraisable-%s.txt" % user)
+
+
+def unraisable_to_file(name):
+    """
+    RETURN: None. 'sys.unraisablehook' set so that what Python cannot
+            raise -- a '__del__' failing, mostly in the teardown -- is
+            APPENDED to 'unraisable_file_name()' with its traceback, and
+            the first one of this process says so on stderr in one line:
+
+                NOTE: <name>: an object failed to close at exit => "<file>"
+
+    THE TRACEBACK IS EVIDENCE, NOT TALK (E-225): it is kept, but not on
+    the person's command line, after the face's last line, where nobody
+    can act on it. Where the file cannot be written, the line says so
+    instead of naming it. The hook itself never raises.
+    """
+    import os
+    import sys
+    import traceback
+
+    said = {"f": False}
+
+    def hook(unraisable):
+        """RETURN: None. One unraisable recorded; the NOTE said once."""
+        try:
+            file_name = unraisable_file_name()
+            message   = unraisable.err_msg or "Exception ignored in"
+            text_list = ["=== %s (pid %d): %s: %r\n"
+                         % (name, os.getpid(), message, unraisable.object)]
+            if unraisable.exc_type is not None:
+                text_list.extend(traceback.format_exception(
+                    unraisable.exc_type, unraisable.exc_value,
+                    unraisable.exc_traceback))
+            try:
+                with open(file_name, "a", encoding="utf-8") as fh:
+                    fh.write("".join(text_list))
+                where = '=> "%s"' % file_name
+            except OSError as error:
+                where = "(not recorded: %s)" % error.strerror
+            if not said["f"]:
+                said["f"] = True
+                sys.stderr.write("NOTE: %s: an object failed to close at "
+                                 "exit %s\n" % (name, where))
+                sys.stderr.flush()
+        except Exception:  # noqa: S110 -- a hook that raised would print the traceback it exists to keep off the line
+            pass
+
+    sys.unraisablehook = hook
+
+
 def guarded(name, main_f, *argument_tuple, **argument_db):
     """
     RETURN: int, what 'main_f' returns -- or the ending's own code
@@ -82,7 +147,9 @@ def guarded(name, main_f, *argument_tuple, **argument_db):
             SIGINT (Ctrl-C), SIGTERM, SIGPIPE.
 
     ONE LINE ON STDERR AND NOTHING ELSE where an ending stops the
-    face -- the interpreter's own teardown noise included: '<name> ended forcefully.'. SIGTERM is turned into the same
+    face -- the interpreter's own teardown noise included: '<name> ended forcefully.'.
+    On every other ending the teardown's unraisables go to a file, said
+    in one NOTE line ('unraisable_to_file', E-225). SIGTERM is turned into the same
     ending as Ctrl-C by a handler installed for the face's duration
     and RESTORED after it -- a face never leaves a handler behind for
     whatever runs next in the process.
@@ -104,6 +171,12 @@ def guarded(name, main_f, *argument_tuple, **argument_db):
         #  -- a terminal read, a lock -- names its line as well.
         __import__("faulthandler").enable()
         return main_f(*argument_tuple, **argument_db)
+
+    #  EVERY ENDING, NOT ONLY A FORCED ONE (E-225): a face that ends
+    #  well still tears down its loop, and a transport outliving it
+    #  printed 'Exception ignored in: ...' under 'RESULTS'. Installed
+    #  here and left in place: the teardown comes after 'guarded'.
+    unraisable_to_file(name)
 
     ending = {"code": E_ExitCode.SIGINT}
 

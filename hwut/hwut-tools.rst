@@ -10,10 +10,17 @@ file is optional; where it stands it binds: a name it does not explain is
 refused at the start. A tool is an informal name for what a subtree needs;
 an announcement is a hint, not a complete list.
 
+A ``probe:`` line under a tool names the programs it needs on PATH. Where
+``local`` declares such a tool and one of them is not found, ``local``
+does not announce it: a directory requiring it is not entered, and the
+NOTE says which program is missing (E-226). A tool without a ``probe:``
+line is taken as declared.
+
 [[iverilog]]
     Icarus Verilog -- ``iverilog`` and its runtime ``vvp``: the simulator
     under which the remote agent and its prototype are tested
     (support/remote/iverilog).
+    probe: iverilog vvp
 
 [[verilator]]
     Verilator, the SystemVerilog simulator and its coverage

@@ -31,6 +31,12 @@ REFUSED AT THE START (PlatformRefused): a 'platform' in an inner root
 (o-53), and -- where 'hwut-tools.rst' stands beside the outermost root
 (o-52) -- a tool announced or required that it does not explain.
 
+'local' ANNOUNCES ONLY WHAT IT HOLDS (E-226): a tool it declares whose
+'probe:' line in 'hwut-tools.rst' names a program not on PATH is not
+announced; every NOTE that the tool decides says so. A tool without a
+'probe:' line is taken as declared (o-50) -- a tool is an informal name,
+not a program.
+
 A bubble NOT RUN hides none of its inner bubbles (ruling 19): each is
 decided on its own, with the same S.
 
@@ -52,6 +58,7 @@ ______________________________________________________________________________
 """
 import os
 import re
+import shutil
 from dataclasses import dataclass
 
 from ..exploration.task_list     import SelectionError
@@ -80,6 +87,8 @@ class CBubbleDecision:
     reason:         str = ""     # 'available', 'reachable' (NOT_RUN)
     text:           str = ""     # the NOTE's text (NOT_RUN)
     tool_tuple:     tuple = ()   # what the platform taken announces
+    absent_tuple:   tuple = ()   # of (tool, programs): 'local' declares
+                                 # it, its probe finds not (E-226)
 
 
 class PlatformRefused(SelectionError):
@@ -105,7 +114,8 @@ def decision_tuple(top, wish):
     shown     = _specified_shown(wish)
     specified = wish.specified_platform_set()
     outermost = outermost_root_directory(top)
-    defined   = ascended_spec(outermost)[0].platform_tuple or ()
+    declared  = ascended_spec(outermost)[0].platform_tuple or ()
+    defined, absent = probed(declared, outermost)
     path_list = [root_conf_directory(top)]
     #  WALK ORDER: sorted component by component, as the walk descends --
     #  an outer bubble before its inner ones, a sibling's after them.
@@ -125,7 +135,7 @@ def decision_tuple(top, wish):
                 "(intend/26 o-53)"
                 % (name, os.path.join(outermost, ROOT_CONF_NAME)))
         read_list.append((path, name, spec.requires_tuple or ()))
-    refusal_list.extend(_unexplained_tuple(outermost, defined, read_list))
+    refusal_list.extend(_unexplained_tuple(outermost, declared, read_list))
     if refusal_list:
         raise PlatformRefused(("\n" + " " * 9).join(refusal_list))
 
@@ -134,7 +144,7 @@ def decision_tuple(top, wish):
         if any(path.startswith(outer + os.sep) for outer in handed_list):
             continue
         decision = _decided(path, name, required, defined, specified,
-                            shown, wish.as_platform, outermost)
+                            shown, wish.as_platform, outermost, absent)
         if decision.state == HANDED: handed_list.append(path)
         decision_list.append(decision)
     return tuple(decision_list)
@@ -171,8 +181,9 @@ def entry_refusal(decision_db, top, directory, required):
     if not missing: return None
     held_by = owner.platform if owner.platform != LOCAL_PLATFORM \
               else LOCAL_PLATFORM
-    return "NOTE  %s/: requires %s; %s does not hold it" \
-           % (_name_of(directory, top), ", ".join(missing), held_by)
+    return "NOTE  %s/: requires %s; %s does not hold it%s" \
+           % (_name_of(directory, top), ", ".join(missing), held_by,
+              absent_said(missing, owner.absent_tuple))
 
 
 def case_required_tuple(app_set, test, choice):
@@ -201,9 +212,10 @@ def case_refusal(decision, app_set, test, choice):
     missing = tuple(t for t in case_required_tuple(app_set, test, choice)
                     if t not in decision.tool_tuple)
     if not missing: return None
-    return "requires %s; %s does not hold it => a platform announcing " \
-           "it, '-p <platform>' (intend/26 o-59)" \
-           % (", ".join(missing), decision.platform or LOCAL_PLATFORM)
+    return "requires %s; %s does not hold it%s => a platform " \
+           "announcing it, '-p <platform>' (intend/26 o-59)" \
+           % (", ".join(missing), decision.platform or LOCAL_PLATFORM,
+              absent_said(missing, decision.absent_tuple))
 
 
 def owner_of(decision_db, directory):
@@ -226,7 +238,8 @@ def candidates_of(directory):
             order; ('local',) where it requires nothing.
     """
     outermost = outermost_root_directory(directory)
-    defined   = ascended_spec(outermost)[0].platform_tuple or ()
+    defined   = probed(ascended_spec(outermost)[0].platform_tuple or (),
+                       outermost)[0]
     required  = ascended_spec(root_conf_directory(directory))[0] \
                 .requires_tuple or ()
     return candidate_tuple(required, defined)
@@ -255,7 +268,7 @@ def candidate_tuple(required, defined):
 
 
 def _decided(path, name, required, defined, specified, shown, as_platform,
-             outermost):
+             outermost, absent=()):
     """
     RETURN: CBubbleDecision of one bubble: RUN where the platform taken
             is 'local' (or, over there, the platform handed to); NOT_RUN
@@ -276,7 +289,8 @@ def _decided(path, name, required, defined, specified, shown, as_platform,
     here = as_platform or LOCAL_PLATFORM          # what 'local' is
     feasible = tuple(c for c in candidates if c in specified)
     common = dict(path=path, name=name, platform_tuple=required or None,
-                  required_tuple=candidates, feasible_tuple=feasible)
+                  required_tuple=candidates, feasible_tuple=feasible,
+                  absent_tuple=absent)
     if not feasible:
         if not required:
             text = "%s/: requires no tool -- runs on local; specified %s" \
@@ -288,6 +302,7 @@ def _decided(path, name, required, defined, specified, shown, as_platform,
             text = "%s/: requires %s, held by %s; specified %s" \
                    % (name, ", ".join(required), ", ".join(candidates),
                       shown)
+        text += absent_said(required, absent)
         return CBubbleDecision(state=NOT_RUN, reason="available",
                                text=text, **common)
     platform   = feasible[0]
@@ -334,6 +349,70 @@ def explained_tool_set(outermost):
 
 
 _TOOL_MARK_RE = re.compile(r"\[\[([^\[\]\s]+)\]\]")
+_PROBE_RE     = re.compile(r"^\s+probe:[ \t]*(.*?)\s*$")
+
+
+def probe_db(outermost):
+    """
+    RETURN: dict, tool -> tuple of str: the programs a 'probe:' line under
+            its '[[tool]]' in 'hwut-tools.rst' beside the outermost root
+            names ('probe: iverilog vvp'); empty where the file does not
+            stand or names none (E-226).
+    """
+    path = os.path.join(outermost, TOOLS_FILE_NAME)
+    if not os.path.isfile(path): return {}
+    db, tool = {}, None
+    with open(path, encoding="utf-8") as fh:
+        for line in fh:
+            mark = _TOOL_MARK_RE.match(line)
+            if mark is not None:
+                tool = mark.group(1); continue
+            probe = _PROBE_RE.match(line)
+            if probe is not None and tool is not None:
+                db[tool] = tuple(probe.group(1).split())
+    return db
+
+
+def probed(defined, outermost):
+    """
+    RETURN: (defined, absent): 'defined' with the tools of 'local' cut to
+            those whose probe finds every program on PATH -- a tool
+            without a 'probe:' line kept, as declared (o-50) -- and
+            'absent', a tuple of (tool, programs not found), one pair
+            per tool cut (E-226). Only 'local' is probed: this is the
+            machine hwut runs on; another platform is what its recipe
+            makes.
+    """
+    db = probe_db(outermost) if defined else {}
+    if not db: return defined, ()
+    result, absent = [], []
+    for name, spec in defined:
+        if name == LOCAL_PLATFORM:
+            kept = []
+            for tool in spec.get("tools", ()):
+                lacking = tuple(p for p in db.get(tool, ())
+                                if shutil.which(p) is None)
+                if lacking: absent.append((tool, lacking))
+                else:       kept.append(tool)
+            spec = dict(spec, tools=tuple(kept))
+        result.append((name, spec))
+    return tuple(result), tuple(absent)
+
+
+def absent_said(required, absent):
+    """
+    RETURN: str, ' -- local declares iverilog; not on PATH: vvp
+            (hwut-tools.rst probe)' for the tools of 'required' that
+            'absent' holds; '' where none.
+    """
+    pair_list = [(tool, lacking) for tool, lacking in absent
+                 if tool in required]
+    if not pair_list: return ""
+    program_list = list(dict.fromkeys(p for _, lacking in pair_list
+                                      for p in lacking))
+    return " -- local declares %s; not on PATH: %s (%s probe)" \
+           % (", ".join(t for t, _ in pair_list), ", ".join(program_list),
+              TOOLS_FILE_NAME)
 
 
 def _unexplained_tuple(outermost, defined, read_list):

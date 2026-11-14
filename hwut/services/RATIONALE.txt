@@ -8506,3 +8506,82 @@ GRAVEYARD (B) a check before every start: +118 ms ('requirements.missing'),
 CHECKED   services/TEST test-urgency.sh [module-absent, no-python, too-old,
           crash, endings]; adm/packaging/TEST test-one-list.py
           [help-missing] re-recorded: the block, its values masked.
+
+E-225  THE TEARDOWN'S UNRAISABLES GO TO A FILE, SAID IN ONE LINE  (2026-11-14)
+------------------------------------------------------------------------------
+PROBLEM   MEASURED on the author's machine (4e03ee5, Python 3.12, a venv):
+          a 'hwut.run' that had ended -- 'RESULTS' and its bar printed --
+          was followed by 'Exception ignored in: <function BaseSubprocess
+          Transport.__del__>' and 'RuntimeError: Event loop is closed'. A
+          subprocess transport outlived the loop that made it. E-55
+          silenced this after a FORCED ending only; an ordinary ending
+          still showed the face's innards, after its last line.
+DECISION  (A, Frank-Rene 2026-11-14) 'guarded' sets 'sys.unraisablehook'
+          on every ending ('unraisable_to_file'): each unraisable is
+          APPENDED, with its traceback, to 'hwut-unraisable-<user>.txt'
+          in the temporary directory, and the first of a process says on
+          stderr:
+
+              NOTE: hwut.run: an object failed to close at exit => "<file>"
+
+          Unwritable, the line says '(not recorded: <reason>)'. A forced
+          ending keeps E-55's silence. '--debug-exception' stands the
+          hook aside with the rest of the guard.
+READ OUT  THE FILE STANDS OUTSIDE EVERY TREE: 'TMP/' at a tree's top is
+          not ignored by git (only '**/TEST/TMP'), so a run from 'hwut/'
+          would have left an untracked file. Per person, appended: faces
+          called by tests write the same file, and none erases another's
+          evidence.
+COST      The leak itself is NOT fixed: the transport is not yet named
+          (two full passes here, Python 3.12.3, did not show it; procsitter
+          closes it on a normal end, a wall cap, a grandchild on the pipe,
+          a cancel). The file is where its traceback will be read.
+GRAVEYARD (B) discard, as E-55 does -- rejected: a silent success is a
+          bug, and the leak would vanish with its evidence. (C) the cause
+          only -- the person's terminal shows the traceback until then.
+CHECKED   services/TEST test-exit.sh [unraisable]: two raising '__del__'
+          behind a face that ends well -- one NOTE, two entries, no
+          traceback on stderr; the guard stood aside shows both.
+
+E-226  'local' ANNOUNCES ONLY WHAT ITS PROBE FINDS                (2026-11-14)
+------------------------------------------------------------------------------
+PROBLEM   MEASURED on the author's machine (4e03ee5): the outermost root
+          says 'local { tools = ["iverilog"] }'; iverilog is not
+          installed. 'support/remote/iverilog' -- an inner root requiring
+          iverilog -- was entered: 'build failed' for test-sim.py, ten
+          test-agent.py cases 'unexpected stderr' ('iverilog: not
+          installed'). hwut took the declaration on trust (o-50).
+DECISION  (Frank-Rene 2026-11-14, A then 1) a tool in 'hwut-tools.rst'
+          may carry a 'probe:' line naming the programs it needs:
+
+              [[iverilog]]
+                  Icarus Verilog ...
+                  probe: iverilog vvp
+
+          'local' announces a declared tool only where every program of
+          its probe is on PATH ('shutil.which'). A tool cut so decides as
+          one never declared, and every NOTE it decides says why:
+
+              requires iverilog, held by linux; specified local -- local
+              declares iverilog; not on PATH: iverilog, vvp
+              (hwut-tools.rst probe)
+
+          -- the bubble's NOT RUN line, a directory not entered (o-57), a
+          case refused (o-59). A tool without a 'probe:' line is taken as
+          declared, as before.
+READ OUT  A TOOL IS NOT A PROGRAM (hwut-tools.rst): 'erlang' needs
+          'escript', 'iverilog' needs 'vvp' too, the book's 'console-sdk'
+          is no program at all. 'which <tool>' would have cut tools that
+          stand (rejected, option 2). Only 'local' is probed: it is the
+          machine hwut runs on; a container is what its recipe makes. The
+          o-52 check reads the declarations, not the probed set.
+GRAVEYARD (2) the tool's own name on PATH -- false absences. (3) a probe
+          in 'local' itself -- o-56: 'local' takes 'tools' alone. (B,
+          before 1) undeclared tools found on PATH announced -- what is
+          installed would decide what runs, against P-21.
+CHECKED   engine/orchestrator/run/TEST test-bubble.py [probe]: the probe's
+          program absent -- both/ NOT RUN, a directory below not entered,
+          each NOTE naming it; a stand-in on PATH -- both run here; ghdl
+          without a probe line keeps its words. The full pass here (no
+          iverilog): support/remote/iverilog/ not entered, its 11 cases
+          gone from the failures.
