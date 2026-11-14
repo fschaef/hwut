@@ -1,0 +1,6 @@
+hwut.about            status 0
+hwut.run --no-such   status 2
+hwut.run (no tests)   status 3
+hwut.pype, TERM to the launcher alone: status 143
+    stderr: hwut.pype ended forcefully.
+<hwut-end>

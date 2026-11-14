@@ -1,0 +1,23 @@
+# REUSE.toml -- licensing of every file in the repository, read by the
+# FSFE 'reuse' tool (https://reuse.software, specification 3.3).
+#
+# CHECK: 'reuse lint' at the repository root.
+#
+# hwut's own headers say 'SPDX-License: MIT', a form 'reuse' does not read;
+# the first annotation covers them and every file without a header.
+version = 1
+
+[[annotations]]
+path = "**"
+SPDX-FileCopyrightText = "2005-2026 Frank-Rene Schaefer"
+SPDX-License-Identifier = "MIT"
+
+# The spdx-headers showcase holds headers of a fictional project -- GPL-2.0,
+# 'Acme Embedded GmbH', malformed expressions -- as the material its test
+# judges. They are data, not the licence of the files: 'override' keeps
+# 'reuse' from reading them.
+[[annotations]]
+path = "hwut/support/demo/showcase/conventions/spdx-headers/**"
+precedence = "override"
+SPDX-FileCopyrightText = "2005-2026 Frank-Rene Schaefer"
+SPDX-License-Identifier = "MIT"
