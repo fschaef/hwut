@@ -647,6 +647,8 @@ RULED  (chat, 2026-10-25/26; RATIONALE entries are written with the build)
            'requires', runs here.
            AMENDS o-51 ("inherited down the subtree": across hwut.conf
            files, not across an inner root).
+           RETIRED 2026-11-15 by intend/45 R-1, R-4: one root per project;
+           no inner root, nothing replaces.
 
  o-55  '-p' RESTRICTS; THE FIRST GIVEN WINS (ruled 2026-11-07: "bei -p
            [soll] das, was bei -p angegeben ist, die Plattform einschraenken,
@@ -682,6 +684,8 @@ RULED  (chat, 2026-10-25/26; RATIONALE entries are written with the build)
            platform does not announce is not entered, named so ("requires
            ghdl; linux does not hold it").
            OPEN BEHIND IT: 'requires' in a test's header (not named).
+           2026-11-15 (intend/45 R-4): stands; with no inner root, a
+           directory -- not a subtree -- is what a platform takes.
 
  o-58  THE FIRST DEFINED, ALWAYS (ruled 2026-11-08, q-58: "Das was zuerst
            definiert wurde von den Plattformen die vorgegeben wurden. Wenn

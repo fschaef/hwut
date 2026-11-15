@@ -1,0 +1,137 @@
+==============================================================================
+intend/45-one-root -- ONE PROJECT, ONE hwut-root.conf; BUBBLES RETIRED
+==============================================================================
+Born 2026-11-15, in conversation. Measured on c317557. Takes up the book's
+"root is a cut" note (2026-11-14, Ch. 12 "Only the Outermost Root Defines"
+left open there) and today's iverilog failure (E-226).
+
+Everything marked RULED is Frank-Rene's; everything else is read out of
+it (STRIKE WHAT IS OVER-READ).
+
+COMPONENTS CONCERNED:
+  engine/orchestrator/exploration  the climb, the walk down (inner roots)
+  engine/orchestrator/plan         bubble.py: the decision per directory
+  engine/orchestrator/run          RESULTS, the final tree
+  engine/platforms                 the hand-over, grouped by platform
+  services/lib/labels, features    one view per project (E-200 retired)
+  support/                         four inner roots become hwut.conf
+  adm/WORK/spec/42-platforms.txt   section 8 (bubbles)
+  adm/WORK/intend/26-hwut-bench    o-54, o-57
+
+------------------------------------------------------------------------------
+INTENT
+------------------------------------------------------------------------------
+A PROJECT HAS ONE REFERENCE. The root holds what the project is: its
+platforms and their tools, its languages, its ignore list, its labels,
+its feature registry. Below it, hwut.conf refines -- in TEST or in any
+directory above a TEST -- and never reaches above the root.
+
+    <project>/hwut-root.conf      platform, tools, language-setup, ignore,
+                                  app_defaults; hwut-root.labels, features
+    <project>/**/hwut.conf        refines; 'requires' adds (o-57)
+    climbing from .../TEST        stops at the first hwut-root.conf
+
+MEASURED (c317557): four inner roots stand in hwut's own tree.
+
+    support/hwut-root.conf                requires 14 tools; language-setup
+                                          (17 entries), ignore, app_defaults
+                                          -- every one equal to the top's
+    support/test_writing/python/TEST/     requires nothing: there to cancel
+                                          support/'s requires (o-54)
+    support/remote/model/                 requires nothing; ignore adds
+                                          'fake_agent.py'
+    support/remote/iverilog/              requires iverilog, replacing
+                                          support/'s (o-54)
+
+Their only work that the top does not do is o-54: an inner root's
+'requires' REPLACES. Everything else is a copy E-200 forced ("said here
+again"). With 'requires' stated where a need arises, none of the four
+is needed.
+
+------------------------------------------------------------------------------
+RULED
+------------------------------------------------------------------------------
+R-1  ONE hwut-root.conf PER PROJECT (2026-11-15: "my wish was to have a
+     single hwut-root.conf for a project that talks about platforms etc.
+     that is all others would have to become 'hwut.conf' files").
+
+R-2  THE CLIMB STOPS AT THE FIRST ROOT; BEYOND IT NOTHING IS SEEN
+     (2026-11-15: "When we are in /a/b/c/d/e/f/TEST and we find a
+     /a/b/c/hwut-root.conf while going backwards, we stop there; a
+     /a/b/hwut-root.conf or any other configuration file would be beyond
+     our radar." -- "outside the project we cannot make any assumptions
+     on how people call their files"). The inside half of E-200, kept.
+
+R-3  A hwut-root.conf BELOW THE ROOT IS ANOTHER PROJECT, NOT WALKED FROM
+     ABOVE (q2 (b), 2026-11-15):
+         NOTE  vendor/lib/: a project of its own (hwut-root.conf)
+               => run hwut inside it
+     Read out: the outside half of E-200 ("every way in") is retired. The
+     note is also the migration: whoever holds an inner root today reads
+     it and chooses -- a project of its own, or a hwut.conf.
+
+R-4  EACH DIRECTORY DECIDES; HANDED OVER GROUPED BY PLATFORM (q1 (a),
+     2026-11-15: "I tend towards (a)"). 'requires' names tools and adds
+     downwards (o-57 stands); "all of the above requires" is said once
+     in a non-TEST hwut.conf ("we can do this in a non-TEST hwut.conf").
+     A directory runs on the first defined platform announcing all it
+     requires (o-58); the directories a platform takes go to it in ONE
+     run. BUBBLES ARE RETIRED (2026-11-15: "let us think about bubbles.
+     what would they serve?").
+
+R-5  NO PLATFORM -> REFUSED; A PLATFORM LACKING WHAT IT DECLARES -> FAIL
+     (2026-11-15: "If there is no platform that has it, it refuses. If a
+     platform does not work as expected (does not have the tool), the
+     according test fails with the message of 'platform does not provide
+     tool'.")
+         platform local does not provide tool iverilog
+         (not on PATH: iverilog, vvp; hwut-tools.rst probe)
+     AMENDS E-226: a probe that misses no longer withdraws the tool from
+     'local' (no NOTE, no skip, no fall to the next platform); the
+     declaration is the contract, its breach a failing case. A tool
+     without a 'probe:' line is taken as declared (E-226 stands there).
+
+R-6  A DIRECTORY NO PLATFORM CAN TAKE IS COUNTED REFUSED (o-1 (a),
+     2026-11-15): its cases count 'refused' in RESULTS ('..., 12
+     refused'), the directory is marked in the final tree -- as o-59
+     counts a case refused for its header. Answers the book's D-84 and
+     its section 5 Q1.
+
+R-7  EVERY PLATFORM CHECKS ITSELF (o-2 (b), 2026-11-15: "A container is
+     a platform"). hwut over there probes the tools of the platform it
+     runs as ('as_platform') before its first case; a miss fails that
+     platform's cases with R-5's sentence:
+         platform linux does not provide tool gfortran
+         (not on PATH: gfortran; hwut-tools.rst probe)
+     One probe, one place, used on both sides.
+
+FOR THE BOOK (2026-11-15: "make this point later to the book writers what
+can be a platform: container, remote interaction socket/infra ..."):
+  say what a platform IS -- a place hwut runs that announces tools. Built
+  kinds (c317557): 'local' (this machine) and 'container'. Remote
+  execution (support/remote, hwut_remote) is today a TEST talking to an
+  agent over a link, not a platform kind; whether a socket or an infra
+  host becomes a kind is not ruled.
+
+READ OUT (strike what is over-read):
+  - o-54 retired: no inner root, nothing replaces. o-53 stands ('platform'
+    in the root alone -- now the only root).
+  - E-200 retired except R-2: one label view, one feature registry per
+    project; 'inner_tuple', "a bubble of its own" warnings, the bubble
+    line and marker in the final tree go.
+  - The word 'bubble' leaves hwut's output, spec/42 section 8 and the
+    book (Ch. 2, Ch. 12).
+  - hwut's tree: support/hwut.conf without the 14-tool list; each port's
+    TEST/hwut.conf (test_writing/*, demo/*) gains its 'requires' (gcc for
+    c and cpp, ghdl for vhdl, ...); remote/iverilog/hwut.conf requires
+    iverilog; remote/model/TEST/hwut.conf takes 'fake_agent.py' into its
+    ignore; the python port requires nothing.
+  - On a machine whose 'local' announces gcc, the c port runs locally;
+    today it runs only with the support, in the container.
+  - D-86 changes shape: the iverilog prototype is copied as a directory
+    with its hwut.conf into a project whose root announces iverilog.
+
+------------------------------------------------------------------------------
+OPEN
+------------------------------------------------------------------------------
+     (none open)

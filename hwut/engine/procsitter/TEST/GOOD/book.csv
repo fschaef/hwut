@@ -22,9 +22,9 @@ test-procsitter_limits.py;cancelled_run;true;ok;;1;0
 ;memory;true;ok;;1;8
 ;no_psutil;true;ok;;1;9
 ;output_gap;true;ok;;1;10
-;pids;false;test-app-memory-exceeded;;1;11
-;self_exit_codes;false;test-app-session-gone;;1;12
-;stderr_tail_cap;false;test-app-session-gone;;1;13
-;wall_clock;false;test-app-session-gone;;1;14
+;pids;true;ok;;1;11
+;self_exit_codes;true;ok;;1;12
+;stderr_tail_cap;true;ok;;1;13
+;wall_clock;true;ok;;1;14
 test-reporting.sh;caps;true;ok;;2;0
 ;multi;true;ok;;2;1

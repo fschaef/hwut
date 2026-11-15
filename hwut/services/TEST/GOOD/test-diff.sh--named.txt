@@ -1,0 +1,38 @@
+STIMULUS  a walk: hwut.diff (test-b.sh equivalent, test-app.sh differs)
+          exit code : 1
+          shown: =[ test-app.sh one ]================================ round 1
+          shown: =[ test-app.sh two ]================================ round 1
+
+STIMULUS  named: hwut.diff test-b.sh
+          exit code : 0
+          stderr: NOTE  test-b.sh: equivalent to its nominal -- shown, as it was named (E-227)
+              =[ test-b.sh ]====================================== round 1
+                   1    1 | steady
+                   2    2 | <hwut-end>
+
+STIMULUS  a glob: hwut.diff --glob 'test-*.sh' --all
+          exit code : 1
+          shown: =[ test-app.sh one ]================================ round 1
+          shown: =[ test-app.sh two ]================================ round 1
+          shown: =[ test-b.sh ]====================================== round 1
+
+STIMULUS  a file by hand: hwut.diff test-b.sh --subject by-hand.txt
+          exit code : 1
+              =[ test-b.sh ]====================================== round 1
+              S    1      | [unsteady]
+              N         1 | [steady]
+                   2    2 | <hwut-end>
+
+STIMULUS  '--subject' with no case named
+          exit code : 2
+          stderr: REFUSED: '--subject' judges a file as a NAMED case => name the test and its choice
+          stderr: usage: hwut.diff SUBJECT NOMINAL | FILE | [<wish>] [<test> [<choice>]] [--subject FILE] [--directory D] [--all] [--console] [-y] [--width N] [--plain]
+
+STIMULUS  hwut.merge test-b.sh --force: named, equivalent
+          exit code : 0
+          ACCEPTED  0 of 1
+              left alone     test-b.sh
+          GOOD/test-b.sh.txt unchanged
+
+SUCCESS: a named case is shown; a walk shows what differs.
+<hwut-end>

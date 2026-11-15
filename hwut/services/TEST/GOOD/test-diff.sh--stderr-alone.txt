@@ -1,6 +1,6 @@
 STIMULUS  stderr tolerated, stdout as accepted: hwut.diff
           exit code : 0
-          nothing differs: 1 case(s) judged, every candidate equivalent to its nominal
+          NOTE  test-noisy.sh: equivalent to its nominal -- shown, as it was named (E-227)
 
 STIMULUS  the tolerance withdrawn, stdout as accepted: hwut.run
           END   test-noisy.sh ....................................... stderr [FAIL]  ||0

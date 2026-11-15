@@ -14,6 +14,7 @@
 #         stains         { features = ["diff-stains-said"] }
 #         regions        { features = ["diff-two-files", "diff-side-by-side"] }
 #         store          { features = ["diff-store-form", "interactive-checklist", "path-word-enters"] }
+#         named          { features = ["diff-named-shown", "diff-subject-file"] }
 #     }
 #     tolerance { eq_pattern = ["SUCCESS.*"] }
 # }
@@ -46,7 +47,7 @@ export PYTHONPATH="$ROOT"
 case "$1" in
     --hwut-info)
         echo "The diff service face: the diff convention, on stdout.;"
-        echo "CHOICES: differing, tolerated, reading, side-by-side, regions, store, stderr, stderr-alone, stains;"
+        echo "CHOICES: differing, tolerated, reading, side-by-side, regions, store, stderr, stderr-alone, stains, named;"
         echo "HAPPY: SUCCESS.*;"
         exit 0 ;;
 esac
@@ -197,13 +198,58 @@ store)
     echo "          exit code : $?"
     grep -E '^=\[|^[SN] ' out.txt | sed 's/^/              /'
     echo
-    echo "STIMULUS  nothing differs: test-b.sh"
+    echo "STIMULUS  named and equivalent: test-b.sh (shown, E-227)"
     $DIFF tree/suite/TEST/test-b.sh --plain > out.txt 2> err.txt
     echo "          exit code : $?   stderr: $(cat err.txt)"
     echo
     echo "The store answers the wish; compare's engine says what differs,"
     echo "now; the checklist lets the author pick; the view is the same."
     echo "SUCCESS: one selection language on the diff face too."
+    ;;
+
+named)
+    #  A NAMED CASE IS SHOWN, EQUIVALENT OR NOT (E-227, 2026-11-15): "globs
+    #  or specific tests are an expression of 'i want to see that
+    #  specifically'"; a walk implies '--fail'. '--subject FILE' judges a
+    #  file made by hand as the case's output. MEASURED before: a named
+    #  equivalent case answered 'nothing differs' and showed nothing.
+    store_fixture
+    cd tree/suite/TEST
+    echo "STIMULUS  a walk: hwut.diff (test-b.sh equivalent, test-app.sh differs)"
+    $DIFF --all --plain > ../../../out.txt 2> ../../../err.txt
+    echo "          exit code : $?"
+    grep -E '^=\[' ../../../out.txt | sed 's/^/          shown: /'
+    echo
+    echo "STIMULUS  named: hwut.diff test-b.sh"
+    $DIFF test-b.sh --plain > ../../../out.txt 2> ../../../err.txt
+    echo "          exit code : $?"
+    sed 's/^/          stderr: /' ../../../err.txt
+    grep -E '^=\[|^ +[0-9]|^[SN] ' ../../../out.txt | sed 's/^/              /'
+    echo
+    echo "STIMULUS  a glob: hwut.diff --glob 'test-*.sh' --all"
+    $DIFF --glob 'test-*.sh' --all --plain > ../../../out.txt 2> ../../../err.txt
+    echo "          exit code : $?"
+    grep -E '^=\[' ../../../out.txt | sed 's/^/          shown: /'
+    echo
+    echo "STIMULUS  a file by hand: hwut.diff test-b.sh --subject by-hand.txt"
+    printf 'unsteady\n<hwut-end>\n' > by-hand.txt
+    $DIFF test-b.sh --subject by-hand.txt --plain > ../../../out.txt 2> ../../../err.txt
+    echo "          exit code : $?"
+    grep -E '^=\[|^ +[0-9]|^[SN] ' ../../../out.txt | sed 's/^/              /'
+    echo
+    echo "STIMULUS  '--subject' with no case named"
+    $DIFF --subject by-hand.txt --plain > ../../../out.txt 2> ../../../err.txt
+    echo "          exit code : $?"
+    sed 's/^/          stderr: /' ../../../err.txt
+    echo
+    echo "STIMULUS  hwut.merge test-b.sh --force: named, equivalent"
+    before=$(cat GOOD/test-b.sh.txt)
+    python3 -m hwut.services.lib.accept.interactive test-b.sh --force < /dev/null > ../../../out.txt 2> ../../../err.txt
+    echo "          exit code : $?"
+    grep -E 'ACCEPTED|left alone' ../../../err.txt ../../../out.txt | sed 's/^[^:]*:/          /'
+    [ "$before" = "$(cat GOOD/test-b.sh.txt)" ] && echo "          GOOD/test-b.sh.txt unchanged"
+    echo
+    echo "SUCCESS: a named case is shown; a walk shows what differs."
     ;;
 
 stderr)

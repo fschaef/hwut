@@ -39,8 +39,8 @@ STIMULUS  a path word enters the directory: hwut.diff tree/suite/TEST/test-app.s
               S    1      | [changed ]line for one
               N         1 | line for one
 
-STIMULUS  nothing differs: test-b.sh
-          exit code : 0   stderr: nothing differs: 1 case(s) judged, every candidate equivalent to its nominal
+STIMULUS  named and equivalent: test-b.sh (shown, E-227)
+          exit code : 0   stderr: NOTE  test-b.sh: equivalent to its nominal -- shown, as it was named (E-227)
 
 The store answers the wish; compare's engine says what differs,
 now; the checklist lets the author pick; the view is the same.

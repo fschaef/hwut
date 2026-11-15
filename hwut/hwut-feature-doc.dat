@@ -3536,6 +3536,16 @@ documents: services/README.txt, services/RATIONALE.txt
 '-y' renders two columns at '--width', subject left and nominal right, and a line without a partner is said on both sides of its row.
 README 'hwut.diff'; RATIONALE E-49, E-142.
 
+[[diff-named-shown]]
+documents: services/README.txt, services/RATIONALE.txt
+A case named on 'hwut.diff' or 'hwut.merge' -- a test, a test and a choice, a '--glob' -- is shown even where it is equivalent, headed so; a walk shows only what differs. A stained case stays said, not shown.
+README 'hwut.diff', 'hwut.merge'; RATIONALE E-227.
+
+[[diff-subject-file]]
+documents: services/README.txt, services/RATIONALE.txt
+'hwut.diff <test> <choice> --subject FILE' judges a file the person made by hand as the named case's output, under the case's GOOD and its tolerance.
+README 'hwut.diff'; RATIONALE E-227.
+
 [[diff-store-form]]
 documents: services/README.txt, services/RATIONALE.txt
 With a wish 'hwut.diff' shows every selected case whose stdout candidate is not equivalent to its nominal, judged now under the choice's own setup, one banner each.

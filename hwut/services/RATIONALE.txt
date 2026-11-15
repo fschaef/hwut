@@ -8585,3 +8585,55 @@ CHECKED   engine/orchestrator/run/TEST test-bubble.py [probe]: the probe's
           without a probe line keeps its words. The full pass here (no
           iverilog): support/remote/iverilog/ not entered, its 11 cases
           gone from the failures.
+
+E-227  A NAMED CASE IS SHOWN, EQUIVALENT OR NOT; A FILE BY HAND
+       JUDGED AS A CASE                                         (2026-11-15)
+------------------------------------------------------------------------------
+PROBLEM   MEASURED on c317557: 'hwut.diff test-report.py strict' over an
+          equivalent case answered 'nothing differs: 1 case(s) judged'
+          and showed nothing; 'hwut.merge' the same ('nothing to
+          accept'). A tolerant choice never showed which tolerance
+          carried it. And no form judged a file the person made by hand
+          under a case's own tolerance: the two-file form reads the
+          default setup ('whitespace=tolerant' where the choice says
+          strict). The author's aim: "If 'python app.py' differs in
+          behavior when called from inside hwut, this must be
+          detectable."
+DECISION  (a), Frank-Rene 2026-11-15: "when we walk we expect to ignore
+          good cases (--fail) implied. globs or specific tests are an
+          expression of 'i want to see that specifically' and we should
+          satisfy that."
+          - NAMED ('_cases.named_f'): a word naming a test, a test and a
+            choice, a '--glob'. Every selected case is shown; an
+            equivalent one headed
+                NOTE  <case>: equivalent to its nominal -- shown, as it
+                      was named (E-227)
+            Exit 0 where everything shown is equivalent, 1 where one
+            differs. 'hwut.merge' opens the session; a commit without a
+            change leaves the case alone ('ACCEPTED 0 of 1').
+          - A WALK -- no word, or a path word entering a directory
+            (E-47): only what differs, as before.
+          - A STAINED equivalent case stays SAID, not shown (E-141): its
+            accept is refused, and its exit stays 1.
+          '--subject FILE' ('-' stdin), (a) 2026-11-15: the named case's
+          GOOD and setup, the file as its subject; no recording needed.
+          Without a named case: REFUSED, naming the remedy.
+              MY_TEST=bad python3 test-report.py > by-hand.txt
+              hwut.diff test-report.py strict --subject by-hand.txt
+COST      'test-diff.sh store' and 'stderr-alone' moved where they name an
+          equivalent clean case: the picture and its NOTE stand where
+          'nothing differs' stood. A tolerated line absorbed by
+          'nothing' still shows as '[none]' in an equivalent picture --
+          the book's D-91, now in plain sight; not this entry's.
+GRAVEYARD (b) every case, a walk included -- 400 green pictures for a
+          directory. (b') hwut runs the app a second time "outside" its
+          harness -- still hwut deciding the call; it cannot show what
+          the person's own shell does differently.
+CHECKED   services/TEST test-diff.sh [named]: a walk shows the differing
+          two; a named equivalent case is shown, exit 0; a glob shows
+          all three; '--subject' over a file by hand differs, exit 1;
+          '--subject' unnamed refused; 'hwut.merge --force' leaves the
+          equivalent case alone, its GOOD unchanged.
+MEASURED, LEFT  'hwut.merge --force' still asks '[t]ake ... ?' where stdin
+          is an open pipe (c317557 alike): "for scripts" holds only with
+          stdin closed.

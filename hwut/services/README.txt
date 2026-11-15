@@ -381,7 +381,13 @@ The faces:
                  selected case whose stdout candidate is not
                  equivalent to its nominal -- compare's engine, the
                  choice's own setup, judged NOW -- is shown, one
-                 banner each; more than one: a CHECKLIST first
+                 banner each. A case NAMED -- a test, a test and a
+                 choice, a '--glob' -- is shown equivalent or not
+                 ('NOTE  <case>: equivalent to its nominal -- shown, as
+                 it was named'); a walk shows only what differs (E-227).
+                 '--subject FILE' ('-' stdin) judges a file made by hand
+                 as a named case's output, under its GOOD and its
+                 tolerance. More than one: a CHECKLIST first
                  ('lib/checklist.py': a number works that case,
                  '<enter>' the first unhandled -- printed beside its
                  number -- 'n' the next page, 'q' quits; '[X]' says
@@ -470,7 +476,9 @@ The faces:
     hwut.merge   (lib/accept/interactive.py)
                  the cases a wish selects whose stdout candidate is
                  not equivalent to its nominal (measured now, as
-                 'hwut.diff'), the checklist, then ONE SESSION PER
+                 'hwut.diff'; a NAMED case opens equivalent or not,
+                 and a commit without a change leaves it alone, E-227),
+                 the checklist, then ONE SESSION PER
                  CASE on stderr: the view ('-y' two columns), then
                  [t]ake the subject whole, [e]dit the nominal,
                  [c]ommit the nominal as it stands, [q]uit. COMMIT IS

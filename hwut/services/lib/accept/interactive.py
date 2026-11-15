@@ -117,7 +117,7 @@ from ..._core import (add_setup_arguments,
                                                       setup_from_arguments)
 from ..._exit import E_ExitCode
 
-def keys_of(selected, write, stained_list=None):
+def keys_of(selected, write, stained_list=None, named_f=False):
     """
     RETURN: (list[DifferingKey], int), THIS FACE'S ENGINE FOR ITS CASES:
             'differing_keys' over the RECORDINGS as they stand --
@@ -128,10 +128,11 @@ def keys_of(selected, write, stained_list=None):
     so what is merged is what was seen (E-165).
 
     'stained_list' receives the cases that are equivalent and whose
-    stderr spoke untolerated ('differing_keys').
+    stderr spoke untolerated ('differing_keys'). 'named_f': equivalent
+    cases are keys too (E-227).
     """
     return differing_keys(selected, write, refresh_f=True,
-                          stained_list=stained_list)
+                          stained_list=stained_list, named_f=named_f)
 
 
 USAGE = ("usage: hwut.merge [<wish>] [<test> [<choice>]] "
@@ -204,7 +205,9 @@ def main(argv=None):
         err("EMPTY: the wish selects no case")
         return E_ExitCode.EMPTY
     stained_list = []
-    key_list, judged_n, unread_n = keys_of(selected, err, stained_list)
+    from ..._cases import named_f
+    key_list, judged_n, unread_n = keys_of(selected, err, stained_list,
+                                           named_f(wish, arguments.word))
     #  A CASE THAT FAILS ON STDERR ALONE (E-141): nothing of it can be
     #  accepted, and it is said rather than passed over.
     from ..._accept_common import stain_line_list

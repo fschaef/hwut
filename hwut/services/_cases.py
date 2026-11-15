@@ -127,11 +127,12 @@ class DifferingKey:
     """
     __slots__ = ("where", "test", "choice", "subject_text",
                  "nominal_text", "setup", "candidate_path",
-                 "nominal_path", "aspirant_f", "stderr_ignored_f", "stain")
+                 "nominal_path", "aspirant_f", "stderr_ignored_f", "stain",
+                 "equivalent_f")
 
     def __init__(self, where, test, choice, subject_text, nominal_text,
                  setup, candidate_path, nominal_path, aspirant_f=False,
-                 stderr_ignored_f=False, stain=None):
+                 stderr_ignored_f=False, stain=None, equivalent_f=False):
         self.where = where;               self.test = test
         self.choice = choice;             self.subject_text = subject_text
         self.nominal_text = nominal_text; self.setup = setup
@@ -144,6 +145,9 @@ class DifferingKey:
         #  the faces that view it (E-141).
         self.stain          = stain
         self.aspirant_f     = aspirant_f
+        #  EQUIVALENT, AND SHOWN BECAUSE IT WAS NAMED (E-227): a key of
+        #  'differing_keys(..., named_f=True)' with nothing differing.
+        self.equivalent_f   = equivalent_f
 
     @property
     def name(self):
@@ -159,7 +163,21 @@ class DifferingKey:
                else "%s/%s" % (self.where, self.name)
 
 
-def differing_keys(selected, write, refresh_f=False, stained_list=None):
+def named_f(wish, word_list):
+    """
+    RETURN: True,  the words or the wish NAME cases -- a test, a test and
+                   a choice, a '--glob' target: "i want to see that
+                   specifically" (E-227); equivalent cases are shown too.
+            False, a walk -- no word, or only a directory entered by a
+                   path word (E-47): only what differs is shown, as if
+                   '--fail' were said.
+    """
+    if wish is not None and wish.glob_tuple: return True
+    return any(not os.path.isdir(word) for word in word_list)
+
+
+def differing_keys(selected, write, refresh_f=False, stained_list=None,
+                   named_f=False, subject_text=None):
     """
     RETURN: [0] list[DifferingKey], every selected (test, choice) whose
                 stdout candidate stands, whose nominal stands, and
@@ -189,7 +207,15 @@ def differing_keys(selected, write, refresh_f=False, stained_list=None):
     'hwut.diff', 'hwut.merge' -- work on the RECORDING, which only
     'hwut.run' and 'hwut.play' make. 'refresh_f' is kept for the
     callers' signature and asks nothing.
+
+    'named_f' (E-227): the cases were NAMED, not walked -- an equivalent
+    case is a key too, with 'equivalent_f' set, so the face shows it;
+    a STAINED equivalent case stays in 'stained_list' alone (E-141).
+    'subject_text' (E-227): where given, it is every case's subject in
+    place of its recording -- a file the person made by hand, judged as
+    the case's output under the case's own setup; no recording needed.
     """
+    given_text = subject_text
     from ..engine.compare.api import (is_equivalent, Configuration,
                                         RegionSyntaxError)
     key_list  = []
@@ -214,11 +240,16 @@ def differing_keys(selected, write, refresh_f=False, stained_list=None):
             test, choice = case.source_file, case.choice
             out_path  = store.bookkeeper.candidate_path(test, choice, "stdout")
             good_path = store.bookkeeper.nominal_path(test, choice, "stdout")
-            if not out_path.exists():  no_run_n += 1; continue
-            try:
-                subject_text = io.open(str(out_path),  encoding="utf-8").read()
-            except (OSError, UnicodeDecodeError):
-                continue
+            if given_text is not None:
+                subject_text = given_text
+            elif not out_path.exists():
+                no_run_n += 1; continue
+            else:
+                try:
+                    subject_text = io.open(str(out_path),
+                                           encoding="utf-8").read()
+                except (OSError, UnicodeDecodeError):
+                    continue
             configuration = config_db.get(test)
             setup = None
             if configuration is not None:
@@ -283,7 +314,8 @@ def differing_keys(selected, write, refresh_f=False, stained_list=None):
                             None if witness is None else str(witness),
                             None if witness is None
                             else os.path.relpath(str(witness))))
-                continue
+                        continue      # a stain is said, never shown (E-141)
+                if not named_f: continue
             key_list.append(DifferingKey(where, test, choice, subject_text,
                                          nominal_text, setup,
                                          str(out_path), str(good_path),
@@ -291,7 +323,8 @@ def differing_keys(selected, write, refresh_f=False, stained_list=None):
                                          stderr_ignored_f=
                                              stderr_ignored_f_of(
                                                  configuration, choice),
-                                         stain=stain))
+                                         stain=stain,
+                                         equivalent_f=equivalent_f))
     #  ASPIRANTS FIRST (B-14). A test the book knows and nobody has
     #  accepted is playable, not runnable; its accept is the act that
     #  makes it a member, and a person working a list wants the

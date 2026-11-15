@@ -26,7 +26,11 @@ DESCRIPTION
                                           THE STORE FORM (E-50): every
                                           case the wish selects whose
                                           stdout candidate differs from
-                                          its nominal -- judged NOW by
+                                          its nominal -- every case it
+                                          selects where a test or a
+                                          '--glob' NAMES it (E-227),
+                                          equivalent ones headed so --
+                                          judged NOW by
                                           compare's engine under the
                                           choice's own setup, not by the
                                           book's memory. More than one:
@@ -62,7 +66,7 @@ DESCRIPTION
        EXIT CODES (the diff convention):
                     0 equivalent -- no differing pair (or: a reading
                       was displayed; or: the store form found nothing
-                      differing);
+                      differing, or showed only equivalent cases);
                     1 at least one differing pair was shown;
                     2 the request itself was unusable;
                     3 the store form selected no case.
@@ -320,6 +324,10 @@ def _main(argv):
     parser.add_argument("--all", action="store_true",
                         help="store form: every differing case, no "
                              "checklist")
+    parser.add_argument("--subject", default=None,
+                        help="store form, a named case: this FILE ('-' "
+                             "stdin) judged as the case's output, under "
+                             "its GOOD and its tolerance (E-227)")
     add_setup_arguments(parser)
     if "--yes" in rest_list:
         #  E-57: one word for 'do not ask'. Refused BY NAME so a script
@@ -341,10 +349,18 @@ def _main(argv):
     setup     = setup_from_arguments(arguments)
     word_list = arguments.word
 
+    if arguments.subject is not None and not word_list \
+       and not wish.glob_tuple:
+        sys.stderr.write("REFUSED: '--subject' judges a file as a NAMED "
+                         "case => name the test and its choice\n")
+        sys.stderr.write(USAGE + "\n")
+        return E_ExitCode.REFUSED
+
     adapter = display_for(arguments,
                           lambda text: sys.stderr.write(text + "\n"))
 
-    if _file_form_f(word_list, wish_said_f, arguments.directory):
+    if arguments.subject is None \
+       and _file_form_f(word_list, wish_said_f, arguments.directory):
         if word_list.count("-") > 1:
             parser.error("only one of SUBJECT and NOMINAL may be '-': "
                          "stdin is one stream, not two")
@@ -383,7 +399,18 @@ def _main(argv):
         err("EMPTY: the wish selects no case")
         return E_ExitCode.EMPTY
     stained_list = []
-    key_list, judged_n, unread_n = keys_of(selected, err, stained_list)
+    from ..._cases import named_f
+    given_text = None
+    if arguments.subject is not None:
+        try:
+            given_text = read_source(arguments.subject)
+        except OSError as error:
+            err("REFUSED: '--subject %s' cannot be read: %s"
+                % (arguments.subject, error.strerror))
+            return E_ExitCode.REFUSED
+    key_list, judged_n, unread_n = keys_of(selected, err, stained_list,
+                                           named_f(wish, word_list),
+                                           given_text)
     #  A CASE THAT FAILS ON STDERR ALONE HAS NO DIFFERENCE TO SHOW
     #  (E-141): it is said, with the text, and the face does not
     #  answer 'nothing differs' over a case the run calls failed.
@@ -406,11 +433,16 @@ def _main(argv):
     checklist = Checklist(key_list, err, sys.stdin.readline,
                           label_of=lambda key: key.label,
                           all_f=arguments.all)
-    shown_n = 0
+    shown_n, differing_n = 0, 0
     while True:
         key = checklist.pick()
         if key is None: break
         shown_n += 1
+        if key.equivalent_f:
+            err("NOTE  %s: equivalent to its nominal -- shown, as it was "
+                "named (E-227)" % key.label)
+        else:
+            differing_n += 1
         options = key.setup if not _setup_said_f(arguments) else setup
         #  THE STDERR STAIN IS MENTIONED (E-136): in words, and on the
         #  screen's foot where there is one.
@@ -434,10 +466,11 @@ def _main(argv):
     if not shown_n:
         err("NOTE: nothing shown")
         return E_ExitCode.FAULT if unread_n else E_ExitCode.OK
-    return E_ExitCode.FAULT
+    return E_ExitCode.FAULT if differing_n or unread_n else E_ExitCode.OK
 
 
-def keys_of(selected, write, stained_list=None):
+def keys_of(selected, write, stained_list=None, named_f=False,
+            subject_text=None):
     """
     RETURN: (list[DifferingKey], int), THIS FACE'S ENGINE FOR ITS CASES:
             'differing_keys' over the RECORDINGS as they stand -- nothing
@@ -447,19 +480,23 @@ def keys_of(selected, write, stained_list=None):
     'hwut.run' or 'hwut.play' made, so what is merged is what was seen.
 
     'stained_list' receives the cases that are equivalent and whose
-    stderr spoke untolerated ('differing_keys').
+    stderr spoke untolerated ('differing_keys'). 'named_f': equivalent
+    cases are keys too (E-227); 'subject_text', where given, stands in
+    for every recording ('--subject').
     """
     return differing_keys(selected, write, refresh_f=True,
-                          stained_list=stained_list)
+                          stained_list=stained_list, named_f=named_f,
+                          subject_text=subject_text)
 
 
 USAGE = ("usage: hwut.diff SUBJECT NOMINAL | FILE | [<wish>] "
-         "[<test> [<choice>]] [--directory D] [--all] [--console] [-y] "
+         "[<test> [<choice>]] [--subject FILE] [--directory D] [--all] "
+         "[--console] [-y] "
          "[--width N] [--plain]")
 
 
 #  What a value IS (E-81): True, a path follows; a tuple, the words.
-ARG_DB = {"--directory": True}
+ARG_DB = {"--directory": True, "--subject": True}
 
 
 def display_for(arguments, err):
