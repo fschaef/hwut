@@ -1,0 +1,11 @@
+  unchanged:  (no HINT)
+  equivalent: HINT: 'test-new.py' -- the test's source changed since it was recorded; 'hwut.play' shows it as it stands
+  differing:  HINT: 'test-new.py' -- the test's source changed since it was recorded; 'hwut.play' shows it as it stands
+  merge:      HINT: 'test-new.py' -- the test's source changed since it was recorded; 'hwut.play' shows it as it stands
+  OK  : no HINT where the source is unchanged
+  OK  : HINT beside 'nothing differs'
+  OK  : HINT beside a difference
+  OK  : diff showed the RECORDING, ran nothing
+  OK  : merge says the same HINT
+SUCCESS: diff and merge read the recording and say it is older than the source.
+<hwut-end>

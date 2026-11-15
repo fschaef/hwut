@@ -176,7 +176,7 @@ def named_f(wish, word_list):
     return any(not os.path.isdir(word) for word in word_list)
 
 
-def differing_keys(selected, write, refresh_f=False, stained_list=None,
+def differing_keys(selected, write, stained_list=None,
                    named_f=False, subject_text=None):
     """
     RETURN: [0] list[DifferingKey], every selected (test, choice) whose
@@ -205,8 +205,11 @@ def differing_keys(selected, write, refresh_f=False, stained_list=None,
 
     NOTHING IS RUN HERE (services E-165): the faces that read this --
     'hwut.diff', 'hwut.merge' -- work on the RECORDING, which only
-    'hwut.run' and 'hwut.play' make. 'refresh_f' is kept for the
-    callers' signature and asks nothing.
+    'hwut.run' and 'hwut.play' make. Where the test's source changed
+    since its recording, ONE 'HINT:' line per case says so on 'write'
+    (E-165 point 3, E-232) -- equivalent or not, since a stale recording
+    that 'nothing differs' from its nominal misleads as much as one that
+    differs. A 'subject_text' is no recording: no HINT for it.
 
     'named_f' (E-227): the cases were NAMED, not walked -- an equivalent
     case is a key too, with 'equivalent_f' set, so the face shows it;
@@ -218,6 +221,7 @@ def differing_keys(selected, write, refresh_f=False, stained_list=None,
     given_text = subject_text
     from ..engine.compare.api import (is_equivalent, Configuration,
                                         RegionSyntaxError)
+    from ._accept_common import source_changed_f, source_changed_hint
     key_list  = []
     judged_n  = 0
     unread_n  = 0
@@ -245,6 +249,15 @@ def differing_keys(selected, write, refresh_f=False, stained_list=None,
             elif not out_path.exists():
                 no_run_n += 1; continue
             else:
+                #  A STALE RECORDING IS SAID (E-165, 3; E-232): this face
+                #  reads what stands and runs nothing, so it says where
+                #  that is not what the source would print now.
+                if source_changed_f(store.freshness(test, choice, "stdout"),
+                                    os.path.join(whole, test)):
+                    name = test if choice is None else "%s %s" % (test, choice)
+                    write(source_changed_hint(
+                              name if where in (".", "")
+                              else "%s/%s" % (where, name)))
                 try:
                     subject_text = io.open(str(out_path),
                                            encoding="utf-8").read()

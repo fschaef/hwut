@@ -4597,6 +4597,11 @@ documents: services/RATIONALE.txt
 'hwut.accept' names what it blesses -- which face recorded it and when -- hints where the test's source changed since, and refuses a case with no recording.
 RATIONALE E-165.
 
+[[look-hints-stale-recording]]
+documents: services/RATIONALE.txt
+'hwut.diff' and 'hwut.merge' run nothing and say, per case, where the test's source changed since its recording -- beside a difference and beside 'nothing differs' alike; silent where the source is unchanged.
+RATIONALE E-232.
+
 [[play-runs-handlers]]
 documents: services/RATIONALE.txt
 'hwut.play' runs the directory's 'on_entry', 'on_before_test', 'on_after_test' and 'on_exit' around the case it plays, told as 'hwut.run' tells them, and says an end other than exit 0 in the run's words.

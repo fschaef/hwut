@@ -8770,3 +8770,28 @@ DECISION  Frank-Rene, 2026-11-15 ("das hätte ich erwartet"): a face's usage
 COST      'hwut.execute's usage now names '--dir' and '--exclude-dir' in
           its first form too, where it takes them as well; its help pages
           moved. 'test-wish.py take' prints each face's derived tokens.
+
+E-232  DIFF AND MERGE SAY A STALE RECORDING, AS ACCEPT DOES     (2026-11-15)
+------------------------------------------------------------------------------
+PROBLEM   E-165 point 3 ("yes, this important": a hint where the source
+          changed since the recording) was built into 'hwut.accept' only.
+          MEASURED on c317557: a page edited after its run, then
+          'hwut.diff' -- the OLD recording shown, no word that it is old;
+          equally 'nothing differs' over a stale recording. Read as
+          "provision does not follow the code". Two docstrings still
+          said the pre-E-165 rule ('subject_provision' REFRESH intent
+          naming accept, merge and diff; 'session.refresh' naming them
+          as its callers), and 'refresh_f=True' was passed and ignored.
+DECISION  (Frank-Rene, 2026-11-15: "make the changes") The HINT of E-165
+          is said by 'differing_keys' ('services/_cases.py'), the one
+          engine of 'hwut.diff' and 'hwut.merge': ONE line per case with
+          a recording whose source digest differs from the freshness
+          sidecar's, BEFORE it is judged -- so beside 'nothing differs'
+          too. Wording: '_accept_common.source_changed_hint', the very
+          words of accept. Nothing runs (E-165 stands). 'refresh_f' is
+          gone; the two docstrings say E-165.
+READ OUT  'session.refresh' has no caller left. Kept: its removal is a
+          ruling of its own.
+CHECKED   services/TEST test-play.py [look_hints]: unchanged -> no HINT;
+          edited, equivalent -> HINT + 'nothing differs'; edited,
+          differing -> HINT + the RECORDING shown; merge -> HINT.

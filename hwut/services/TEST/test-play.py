@@ -5,6 +5,7 @@
 #     features   = ["play-save"]
 #     choices {
 #         accept_hints { features = ["accept-names-recording"] }
+#         look_hints  { features = ["look-hints-stale-recording"] }
 #         entrance    { features = ["play-save", "accept-whole"] }
 #         records     { features = ["play-reading", "play-save"] }
 #     }
@@ -31,6 +32,13 @@ ______________________________________________________________________________
                that the source changed since. MEASURED 2026-10-22
                before (E-40): accept ran the case, 'RUN: ...', and
                blessed the new text's output.
+    look_hints 'hwut.diff' and 'hwut.merge' RUN NOTHING either (E-165);
+               they say the same HINT where the source changed since the
+               recording -- also where 'nothing differs', since a stale
+               recording equivalent to its nominal misleads as much.
+               No HINT where the source is unchanged. MEASURED
+               2026-11-15 before (E-232): diff and merge showed the
+               stale recording without a word.
 ______________________________________________________________________________
 """
 import io
@@ -208,12 +216,82 @@ def test_accept_hints():
                  "than the source.")
 
 
+def _diff(test):
+    """RETURN: (int, list[str]), the status of 'hwut.diff' over the
+    directory and every line it wrote, stdout and stderr together."""
+    from hwut.services.lib.run.diff import main as diff_main
+    sink = io.StringIO()
+    with contextlib.redirect_stdout(sink), contextlib.redirect_stderr(sink):
+        status = diff_main(["--console", "--plain", "--all",
+                            "--directory=%s" % test])
+    return int(status), sink.getvalue().splitlines()
+
+
+def _merge_lines(test):
+    """RETURN: list[str], what 'hwut.merge' says while it gathers its
+    cases -- its 'keys_of', the step before any screen."""
+    from hwut.services._cases import select
+    from hwut.services.lib.accept.interactive import keys_of
+    from hwut.engine.orchestrator.plan.wish import parse_wish
+    line_list = []
+    wish, _   = parse_wish([])
+    selected, _ = select(wish, [], test, True, line_list.append, "usage")
+    keys_of(selected, line_list.append)
+    return line_list
+
+
+def test_look_hints():
+    """'hwut.diff' and 'hwut.merge' run nothing and say where the source
+    changed since the recording; silent where it did not."""
+    root, test = fixture()
+    _play(test)
+    accept_main(["test-new.py", "--force", "--directory=%s" % test],
+                write=lambda line: None)
+    path = os.path.join(test, "test-new.py")
+    def hint_of(line_list):
+        return [l for l in line_list if l.startswith("HINT:")]
+
+    _, same_list = _diff(test)
+    print("  unchanged:  %s" % (hint_of(same_list) or "(no HINT)"))
+
+    with open(path, "w") as fh:                  # output alike, source not
+        fh.write(SCRIPT + "# an edit\n")
+    _, equal_list = _diff(test)
+    print("  equivalent: %s" % (hint_of(equal_list) or ["(no HINT)"])[0])
+
+    with open(path, "w") as fh:                  # recording differs ...
+        fh.write(SCRIPT.replace("hello from new", "hello, changed"))
+    _play(test)
+    with open(path, "w") as fh:                  # ... and is stale again
+        fh.write(SCRIPT.replace("hello from new", "bonjour"))
+    status, differ_list = _diff(test)
+    print("  differing:  %s" % (hint_of(differ_list) or ["(no HINT)"])[0])
+    merge_list = _merge_lines(test)
+    print("  merge:      %s" % (hint_of(merge_list) or ["(no HINT)"])[0])
+    text = "\n".join(differ_list)
+    ok = _check([
+        (not hint_of(same_list), "no HINT where the source is unchanged"),
+        (bool(hint_of(equal_list)) and
+         any("nothing differs" in l for l in equal_list),
+         "HINT beside 'nothing differs'"),
+        (bool(hint_of(differ_list)) and status == 1,
+         "HINT beside a difference"),
+        ("[changed]" in text and "bonjour" not in text,
+         "diff showed the RECORDING, ran nothing"),
+        (bool(hint_of(merge_list)), "merge says the same HINT"),
+    ])
+    shutil.rmtree(root, ignore_errors=True)
+    _verdict(ok, "diff and merge read the recording and say it is older "
+                 "than the source.")
+
+
 if __name__ == "__main__":
     HwutRunner(
         argv       = sys.argv,
         title      = "hwut.play: shows and records",
         choice_map = {
             "accept_hints": test_accept_hints,
+            "look_hints":   test_look_hints,
             "entrance": test_entrance,
             "records":  test_records,
         }).run()

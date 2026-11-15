@@ -131,7 +131,7 @@ def keys_of(selected, write, stained_list=None, named_f=False):
     stderr spoke untolerated ('differing_keys'). 'named_f': equivalent
     cases are keys too (E-227).
     """
-    return differing_keys(selected, write, refresh_f=True,
+    return differing_keys(selected, write,
                           stained_list=stained_list, named_f=named_f)
 
 

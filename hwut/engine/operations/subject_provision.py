@@ -51,13 +51,16 @@ DESCRIPTION
                    -- (B.1), and the build tool's own freshness --
                    never whether it is run.
          REFRESH   a face that OBTAINS A SUBJECT AND DOES SOMETHING
-                   WITH IT -- 'hwut.report.details', and 'session.refresh'
-                   for accept, the merge and the diff -- and must therefore hold a
-                   CURRENT one: PROVIDE where stale, RECORDED where
-                   current. The criterion is not 'obtains and
-                   judges'; it is 'obtains and does something with
-                   it'. Nothing that reads a subject goes around the
-                   channel.
+                   WITH IT -- 'hwut.report.details' -- and must
+                   therefore hold a CURRENT one: PROVIDE where stale,
+                   RECORDED where current. The criterion is not
+                   'obtains and judges'; it is 'obtains and does
+                   something with it'. Nothing that reads a subject
+                   goes around the channel.
+                   NOT 'hwut.accept', 'hwut.merge', 'hwut.diff'
+                   (services E-165, 2026-10-22): they read the
+                   RECORDING and run nothing; where the source changed
+                   since, they say so in a 'HINT:' line.
          READ      never execute; deliver what stands and say whether
                    it is stale. The closure a run could
        check is the test's own sources; the framework that runs them

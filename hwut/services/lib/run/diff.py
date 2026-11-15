@@ -484,7 +484,7 @@ def keys_of(selected, write, stained_list=None, named_f=False,
     cases are keys too (E-227); 'subject_text', where given, stands in
     for every recording ('--subject').
     """
-    return differing_keys(selected, write, refresh_f=True,
+    return differing_keys(selected, write,
                           stained_list=stained_list, named_f=named_f,
                           subject_text=subject_text)
 
