@@ -14,8 +14,9 @@ support/remote -- REMOTE EXECUTION: A TEST APPLICATION DRIVES A BOARD
     README.txt     this file: the bench and the writer
     host/          hwut_remote, the package the writer imports; image_id.mk
     target/        the agents: verilog/ (built); c/, python/ (delivery 5)
-    <platform>/    one per target kind, each with its hwut-root.conf and
-                   TEST/; a writer copies one, root and all (o-45):
+    <platform>/    one per target kind, each with its hwut.conf and TEST/;
+                   a writer copies one into a project of his (o-45;
+                   intend/45 R-1, R-4):
                    model/     the host against a model agent and a fake link
                    iverilog/  the Verilog agent and the prototype (built)
 
@@ -30,8 +31,8 @@ support/remote -- REMOTE EXECUTION: A TEST APPLICATION DRIVES A BOARD
     (5), 'can' (9), capture.py (7), 'visa' and VisaHub (12); the other
     prototypes. The bus (map 100 and above) is not built in the Verilog
     agent. hwut's side -- exit 77 as 'device not reachable', 'deploy',
-    'target', 'tools' and 'requires', hwut-tools.rst -- is in the making;
-    until it is built a test exiting 77 is judged as any other exit.
+    'target', 'tools' and 'requires', hwut-tools.rst -- is built (the
+    book's D-87).
 
 
 ==============================================================================
@@ -64,8 +65,9 @@ support/remote -- REMOTE EXECUTION: A TEST APPLICATION DRIVES A BOARD
            |                    puts the image on the target
            v
     the test         max10.conf: link, loader, ...: create_hub's (2)
-    hwut-root.conf   outermost: platform = [ { ..., tools = [ <tool> ] } ];
-                     below: requires = [ <tool> ] (o-51 .. o-53)
+    hwut-root.conf   the project's one root: platform = [ { ..., tools =
+                     [ <tool> ] } ]; below, in hwut.conf: requires =
+                     [ <tool> ] (o-51 .. o-53; intend/45 R-1, R-4)
 
     host           the machine that runs hwut and the test application
     hwut_remote    the Python package the writer imports, in
@@ -85,7 +87,7 @@ support/remote -- REMOTE EXECUTION: A TEST APPLICATION DRIVES A BOARD
     bench          a target, its link and
                    its loader
     platform       an environment holding the TOOLS a subtree needs, defined
-                   in the outermost hwut-root.conf (o-49, o-51; spec/42)
+                   in the project's hwut-root.conf (o-49, o-51; spec/42)
     device         what ONE test talks to: a board, a simulator; reached
                    by the test, never by hwut (o-49)
 
@@ -497,10 +499,12 @@ KEYS -- closed; an unknown key is refused
 
     A BOARD IS A DEVICE, NOT A PLATFORM (o-49). A platform holds the TOOLS
     a subtree needs (quartus, iverilog) and is defined once, in the
-    outermost hwut-root.conf, with 'tools = [ ... ]'; a conf below and a
-    directory says 'requires = [ <tool> ... ]' (o-50 .. o-58; spec/42 --
-    BUILT): a hwut.conf adds, an inner root replaces; the first platform
-    defined that announces them all runs the subtree, '-p' narrowing. A device is what one test talks to; the test reaches it
+    project's hwut-root.conf, with 'tools = [ ... ]'; a hwut.conf below
+    says 'requires = [ <tool> ... ]', and every hwut.conf below adds to it
+    (o-50 .. o-58; intend/45 R-4 -- BUILT): each directory runs on the
+    first platform defined that announces all it requires, '-p'
+    narrowing; a platform declaring a tool it lacks fails the cases
+    requiring it, named (R-5). A device is what one test talks to; the test reaches it
     itself, through its hub.
 
     THE DEVICE NOT REACHABLE -- exit status 77 (o-49; BUILT). Only the test
@@ -615,7 +619,7 @@ KEYS -- closed; an unknown key is refused
     HwutRunner(sys.argv, "Adder on MAX 10;", {"adder": adder}).run()
 
     Nothing runs at import: '--hwut-info' needs no build and no board.
-    The directory's hwut-root.conf says requires = [ "quartus" ]; the
+    The directory's hwut.conf says requires = [ "quartus" ]; the
     test names its configuration file, never the platform. The hub finds
     the bench reset by 'loader'. The board absent: exit 77 (section 7).
     The writer never sees a token, a CRC, a byte order or a recovery.
@@ -802,8 +806,8 @@ KEYS -- closed; an unknown key is refused
 
     Each holds: README.txt (board, wiring, host setup), the Makefile with
     host/image_id.mk, the top level or port, the configuration file, the
-    platform's 'tools' as a snippet for the outermost hwut-root.conf, the
-    directory's hwut-root.conf saying 'requires', the test application. A GOOD is
+    platform's 'tools' as a snippet for the project's hwut-root.conf, the
+    directory's hwut.conf saying 'requires', the test application. A GOOD is
     recorded where the board stands; iverilog, qemu and scpi-sim record
     theirs on
     every host. tcp and power are configuration variants, documented in the

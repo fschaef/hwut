@@ -26,7 +26,7 @@ FORMAT = 1
 #  are OPEN under the add-only promise.
 VERDICT_TUPLE = ("ok", "test-failed", "build-failed", "launch-failed",
                  "unsupported", "misdep", "unaccepted", "no-good-file",
-                 "uncapped", "deploy-failed")
+                 "uncapped", "deploy-failed", "tool-not-provided")
 
 #  kind -> (required {field: type}, optional {field: type}).
 #  'when' is on EVERY event and stated once below the table.
@@ -51,7 +51,8 @@ KIND_DB = {
     "dir-done":   ({"directory": str, "good": bool,
                     "fail_db": dict}, {}),
     "tree-done":  ({"good": bool, "fail_n": int}, {"meta_n": int,
-                                                     "skip_n": int}),
+                                                     "skip_n": int,
+                                                     "not_run_n": int}),
     #  A BUBBLE NOT RUN HERE (spec/42 section 6, rulings 13, 21): no
     #  platform both specified and required ('available'), or the one
     #  that is cannot be reached ('reachable'). Nothing of it is counted.
@@ -103,6 +104,9 @@ _FIELD_TEXT_DB = {
     "skip_n":         "how many cases the wish did not want -- present in "
                       "the tree, not selected, not run; the SKIPPED of the "
                       "closing bar",
+    "not_run_n":      "how many test directories no platform took -- "
+                      "not run, said once in the closing numbers "
+                      "(intend/45 R-6)",
     "meta_n":         "how many cases the standard label 'meta' hid from "
                       "a wish that named no label -- excluded, not run, "
                       "not refused; stated once in the closing numbers",

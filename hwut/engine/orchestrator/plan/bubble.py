@@ -1,59 +1,52 @@
 """SPDX-License: MIT; Project HWUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 
-PURPOSE: WHICH BUBBLE RUNS WHERE (adm/WORK/spec/42-platforms.txt section 3;
-         intend/26 o-50 .. o-58) -- decided before the first event, from
-         the confs alone: nothing is run to learn it.
+PURPOSE: WHICH DIRECTORY RUNS WHERE (intend/45 R-1 .. R-7, 2026-11-15;
+         intend/26 o-50 .. o-59; spec/42 section 3) -- decided before the
+         first event, from the confs alone: nothing is run to learn it.
 
-    D      the platforms DEFINED       the OUTERMOST 'hwut-root.conf''s
+    D      the platforms DEFINED       the ROOT's 'hwut-root.conf' -- the
+                                       one root of the project (R-1) --
                                        'platform = [...]', in its order;
                                        each announces 'tools = [...]'
-    R(B)   the tools bubble B requires its own 'requires = [...]' -- an
-                                       inner root replaces, it inherits
-                                       nothing (o-54)
-    S      the platforms specified     'Wish.specified_platform_set':
-                                       'local' and every '-p' (no '-p'
-                                       excludes 'local', o-58)
-    C(B)   the candidates              R(B) empty: {local}; else every
+    R(d)   the tools directory d       'requires' inherited down the
+           requires                    hwut.conf files and its own, ADDED
+                                       (o-57); said once for a subtree in
+                                       a non-TEST hwut.conf (R-4)
+    S      the platforms specified     'Wish.specified_platform_set'
+    C(d)   the candidates              R(d) empty: {local}; else every
                                        platform of D announcing all of
-                                       R(B), in D's order
-    F(B)   C(B) & S, in D's order      the FIRST is taken (o-58)
+                                       R(d), in D's order
+    F(d)   C(d) & S, in D's order      the FIRST is taken (o-58)
 
-    F(B) == {}                     NOT RUN, reason 'available'
-    first of F(B) is local         run here, as ever
-    first of F(B) not reachable    NOT RUN, reason 'reachable'
-    first of F(B) reachable        HANDED -- run there by one far
-                                   'hwut.run', its inner bubbles decided
-                                   over there (ruling 3; the hand-over:
-                                   'run/orchestrate.py')
+    F(d) == {}                     NOT RUN, reason 'available'
+    first of F(d) is local         run here
+    first of F(d) not reachable    NOT RUN, reason 'reachable'
+    first of F(d) reachable        HANDED -- every directory handed to one
+                                   platform goes in ONE far 'hwut.run'
+                                   ('run/orchestrate.py'): the root, the
+                                   wish, '--as-platform' and the near
+                                   run's platform words
 
-REFUSED AT THE START (PlatformRefused): a 'platform' in an inner root
-(o-53), and -- where 'hwut-tools.rst' stands beside the outermost root
-(o-52) -- a tool announced or required that it does not explain.
+OVER THERE ('Wish.as_platform'), every directory is decided alike, and runs
+where it was decided for the platform handed to; the others are ELSEWHERE,
+passed by in silence.
 
-'local' ANNOUNCES ONLY WHAT IT HOLDS (E-226): a tool it declares whose
-'probe:' line in 'hwut-tools.rst' names a program not on PATH is not
-announced; every NOTE that the tool decides says so. A tool without a
-'probe:' line is taken as declared (o-50) -- a tool is an informal name,
-not a program.
+THE DECLARATION IS THE CONTRACT (R-5, R-7, amending E-226): a tool a
+platform declares whose 'probe:' line in 'hwut-tools.rst' finds a program
+missing -- on 'local' near, on the platform handed to over there -- stays
+announced; the cases of a directory requiring it FAIL, not run,
+'tool-not-provided' ('tool_absent_reason'). A tool without a 'probe:' line
+is taken as declared (o-50) -- a tool is an informal name, not a program.
 
-A bubble NOT RUN hides none of its inner bubbles (ruling 19): each is
-decided on its own, with the same S.
+REFUSED AT THE START (PlatformRefused): a 'platform' in any hwut.conf
+below the root (o-53), and -- where 'hwut-tools.rst' stands beside the
+root (o-52) -- a tool announced or required anywhere that it does not
+explain.
 
-OVER THERE, 'local' IS THE PLATFORM HANDED TO (THE RULE): a far run is
-told it by 'Wish.as_platform'; a bubble whose tools that platform
-announces -- or that the far run cannot check, the definitions out of
-its sight -- runs there as 'local'; the switch is not obeyed again.
-
-BELOW A BUBBLE, A DIRECTORY MAY REQUIRE MORE (o-57): 'entry_gate' answers
-for each directory of a bubble run here whether the platform it runs on
-announces everything the directory requires; one that does not is not
-entered, and said.
-
-THE BUBBLES ARE THE WALK'S: the one that governs the top -- the nearest
-'hwut-root.conf' at or above it -- and every inner one below, unless the
-wish says '--no-bubbles' (E-202). A bubble is named by its path from the
-top, '.' for the top's own, '..' and up for one above it.
+A 'hwut-root.conf' BELOW THE ROOT is another project, never walked from
+above (R-3). A directory is named by its path from the top, '.' for the
+top itself.
 ______________________________________________________________________________
 """
 import os
@@ -63,15 +56,16 @@ from dataclasses import dataclass
 
 from ..exploration.task_list     import SelectionError
 from ..exploration.tree_explorer import (ROOT_CONF_NAME, ascended_spec,
-                                         inner_root_tuple,
-                                         outermost_root_directory,
                                          root_conf_directory)
 from ...                         import platforms
 from .wish                       import LOCAL_PLATFORM
 
-RUN     = "run"
-NOT_RUN = "not-run"
-HANDED  = "handed"
+RUN       = "run"
+NOT_RUN   = "not-run"
+HANDED    = "handed"
+#  OVER THERE, A DIRECTORY DECIDED FOR ANOTHER PLATFORM (intend/45 R-4): the
+#  far run passes it by in silence -- the platform it was decided for runs it.
+ELSEWHERE = "elsewhere"
 
 @dataclass(frozen=True, slots=True)
 class CBubbleDecision:
@@ -89,6 +83,8 @@ class CBubbleDecision:
     tool_tuple:     tuple = ()   # what the platform taken announces
     absent_tuple:   tuple = ()   # of (tool, programs): 'local' declares
                                  # it, its probe finds not (E-226)
+    directory_tuple: tuple = ()  # HANDED, grouped: the test directories
+                                 # the far run takes, from the root
 
 
 class PlatformRefused(SelectionError):
@@ -101,89 +97,119 @@ TOOLS_FILE_NAME = "hwut-tools.rst"
 
 def decision_tuple(top, wish):
     """
-    RETURN: tuple of CBubbleDecision, every bubble the walk from 'top'
-            meets that is decided HERE -- outermost first, the one
-            governing 'top' first. A bubble inside one HANDED to a
-            platform is not among them: it is decided over there.
+    RETURN: tuple of CBubbleDecision, one: the ROOT's own -- the nearest
+            'hwut-root.conf' at or above 'top', the project (intend/45
+            R-1, R-2). Every directory below it is decided by the walk
+            ('decider', R-4).
 
-    Raises PlatformRefused where an inner root defines platforms or a
-    tool is not explained by 'hwut-tools.rst' (each named);
+    Raises PlatformRefused where a hwut.conf below the root says
+    'platform' (o-53) or a tool announced or required anywhere in the
+    project is not explained by 'hwut-tools.rst' (o-52), each named;
     RootConfMissing where no root bounds 'top'.
     """
     top       = os.path.abspath(top)
     shown     = _specified_shown(wish)
     specified = wish.specified_platform_set()
-    outermost = outermost_root_directory(top)
+    #  THE NEAREST ROOT IS THE PROJECT (intend/45 R-1, R-2): the climb
+    #  stops at it; a root above it is beyond the radar, one below it a
+    #  project of its own, never walked from here (R-3).
+    outermost = root_conf_directory(top)
     declared  = ascended_spec(outermost)[0].platform_tuple or ()
-    defined, absent = probed(declared, outermost)
-    path_list = [root_conf_directory(top)]
-    #  WALK ORDER: sorted component by component, as the walk descends --
-    #  an outer bubble before its inner ones, a sibling's after them.
-    if not wish.no_bubbles_f:
-        path_list.extend(sorted(inner_root_tuple(top),
-                                key=lambda path: path.split(os.sep)))
+    defined, absent = probed(declared, outermost,
+                             wish.as_platform or LOCAL_PLATFORM)
 
     refusal_list = []
-    read_list    = []
-    for path in path_list:
-        spec = ascended_spec(path)[0]
+    read_list    = [(outermost, _name_of(outermost, top),
+                     ascended_spec(outermost)[0].requires_tuple or ())]
+    #  EVERY hwut.conf OF THE PROJECT IS ASKED (intend/45 R-1): 'platform'
+    #  stands in the root alone (o-53); every tool required is explained
+    #  (o-52) -- below the root, wherever it is said.
+    for path, conf_spec in _conf_spec_tuple(outermost):
         name = _name_of(path, top)
-        if path != outermost and spec.platform_tuple:
+        if conf_spec.platform_tuple:
             refusal_list.append(
-                "%s/hwut-root.conf: 'platform' stands in the outermost "
-                "root alone (%s); here say 'requires = [ <tool> ... ]' "
-                "(intend/26 o-53)"
+                "%s/hwut.conf: 'platform' stands in the root alone (%s); "
+                "here say 'requires = [ <tool> ... ]' (intend/26 o-53)"
                 % (name, os.path.join(outermost, ROOT_CONF_NAME)))
-        read_list.append((path, name, spec.requires_tuple or ()))
+        if conf_spec.requires_tuple:
+            read_list.append((path, name, conf_spec.requires_tuple))
     refusal_list.extend(_unexplained_tuple(outermost, declared, read_list))
     if refusal_list:
         raise PlatformRefused(("\n" + " " * 9).join(refusal_list))
 
-    decision_list, handed_list = [], []
-    for path, name, required in read_list:
-        if any(path.startswith(outer + os.sep) for outer in handed_list):
-            continue
-        decision = _decided(path, name, required, defined, specified,
-                            shown, wish.as_platform, outermost, absent)
-        if decision.state == HANDED: handed_list.append(path)
-        decision_list.append(decision)
-    return tuple(decision_list)
+    #  THE ROOT'S OWN DECISION; every directory below is decided by the
+    #  walk ('decider', intend/45 R-4).
+    path, name, required = read_list[0]
+    return (_decided(path, name, required, defined, specified, shown,
+                     wish.as_platform, outermost, absent),)
+
+
+def _conf_spec_tuple(outermost):
+    """
+    RETURN: tuple of (str, DirectorySpec): every directory below the root
+            'outermost' -- a project of its own (a 'hwut-root.conf')
+            excluded, and what no walk enters -- whose 'hwut.conf' reads,
+            with what it says; walk order.
+    """
+    from ..exploration import finder, reader
+    from ....auxiliary.no_entry import entered
+    found = []
+    for here, name_list, _ in os.walk(outermost):
+        name_list[:] = entered(here, name_list, boundary_f=True)
+        if here == outermost: continue
+        text = finder.conf_text(here)
+        if text is None: continue
+        spec, _app_db, _fault_list = reader.read_conf(text, finder.CONF_NAME)
+        if spec is not None: found.append((here, spec))
+    return tuple(found)
+
+
+def decider(top, wish):
+    """
+    RETURN: function 'decide(directory, required)', the CBubbleDecision of
+            the ABSOLUTE 'directory' requiring the tools 'required' (what
+            it inherits and states, o-57) under 'wish' (intend/45 R-4):
+            RUN where the first defined platform announcing all of it,
+            among those specified, is 'local' -- over there: is the
+            platform handed to; HANDED or NOT_RUN 'reachable' where it is
+            another; NOT_RUN 'available' where none is; over there
+            ELSEWHERE where it is another than the one handed to.
+
+    Raises RootConfMissing where no root bounds 'top'.
+    """
+    top       = os.path.abspath(top)
+    outermost = root_conf_directory(top)
+    defined, absent = probed(ascended_spec(outermost)[0].platform_tuple
+                             or (), outermost,
+                             wish.as_platform or LOCAL_PLATFORM)
+    specified = wish.specified_platform_set()
+    shown     = _specified_shown(wish)
+
+    def decide(directory, required):
+        """RETURN: CBubbleDecision of 'directory' requiring 'required'."""
+        return _decided(directory, _name_of(directory, top),
+                        tuple(dict.fromkeys(required or ())), defined,
+                        specified, shown, wish.as_platform, outermost,
+                        absent)
+    return decide
 
 
 def governing_decision(directory, wish):
     """
-    RETURN: CBubbleDecision of the ONE bubble that governs 'directory' --
-            the nearest 'hwut-root.conf' at or above it -- for 'wish': a
-            face that runs one directory ('hwut.play') decides as
-            'hwut.run' does, inner bubbles aside.
+    RETURN: CBubbleDecision of 'directory' for 'wish' (intend/45 R-4): what
+            it requires -- inherited down the hwut.conf files and its own
+            -- decided as 'hwut.run' decides it: a face that runs one
+            directory ('hwut.play') runs it where the run would.
 
     Raises PlatformRefused as 'decision_tuple'; RootConfMissing where no
     root bounds it.
     """
-    from dataclasses import replace
-    return decision_tuple(directory, replace(wish, no_bubbles_f=True))[0]
-
-
-def entry_refusal(decision_db, top, directory, required):
-    """
-    RETURN: str, the NOTE that 'directory' is not entered -- 'NOTE
-            sub/: requires ghdl; linux does not hold it' -- where the
-            platform its bubble runs on does not announce every tool of
-            'required' (intend/26 o-57); None, else, and None where no
-            bubble decided here governs it.
-
-    'decision_db' maps a bubble's path to its CBubbleDecision; the
-    bubble governing 'directory' is the deepest at or above it.
-    """
-    owner = owner_of(decision_db, directory)
-    if owner is None or owner.state != RUN: return None
-    missing = tuple(t for t in required if t not in owner.tool_tuple)
-    if not missing: return None
-    held_by = owner.platform if owner.platform != LOCAL_PLATFORM \
-              else LOCAL_PLATFORM
-    return "NOTE  %s/: requires %s; %s does not hold it%s" \
-           % (_name_of(directory, top), ", ".join(missing), held_by,
-              absent_said(missing, owner.absent_tuple))
+    from ..exploration.tree_explorer import own_requires
+    decision_tuple(directory, wish)          # the refusals, said first
+    required = tuple(ascended_spec(directory)[0].requires_tuple or ()) \
+               + own_requires(directory)
+    return decider(root_conf_directory(directory), wish)(
+               os.path.abspath(directory), required)
 
 
 def case_required_tuple(app_set, test, choice):
@@ -201,6 +227,35 @@ def case_required_tuple(app_set, test, choice):
                + tuple(getattr(parameters, "requires", None) or ())))
 
 
+#  THE OPENER OF A REFUSAL THAT FAILS (intend/45 R-5): 'orchestrate' counts
+#  such a case as a FAIL, 'tool-not-provided', not as a refusal.
+TOOL_ABSENT_OPENER = "does not provide tool"
+
+
+def tool_absent_refusal_f(reason):
+    """RETURN: bool, the refusal 'reason' is a platform's breach of what it
+    declares (R-5) -- the case fails, not run."""
+    return (" %s " % TOOL_ABSENT_OPENER) in (reason or "")
+
+
+def tool_absent_reason(decision, required):
+    """
+    RETURN: str, 'platform local does not provide tool iverilog (not on
+            PATH: iverilog, vvp; hwut-tools.rst probe)' where the platform
+            of 'decision' declares a tool of 'required' its probe finds
+            missing (intend/45 R-5, R-7); None, else.
+    """
+    pair_list = [(tool, lacking) for tool, lacking in decision.absent_tuple
+                 if tool in required]
+    if not pair_list: return None
+    program_list = list(dict.fromkeys(p for _, lacking in pair_list
+                                      for p in lacking))
+    return "platform %s does not provide tool %s (not on PATH: %s; %s probe)" \
+           % (decision.platform or LOCAL_PLATFORM,
+              ", ".join(t for t, _ in pair_list), ", ".join(program_list),
+              TOOLS_FILE_NAME)
+
+
 def case_refusal(decision, app_set, test, choice):
     """
     RETURN: str, why the case may not run where its bubble runs -- 'requires
@@ -209,13 +264,16 @@ def case_refusal(decision, app_set, test, choice):
             None, where it may, or where 'decision' is None.
     """
     if decision is None: return None
+    required = tuple(decision.platform_tuple or ()) \
+               + case_required_tuple(app_set, test, choice)
+    absent = tool_absent_reason(decision, required)
+    if absent is not None: return absent
     missing = tuple(t for t in case_required_tuple(app_set, test, choice)
                     if t not in decision.tool_tuple)
     if not missing: return None
-    return "requires %s; %s does not hold it%s => a platform " \
+    return "requires %s; %s does not hold it => a platform " \
            "announcing it, '-p <platform>' (intend/26 o-59)" \
-           % (", ".join(missing), decision.platform or LOCAL_PLATFORM,
-              absent_said(missing, decision.absent_tuple))
+           % (", ".join(missing), decision.platform or LOCAL_PLATFORM)
 
 
 def owner_of(decision_db, directory):
@@ -233,15 +291,17 @@ def owner_of(decision_db, directory):
 
 def candidates_of(directory):
     """
-    RETURN: tuple of str, C(B) of the bubble governing 'directory' --
-            the platforms announcing what it requires, definitions'
-            order; ('local',) where it requires nothing.
+    RETURN: tuple of str, C of 'directory' (intend/45 R-4) -- the
+            platforms announcing all it requires, inherited down the
+            hwut.conf files and its own, definitions' order; ('local',)
+            where it requires nothing.
     """
-    outermost = outermost_root_directory(directory)
-    defined   = probed(ascended_spec(outermost)[0].platform_tuple or (),
-                       outermost)[0]
-    required  = ascended_spec(root_conf_directory(directory))[0] \
-                .requires_tuple or ()
+    from ..exploration.tree_explorer import own_requires
+    outermost = root_conf_directory(directory)
+    defined   = ascended_spec(outermost)[0].platform_tuple or ()
+    required  = tuple(dict.fromkeys(
+                    tuple(ascended_spec(directory)[0].requires_tuple or ())
+                    + own_requires(directory)))
     return candidate_tuple(required, defined)
 
 
@@ -276,18 +336,28 @@ def _decided(path, name, required, defined, specified, shown, as_platform,
             'reachable' or HANDED, as 'platforms.is_available' answers.
     """
     candidates = candidate_tuple(required, defined)
-    if as_platform is not None and required \
-       and (not defined or as_platform in candidates):
-        #  OVER THERE (ruling 3): handed here, it runs here.
-        tool_tuple = tools_of(defined, as_platform) or tuple(required)
+    feasible   = tuple(c for c in candidates if c in specified)
+    if as_platform is not None:
+        #  OVER THERE (intend/45 R-4): every directory is decided as the
+        #  near run decided it -- the same definitions, the same words --
+        #  and runs here where it was decided FOR THIS PLATFORM; the far
+        #  run passes the others by. Definitions out of sight: what was
+        #  handed runs.
+        if (feasible and feasible[0] == as_platform) \
+           or (not defined and required):
+            tool_tuple = tools_of(defined, as_platform) or tuple(required)
+            return CBubbleDecision(path=path, name=name,
+                                   platform_tuple=required or None,
+                                   required_tuple=(LOCAL_PLATFORM,),
+                                   feasible_tuple=(LOCAL_PLATFORM,),
+                                   state=RUN, platform=as_platform,
+                                   tool_tuple=tool_tuple,
+                                   absent_tuple=absent)
         return CBubbleDecision(path=path, name=name,
                                platform_tuple=required or None,
-                               required_tuple=(LOCAL_PLATFORM,),
-                               feasible_tuple=(LOCAL_PLATFORM,),
-                               state=RUN, platform=LOCAL_PLATFORM,
-                               tool_tuple=tool_tuple)
-    here = as_platform or LOCAL_PLATFORM          # what 'local' is
-    feasible = tuple(c for c in candidates if c in specified)
+                               required_tuple=candidates,
+                               feasible_tuple=feasible, state=ELSEWHERE)
+    here = LOCAL_PLATFORM
     common = dict(path=path, name=name, platform_tuple=required or None,
                   required_tuple=candidates, feasible_tuple=feasible,
                   absent_tuple=absent)
@@ -302,7 +372,6 @@ def _decided(path, name, required, defined, specified, shown, as_platform,
             text = "%s/: requires %s, held by %s; specified %s" \
                    % (name, ", ".join(required), ", ".join(candidates),
                       shown)
-        text += absent_said(required, absent)
         return CBubbleDecision(state=NOT_RUN, reason="available",
                                text=text, **common)
     platform   = feasible[0]
@@ -373,46 +442,25 @@ def probe_db(outermost):
     return db
 
 
-def probed(defined, outermost):
+def probed(defined, outermost, here=LOCAL_PLATFORM):
     """
-    RETURN: (defined, absent): 'defined' with the tools of 'local' cut to
-            those whose probe finds every program on PATH -- a tool
-            without a 'probe:' line kept, as declared (o-50) -- and
-            'absent', a tuple of (tool, programs not found), one pair
-            per tool cut (E-226). Only 'local' is probed: this is the
-            machine hwut runs on; another platform is what its recipe
-            makes.
+    RETURN: (defined, absent): 'defined' AS DECLARED -- the declaration is
+            the contract (intend/45 R-5): the same on both sides of a
+            hand-over, so both decide alike -- and 'absent', a tuple of
+            (tool, programs not on PATH), one pair per tool platform
+            'here' declares whose 'probe:' line in 'hwut-tools.rst' finds
+            a program missing ON THIS MACHINE. 'here' is 'local' near,
+            the platform handed to over there (R-7). A tool without a
+            'probe:' line is taken as declared (o-50).
     """
     db = probe_db(outermost) if defined else {}
     if not db: return defined, ()
-    result, absent = [], []
-    for name, spec in defined:
-        if name == LOCAL_PLATFORM:
-            kept = []
-            for tool in spec.get("tools", ()):
-                lacking = tuple(p for p in db.get(tool, ())
-                                if shutil.which(p) is None)
-                if lacking: absent.append((tool, lacking))
-                else:       kept.append(tool)
-            spec = dict(spec, tools=tuple(kept))
-        result.append((name, spec))
-    return tuple(result), tuple(absent)
-
-
-def absent_said(required, absent):
-    """
-    RETURN: str, ' -- local declares iverilog; not on PATH: vvp
-            (hwut-tools.rst probe)' for the tools of 'required' that
-            'absent' holds; '' where none.
-    """
-    pair_list = [(tool, lacking) for tool, lacking in absent
-                 if tool in required]
-    if not pair_list: return ""
-    program_list = list(dict.fromkeys(p for _, lacking in pair_list
-                                      for p in lacking))
-    return " -- local declares %s; not on PATH: %s (%s probe)" \
-           % (", ".join(t for t, _ in pair_list), ", ".join(program_list),
-              TOOLS_FILE_NAME)
+    absent = []
+    for tool in tools_of(defined, here):
+        lacking = tuple(p for p in db.get(tool, ())
+                        if shutil.which(p) is None)
+        if lacking: absent.append((tool, lacking))
+    return defined, tuple(absent)
 
 
 def _unexplained_tuple(outermost, defined, read_list):

@@ -32,9 +32,10 @@ from ...bookkeeper.api       import Bookkeeper
 from ..exploration.task_list_query import dir_wanted_f
 from ..exploration.tree_explorer   import (explore_tree, GATE_RUN,
                                            test_directory_name_tuple)
-from ..plan.bubble                 import (HANDED, NOT_RUN, case_refusal,
-                                           decision_tuple, entry_refusal,
-                                           owner_of)
+from ..plan.bubble                 import (HANDED, NOT_RUN, RUN,
+                                           case_refusal, decider,
+                                           decision_tuple, owner_of,
+                                           tool_absent_refusal_f)
 from ...                           import platforms
 from ..plan.wish                   import unrequired_platform_note_tuple
 from ..plan.form                   import E_NodeKind
@@ -171,9 +172,13 @@ class CDirectoryWork:
         #  keep, unacknowledged -- not run, counted, the remedy beside it.
         uncapped_db = {name: reason for name, reason in entry.refused_tuple
                        if uncapped_refusal_f(reason)}
+        #  A PLATFORM LACKING WHAT IT DECLARES (intend/45 R-5): the case
+        #  fails, not run, the reason beside it.
+        absent_db = {name: reason for name, reason in entry.refused_tuple
+                     if tool_absent_refusal_f(reason)}
         for name, reason in entry.refused_tuple:
             if name in no_good_tuple or name in unaccepted_tuple \
-               or name in uncapped_db: continue
+               or name in uncapped_db or name in absent_db: continue
             emit("refused", directory=directory, node=name, text=reason)
         #  SILENT, NOT REFUSED (X-SILENT): a candidate carrying no
         #  'hwut { }' and named under no 'apps'. Ordinary -- a helper,
@@ -184,7 +189,8 @@ class CDirectoryWork:
             emit("silent", directory=directory, node=name)
         emit("dir-begun", directory=directory,
              node_n=len(entry.plan) + len(unstood) + len(no_good_tuple)
-                    + len(unaccepted_tuple) + len(uncapped_db))
+                    + len(unaccepted_tuple) + len(uncapped_db)
+                    + len(absent_db))
         #  THE BOOK DOCUMENTS WHAT TESTS EXIST, and a test it records
         #  that no longer stands is a FAILING TEST, not a silence: the
         #  documentation and the tree disagree, and only a person can
@@ -203,6 +209,10 @@ class CDirectoryWork:
         for name, reason in uncapped_db.items():
             emit("run-ended", directory=directory, node=name,
                  node_kind="TEST", good=False, verdict="uncapped",
+                 detail=reason)
+        for name, reason in absent_db.items():
+            emit("run-ended", directory=directory, node=name,
+                 node_kind="TEST", good=False, verdict="tool-not-provided",
                  detail=reason)
 
         #  [MISDEP] nodes are terminal before anything runs (P-6):
@@ -291,10 +301,10 @@ class CDirectoryWork:
                    in sorted(report.failure_db().items())}
         good_f  = report.good_f() and not entry.fault_tuple \
                   and not unstood and not no_good_tuple and not uncapped_db \
-                  and not unaccepted_tuple
+                  and not unaccepted_tuple and not absent_db
         emit("dir-done", directory=directory, good=good_f,
              fail_db=fail_db)
-        return CDirDone(good_f, len(fail_db))
+        return CDirDone(good_f, len(fail_db) + len(absent_db))
 
 
 class CTreeScheduler:
@@ -344,10 +354,8 @@ class CTreeScheduler:
         #  found by the walk alone, so a viewer knows them before they
         #  report (spec/42 section 5).
         far_directory_list = [
-            os.path.normpath(os.path.join(decision.name, directory))
-                   .replace(os.sep, "/")
-            for decision, _ in tree_plan.handed_tuple
-            for directory in test_directory_name_tuple(decision.path)]
+            directory for decision, _ in tree_plan.handed_tuple
+            for directory in decision.directory_tuple]
         emit("tree-begun",
              directory_list=[entry.directory for entry in tree_plan]
                             + far_directory_list,
@@ -402,6 +410,7 @@ class CTreeScheduler:
         extra = {}
         if tree_plan.meta_hidden_n:  extra["meta_n"] = tree_plan.meta_hidden_n
         if tree_plan.wish_skipped_n: extra["skip_n"] = tree_plan.wish_skipped_n
+        if tree_plan.not_run_n:      extra["not_run_n"] = tree_plan.not_run_n
         emit("tree-done", good=good_f, fail_n=fail_n, **extra)
         queue.put_nowait(None)
 
@@ -667,19 +676,48 @@ def orchestrate(root, wish, build_interview=None, label_view=None):
     bubble's platform does not announce is not entered (o-57), its NOTE
     among the plan's warnings.
     """
-    decision_db = {decision.path: decision
-                   for decision in decision_tuple(root, wish)}
+    #  THE REFUSALS FIRST (o-52, o-53): raised before anything is walked.
+    decision_tuple(root, wish)
+    #  EACH DIRECTORY DECIDED ON ITS OWN (intend/45 R-4): the walk asks the
+    #  gate at every level; what runs here is entered, what is handed is
+    #  gathered BY PLATFORM -- one far run each -- what no platform takes
+    #  is not run, and said once, at its outermost directory.
+    decide       = decider(root, wish)
+    decision_db  = {}                  # path -> the decision RUN here
+    handed_db    = {}                  # platform -> [decision, ...]
+    not_run_list = []
+    candidate_list = []                # every directory's C, for '-p' notes
 
     def gate(path):
-        """RETURN: str, the walk's word for the bubble rooted at 'path'
-        -- its decision's state; GATE_RUN for one not decided here."""
-        decision = decision_db.get(os.path.abspath(path))
-        return GATE_RUN if decision is None else decision.state
+        """RETURN: str, GATE_RUN: every level is decided by 'entry_gate'."""
+        return GATE_RUN
+
+    def _below_f(decision, decision_list):
+        """RETURN: bool, 'decision' lies at or below one of 'decision_list'
+        decided ALIKE -- the same state, platform and reason: said once,
+        at the outermost."""
+        return any((decision.path == d.path
+                    or decision.path.startswith(d.path + os.sep))
+                   and (d.state, d.platform, d.reason)
+                       == (decision.state, decision.platform, decision.reason)
+                   for d in decision_list)
 
     def entry_gate(directory, required):
-        """RETURN: str, the NOTE that 'directory' is not entered, its
-        bubble's platform not holding all of 'required'; None, else."""
-        return entry_refusal(decision_db, root, directory, required)
+        """RETURN: None where 'directory' runs here; '' where it is handed
+        or, over there, another platform's; '' too where no platform takes
+        it -- its decision kept for the 'not-run' event."""
+        decision = decide(directory, required)
+        candidate_list.append(decision.required_tuple)
+        if decision.state == RUN:
+            decision_db[directory] = decision
+            return None
+        if decision.state == HANDED:
+            group = handed_db.setdefault(decision.platform, [])
+            if not _below_f(decision, group): group.append(decision)
+        elif decision.state == NOT_RUN:
+            if not _below_f(decision, not_run_list):
+                not_run_list.append(decision)
+        return ""
 
     #  WHAT THE WISH NEVER ASKED ABOUT IS NOT WALKED (2026-11-04): the
     #  directory rules ('--dir', '--exclude-dir') reach the WALK, as they
@@ -707,21 +745,53 @@ def orchestrate(root, wish, build_interview=None, label_view=None):
                                build_interview    = build_interview,
                                label_view         = label_view,
                                case_gate          = case_gate)
-    #  A '-p' NO BUBBLE REQUIRES (spec/42 section 2): one NOTE each, asked
-    #  of every bubble decided -- a bubble not walked requires all the same.
-    note_tuple = unrequired_platform_note_tuple(
-                     wish, (d.required_tuple for d in decision_db.values()))
-    #  A BUBBLE HANDED carries the far run's words: the wish re-rooted at
-    #  it ('Wish.far_argv'); one the wish wants nothing of is not handed.
+    #  A '-p' NO DIRECTORY REQUIRES (spec/42 section 2): one NOTE each,
+    #  asked of every directory decided.
+    note_tuple = unrequired_platform_note_tuple(wish, candidate_list)
+    #  ONE FAR RUN PER PLATFORM (intend/45 R-4): the project's root, the
+    #  wish as given, '--as-platform' and the near run's platform words --
+    #  so the far run decides every directory as the near run did, and
+    #  runs exactly those decided for it.
     handed_list = []
-    for decision in decision_db.values():
-        if decision.state != HANDED: continue
-        far_argv = wish.far_argv(decision.name, decision.platform)
-        if far_argv is not None: handed_list.append((decision, far_argv))
+    for platform, group in handed_db.items():
+        far_argv = wish.far_argv(".", platform)
+        if far_argv is None: continue
+        if wish.exclude_local_f: far_argv.append("--exclude-local")
+        for name in wish.platform_tuple: far_argv += ["-p", name]
+        directory_tuple = tuple(
+            os.path.normpath(os.path.join(d.name, t)).replace(os.sep, "/")
+            for d in group for t in test_directory_name_tuple(d.path))
+        handed_list.append((replace(group[0], path=os.path.abspath(root),
+                                    name=".",
+                                    directory_tuple=directory_tuple),
+                            far_argv))
+    #  WHAT NO PLATFORM TOOK IS COUNTED (intend/45 R-6, (b) 2026-11-15):
+    #  its test directories, each at the not-run decision that holds it --
+    #  not one below a deeper decision of another kind.
+    owner_list = sorted([d.path for d in not_run_list]
+                        + [d.path for g in handed_db.values() for d in g]
+                        + list(decision_db), key=len, reverse=True)
+    #  WHAT THE WISH NEVER ASKED ABOUT is neither said nor counted.
+    wanted_f = dir_wanted_f(wish, root)
+    not_run_n, said_list = 0, []
+    for decision in not_run_list:
+        mine_n = 0
+        for name in test_directory_name_tuple(decision.path):
+            path = os.path.normpath(os.path.join(decision.path, name))
+            owner = next((o for o in owner_list
+                          if path == o or path.startswith(o + os.sep)),
+                         None)
+            relative = os.path.relpath(path, root).replace(os.sep, "/")
+            if owner == decision.path \
+               and (wanted_f is None or wanted_f(relative)):
+                mine_n += 1
+        if mine_n:
+            not_run_n += mine_n
+            said_list.append(decision)
     return replace(tree_plan,
                    warning_tuple = tree_plan.warning_tuple + note_tuple,
-                   not_run_tuple = tuple(d for d in decision_db.values()
-                                         if d.state == NOT_RUN),
+                   not_run_tuple = tuple(said_list),
+                   not_run_n     = not_run_n,
                    handed_tuple  = tuple(handed_list))
 
 

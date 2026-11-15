@@ -32,25 +32,27 @@ PURPOSE: THE DECISION OF adm/WORK/spec/42-platforms.txt section 3 (plan/42
                                    { linux  tools = [iverilog, ghdl] } ]
                       no 'requires'                          C = {local}
     ./TEST            test-top.sh
-    none/             hwut-root.conf, no 'requires'          C = {local}
+    none/             hwut.conf, no 'requires'               C = {local}
     linux/            requires = [ ghdl ]                    C = {linux}
-    linux/inner/      hwut-root.conf, no 'requires'          C = {local}
+    linux/inner/      hwut.conf, inherits ghdl (o-57)        C = {linux}
     both/             requires = [ iverilog ]                C = {local, linux}
 
 CHOICES: local, refused, first, below, header, excluded, handed,
          untouched, stream, sigterm, play, book, far-empty, probe;
 
 local      S = {local}: '.', none/, both/ run here; linux/ NOT RUN,
-           'available'; its inner bubble runs here (ruling 19).
+           'available', and linux/inner/ with it: it inherits ghdl
+           (intend/45 R-4; no inner root, nothing replaces).
 refused    REFUSED at the call, named, nothing explored: a 'platform' in
-           an inner root (o-53); a tool 'hwut-tools.rst' beside the root
-           does not explain (o-52).
+           a hwut.conf below the root (o-53); a tool 'hwut-tools.rst'
+           beside the root does not explain (o-52).
 first      the FIRST DEFINED wins, '-p' narrows and never orders (o-58):
            '-p linux' -- both/ runs here, 'local' defined first; the
            definitions swapped -- both/ goes to linux.
 below      a 'hwut.conf' below none/ requires ghdl, which 'local' does
-           not announce: that directory is not entered, the NOTE says why
-           (o-57); its sibling runs.
+           not announce: that directory is decided on its own (intend/45
+           R-4) -- for linux, not specified: NOT RUN 'available'; its
+           sibling runs.
 header     a test's header requires ghdl, a choice's iverilog, another
            choice's ghdl (o-59): 'hwut.run' refuses the cases 'local'
            cannot hold, named in REFUSED, uncounted; the rest run;
@@ -60,22 +62,24 @@ excluded   '--exclude-local -p linux', S = {linux}, a podman stand-in
            linux/ and both/ NOT RUN, 'reachable'; every bubble requiring
            no tool NOT RUN, 'available'; nothing explored.
 handed     the same, the stand-in answering 0 -- the image stands:
-           linux/ and both/ HANDED, each with the far run's words ('--as-
-           platform=linux': over there its 'local' IS linux); linux/inner/
-           is decided over there -- not here, not walked.
+           linux/ and both/ HANDED in ONE far run (intend/45 R-4): the
+           root, the far run's words ('--as-platform=linux' and the near
+           run's platform words) -- over there every directory is decided
+           alike, and those decided for linux run.
 untouched  'hwut.run' itself, each S: the stream's 'not-run' lines, the
            RESULTS, and every file below a bubble not run -- the same
            before and after: no book, no 'TMP/', no 'OUT/' (ruling 21).
 
 stream     the hand-over, real: a 'podman' that is this machine ('run'
            changes to '-w' and executes the words after the image).
-           'hwut.run --exclude-local -p linux' against 'hwut.run' inside
-           linux/ alone: the same verdict per case -- the near run's
-           directories below 'linux/', each carrying 'platform' -- and
-           the same RESULTS; the inner bubble run over there too.
+           'hwut.run --exclude-local -p linux' against the far run's own
+           words run here at the root ('--as-platform=linux --exclude-
+           local -p linux'): the same verdict per case, each near one
+           carrying 'platform' -- both/, linux/ and linux/inner/ in ONE
+           far run (intend/45 R-4).
 sigterm    the near run ended by SIGTERM while the far run sleeps: the
            near run ends (128 + 15), the far process with it (E-55).
-play       'hwut.play' decides its directory's bubble as 'hwut.run' does
+play       'hwut.play' decides its directory as 'hwut.run' does
            (ruled 2026-11-03, "yes to play"): in linux/TEST without '-p',
            not run -- the NOTE, EMPTY; with '--exclude-local -p linux',
            handed -- the far play's lines relayed, its recording on this
@@ -94,15 +98,16 @@ book       after 'hwut.run' and 'hwut.run --exclude-local -p linux': each
            21): '(linux)' beside a case linux measured; in JSON, its
            'platform'.
 
-probe      'local' announces only what it holds (E-226, 2026-11-14):
-           'hwut-tools.rst' gives iverilog 'probe: hwut-bubble-probe'.
-           Not on PATH: both/ NOT RUN, its NOTE naming the program; a
-           directory below none/ requiring iverilog not entered, the same
-           words. A stand-in first on PATH: both/ runs here, as ever.
-           ghdl has no 'probe:' line: linux/ keeps its words. MEASURED
-           before (4e03ee5, the author's machine): 'local' declaring
-           iverilog without it installed -- 'build failed', 10 cases
-           'unexpected stderr'.
+probe      the declaration is the contract (intend/45 R-5, amending
+           E-226, 2026-11-15): 'hwut-tools.rst' gives iverilog 'probe:
+           hwut-bubble-probe'. Not on PATH: both/ and a directory below
+           none/ requiring iverilog run here as declared, their cases
+           FAIL 'platform local does not provide tool iverilog', the
+           program named. A stand-in first on PATH: they run. ghdl has
+           no 'probe:' line: linux/ keeps its words. MEASURED before
+           (4e03ee5, the author's machine): 'local' declaring iverilog
+           without it installed -- 'build failed', 10 cases 'unexpected
+           stderr'.
 
 EXPLORED counts the walk's own 'explore' per test directory: zero for a
 directory of a bubble not run -- nothing of it interviewed or read.
@@ -151,8 +156,10 @@ def tree(definitions=None, none_text=""):
                "linux/TEST": "test-b.sh", "linux/inner/TEST": "test-c.sh",
                "both/TEST": "test-d.sh"}
     for where, text in conf_db.items():
+        #  ONE ROOT, hwut.conf BELOW IT (intend/45 R-1, R-4).
         os.makedirs(os.path.join(root, where), exist_ok=True)
-        with open(os.path.join(root, where, "hwut-root.conf"), "w") as fh:
+        name = "hwut-root.conf" if where == "" else "hwut.conf"
+        with open(os.path.join(root, where, name), "w") as fh:
             fh.write("hwut {\n    %s\n}\n" % text)
     for where, name in test_db.items():
         os.makedirs(os.path.join(root, where, "GOOD"))
@@ -210,11 +217,20 @@ def decided(root, argv, path=None):
     for decision, far_argv in tree_plan.handed_tuple:
         print("    handed   %-14s %-10s far: hwut.run %s"
               % (decision.name, decision.platform, " ".join(far_argv)))
+        print("             takes: %s" % ", ".join(decision.directory_tuple))
     print("    PLANNED: %s" % ", ".join(e.directory for e in tree_plan))
     for name in ("TEST", "none/TEST", "linux/TEST", "linux/inner/TEST",
                  "both/TEST"):
         print("    EXPLORED %-18s %i" % (name, counted.count_db.get(name, 0)))
     for line in tree_plan.warning_tuple: print("    %s" % line)
+    #  A PLATFORM LACKING WHAT IT DECLARES (intend/45 R-5): the cases that
+    #  fail, not run, with the reason.
+    from hwut.engine.orchestrator.plan.bubble import tool_absent_refusal_f
+    for entry in tree_plan:
+        for name, reason in entry.refused_tuple:
+            if tool_absent_refusal_f(reason):
+                print("    FAIL     %s %s -- %s" % (entry.directory, name,
+                                                     reason))
 
 
 def podman_bin(status):
@@ -485,28 +501,32 @@ def test_stream():
     try:
         near_code, near_list, near_results = run_with_events(
             root, ["--exclude-local", "-p", "linux"], environment)
-        #  THE SAME BUBBLE RUN LOCALLY, as over there: its 'local' is linux.
+        #  THE FAR RUN'S OWN WORDS, run here (intend/45 R-4): at the
+        #  project's root, '--as-platform=linux' and the near run's
+        #  platform words -- it takes exactly what was decided for linux.
         for name in ("TMP", "OUT"):
-            for here, name_list, _ in os.walk(os.path.join(root, "linux")):
+            for here, name_list, _ in os.walk(root):
                 if name in name_list:
                     shutil.rmtree(os.path.join(here, name))
         local_code, local_list, local_results = run_with_events(
-            os.path.join(root, "linux"), ["--as-platform=linux"], environment)
+            root, ["--as-platform=linux", "--exclude-local", "-p", "linux"],
+            environment)
     finally:
         shutil.rmtree(root); shutil.rmtree(bin_dir)
-    near_linux = [line for line in verdict_list(near_list)
-                  if line.startswith("linux/")]
-    local_linux = verdict_list(local_list, "linux")
+    near_far = verdict_list(near_list)
+    local_far = verdict_list(local_list)
     print("near  [exit %i] %s" % (near_code, near_results))
-    for line in verdict_list(near_list): print("    %s" % line)
-    print("local [exit %i] %s   (in linux/)" % (local_code, local_results))
-    for line in local_linux: print("    %s" % line)
-    ok_f = [line.rsplit(" ", 1)[0] for line in near_linux] \
-           == [line.rsplit(" ", 1)[0] for line in local_linux] \
-           and all(line.endswith(" linux") for line in near_linux) \
-           and "linux/inner/TEST test-c.sh ok linux" in near_linux
-    print("%s: the bubble run there is the bubble run here, but for "
-          "'platform'." % ("SUCCESS" if ok_f else "FAILURE"))
+    for line in near_far: print("    %s" % line)
+    print("local [exit %i] %s   (the far run's words, at the root)"
+          % (local_code, local_results))
+    for line in local_far: print("    %s" % line)
+    ok_f = [line.rsplit(" ", 1)[0] for line in near_far] \
+           == [line.rsplit(" ", 1)[0] for line in local_far] \
+           and all(line.endswith(" linux") for line in near_far) \
+           and "linux/inner/TEST test-c.sh ok linux" in near_far
+    print("%s: what runs there is what runs here, but for 'platform'; one "
+          "far run takes every directory decided for linux."
+          % ("SUCCESS" if ok_f else "FAILURE"))
 
 
 def test_sigterm():
@@ -629,7 +649,7 @@ def test_probe():
         decided(root, [], first_on_path(bin_dir))
     finally:
         shutil.rmtree(root); shutil.rmtree(bin_dir)
-    print("SUCCESS: local announces only what its probe finds.")
+    print("SUCCESS: a declared tool its probe misses fails its cases, named.")
 
 
 def test_book():

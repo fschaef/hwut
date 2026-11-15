@@ -2736,8 +2736,8 @@ A bubble handed to a platform whose far wish selects nothing ends EMPTY: no faul
 engine/platforms '_status.py'; services RATIONALE E-221.
 
 [[bubble-local-probed]]
-'local' announces a tool it declares only where the 'probe:' line under that tool in 'hwut-tools.rst' finds every program on PATH; a directory requiring a tool so cut is not entered, its NOTE naming the missing programs. A tool without a 'probe:' line is taken as declared.
-engine/orchestrator/plan 'bubble.py'; services RATIONALE E-226.
+A tool a platform declares whose 'probe:' line in 'hwut-tools.rst' finds a program missing there stays declared; the cases requiring it FAIL, not run, 'platform <p> does not provide tool <t>', the programs named. A tool without a 'probe:' line is taken as declared.
+engine/orchestrator/plan 'bubble.py'; services RATIONALE E-226, E-228.
 
 [[concurrent-dispatch]]
 documents: engine/orchestrator/scheduler/README.txt, engine/orchestrator/scheduler/RATIONALE.txt

@@ -1,6 +1,6 @@
 $ (linux/TEST) hwut.play test-b.sh   [exit 3]
-    NOTE  ../: requires ghdl, held by linux; specified local
-    nothing played: the bubble is not run here
+    NOTE  linux/TEST/: requires ghdl, held by linux; specified local
+    nothing played: the directory is not run here
     OUT here: -
 $ (linux/TEST) hwut.play --exclude-local -p linux test-b.sh   [exit 0]
          1 | test-b.sh

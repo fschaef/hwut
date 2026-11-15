@@ -138,7 +138,8 @@ HELP = __doc__.split("\n", 2)[2].rsplit("_" * 10, 1)[0].rstrip() \
 #  not as a report the run never wrote.
 UNSTOOD_REPORT_SET = frozenset(("spec-broken", "test-vanished",
                                 "test-choice-vanished", "misdep",
-                                "no-good-file", "uncapped"))
+                                "no-good-file", "uncapped",
+                                "tool-not-provided"))
 
 
 class CRow:

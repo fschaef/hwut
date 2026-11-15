@@ -101,9 +101,12 @@ class CTreePlan:
     entry_tuple:   tuple
     fault_tuple:   tuple         # the WALK's own faults
     warning_tuple: tuple = ()    # findings that decide nothing
-    #  THE BUBBLES NOT RUN HERE (spec/42 section 3): CBubbleDecision, one
-    #  'not-run' event each, before the first run; nothing of them counted.
+    #  THE DIRECTORIES NOT RUN (spec/42 section 3; intend/45 R-4): a
+    #  CBubbleDecision at the outermost of each, one 'not-run' event each,
+    #  before the first run; 'not_run_n' their test directories, counted
+    #  at the end (R-6).
     not_run_tuple: tuple = ()
+    not_run_n:     int   = 0
     #  THE BUBBLES HANDED TO A PLATFORM (spec/42 sections 4, 5): pairs
     #  (CBubbleDecision, the far 'hwut.run's words), each run there.
     handed_tuple:  tuple = ()

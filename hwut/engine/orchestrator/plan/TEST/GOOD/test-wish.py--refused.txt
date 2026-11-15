@@ -29,6 +29,12 @@ REFUSED: '--fail' beside '--pass' can want nothing
 --- --since=1h --until=2h ---
 REFUSED: '--since=1h --until=2h': the window is empty -- 'until' must lie further back than 'since'
 
+--- --no-bubbles ---
+REFUSED: '--no-bubbles' is retired: no walk enters an inner 'hwut-root.conf' -- a project of its own (intend/45 R-3) => drop it
+
+--- --no-boundary ---
+REFUSED: '--no-boundary' is retired: an inner 'hwut-root.conf' is a project of its own, never walked from above (intend/45 R-3) => run hwut inside it
+
 --- -l slow --fail ---
 REFUSED: '--label slow' beside '--fail': a label expression or wishlist arguments, never both -- sets are combined in labels => 'hwut.labels.create <name> --fail ...', then '--label "slow AND <name>"'
 

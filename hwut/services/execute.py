@@ -62,17 +62,26 @@ from ..engine.orchestrator.plan.wish import WishError, parse_wish
 #  whose SUBJECT is directories takes the walk's words, and a person who
 #  learnt '--dir' on 'hwut.run' has learnt it here (disc-10, E-202).
 _WISH_TAKE_TUPLE = ("--dir", "--exclude-dir", "--no-bubbles",
-                    "--no-boundary")
+                    "--no-boundary")       # the last two: refused by name
 from ..auxiliary.no_entry import entered
 from ._exit import E_ExitCode
 from ..engine.procsitter.api import spawn
 from ..engine.orchestrator.run.adapter import script_config_of
 
 
-USAGE = "usage: hwut.execute [-i] [--default=<script>] [-q] [+x] " \
-        "[--no-bubbles] [--directory=<path>] <target> [<argument> ...]\n" \
-        "       hwut.execute [-q] [--dir|--exclude-dir <glob>]... [--directory=<path>] " \
-        "-c \"<commands>\""
+#  THE WISH'S SHARE IS THE WISH'S TABLE (2026-11-15): derived, never
+#  copied -- 'usage_token_tuple' filters 'plan/wish.py's tokens by what
+#  this face takes.
+from ._core import usage_line as _usage_line
+from ..engine.orchestrator.plan.wish import usage_token_tuple as _wish_tokens
+USAGE = "\n".join((
+    _usage_line("usage: hwut.execute",
+                ("[-i]", "[--default=<script>]", "[-q]", "[+x]")
+                + _wish_tokens(_WISH_TAKE_TUPLE)
+                + ("[--directory=<path>]", "<target>", "[<argument> ...]")),
+    _usage_line("       hwut.execute",
+                ("[-q]",) + _wish_tokens(_WISH_TAKE_TUPLE)
+                + ("[--directory=<path>]", '-c "<commands>"'))))
 
 HELP = """hwut.execute -- run one user-defined target over the tree
 

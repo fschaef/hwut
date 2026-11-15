@@ -8637,3 +8637,136 @@ CHECKED   services/TEST test-diff.sh [named]: a walk shows the differing
 MEASURED, LEFT  'hwut.merge --force' still asks '[t]ake ... ?' where stdin
           is an open pipe (c317557 alike): "for scripts" holds only with
           stdin closed.
+
+E-228  ONE PROJECT, ONE ROOT; EACH DIRECTORY DECIDES ITS PLATFORM;
+       A DECLARED TOOL LACKING FAILS                            (2026-11-15)
+------------------------------------------------------------------------------
+PROBLEM   MEASURED on c317557: four inner 'hwut-root.conf' in hwut's own
+          tree (support/, support/test_writing/python/TEST/,
+          support/remote/model/, support/remote/iverilog/). Beyond the
+          top's, they held nothing but o-54's work: an inner root's
+          'requires' REPLACES -- support/'s language-setup (17 entries),
+          ignore and app_defaults were copies of the top's (E-200's
+          "said here again"). The author: "my wish was to have a single
+          hwut-root.conf for a project that talks about platforms etc.
+          that is all others would have to become 'hwut.conf' files."
+DECISION  intend/45 R-1 .. R-7 (Frank-Rene, 2026-11-15):
+          R-1  one 'hwut-root.conf' per project.
+          R-2  the climb stops at the first root; beyond it nothing is
+               seen -- the platforms, the forest, the labels are the
+               nearest root's ('decision_tuple', 'forest_top', 'view_at').
+          R-3  a 'hwut-root.conf' below the root is another project:
+               never walked from above, by any walk --
+                   NOTE  world/: a project of its own (hwut-root.conf)
+                         => run hwut inside it
+          R-4  each directory decides: the first defined platform
+               announcing all it requires (inherited down the hwut.conf
+               files, added, o-57), among those specified, takes it
+               ('bubble.decider'). The near run enters what is decided
+               'local'; what is decided for another platform is handed in
+               ONE far run per platform -- the project's root mounted, the
+               wish as given, '--as-platform=<p>' and the near run's
+               platform words -- and over there every directory is
+               decided alike: the far run runs exactly those decided for
+               it (ELSEWHERE, passed by in silence). "All of the above
+               requires" is said once, in a non-TEST hwut.conf. BUBBLES
+               ARE RETIRED.
+          R-5  no platform takes it: not run ('available'); a platform
+               declaring a tool whose 'probe:' line finds a program
+               missing: its cases FAIL, not run --
+                   platform local does not provide tool iverilog (not on
+                   PATH: iverilog, vvp; hwut-tools.rst probe)
+               verdict 'tool-not-provided', ENVIRONMENT. AMENDS E-226:
+               the probe no longer withdraws the tool -- the declaration
+               is the contract, the same on both sides of a hand-over.
+          R-7  every platform probes itself: over there, the tools of
+               the platform handed to ('probed(..., as_platform)').
+          o-53 widened: 'platform' in any hwut.conf is refused; o-52
+          widened: every 'requires' of the project is explained.
+READ OUT  o-54 retired; E-200 retired but for its inside half (R-2); one
+          label view and one forest per project (spec 43 T-m amended);
+          the word 'bubble' leaves the output ('-p x: no directory below
+          requires it'). hwut's tree: the four inner roots gone;
+          support/remote/iverilog/hwut.conf requires iverilog; 30 language
+          directories (support/test_writing/*, support/demo/*) say their
+          'requires' once in a non-TEST hwut.conf; remote/model/TEST
+          ignores 'fake_agent.py'.
+COST      The bash and python ports and model run wherever hwut runs
+          (they sat in the support's bubble before); here, without
+          libvterm, their vterm cases fail as the python port's did.
+          ~40 pages moved, each read against R-1 .. R-7 before it was
+          re-recorded: test-bubble.py (14), test-platform-console.py (3),
+          test-book-defects-4.sh (5), -5.sh (1), test-platform.py (2),
+          test-faces.py (1), and the verdict tables (3).
+OPEN      R-6 (a directory no platform takes is counted refused) waits on
+          one sub-case the ruling did not see: such a directory is not
+          interviewed, so its CASES are not known. '--no-bubbles' and the
+          wishlist word '!<hwut-root>' now ask what is always so.
+CHECKED   engine/orchestrator/run/TEST test-bubble.py: 'stream' -- a real
+          hand-over, one far run taking both/, linux/, linux/inner/, the
+          same verdicts as the far run's own words run here; 'probe' --
+          the declared tool its probe misses fails the cases, named.
+
+E-229  WHAT NO PLATFORM TOOK IS COUNTED: ITS TEST DIRECTORIES      (2026-11-15)
+------------------------------------------------------------------------------
+PROBLEM   intend/45 R-6 (ruled (a), 2026-11-15) counts a directory no
+          platform takes; it is not interviewed, so its CASES are not
+          known (o-3). Before, RESULTS read the same whether support/ ran
+          or not -- the book's section 5 Q1, "a green run that measured
+          less".
+DECISION  (b), Frank-Rene 2026-11-15: its TEST directories.
+              RESULTS: 78 ok, 16 fail, 15 directories not run, ...
+          Counted at the not-run decision that holds each test directory
+          -- the outermost one decided alike; one below a deeper decision
+          of another kind (run here, handed) is not counted there. What
+          the wish's directory rules never asked about is neither said
+          nor counted ('dir_wanted_f'): '--dir support/test_writing/c'
+          says one NOTE, '1 directory not run'. Carried as the optional
+          'not_run_n' of 'tree-done' (as 'skip_n', 'meta_n'); the exit
+          status does not change.
+          THE ADD-ONLY PROMISE, HELD: a CSV line missing trailing optional
+          cells reads ('protocol/line.py') -- a line written before
+          'not_run_n' existed is no 'LineError'.
+COST      Every page whose RESULTS line follows a not-run directory moved
+          by that word: test-bubble.py header, stream, untouched;
+          test-platform-console.py available, handed, reachable;
+          test-platform-words.sh takes; the line's grammar in
+          test-line.py roundtrip and test-receiver.py format; the page's
+          own receiver (test-receiver.py) took the new keyword.
+GRAVEYARD (a) the cases the registers know -- stale where tests changed,
+          zero on a fresh checkout. (c) interview it anyway -- a compiled
+          test answers only once built, which needs the missing tool.
+
+E-230  '--no-bubbles' AND '!<hwut-root>' RETIRED, REFUSED BY NAME  (2026-11-15)
+------------------------------------------------------------------------------
+PROBLEM   intend/45 R-3: no walk enters an inner 'hwut-root.conf'. The word
+          that asked the walk to stay out (E-202) -- '--no-bubbles' on the
+          line, '!<hwut-root>' in a wishlist -- now asks what is always so.
+DECISION  (refuse, Frank-Rene 2026-11-15, intend/45 o-4), as
+          '--no-boundary' was (E-202):
+              REFUSED: '--no-bubbles' is retired: no walk enters an inner
+              'hwut-root.conf' -- a project of its own (intend/45 R-3) =>
+              drop it
+          a wishlist line '!<hwut-root>' (or '<hwut-root>') the same,
+          naming file and line, 'drop the line'. The usage lines and the
+          wish's help no longer name it; 'hwut.execute' refuses it by name.
+          '--no-boundary' keeps its refusal, its words brought to R-3.
+COST      The pages that showed the word in a usage line, a help text or a
+          wishlist moved.
+
+E-231  A FACE'S SHARE OF THE WISH: ITS USAGE DERIVED FROM THE ONE TABLE
+                                                                 (2026-11-15)
+------------------------------------------------------------------------------
+PROBLEM   The wish is read by one module ('plan/wish.py': 'parse_wish', the
+          wishlist reader); its usage tokens stand in one table
+          ('USAGE_TOKEN_TUPLE'). 'hwut.execute' takes a share of the words
+          ('_WISH_TAKE_TUPLE') and WROTE ITS OWN usage text -- the words
+          twice, once in the tuple, once in the text. Retiring
+          '--no-bubbles' (E-230) had to touch that copy by hand.
+DECISION  Frank-Rene, 2026-11-15 ("das hätte ich erwartet"): a face's usage
+          line is DERIVED from the central table, filtered by the words it
+          takes -- 'usage_token_tuple(take_tuple)'. 'hwut.execute' builds
+          both of its lines from it, wrapped by '_core.usage_line'.
+COST      'hwut.execute's usage now names '--dir' and '--exclude-dir' in
+          its first form too, where it takes them as well; its help pages
+          moved. 'test-wish.py take' prints each face's derived tokens.

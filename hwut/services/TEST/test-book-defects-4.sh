@@ -31,11 +31,11 @@
 #                 exit 0. MEASURED before: libvterm alone, then INSTALLED.
 # numeral         RQ-6: a number binding takes the longest numeral; '5.5'
 #                 is no 'int'. MEASURED before: 'count 5.5' bound n = 5.
-# nested-root     RQ-1, amended by RQ-9 (2026-10-27, E-200): an inner
-#                 'hwut-root.conf' closes a bubble: from inside it
-#                 governs; from above the walk ENTERS it under the inner
-#                 configuration alone; '--no-bubbles' stays out, with a
-#                 NOTE, and the retired '--no-boundary' is refused (E-202).
+# nested-root     RQ-1, RQ-9 (E-200), AMENDED by intend/45 R-2, R-3
+#                 (2026-11-15): an inner 'hwut-root.conf' is A PROJECT OF
+#                 ITS OWN -- from inside it governs, the climb stops at it;
+#                 from above no walk enters it, a NOTE says so; the
+#                 retired '--no-boundary' is refused (E-202).
 #                 MEASURED before RQ-1: walked from above under the outer
 #                 configuration -- one case, two verdicts; before RQ-9:
 #                 not walked from above, a NOTE.
@@ -273,10 +273,12 @@ with open(coverage_path(out, "test-gen.py"), "rb") as handle:
 PYEOF2
         ;;
     bubble-labels|bubble-features|bubble-fault)
-        #  RQ-9 (2026-10-27, services E-200): a 'hwut-root.conf' closes a
-        #  bubble -- from inside no way out, from outside every way in;
-        #  one case, one verdict wherever hwut is called. $WORK holds
-        #  TEST/test-top.sh; world/ is a bubble with world/TEST/test-w.sh.
+        #  RQ-9 (services E-200), AMENDED by intend/45 R-2, R-3
+        #  (2026-11-15): a 'hwut-root.conf' below the root is A PROJECT OF
+        #  ITS OWN -- from inside it governs and nothing above is seen;
+        #  from above it is not walked: its labels, features and faults
+        #  are its own. $WORK holds TEST/test-top.sh; world/ is another
+        #  project with world/TEST/test-w.sh.
         #  MEASURED before: from above, world/ was not walked (a NOTE);
         #  '--no-boundary' walked it, but '--label' gave its runs no
         #  label, '-F' refused without the outer feature file, and a
@@ -328,8 +330,9 @@ PYEOF2
         esac ;;
     wishlist-rules)
         #  E-202 (2026-10-27): a wishlist line may be a RULE -- '!<target>'
-        #  '--exclude', '<dir>/' '--dir', '!<dir>/' '--exclude-dir',
-        #  '!<hwut-root>' '--no-bubbles'; the last directory line matching
+        #  '--exclude', '<dir>/' '--dir', '!<dir>/' '--exclude-dir' --
+        #  '!<hwut-root>' is RETIRED, refused by name (intend/45 R-3,
+        #  services E-230); the last directory line matching
         #  decides. MEASURED before: every line was a wanted target --
         #  '!a/vendor/' selected nothing, silently.
         for d in a/TEST a/vendor/TEST a/vendor/keep/TEST world/TEST; do

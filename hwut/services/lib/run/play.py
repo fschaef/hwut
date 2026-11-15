@@ -291,6 +291,8 @@ def _decided_elsewhere(directory, wish, arguments, word_list, write):
     from ....engine.orchestrator.plan.bubble import (HANDED, NOT_RUN,
                                                      PlatformRefused,
                                                      governing_decision)
+    from ....engine.orchestrator.exploration.tree_explorer import \
+        root_conf_directory
     try:
         decision = governing_decision(directory, wish)
     except PlatformRefused as error:
@@ -298,17 +300,12 @@ def _decided_elsewhere(directory, wish, arguments, word_list, write):
         return E_ExitCode.REFUSED
     except RootConfMissing:
         return None                     # said where the play reads its tree
+    #  THE DIRECTORY IS DECIDED AS THE RUN DECIDES IT (intend/45 R-4).
     if decision.state == NOT_RUN:
         write("NOTE  %s" % decision.text)
-        write("nothing played: the bubble is not run here")
+        write("nothing played: the directory is not run here")
         return E_ExitCode.EMPTY
-    if decision.state != HANDED:
-        #  A DIRECTORY REQUIRING MORE THAN ITS BUBBLE (intend/26 o-57).
-        text = _entry_refused_text(directory, decision)
-        if text is None: return None
-        write(text)
-        write("nothing played: the directory is not entered here")
-        return E_ExitCode.EMPTY
+    if decision.state != HANDED: return None
     name, spec = decision.platform, decision.spec
     ready_f, why = platforms.start(name, spec, write)
     if not ready_f:
@@ -320,7 +317,9 @@ def _decided_elsewhere(directory, wish, arguments, word_list, write):
     for flag in ("raw", "pyped", "stderr", "plain", "all"):
         if getattr(arguments, flag): far_argv.append("--" + flag)
     try:
-        status = platforms.relay(name, spec, decision.path,
+        #  THE PROJECT'S ROOT IS MOUNTED: the far play climbs to it.
+        status = platforms.relay(name, spec,
+                                 root_conf_directory(directory),
                                  os.path.abspath(directory), far_argv, write)
     finally:
         platforms.stop(name, spec)
@@ -343,24 +342,6 @@ def _requires_refusal(directory, wish, app_set, test, choice):
     except Exception:                       # refused or unbounded: said
         return None                         # where the play decides
     return case_refusal(decision, app_set, test, choice)
-
-
-def _entry_refused_text(directory, decision):
-    """
-    RETURN: str, the NOTE that 'directory' is not entered -- the platform
-            its bubble runs on does not announce every tool the directory
-            requires, from the confs above and its own (intend/26 o-57);
-            None, else.
-    """
-    from ....engine.orchestrator.exploration.tree_explorer import (
-        ascended_spec, own_requires)
-    from ....engine.orchestrator.plan.bubble import entry_refusal
-    required = tuple(dict.fromkeys(
-                   tuple(ascended_spec(directory)[0].requires_tuple or ())
-                   + own_requires(directory)))
-    if not required: return None
-    path = os.path.abspath(directory)
-    return entry_refusal({decision.path: decision}, path, path, required)
 
 
 def _faults_spare(fault_tuple, app_set, wanted_tuple, write):

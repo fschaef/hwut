@@ -84,6 +84,7 @@ class E_Failure(Enum):
     TEST_VANISHED               = "test-vanished"
     UNACCEPTED                  = "unaccepted"
     UNCAPPED                    = "uncapped"
+    TOOL_NOT_PROVIDED           = "tool-not-provided"
     DISK_SHORT                  = "disk-short"
     UNEXPECTED_STDERR           = "unexpected-stderr"
     UNSTABLE                    = "unstable"
@@ -257,6 +258,7 @@ _brief_failure_db = {
     _F.DISPLAY_TARGET_UNREACHABLE:  (_C.ENVIRONMENT, "no-display"),
     _F.UNSUPPORTED:                 (_C.ENVIRONMENT, "failed"),
     _F.UNCAPPED:                    (_C.ENVIRONMENT, "uncapped"),
+    _F.TOOL_NOT_PROVIDED:           (_C.ENVIRONMENT, "no-tool"),
     _F.DISK_SHORT:                  (_C.ENVIRONMENT, "no-disk"),
 }
 
@@ -563,6 +565,14 @@ failure_db = MappingProxyType({f.failure_id: f for f in (
     _failure(_F.ACQUISITION_FAILED, "dependency not acquired",
              "A dependency's acquisition command failed.",
              "Run the command by hand to see why."),
+    _failure(_F.TOOL_NOT_PROVIDED, "platform does not provide tool; not run",
+             "The platform this directory runs on declares a tool it "
+             "requires, and the tool's 'probe:' line in 'hwut-tools.rst' "
+             "finds a program missing on that platform: the declaration "
+             "is the contract, its breach a failing case (intend/45 R-5, "
+             "R-7).",
+             "Install what the reason names on that platform, or take the "
+             "tool out of its 'tools' in 'hwut-root.conf'."),
     _failure(_F.UNCAPPED, "cap not enforceable here; not run",
              "The test states a cap the supervisor cannot watch on this "
              "machine, and 'hwut-root.conf' does not acknowledge it: the "

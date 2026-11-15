@@ -175,8 +175,28 @@ USAGE_TOKEN_TUPLE = ("[--fail]", "[--pass]", "[--since=<point>]",
                      "[--dir <glob>]...",
                      "[--exclude-dir <glob>]...",
                      "[--wishlist <file>]...", "[-l|--label <expr>]",
-                     "[--language=<name>]...", "[--faster-than=<sec>]",
-                     "[--no-bubbles]")
+                     "[--language=<name>]...", "[--faster-than=<sec>]")
+
+_USAGE_WORD_RE = re.compile(r"-{1,2}[A-Za-z][\w-]*")
+
+
+def usage_token_tuple(take_tuple=None):
+    """
+    RETURN: tuple of str, the tokens of 'USAGE_TOKEN_TUPLE' a face that
+            takes the wish's words 'take_tuple' shows in its usage line --
+            each token whose option words ('-l', '--label') stand in
+            'take_tuple' -- in the table's order; the whole table where
+            'take_tuple' is None.
+
+    ONE TABLE, EVERY USAGE LINE (2026-11-15): a face taking a share of the
+    wish derives its line from here, so a word added, renamed or retired
+    in the table moves every face that shows it -- never a hand-written
+    copy of the words.
+    """
+    if take_tuple is None: return USAGE_TOKEN_TUPLE
+    return tuple(token for token in USAGE_TOKEN_TUPLE
+                 if set(_USAGE_WORD_RE.findall(token)) & set(take_tuple))
+
 
 #  THE PLATFORM WORDS (spec/42 section 2): WHERE the selected runs run.
 #  Read by the faces that run a test -- 'hwut.run', 'hwut.play' -- and by
@@ -234,7 +254,6 @@ HELP = """SELECTION -- the wish; an absent keyword asks nothing
                             !<target>       not wanted ('--exclude')
                             <dir-glob>/     wanted ('--dir')
                             !<dir-glob>/    not entered ('--exclude-dir')
-                            !<hwut-root>    '--no-bubbles'
                         the last directory line matching decides; a
                         list names no set -- no 'label:' line
     --glob <target>     a target: a file name, or a file name and a
@@ -256,10 +275,6 @@ HELP = """SELECTION -- the wish; an absent keyword asks nothing
                         (it warns instead)
     --language=<name>   the runs of test applications of that language;
                         several are a union, narrowing against the rest
-    --no-bubbles        do not enter an inner 'hwut-root.conf' (RQ-9):
-                        by default the walk enters every bubble below,
-                        each under its own configuration. Selects
-                        nothing by itself
     --faster-than=<seconds>
                         the runs this machine last saw finish faster
                         than that; one this machine never saw is not
@@ -536,7 +551,9 @@ def parse_wish(argv, digest_f=False, take_tuple=None,
             family_word = argument
         if   argument == "--fail":  fail_f = True
         elif argument == "--unaccepted": unaccepted_f = True
-        elif argument == "--no-bubbles": no_bubbles_f = True
+        elif argument == "--no-bubbles":
+            #  RETIRED (intend/45 o-4, E-230): no walk enters an inner root.
+            raise WishError(NO_BUBBLES_RETIRED_TEXT)
         elif argument == "--no-boundary":
             #  RETIRED (RQ-9, E-202): it asked what every walk now does.
             raise WishError(NO_BOUNDARY_RETIRED_TEXT)
@@ -766,7 +783,7 @@ def unrequired_platform_note_tuple(wish, required_iterable):
     required_set = set()
     for name_tuple in required_iterable:
         required_set.update(name_tuple or (LOCAL_PLATFORM,))
-    return tuple("NOTE  -p %s: no bubble below requires it" % name
+    return tuple("NOTE  -p %s: no directory below requires it" % name
                  for name in wish.platform_tuple
                  if name not in required_set)
 
@@ -855,10 +872,16 @@ def _label_remedy(first, second, either_form):
 #  A LABEL LINE OF A WISHLIST (E-206): 'label: <expression>'.
 _LABEL_LINE_RE = re.compile(r"^label\s*:(.*)$")
 
-#  '--no-boundary' asked, before RQ-9, what every walk now does.
+#  '--no-boundary' and '--no-bubbles' asked what no walk does, or what
+#  every walk does (intend/45 R-3): an inner 'hwut-root.conf' is another
+#  project, never walked from above.
 NO_BOUNDARY_RETIRED_TEXT = (
-    "'--no-boundary' is retired: a walk enters every inner "
-    "'hwut-root.conf' (RQ-9) => drop it; '--no-bubbles' stays out")
+    "'--no-boundary' is retired: an inner 'hwut-root.conf' is a project "
+    "of its own, never walked from above (intend/45 R-3) => run hwut "
+    "inside it")
+NO_BUBBLES_RETIRED_TEXT = (
+    "'--no-bubbles' is retired: no walk enters an inner 'hwut-root.conf' "
+    "-- a project of its own (intend/45 R-3) => drop it")
 
 
 @dataclass(frozen=True)
@@ -913,7 +936,6 @@ def _wishlist_read(file_name, digest_f):
         !<target>             not wanted               '--exclude'
         <dir-glob>/           a directory wanted       '--dir'
         !<dir-glob>/          a directory not entered  '--exclude-dir'
-        !<hwut-root>          no inner bubble entered  '--no-bubbles'
     A LIST NAMES NO SET (intend/three-worlds, ruled 2026-10-31): a
     'label:' line -- E-206's, retired -- is refused by name; a set by
     name is a label, combined in labels.
@@ -983,14 +1005,12 @@ def _wishlist_read(file_name, digest_f):
             if not text: raise refused("'!' negates nothing")
         if text.startswith("<") and text.endswith(">"):
             if text != BUBBLE_WORD:
-                raise refused("'%s' is no word of a wishlist; the one "
-                              "reserved word is '!%s'" % (text, BUBBLE_WORD))
-            if not negated_f:
-                raise refused("'%s' alone asks the default -- every walk "
-                              "enters inner bubbles; '!%s' stays out"
-                              % (BUBBLE_WORD, BUBBLE_WORD))
-            no_bubbles_f = True
-            continue
+                raise refused("'%s' is no word of a wishlist" % text)
+            #  RETIRED (intend/45 o-4, E-230), with '--no-bubbles'.
+            raise refused("'%s%s' is retired: no walk enters an inner "
+                          "'hwut-root.conf' -- a project of its own "
+                          "(intend/45 R-3) => drop the line"
+                          % ("!" if negated_f else "", BUBBLE_WORD))
         tag   = None
         match = _DIGEST_SUFFIX_RE.search(text)
         if match is not None:

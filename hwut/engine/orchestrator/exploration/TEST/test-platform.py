@@ -38,16 +38,16 @@ CHOICES: reads, bubble, root-only, tools, requires, tools-faults, and one
 reads           "local" and a 'container' entry: the tuple of (name,
                 spec) in the list's order, and it reaches the bubble's
                 test directory.
-bubble          an inner bubble with no 'platform' decides alone: its
-                test directory carries none, the outer one's list stops
-                at its root (rulings 10, 19).
+bubble          an inner 'hwut-root.conf' is a project of its own: not
+                walked from above (intend/45 R-3, 2026-11-15) -- only the
+                root's test directory is reached.
 root-only       'platform' in a tree level's 'hwut.conf' and in a test
                 directory's own: refused, the root's alone.
 tools           'tools' on each entry, 'local' with 'tools' alone (intend/26
                 o-50, o-56): kept with the entry, a tuple.
 requires        'requires' in the root, added to by a tree level's
-                'hwut.conf' and a test directory's own, replaced by an
-                inner root (o-54, o-57).
+                'hwut.conf' and a test directory's own (o-57); an inner
+                root is another project, not walked (intend/45 R-3).
 tools-faults    'tools' and 'requires' that do not read: refused by name.
 not-list .. value-no-string
                 one fault each: the shape, the bare name, the name, the
@@ -113,7 +113,7 @@ def test_reads():
 
 
 def test_bubble():
-    """RETURN: None. An inner bubble with no 'platform' of its own."""
+    """RETURN: None. An inner root: a project of its own, not walked."""
     walked("platform = [ %s ]" % LINUX,
            {"inner/hwut-root.conf":     "hwut {\n}\n",
             "inner/TEST/test-b.py":     '# @hwut { title = "B" }\n'})
@@ -137,7 +137,7 @@ def test_tools():
 
 
 def test_requires():
-    """RETURN: None. 'requires' added down, replaced at an inner root."""
+    """RETURN: None. 'requires' added down; an inner root not walked."""
     walked('requires = ["iverilog"]',
            {"sub/hwut.conf":          'hwut { requires = ["ghdl"] }\n',
             "sub/TEST/test-b.py":     '# @hwut { title = "B" }\n',

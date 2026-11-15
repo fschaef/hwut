@@ -29,8 +29,8 @@
 --- --exclude support/a/b.py --exclude z/q.py   ---
     far: --as-platform=linux --exclude a/b.py
 
---- -l f/display --no-bubbles   ---
-    far: --as-platform=linux --no-bubbles --label f/display
+--- -l f/display   ---
+    far: --as-platform=linux --label f/display
 
 --- --language=c --since=2h --faster-than=2.5 --unaccepted   ---
     far: --as-platform=linux --unaccepted --since=2h --language=c --faster-than=2.5

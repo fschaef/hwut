@@ -5,6 +5,14 @@ spec/42-platforms -- THE FIRST RELEASE: 'local' AND 'container', 'support/'
 
 VERSION: 9
 
+AMENDED 2026-11-15 by intend/45 (services E-228): ONE PROJECT, ONE ROOT --
+the BUBBLE of this spec is retired. Section 3's decision is taken per
+DIRECTORY (what it requires, inherited and its own), not per inner root;
+section 4's hand-over is ONE far run per platform at the project's root;
+section 8's support is no bubble: its language directories each say their
+'requires' in a non-TEST hwut.conf. Where this text says 'bubble', read
+'directory' and intend/45 R-1 .. R-7.
+
 COMPONENTS: engine/orchestrator (exploration: the conf key, the walk;
             plan: the wish's '-p'; run: handing a bubble over),
             engine/platforms (NEW: the helper of ruling 14),

@@ -52,6 +52,7 @@ test-app-wall-clock-exceeded   execution    killed
 test-choice-vanished           book         no-choice
 test-failed                    deviation    -
 test-vanished                  book         no-app
+tool-not-provided              environment  no-tool
 unaccepted                     nominal      unaccepted
 uncapped                       environment  uncapped
 unexpected-stderr              execution    stderr

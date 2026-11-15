@@ -1,5 +1,5 @@
 $ (no -p)
-    REFUSED: none/hwut-root.conf: 'platform' stands in the outermost root alone (<root>/hwut-root.conf); here say 'requires = [ <tool> ... ]' (intend/26 o-53)
+    REFUSED: none/hwut.conf: 'platform' stands in the root alone (<root>/hwut-root.conf); here say 'requires = [ <tool> ... ]' (intend/26 o-53)
     EXPLORED: nothing
 $ (no -p)
     REFUSED: platform 'linux' announces 'ghdl'; hwut-tools.rst does not explain it -- add '[[ghdl]]'

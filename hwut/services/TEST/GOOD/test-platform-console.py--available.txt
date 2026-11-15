@@ -1,9 +1,8 @@
 $ hwut.run (no -p)   [exit 0]
-    DIRECTORIES  (counts: 4 ok, 0 fail)
+    DIRECTORIES  (counts: 3 ok, 0 fail)
        +--- TEST . . . . . . . . . . . . . . . . . . . . . . .       [OK]      1/1
        +--- both/TEST . . . . . . . . . . . . . . . . . . . . .      [OK]      1/1
-       +---  linux/  [PLATFORM not available]  requires ghdl, held by linux; specified local
-       |   '--- inner/TEST . . . . . . . . . . . . . . . . . .       [OK]      1/1
+       +--- linux/  [PLATFORM not available]  requires ghdl, held by linux; specified local
        '--- none/TEST . . . . . . . . . . . . . . . . . . . . .      [OK]      1/1
-    RESULTS: 4 ok, 0 fail
+    RESULTS: 3 ok, 0 fail, 2 directories not run
 <hwut-end>

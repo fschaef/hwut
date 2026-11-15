@@ -1,10 +1,10 @@
 $ (no -p)
     not-run  linux          ''         available linux/: requires ghdl, held by linux; specified local
-    PLANNED: TEST, both/TEST, linux/inner/TEST, none/TEST
+    PLANNED: TEST, both/TEST, none/TEST
     EXPLORED TEST               1
     EXPLORED none/TEST          1
     EXPLORED linux/TEST         0
-    EXPLORED linux/inner/TEST   1
+    EXPLORED linux/inner/TEST   0
     EXPLORED both/TEST          1
 SUCCESS: decided, the inner bubble of a bubble not run run here.
 <hwut-end>

@@ -5,6 +5,8 @@ Born 2026-11-15, in conversation. Measured on c317557. Takes up the book's
 "root is a cut" note (2026-11-14, Ch. 12 "Only the Outermost Root Defines"
 left open there) and today's iverilog failure (E-226).
 
+BUILT 2026-11-15 on 45dcaf4 (services E-228, E-229, E-230): R-1 .. R-8.
+
 Everything marked RULED is Frank-Rene's; everything else is read out of
 it (STRIKE WHAT IS OVER-READ).
 
@@ -96,6 +98,8 @@ R-6  A DIRECTORY NO PLATFORM CAN TAKE IS COUNTED REFUSED (o-1 (a),
      refused'), the directory is marked in the final tree -- as o-59
      counts a case refused for its header. Answers the book's D-84 and
      its section 5 Q1.
+     WHAT IS COUNTED (o-3 (b), 2026-11-15): its TEST directories --
+     'RESULTS: ..., 15 directories not run' (services E-229).
 
 R-7  EVERY PLATFORM CHECKS ITSELF (o-2 (b), 2026-11-15: "A container is
      a platform"). hwut over there probes the tools of the platform it
@@ -112,6 +116,9 @@ can be a platform: container, remote interaction socket/infra ..."):
   execution (support/remote, hwut_remote) is today a TEST talking to an
   agent over a link, not a platform kind; whether a socket or an infra
   host becomes a kind is not ruled.
+
+R-8  '--no-bubbles' AND '!<hwut-root>' REFUSED BY NAME (o-4, 2026-11-15:
+     "refuse"), as '--no-boundary' (E-202); services E-230.
 
 READ OUT (strike what is over-read):
   - o-54 retired: no inner root, nothing replaces. o-53 stands ('platform'

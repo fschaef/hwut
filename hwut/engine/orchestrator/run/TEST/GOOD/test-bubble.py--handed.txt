@@ -1,8 +1,7 @@
 $ --exclude-local -p linux
     not-run  .              ''         available ./: requires no tool -- runs on local; specified linux
-    not-run  none           ''         available none/: requires no tool -- runs on local; specified linux
-    handed   both           linux      far: hwut.run --as-platform=linux
-    handed   linux          linux      far: hwut.run --as-platform=linux
+    handed   .              linux      far: hwut.run --as-platform=linux --exclude-local -p linux
+             takes: both/TEST, linux/TEST, linux/inner/TEST
     PLANNED: 
     EXPLORED TEST               0
     EXPLORED none/TEST          0

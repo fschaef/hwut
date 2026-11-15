@@ -35,10 +35,11 @@ tree      the forest with titles, roots first, children indented, the
           per line; a subtree; an id that stands nowhere, refused with
           'did you mean'; a word it does not take.
 
-bubbles   a bubble without a forest of its own is the forest's above: its
-          links are judged there, called inside it too; a bubble with one
-          begins its own features (the showcase, 2026-11-08): not walked
-          from above, NOTEd.
+bubbles   a 'hwut-root.conf' below the root is another project (intend/45
+          R-1, R-3, 2026-11-15, amending spec 43 T-m): from above not
+          walked, NOTEd, with a forest or without; inside one without a
+          forest the faces refuse, naming 'hwut.features.init'; one with
+          its own forest answers for itself.
 
 prototypes (intend/44) the tree shows the instances where their owners
           stand, each with the title that documents it -- its own block,

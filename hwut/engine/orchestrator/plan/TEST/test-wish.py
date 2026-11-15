@@ -198,8 +198,7 @@ def test_parsing():
                   "--glob", "quick-[0-9].py"],
                  ["--fail", "--directory=x", "some-file.py"],
                  ["-l", "f/display AND NOT slow"],
-                 ["-l", "f/demo-*+cover-* OR f/port+receive"],
-                 ["-l", "mine", "--no-bubbles"]):
+                 ["-l", "f/demo-*+cover-* OR f/port+receive"]):
         wish, rest = parse_wish(argv)
         banner(" ".join(argv) or "(nothing)")
         print("    wish : %s" % wish)
@@ -223,7 +222,10 @@ def test_refused():
     for argv in (["--since=2"], ["--since=xh"], ["--since="],
                  ["--since"], ["--until"], ["--glob"], ["--since=-1h"],
                  ["--until=noon"], ["--fail", "--pass"],
-                 ["--since=1h", "--until=2h"]):
+                 ["--since=1h", "--until=2h"],
+                 #  RETIRED (intend/45 R-3, services E-230): no walk enters
+                 #  an inner root.
+                 ["--no-bubbles"], ["--no-boundary"]):
         banner(" ".join(argv))
         try:
             parse_wish(argv)
@@ -354,7 +356,7 @@ def test_take():
         ("takes '--label': both spellings, '=' forms",
          ["-l=mine", "--glob=z"], ("--label",), False),
         ("the walk's words, an operand ending (hwut.execute)",
-         ["-i", "--dir", "a", "--exclude-dir=a/b", "--no-bubbles",
+         ["-i", "--dir", "a", "--exclude-dir=a/b",
           "build", "--dir", "z", "-q"], execute, True),
         ("an operand ending: a value is no operand",
          ["--dir", "build", "-c", "ls -l", "--dir", "a"], execute, True),
@@ -370,6 +372,10 @@ def test_take():
                                    if wish.no_bubbles_f
                                    and wish.states_nothing_f() else ""))
         print("    rest : %s" % (", ".join(rest) or "-"))
+        #  THE FACE'S USAGE TOKENS, derived from the one table (2026-11-15).
+        from hwut.engine.orchestrator.plan.wish import usage_token_tuple
+        print("    usage: %s" % (" ".join(usage_token_tuple(take_tuple))
+                                 or "-"))
 
 
 def test_platform():
@@ -382,8 +388,6 @@ def test_platform():
         ("'--exclude-local' with '-p'",
          ["--exclude-local", "-p", "linux"], {"platform_f": True}),
         ("'-p local': what no '-p' says", ["-p", "local"],
-         {"platform_f": True}),
-        ("beside '--no-bubbles'", ["--no-bubbles", "-p", "linux"],
          {"platform_f": True}),
         ("a face taking the platform words alone (hwut.play)",
          ["-p", "linux", "--fail", "test-a.py", "one"],
@@ -437,7 +441,7 @@ def test_far():
             (["--dir", "demo"], []),
             (["--dir", "support/demo", "--exclude-dir", "support/demo/go"], []),
             (["--exclude", "support/a/b.py", "--exclude", "z/q.py"], []),
-            (["-l", "f/display", "--no-bubbles"], []),
+            (["-l", "f/display"], []),
             (["--language=c", "--since=2h", "--faster-than=2.5",
               "--unaccepted"], [])):
         wish, _ = parse_wish(argv, platform_f=True)

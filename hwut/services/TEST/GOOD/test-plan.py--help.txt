@@ -9,7 +9,7 @@ $ hwut.plan --help
                   [--glob <target>]... [--exclude <target>]...
                   [--dir <glob>]... [--exclude-dir <glob>]...
                   [--wishlist <file>]... [-l|--label <expr>]
-                  [--language=<name>]... [--faster-than=<sec>] [--no-bubbles]
+                  [--language=<name>]... [--faster-than=<sec>]
                   [<file-glob> [choice-glob]...] [--directory=<path>]
 
     DESCRIPTION
@@ -52,7 +52,6 @@ $ hwut.plan --help
                                 !<target>       not wanted ('--exclude')
                                 <dir-glob>/     wanted ('--dir')
                                 !<dir-glob>/    not entered ('--exclude-dir')
-                                !<hwut-root>    '--no-bubbles'
                             the last directory line matching decides; a
                             list names no set -- no 'label:' line
         --glob <target>     a target: a file name, or a file name and a
@@ -74,10 +73,6 @@ $ hwut.plan --help
                             (it warns instead)
         --language=<name>   the runs of test applications of that language;
                             several are a union, narrowing against the rest
-        --no-bubbles        do not enter an inner 'hwut-root.conf' (RQ-9):
-                            by default the walk enters every bubble below,
-                            each under its own configuration. Selects
-                            nothing by itself
         --faster-than=<seconds>
                             the runs this machine last saw finish faster
                             than that; one this machine never saw is not

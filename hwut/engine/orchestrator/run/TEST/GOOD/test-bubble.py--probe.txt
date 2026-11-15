@@ -1,22 +1,22 @@
 --- the probe's program not on PATH
 $ (no -p)
-    not-run  both           ''         available both/: requires iverilog, held by linux; specified local -- local declares iverilog; not on PATH: hwut-bubble-probe (hwut-tools.rst probe)
     not-run  linux          ''         available linux/: requires ghdl, held by linux; specified local
-    PLANNED: TEST, linux/inner/TEST, none/TEST
+    PLANNED: TEST, both/TEST, none/TEST, none/deep/TEST
     EXPLORED TEST               1
     EXPLORED none/TEST          1
     EXPLORED linux/TEST         0
-    EXPLORED linux/inner/TEST   1
-    EXPLORED both/TEST          0
-    NOTE  none/deep/: requires iverilog; local does not hold it -- local declares iverilog; not on PATH: hwut-bubble-probe (hwut-tools.rst probe)
+    EXPLORED linux/inner/TEST   0
+    EXPLORED both/TEST          1
+    FAIL     both/TEST test-d.sh -- platform local does not provide tool iverilog (not on PATH: hwut-bubble-probe; hwut-tools.rst probe)
+    FAIL     none/deep/TEST test-e.sh -- platform local does not provide tool iverilog (not on PATH: hwut-bubble-probe; hwut-tools.rst probe)
 --- a stand-in first on PATH
 $ (no -p)
     not-run  linux          ''         available linux/: requires ghdl, held by linux; specified local
-    PLANNED: TEST, both/TEST, linux/inner/TEST, none/TEST, none/deep/TEST
+    PLANNED: TEST, both/TEST, none/TEST, none/deep/TEST
     EXPLORED TEST               1
     EXPLORED none/TEST          1
     EXPLORED linux/TEST         0
-    EXPLORED linux/inner/TEST   1
+    EXPLORED linux/inner/TEST   0
     EXPLORED both/TEST          1
-SUCCESS: local announces only what its probe finds.
+SUCCESS: a declared tool its probe misses fails its cases, named.
 <hwut-end>

@@ -3,20 +3,21 @@ $ run --plain
     RESULTS: 1 ok, 0 fail
 $ run -p linux --plain
     STATUS: 0
-    NOTE  -p linux: no bubble below requires it
+    NOTE  -p linux: no directory below requires it
     RESULTS: 1 ok, 0 fail
 $ run -p local --plain
     STATUS: 0
     RESULTS: 1 ok, 0 fail
 $ run --exclude-local -p linux --plain
     STATUS: 3
-    NOTE  -p linux: no bubble below requires it
+    NOTE  -p linux: no directory below requires it
+    RESULTS: 0 ok, 0 fail, 1 directory not run
 $ run --exclude-local --plain
     STATUS: 2
     REFUSED: '--exclude-local' leaves no platform -- add '-p <name>'
 $ lib.run.play -p linux test-a.sh
     STATUS: 0
-    NOTE  -p linux: no bubble below requires it
+    NOTE  -p linux: no directory below requires it
     RECORDED: test-a.sh.txt (digest)
 $ lib.sanitize.propose -p linux -p local -o proposal.txt
     STATUS: 0

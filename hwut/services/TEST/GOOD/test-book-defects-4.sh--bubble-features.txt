@@ -2,7 +2,5 @@
    TEST . . . . . . . . . . . . . . . . . . . . . . . . . .      [OK]      2/2
 RESULTS: 2 ok, 0 fail, <t> [sec], <t> [sec] total
 == above: hwut.run --label f/flow
-   +--- TEST . . . . . . . . . . . . . . . . . . . . . . .       [OK]      0/0
-   '--- world/TEST . . . . . . . . . . . . . . . . . . . .       [OK]      2/2
-RESULTS: 2 ok, 0 fail, 2 skip, <t> [sec], <t> [sec] total
+REFUSED: 'f/flow' asks for a feature: no 'hwut-feature-forest.csv' stands at '$WORK' => hwut.features.init
 <hwut-end>

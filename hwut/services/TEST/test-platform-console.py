@@ -21,21 +21,23 @@ PURPOSE: THE CONSOLE OF adm/WORK/spec/42-platforms.txt section 6 (plan/42
                                    { linux  tools = [iverilog, ghdl] } ]
                       no 'requires'                          C = {local}
     ./TEST            test-top.sh
-    none/             hwut-root.conf, no 'requires'          C = {local}
+    none/             hwut.conf, no 'requires'               C = {local}
     linux/            requires = [ ghdl ]                    C = {linux}
-    linux/inner/      hwut-root.conf, no 'requires'          C = {local}
+    linux/inner/      hwut.conf, inherits ghdl (o-57)        C = {linux}
     both/             requires = [ iverilog ]                C = {local, linux}
 
 CHOICES: available, reachable, handed;
 
 available  'hwut.run': linux/ stands in the tree where the walk meets it,
-           '[PLATFORM not available]', the reason beside; its inner
-           bubble below it, run here.
+           '[PLATFORM not available]', the reason beside; linux/inner/
+           inherits ghdl and goes with it (intend/45 R-4).
 reachable  'hwut.run --exclude-local -p linux', a 'podman' that answers
-           1 -- the image absent, no recipe: every bubble one marker
-           line, 'available' or 'reachable'; nothing ran, no RESULTS.
-handed     the same, a 'podman' that is this machine: '.' and none/ not
-           available; every directory of linux/ and both/ named with
+           1 -- the image absent, no recipe: one marker line where the
+           decision begins, 'available' or 'reachable'; nothing ran, no
+           RESULTS.
+handed     the same, a 'podman' that is this machine: '.' not available
+           (none/ with it); every directory of linux/ and both/ -- one
+           far run (intend/45 R-4) -- named with
            '(linux)' once -- the verdicts beside, RESULTS as ever.
 
 Each choice prints the final tree, its header's clock cut, and the
@@ -84,8 +86,10 @@ def tree():
                "linux/TEST": "test-b.sh", "linux/inner/TEST": "test-c.sh",
                "both/TEST": "test-d.sh"}
     for where, text in conf_db.items():
+        #  ONE ROOT, hwut.conf BELOW IT (intend/45 R-1, R-4).
         os.makedirs(os.path.join(root, where), exist_ok=True)
-        with open(os.path.join(root, where, "hwut-root.conf"), "w") as fh:
+        name = "hwut-root.conf" if where == "" else "hwut.conf"
+        with open(os.path.join(root, where, name), "w") as fh:
             fh.write("hwut {\n    %s\n}\n" % text)
     for where, name in test_db.items():
         os.makedirs(os.path.join(root, where, "GOOD"))

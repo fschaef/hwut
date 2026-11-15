@@ -58,9 +58,4 @@
     wish : --label "f/demo-*+cover-* OR f/port+receive"
     rest : -
     asks nothing: False
-
---- -l mine --no-bubbles ---
-    wish : --no-bubbles --label "mine"
-    rest : -
-    asks nothing: False
 <hwut-end>

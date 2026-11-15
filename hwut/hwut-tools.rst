@@ -11,10 +11,12 @@ refused at the start. A tool is an informal name for what a subtree needs;
 an announcement is a hint, not a complete list.
 
 A ``probe:`` line under a tool names the programs it needs on PATH. Where
-``local`` declares such a tool and one of them is not found, ``local``
-does not announce it: a directory requiring it is not entered, and the
-NOTE says which program is missing (E-226). A tool without a ``probe:``
-line is taken as declared.
+a platform declares such a tool and one of them is not found there, the
+declaration stands -- it is the contract -- and every case of a directory
+requiring the tool FAILS, not run: ``platform local does not provide tool
+iverilog (not on PATH: iverilog, vvp; hwut-tools.rst probe)`` (intend/45
+R-5, R-7; services E-228). A tool without a ``probe:`` line is taken as
+declared.
 
 [[iverilog]]
     Icarus Verilog -- ``iverilog`` and its runtime ``vvp``: the simulator

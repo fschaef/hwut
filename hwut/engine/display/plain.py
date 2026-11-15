@@ -342,6 +342,7 @@ class CPlainFlow(CRunReportReceiver):
         self.refused_db  = {}        # directory -> [(node, reason), ...]
         self.silent_db   = {}        # directory -> [node, ...]
         self.meta_n      = 0         # cases the standard label hid
+        self.not_run_n   = 0         # test directories no platform took
         self.skip_n      = 0         # cases the wish did not want
                                      # (E-41): not run, said at the end
                                      # in arrival order
@@ -1063,7 +1064,8 @@ class CPlainFlow(CRunReportReceiver):
                 in sorted(enumerate(self.fault_list),
                           key=lambda p: (rank.get(p[1][0], -1), p[0]))]
 
-    def on_tree_done(self, when, good, fail_n, meta_n=0, skip_n=0):
+    def on_tree_done(self, when, good, fail_n, meta_n=0, skip_n=0,
+                     not_run_n=0):
         """RETURN: None. The stream's own closing word, held for the
         tail; a line in the VERBOSE tier alone. 'skip_n' is what the
         wish did not want; 'meta_n' what the standard label hid --
@@ -1074,6 +1076,8 @@ class CPlainFlow(CRunReportReceiver):
         #  what it means.
         self.meta_n = meta_n or 0
         self.skip_n = skip_n or 0
+        #  WHAT NO PLATFORM TOOK (intend/45 R-6): its test directories.
+        self.not_run_n = not_run_n or 0
         if self.tier is not E_Tier.VERBOSE: return
         self._line(when, "TREE ", self.ink.bold("TREE "),
                    "done, %d failure(s)" % fail_n,
@@ -1513,6 +1517,7 @@ class CPlainFlow(CRunReportReceiver):
                         ok_n, run_n - ok_n, w, self.ink,
                         skip_n=self.skip_n,
                         refused_n=refused_n, meta_n=self.meta_n,
+                        not_run_n=self.not_run_n,
                         seconds=self._elapsed_seconds(),
                         total=None if self.started_at is None
                               else "%.2f" % (time.monotonic() - self.started_at),
@@ -1734,7 +1739,7 @@ def hint_line_list(item_list, vocabulary, fail_ink=str, directory_ink=str):
 
 def results_line_list(ok_n, fail_n, w, ink, skip_n=0,
                       refused_n=0, meta_n=0, seconds=None, total=None,
-                      vocabulary=RUN_VOCABULARY):
+                      vocabulary=RUN_VOCABULARY, not_run_n=0):
     """
     RETURN: list[str], THE CLOSING TWO LINES: one line of numbers under
             the prefix 'RESULTS:', then one bordered bar of width 'w'
@@ -1774,7 +1779,8 @@ def results_line_list(ok_n, fail_n, w, ink, skip_n=0,
     drawn with the failures.
     """
     run_n = ok_n + fail_n
-    if run_n == 0 and skip_n == 0 and refused_n == 0: return []
+    if run_n == 0 and skip_n == 0 and refused_n == 0 and not not_run_n:
+        return []
 
     #  THE COUNTING WORDS ARE THE FLOW'S (D-40): 'ok' and 'fail' for a
     #  test run, what the vocabulary handed in says for another.
@@ -1783,6 +1789,12 @@ def results_line_list(ok_n, fail_n, w, ink, skip_n=0,
     if skip_n:      part_list.append("%d skip" % skip_n)
     if refused_n:   part_list.append("%d refused" % refused_n)
     if meta_n:      part_list.append("%d meta" % meta_n)
+    #  WHAT NO PLATFORM TOOK (intend/45 R-6): a green run that measured
+    #  less says so on its last line.
+    if not_run_n:   part_list.append("%d %s not run"
+                                     % (not_run_n, "directory"
+                                        if not_run_n == 1
+                                        else "directories"))
     if seconds is not None: part_list.append("%s [sec]" % seconds)
     #  THE WHOLE RUN, not only its tests: 'seconds' spans the event
     #  stream, from the first run to the last; 'total' is the wall time

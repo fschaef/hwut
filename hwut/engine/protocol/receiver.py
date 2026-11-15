@@ -149,6 +149,7 @@ class CRunReportReceiver:
         'available' or 'reachable', 'text' the NOTE's. Nothing of it is
         counted (ruling 21)."""
 
-    def on_tree_done(self, when, good, fail_n, meta_n=0, skip_n=0):
+    def on_tree_done(self, when, good, fail_n, meta_n=0, skip_n=0,
+                     not_run_n=0):
         """RETURN: None. The run ended; 'None' follows on the
         queue."""

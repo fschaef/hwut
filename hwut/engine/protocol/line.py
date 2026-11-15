@@ -187,12 +187,20 @@ def event_of(line, origin_when=None):
     elif form == "csv":
         cells = next(csv.reader([content]))
         names = _field_names(kind)
+        required_db, optional_db = KIND_DB[kind]
         if names[-1] == PLATFORM_FIELD and len(cells) != len(names):
             names = names[:-1]          # a local line: no 'platform' cell
+        #  OPTIONAL CELLS MAY BE MISSING AT THE END (the add-only promise):
+        #  a line from before an optional field was added still reads.
+        most_n = len(names)
+        while len(cells) < len(names) and names[-1] in optional_db:
+            names = names[:-1]
         if len(cells) != len(names):
-            raise LineError("%d cell(s) wanted, %d found: %r"
-                            % (len(names), len(cells), line))
-        required_db, optional_db = KIND_DB[kind]
+            least_n = len([x for x in names if x not in optional_db])
+            wanted = "%d" % most_n if least_n == most_n \
+                     else "%d to %d" % (least_n, most_n)
+            raise LineError("%s cell(s) wanted, %d found: %r"
+                            % (wanted, len(cells), line))
         for name, cell in zip(names, cells):
             field_type = required_db.get(name, optional_db.get(name, str))
             if cell == "" and name in optional_db: continue

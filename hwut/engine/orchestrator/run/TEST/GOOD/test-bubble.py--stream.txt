@@ -1,9 +1,10 @@
-near  [exit 0] RESULTS: 3 ok, 0 fail
+near  [exit 0] RESULTS: 3 ok, 0 fail, 2 directories not run
     both/TEST test-d.sh ok linux
     linux/TEST test-b.sh ok linux
     linux/inner/TEST test-c.sh ok linux
-local [exit 0] RESULTS: 2 ok, 0 fail   (in linux/)
+local [exit 0] RESULTS: 3 ok, 0 fail   (the far run's words, at the root)
+    both/TEST test-d.sh ok -
     linux/TEST test-b.sh ok -
     linux/inner/TEST test-c.sh ok -
-SUCCESS: the bubble run there is the bubble run here, but for 'platform'.
+SUCCESS: what runs there is what runs here, but for 'platform'; one far run takes every directory decided for linux.
 <hwut-end>

@@ -187,7 +187,8 @@ def inner_root_note(relative):
             that select or run enter, unless the wish says
             '--no-bubbles' -- then they say this NOTE too.
     """
-    return "NOTE  %s/: own root, not walked => do it inside it" % relative
+    return "NOTE  %s/: a project of its own (hwut-root.conf) => run " \
+           "hwut inside it" % relative
 
 
 def inner_root_f(path):
@@ -235,23 +236,19 @@ def inner_root_note_tuple(directory):
                  for path in found)
 
 
-#  THE FEATURES' FOREST SPANS BUBBLES THAT HAVE NONE OF THEIR OWN
-#  (2026-11-03, ruled for plan/42 P-8 against 'hwut.features.split';
-#  spec 43 T-m): a bubble without a 'hwut-feature-forest.csv' belongs to
-#  the nearest forest above it. A bubble WITH one begins features of its
-#  own -- the one exception the author ruled, 2026-11-08: the showcase,
-#  a tree meant to be copied, root and all. The walks that read the
-#  features enter the first kind and stop at the second, with their NOTE.
+#  ONE PROJECT, ONE FOREST (intend/45 R-1, R-3; amends spec 43 T-m): a
+#  'hwut-root.conf' below the root is another project with features of its
+#  own, or none -- never part of the forest above. The walks that read the
+#  features stop at it, with its NOTE.
 
 
 def forest_owner_f(path):
     """
-    RETURN: bool, True where the directory 'path' is a bubble ('hwut-
-            root.conf') holding a forest of its own ('hwut-feature-
-            forest.csv') -- where a walk of the features from above stops.
+    RETURN: bool, True where the directory 'path' holds a 'hwut-root.conf'
+            -- another project, where a walk of the features from above
+            stops (intend/45 R-3).
     """
-    return inner_root_f(path) \
-           and os.path.isfile(os.path.join(path, finder.FOREST_FILE_NAME))
+    return inner_root_f(path)
 
 
 def forest_top(start):
@@ -264,15 +261,9 @@ def forest_top(start):
 
     Raises RootConfMissing where no 'hwut-root.conf' bounds 'start'.
     """
-    nearest = here = root_conf_directory(start)
-    while not os.path.isfile(os.path.join(here, finder.FOREST_FILE_NAME)):
-        parent = os.path.dirname(here)
-        if parent == here: return nearest
-        try:
-            here = root_conf_directory(parent)
-        except RootConfMissing:
-            return nearest
-    return here
+    #  THE NEAREST ROOT IS THE PROJECT (intend/45 R-2): its forest, or
+    #  none -- a root above it is beyond the radar.
+    return root_conf_directory(start)
 
 
 def forest_gate_of(root):
@@ -292,27 +283,19 @@ def forest_gate_of(root):
 
 def forest_inner_tuple(directory):
     """
-    RETURN: tuple[str], the ABSOLUTE bubbles below 'directory' holding a
-            forest of their own, walk order; a bubble without one is part
-            of the forest above it.
+    RETURN: tuple[str], empty: no forest below the root answers for the
+            root's runs -- one project, one forest (intend/45 R-1).
     """
-    return tuple(path for path in inner_root_tuple(directory)
-                 if forest_owner_f(path))
+    return ()
 
 
 def forest_note_tuple(directory):
     """
     RETURN: tuple[str], 'inner_root_note_tuple' for the walks of the
-            features: one NOTE per OUTERMOST bubble below 'directory' that
-            holds a forest of its own; empty where there is none.
+            features: one NOTE per outermost project of its own below
+            'directory'; empty where there is none.
     """
-    top = os.path.abspath(directory)
-    found = []
-    for path in forest_inner_tuple(top):
-        if any(path.startswith(outer + os.sep) for outer in found): continue
-        found.append(path)
-    return tuple(inner_root_note(os.path.relpath(path, top).replace(os.sep, "/"))
-                 for path in found)
+    return inner_root_note_tuple(directory)
 
 
 #  WHAT A BUBBLE GATE ANSWERS for a bubble's root directory (spec/42
@@ -399,9 +382,8 @@ def explore_tree_stream(root, interview_runner=None, fault_list=None,
         #  A TEST DIRECTORY ASKED ITSELF: its own conf joins the climb's.
         text = _entry_refused(entry_gate, root, inherited,
                               own_requires(root))
-        if text is not None:
-            note_list.append(text)
-            state = GATE_NOT_RUN
+        if text: note_list.append(text)
+        if text is not None: state = GATE_NOT_RUN
     if test_directory_f(root, inherited):
         if state == GATE_RUN and (wanted_f is None or wanted_f(".")):
             yield (".", governed(explore(root,
@@ -520,11 +502,14 @@ def _walk_stream(root, relative, effective, interview_runner, fault_list,
                               if conf_fault_f(f))
     marker    = effective.test_directory or FALLBACK_TEST_DIRECTORY
     if note_list is None: note_list = []
-    if explore_f and entry_gate is not None:
+    if entry_gate is not None:
+        #  EACH DIRECTORY IS DECIDED ON ITS OWN (intend/45 R-4): not the
+        #  level above, but what this one requires, says whether it is
+        #  explored here -- a far run enters a directory below one it
+        #  passes by. '' passes it by in silence.
         text = _entry_refused(entry_gate, directory, effective, ())
-        if text is not None:
-            note_list.append(text)
-            explore_f = False
+        if text: note_list.append(text)
+        explore_f = text is None
 
     for name in sorted(os.listdir(directory)):
         if name.startswith("."):                          continue
@@ -535,35 +520,20 @@ def _walk_stream(root, relative, effective, interview_runner, fault_list,
         child_effective, child_folded_f = effective, False
         child_explore_f = explore_f
         if inner_root_f(path):
-            #  A PROJECT OF ITS OWN (RQ-1): not entered, and said; or,
-            #  where entered, entered with the configuration
-            #  RESET from the inner root alone ("we do not inherit into
-            #  hwut-root.conf").
-            if boundary_f:
-                note_list.append(inner_root_note(child_relative))
-                continue
-            state = GATE_RUN if bubble_gate is None else bubble_gate(path)
-            if state == GATE_HANDED: continue
-            child_explore_f = state == GATE_RUN
-            child_effective, reset_fault_list = ascended_spec(
-                path, root_shown="%s/%s" % (child_relative, ROOT_CONF_NAME))
-            if child_explore_f: fault_list.extend(reset_fault_list)
-            child_folded_f = True
-            #  NOTHING ABOVE REACHES BELOW an inner root -- its faults
-            #  neither (RQ-1).
-            child_above = tuple(f for f in reset_fault_list
-                                if conf_fault_f(f))
-        else:
-            child_above = above_tuple
+            #  A PROJECT OF ITS OWN (intend/45 R-3, 2026-11-15): never
+            #  entered from above, by any walk, and said. ONE PROJECT, ONE
+            #  ROOT (R-1); what a subtree shares is a non-TEST hwut.conf.
+            note_list.append(inner_root_note(child_relative))
+            continue
+        child_above = above_tuple
         if name == (child_effective.test_directory
                     or FALLBACK_TEST_DIRECTORY) \
            and (child_folded_f or name == marker):
-            if child_explore_f and entry_gate is not None:
+            if entry_gate is not None:
                 text = _entry_refused(entry_gate, path, child_effective,
                                       own_requires(path))
-                if text is not None:
-                    note_list.append(text)
-                    child_explore_f = False
+                if text: note_list.append(text)
+                child_explore_f = text is None
             if not child_explore_f:
                 if passed_list is not None: passed_list.append(child_relative)
                 continue
@@ -600,13 +570,14 @@ def own_requires(directory):
 
 def _entry_refused(entry_gate, directory, effective, own):
     """
-    RETURN: str, the NOTE that 'directory' is not entered -- its platform
-            does not hold all it requires, inherited and 'own' -- or None
-            where it requires nothing or is let in.
+    RETURN: str, the NOTE that 'directory' is not entered here, '' where
+            it is passed by in silence, or None where it is entered --
+            'entry_gate' answers for what it requires, inherited and
+            'own', nothing included (intend/45 R-4: over there, a
+            directory requiring nothing is the near run's).
     """
     required = tuple(dict.fromkeys(tuple(effective.requires_tuple or ())
                                    + tuple(own)))
-    if not required: return None
     return entry_gate(os.path.abspath(directory), required)
 
 

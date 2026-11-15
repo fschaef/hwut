@@ -130,6 +130,7 @@ def selected_key_tuple(directory, wish, view):
     warning_list = [text.replace(text.split("'")[1],
                                  _spoken(text.split("'")[1],
                                          view.boundary))
+                    if "'" in text else text
                     for text in found.warning_tuple]
     for bubble, run_n in sorted(bubble_db.items()):
         warning_list.append("WARNING: %d run(s) in '%s/' not labelled here "
