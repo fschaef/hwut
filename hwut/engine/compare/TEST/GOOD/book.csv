@@ -1,4 +1,4 @@
-# vut-register 5 generation:95 apps:18 marks:0=3,1=4,2=2,3=3,4=6,5=5,6=4,7=5,8=5,9=3,10=7,11=7,12=3,13=2,14=6,15=5,16=4,17=3
+# vut-register 5 generation:99 apps:19 marks:0=3,1=4,2=2,3=3,4=6,5=5,6=4,7=5,8=5,9=3,10=7,11=7,12=3,13=2,14=6,15=5,16=4,17=3,18=3
 test;choice;verdict;report;stain;test_id;choice_id;platform
 regression-1.py;amnesia;true;ok;;0;0
 ;pruning_analogy;true;ok;;0;1
@@ -9,6 +9,9 @@ regression-2.py;bool;true;ok;;1;0
 ;visible-nothing;true;ok;;1;3
 regression-3.py;associate;true;ok;;2;0
 ;equivalence;true;ok;;2;1
+regression-4.py;outer;true;ok;;18;1
+;potpourri;true;ok;;18;0
+;verbatim;true;ok;;18;2
 test-associate-race.py;jittery;true;ok;;3;0
 ;nominal-slow;true;ok;;3;1
 ;subject-slow;true;ok;;3;2

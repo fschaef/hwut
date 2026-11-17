@@ -83,8 +83,10 @@ AnalogyDb:
 []
 
 TYPE: POTPOURRI POTPOURRI
-cost: 0.00000; line_associations: 1;
+cost: 0.00000; line_associations: 3;
+   [02] ##! potpourri           --> [02] ##! potpourri           {GOOD}
    [03] Welt                    --> [03] Welt                    {GOOD}
+   [04] ####                    --> [04] ####                    {GOOD}
 AnalogyDb:
 []
 
@@ -106,8 +108,10 @@ AnalogyDb:
 []
 
 TYPE: POTPOURRI POTPOURRI
-cost: 0.00000; line_associations: 1;
+cost: 0.00000; line_associations: 3;
+   [02] ##! potpourri           --> [02] ##! potpourri           {GOOD}
    [03] Welt                    --> [03] Welt                    {GOOD}
+   [04] ####                    --> [04] ####                    {GOOD}
 AnalogyDb:
 []
 
@@ -130,9 +134,11 @@ AnalogyDb:
 []
 
 TYPE: POTPOURRI POTPOURRI
-cost: 0.00000; line_associations: 2;
+cost: 0.00000; line_associations: 4;
+   [02] ##! potpourri           --> [02] ##! potpourri           {GOOD}
    [03] Welt                    --> [04] Welt                    {GOOD}
    [04] Le Monde                --> [03] Le Monde                {GOOD, GOOD, GOOD}
+   [05] ####                    --> [05] ####                    {GOOD}
 AnalogyDb:
 []
 
@@ -167,10 +173,12 @@ AnalogyDb:
 => 
 
 TYPE: POTPOURRI POTPOURRI
-cost: 0.00000; line_associations: 3;
+cost: 0.00000; line_associations: 5;
+   [01] ##! potpourri           --> [01] ##! potpourri           {GOOD}
    [02] Hallo##                 --> [02] ##Hello                 {GOOD_TOLERATED}
    [03] ##Welt                  --> [03] World##                 {GOOD_TOLERATED}
    [04] Good                    --> [04] Good                    {GOOD}
+   [05] ####                    --> [05] ####                    {GOOD}
 AnalogyDb:
 []
 
@@ -186,9 +194,11 @@ AnalogyDb:
 => 
 
 TYPE: NONE POTPOURRI
-cost: 0.00000; line_associations: 2;
+cost: 0.00000; line_associations: 4;
+   [--] None                    --> [01] ##! potpourri           {INSERT}
    [--] None                    --> [02] Hello                   {}
    [--] None                    --> [03] World                   {}
+   [--] None                    --> [04] ####                    {INSERT}
 AnalogyDb:
 []
 
@@ -211,9 +221,11 @@ AnalogyDb:
 => 
 
 TYPE: POTPOURRI POTPOURRI
-cost: 0.00000; line_associations: 2;
+cost: 0.00000; line_associations: 4;
+   [01] ##! potpourri           --> [01] ##! potpourri           {GOOD}
    [02] Hello                   --> [02] Hello                   {GOOD}
    [03] Le Monde                --> [03] World                   {DELETE, DELETE, SUBSTITUTE}
+   [04] ####                    --> [04] ####                    {GOOD}
 AnalogyDb:
 []
 

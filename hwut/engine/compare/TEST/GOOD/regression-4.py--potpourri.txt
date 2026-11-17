@@ -1,0 +1,11 @@
+input (subject == nominal):
+    1: ##! potpourri
+    2: x
+    3: ####
+pairs (subject, nominal):
+    (1, 1)
+    (2, 2)
+    (3, 3)
+subject lines in no pair: none
+nominal lines in no pair: none
+<hwut-end>

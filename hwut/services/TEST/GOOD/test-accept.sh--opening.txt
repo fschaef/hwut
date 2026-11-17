@@ -5,11 +5,13 @@ STATUS: 0
       [ ]  3         test-two.sh b
     =[ test-ok.sh ]===================================== round 1
     --[ LINE_SEQUENCE/UNACCEPTED ]--
+    N         1 | [##! unaccepted]
       [X]  1         test-ok.sh
       [ ]  2 <enter> test-two.sh a
       [ ]  3         test-two.sh b
     =[ test-two.sh a ]================================== round 1
     --[ LINE_SEQUENCE/UNACCEPTED ]--
+    N         1 | [##! unaccepted]
       [X]  1         test-ok.sh
       [X]  2         test-two.sh a
       [ ]  3 <enter> test-two.sh b

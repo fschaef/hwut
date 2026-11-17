@@ -1,0 +1,11 @@
+input (subject == nominal):
+    1: a
+    2: x
+    3: b
+pairs (subject, nominal):
+    (1, 1)
+    (2, 2)
+    (3, 3)
+subject lines in no pair: none
+nominal lines in no pair: none
+<hwut-end>

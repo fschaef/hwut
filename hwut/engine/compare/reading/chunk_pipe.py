@@ -104,12 +104,17 @@ class _RegionFraming:
         self.begin_line_n = line_n
         self.begin_text   = line.rstrip("\n")
 
-    def close(self, line, line_n, config, line_list):
-        """RETURNS: InputChunk, the completed region chunk."""
+    def close(self, line, line_n, config, line_list, lexer):
+        """RETURNS: InputChunk, the completed region chunk; its '.framing'
+                    holds the region's two framing lines as 'Line'-s
+                    (shebang, '####') -- LINES OF THE STREAM like any
+                    other, which the association pairs ('core/chunk_pair.py').
+        """
         assert self.is_open()
         chunk = make_region_chunk(self.handler, self.begin_line_n, line_n,
                                   line_list, config, self.params)
-        chunk.framing = (self.begin_text, line.rstrip("\n"))
+        chunk.framing = (Line(self.begin_line_n, self.begin_text, lexer),
+                         Line(line_n, line.rstrip("\n"), lexer))
         self.handler = None
         return chunk
 
@@ -163,7 +168,8 @@ class EquivalenceCheckChunkPipe(ChunkPipe):
                 # Shebang regions are yielded EVEN IF EMPTY: the framing
                 # itself must find its counterpart (an empty 'ignore' vs a
                 # full one is equivalent; a region vs no region is not).
-                yield framing.close(line, line_n, self.configuration, line_list)
+                yield framing.close(line, line_n, self.configuration,
+                                    line_list, self.pf)
                 line_list = []
             elif line_class in INSIGNIFICANT_LINE_CLASS_SET:
                 continue
@@ -220,7 +226,8 @@ class AssociationChunkPipe(ChunkPipe):
                 line_list = []
             elif line_class is E_LineClass.REGION_END:
                 framing.check_stray_end(line_n)
-                yield framing.close(line, line_n, self.configuration, line_list)
+                yield framing.close(line, line_n, self.configuration,
+                                    line_list, self.pf)
                 line_list    = []
                 start_line_n = line_n
             else:

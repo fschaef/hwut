@@ -4,17 +4,27 @@ setup | numeric=exact | analogy=on '((..))' | whitespace=tolerant | ignored '##.
 --[ LINE_SEQUENCE/LINE_SEQUENCE ]--
      1    1 | start
 --[ POTPOURRI/POTPOURRI ]--
+     2    2 | ##! potpourri
      3    4 | worker-2 done
      4    3 | worker-1 done
+     5    5 | ####
 --[ TABLE/TABLE ]--
+     6    6 | ##! table key=0
      7    8 | ~1 orange 3.20~
      8    7 | ~2 apple  1.10~
+     9    9 | ####
 --[ POINT_CLOUD/POINT_CLOUD ]--
+    10   10 | ##! point-cloud limit=0.5
     11   11 | ~0.10 0.20~
+    12   12 | ####
 --[ VERBATIM/VERBATIM ]--
+    13   13 | ##! verbatim
     14   14 | raw   $$ exact
+    15   15 | ####
 --[ IGNORE/IGNORE ]--
+    16   16 | ##! ignore
     17   17 | ~timestamp 12:33:01~
+    18   18 | ####
 --[ LINE_SEQUENCE/LINE_SEQUENCE ]--
     19   19 | end
 ============================================================

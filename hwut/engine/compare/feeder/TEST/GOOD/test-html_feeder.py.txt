@@ -131,6 +131,12 @@ Analogy established at S:8 / N:8">((Location))</span><span class="tok OK_GOOD" t
 <div class="side"><span class="tok OK_GOOD" title="Perfect Match"></span></div></div>
 <div class="row" style="background:var(--gutter); color:#58a6ff; font-weight:bold; height:auto; padding:4px;"><div style="grid-column:1/-1">:: POTPOURRI/POTPOURRI</div></div>
 <div class="row">
+<div class="ln">13</div>
+<div class="side"><span class="tok OK_GOOD" title="Perfect Match">##!&nbsp;potpourri</span></div>
+<div class="mid"></div>
+<div class="ln">14</div>
+<div class="side"><span class="tok OK_GOOD" title="Perfect Match">##!&nbsp;potpourri</span></div></div>
+<div class="row">
 <div class="ln">14</div>
 <div class="side"><span class="tok OK_GOOD" title="Perfect Match">&quot;That</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">which</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">does</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">not</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">kill</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">us</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">makes</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">us</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok BAD_NOMINAL_DIFFERS" title="BAD_NOMINAL_DIFFERS">42.1</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">percent</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">strange,&quot;</span></div>
 <div class="mid"></div>
@@ -164,6 +170,12 @@ Analogy established at S:17 / N:18">((Object))</span><span class="tok OK_GOOD" t
 <div class="mid"></div>
 <div class="ln">19</div>
 <div class="side"><span class="tok OK_GOOD" title="Perfect Match">Then</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">ate</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">a</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">gold</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">watch</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">and</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">started</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">to</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">fly.</span></div></div>
+<div class="row">
+<div class="ln">19</div>
+<div class="side"><span class="tok OK_GOOD" title="Perfect Match">####</span></div>
+<div class="mid"></div>
+<div class="ln">20</div>
+<div class="side"><span class="tok OK_GOOD" title="Perfect Match">####</span></div></div>
 <div class="row" style="background:var(--gutter); color:#58a6ff; font-weight:bold; height:auto; padding:4px;"><div style="grid-column:1/-1">:: LINE_SEQUENCE/LINE_SEQUENCE</div></div>
 <div class="row">
 <div class="ln">20</div>
@@ -172,6 +184,12 @@ Analogy established at S:17 / N:18">((Object))</span><span class="tok OK_GOOD" t
 <div class="ln">21</div>
 <div class="side"><span class="tok OK_GOOD" title="Perfect Match"></span></div></div>
 <div class="row" style="background:var(--gutter); color:#58a6ff; font-weight:bold; height:auto; padding:4px;"><div style="grid-column:1/-1">:: POTPOURRI/POTPOURRI</div></div>
+<div class="row">
+<div class="ln">21</div>
+<div class="side"><span class="tok OK_GOOD" title="Perfect Match">##!&nbsp;potpourri</span></div>
+<div class="mid"></div>
+<div class="ln">22</div>
+<div class="side"><span class="tok OK_GOOD" title="Perfect Match">##!&nbsp;potpourri</span></div></div>
 <div class="row">
 <div class="ln">22</div>
 <div class="side"><span class="tok OK_GOOD" title="Perfect Match">A</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_TOLERATED" title="Tolerated Difference
@@ -204,6 +222,12 @@ Analogy established at S:22 / N:23">((Object))</span><span class="tok OK_GOOD" t
 <div class="mid"></div>
 <div class="ln">26</div>
 <div class="side"><span class="tok OK_GOOD" title="Perfect Match">It</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">sighed</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">as</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">it</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">shifted</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">its</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok BAD_SUBJECT_DIFFERS" title="Content Mismatch">3.14159</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">geological</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">shape,</span></div></div>
+<div class="row">
+<div class="ln">27</div>
+<div class="side"><span class="tok OK_GOOD" title="Perfect Match">####</span></div>
+<div class="mid"></div>
+<div class="ln">28</div>
+<div class="side"><span class="tok OK_GOOD" title="Perfect Match">####</span></div></div>
 <div class="row" style="background:var(--gutter); color:#58a6ff; font-weight:bold; height:auto; padding:4px;"><div style="grid-column:1/-1">:: LINE_SEQUENCE/LINE_SEQUENCE</div></div>
 <div class="row">
 <div class="ln">28</div>

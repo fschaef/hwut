@@ -6,7 +6,8 @@ A chunk of 'LinePair'-s either belongs to a block of 'LineSequences'
 or 'Potpourri'.
 ________________________________________________________________________________
 """
-from .line_pair import LinePair
+from .line_pair import LinePair, display_twin
+from .edit_operations.edit import Edit, E_EditId
 import hwut.engine.compare.region.unaccepted.associate as association_unaccepted
 from ..contract.enums import E_Chunk, BAD_CHUNK_SET
 from ..contract.analogy_db import AnalogyDb
@@ -75,7 +76,10 @@ class ChunkPair(list):
             new_analogy_db  = association_unaccepted.do(subject, nominal,
                                                         analogy_db)
 
-        return ChunkPair(subject_type, nominal_type, line_pair_list, new_analogy_db)
+        head, tail = _framing_pair_list(subject, nominal,
+                                        subject_type == nominal_type)
+        return ChunkPair(subject_type, nominal_type,
+                         head + line_pair_list + tail, new_analogy_db)
 
     def types(self):
         return self.__subject_type_id, self.__nominal_type_id
@@ -125,3 +129,59 @@ class ChunkPair(list):
             ("analogy_db", self.__analogy_db)
         ]
 
+
+
+def _framing_pair_list(subject: InputChunk | None,
+                       nominal: InputChunk | None,
+                       same_type_f: bool) -> tuple[list, list]:
+    """RETURN: [0] list[LinePair], the pair of the regions' SHEBANG lines,
+               [1] list[LinePair], the pair of their '####' lines -- each
+                   [] where neither side is a region.
+
+    A REGION'S FRAMING LINES ARE LINES OF BOTH STREAMS (regression-4):
+    they are paired like any other line, so that every line of either
+    stream stands in exactly one 'LinePair'. Before, only the content
+    was paired; the keyed screen, building its rows from the pairs
+    alone, showed the frames as partnerless and two equal files as
+    '2 differ'.
+
+    Both sides framed BY THE SAME HANDLER: GOOD where the texts are equal; GOOD_TOLERATED
+    where they differ (spacing, parameters) -- whether the region's lines
+    agree is the handler's verdict, carried by the content pairs, and a
+    frame never adds one of its own (THE LAW: the Judge does not compare
+    frame texts). Otherwise -- one side framed (a one-sided region, an
+    ordinary chunk facing an 'unaccepted' one), or two handlers facing
+    each other ('##! verbatim' against a virgin's '##! unaccepted') --
+    every frame stands ONE-SIDED and differs, as the chunk pair does
+    ('ChunkPair.is_equivalent'): a frame is never partnered with a frame
+    of another handler.
+    """
+    s_frame = getattr(subject, "framing", None)
+    n_frame = getattr(nominal, "framing", None)
+    if s_frame is None and n_frame is None:
+        return [], []
+
+    def pair(s, n):
+        s = display_twin(s) if s is not None else None
+        n = display_twin(n) if n is not None else None
+        if s is None or n is None:
+            edit_id = E_EditId.DELETE if n is None else E_EditId.INSERT
+            return [LinePair(s, n, (Edit(edit_id),), cost=1.0,
+                             seq_edit_id=edit_id)]
+        if s._string == n._string:
+            edit_id, cost = E_EditId.GOOD,           0.0
+        else:
+            edit_id, cost = E_EditId.GOOD_TOLERATED, 0.0
+        return [LinePair(s, n, (Edit(edit_id),), cost=cost,
+                         seq_edit_id=edit_id)]
+
+    s_begin, s_end = s_frame if s_frame is not None else (None, None)
+    n_begin, n_end = n_frame if n_frame is not None else (None, None)
+    if s_frame is not None and n_frame is not None and same_type_f:
+        return pair(s_begin, n_begin), pair(s_end, n_end)
+
+    def alone(s, n):
+        return (pair(s, None) if s is not None else []) \
+             + (pair(None, n) if n is not None else [])
+
+    return alone(s_begin, n_begin), alone(s_end, n_end)

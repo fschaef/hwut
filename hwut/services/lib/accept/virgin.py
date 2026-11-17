@@ -26,9 +26,11 @@ DESCRIPTION
        to close the outer region early where it is not refused outright.
 
        THE MARKERS ARE STRUCTURE, NOT CONTENT. compare pairs the fillers
-       and never sees '##! unaccepted' or '####'. That the viewer draws
-       them level with the first and last subject line is a matter of
-       layout, and belongs to the viewer.
+       with subject lines; '##! unaccepted' and '####' stand in pairs of
+       their own, nominal-only, partnered with no subject line (every
+       line of a stream stands in one pair: regression-4). That the
+       viewer draws them level with the first and last subject line is
+       a matter of layout, and belongs to the viewer.
 
        THE CLOSING TOKEN STANDS OUTSIDE EVERY REGION, as the last line.
        R-70 asks whether the stream's last line is '<hwut-end>', and it

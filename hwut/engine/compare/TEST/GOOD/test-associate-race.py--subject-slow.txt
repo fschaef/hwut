@@ -36,6 +36,10 @@ YIELD 2: POTPOURRI <-> POTPOURRI
 [ChunkPair:POTPOURRI]
 .   .<base>: <list>
 .   .   [LinePair]
+.   .   .   .subject: [OK_GOOD:STRING(0) '##! potpourri']
+.   .   .   .nominal: [OK_GOOD:STRING(0) '##! potpourri']
+.   .   .   .cost: 0.0000
+.   .   [LinePair]
 .   .   .   .subject: [BAD_NOMINAL_DIFFERS:STRING(0) 'albert']
 .   .   .   .nominal: [BAD_SUBJECT_DIFFERS:STRING(0) 'karlos']
 .   .   .   .cost: 1.0000
@@ -50,6 +54,10 @@ YIELD 2: POTPOURRI <-> POTPOURRI
 .   .   [LinePair]
 .   .   .   .subject: [OK_GOOD:STRING(0) 'damian']
 .   .   .   .nominal: [OK_GOOD:STRING(0) 'damian']
+.   .   .   .cost: 0.0000
+.   .   [LinePair]
+.   .   .   .subject: [OK_GOOD:STRING(0) '####']
+.   .   .   .nominal: [OK_GOOD:STRING(0) '####']
 .   .   .   .cost: 0.0000
 .   .analogy_db: AnalogyDb
 
