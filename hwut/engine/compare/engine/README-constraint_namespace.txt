@@ -24,7 +24,9 @@ sequential outer text
 enters a name into the space, and the moment it does, every constraint over
 that name is checked ('engine/constraints.py').
 
-The two are composed at evaluation time by 'namespace_of(binding_db)'.
+The two are composed at evaluation time by the configuration's
+'ConstraintNamespace' ('.scope(binding_db)'); its fixed names may be
+widened by a constraint module (section 6).
 Neither is a copy of the other, and one run's bindings never reach another:
 the fixed part is copied, the space belongs to the run.
 
@@ -53,6 +55,27 @@ FUNCTIONS
 
     general     len abs min max sum int float str bool
                 round ord chr all any sorted
+
+    OVER QUANTITIES (book D-92, compare C-25) each maths name is one of
+    four kinds; over plain numbers each is Python's 'math' unchanged:
+
+        keeps the unit  hypot sqrt pow floor ceil trunc fabs fmod
+                        copysign -- 'hypot(30 m, 40 ft)' is 32.38 m,
+                        'sqrt(144 m**2)' 12 m, 'pow(3 m, 2)' 9 m**2;
+                        the units converted to the first argument's
+        compares        isclose isfinite isinf isnan atan2 -- in one unit:
+                        'isclose(1 m, 100 cm)', 'atan2(40 m, 30 m)'
+        angle or plain  sin cos tan sinh cosh tanh exp log log2 log10
+                        degrees radians -- 'sin(30 deg)' is 0.5
+        plain           asin acos atan gcd factorial -- a ratio of one
+                        dimension ('m/m') is plain
+
+    and abs min max sum round keep the unit as Python's do. A function
+    given what it cannot take is refused naming it, what it takes, and the
+    argument as the law writes it:
+
+        sin needs an angle or a plain number -- 'east' is [length]
+        atan2 needs values of one dimension -- 'north' is [length], 'dt' is [time]
 
     text        glob(value, pattern)
 
@@ -133,3 +156,55 @@ expression up for checking.
 
 Deriving that relation inside compare is what makes it impossible to relate
 a variable to an expression that does not mention it.
+
+
+6  THE AUTHOR'S OWN NAMES: 'constraint_module'
+______________________________________________________________________________
+
+(ruled 2026-11-18, compare C-24, services E-233)
+
+    tolerance {
+        constraint_module = "laws.py"
+        constraints       = ["in_band(level, 1 V, 5 V)",
+                             "hypot(east, north) <= 60 m"]
+    }
+
+ONE PYTHON FILE, read from the test directory (an absolute path as
+written). Where it is stated -- a page's header, a choice, a 'hwut.conf''s
+'app_defaults' -- it travels as every tolerance does.
+
+EVERY PUBLIC NAME enters the namespace FLAT, called bare: the names of the
+file's '__all__' where it states one, else every top-level name without a
+leading '_'. A callable is a function a law calls; anything else a
+constant a law names ('LIMIT = 5'). A module the file imported is no name
+('import numpy' gives no 'numpy'); what the file takes from it is
+('from statistics import fmean' gives 'fmean'). Whatever a law calls
+beyond section 2 comes from this file.
+
+A NAME OF THE FILE THAT IS A FIXED NAME REPLACES IT -- 'def hypot(*q)'
+keeps units where math's does not -- said once, on stderr, where the file
+is loaded:
+
+    NOTE constraint_module 'laws.py' replaces the constraint namespace's 'hypot'
+
+Its names are names a variable may not carry (section 4), its constants
+included: '((LIMIT: 3))' is refused by name, "(from laws.py)".
+
+A FILE THAT CANNOT BE LOADED is a fault of the specification, before any
+line is read -- the application is refused, 'spec [FAIL]':
+
+    constraint_module 'missing.py': no such file (No such file or directory)
+    constraint_module 'bad.py' does not load: RuntimeError: boom
+    constraint_module 'all.py': '__all__' names what it does not define: 'g'
+    'constraint_module' names a Python file, '<name>.py': not 'laws.txt'
+
+So is a law calling a name neither section 2 nor the file holds; the
+refusal lists every function there is. A scope's own door cannot judge
+such a call -- the file may be stated in a 'hwut.conf' above -- so it is
+judged where the application is folded ('explorer.py').
+
+THE FILE IS THE AUTHOR'S CODE, as a pype script is: it runs in the
+comparing process, unfenced. 'Nothing with a side effect' (section 3) is a
+law over the fixed names; over the file's it is the author's. The file is
+no test and no wallflower: like a pype it stands beside the tests that
+name it.

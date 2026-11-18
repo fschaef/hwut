@@ -349,6 +349,13 @@ def _parameter(entry, parameter_db, file, fault_list, position_db=None):
             for inner in entry.node.entry_list:
                 position_db["%s.%s" % (key, inner.key)] = \
                                                     inner.key_position
+            #  WHERE THE LAWS STAND, for a refusal judged after the fold
+            #  ('explorer._constraint_module_refused'): the list's place,
+            #  as this door names it.
+            for inner in entry.node.entry_list:
+                if key == "tolerance" and inner.key == "constraints":
+                    position_db[CONSTRAINTS_VALUE_KEY] = \
+                                            _position_of(inner.node, inner)
     if key == "pype":
         value = _string(entry, file, fault_list)
         if value is not None: parameter_db["pype"] = value
@@ -601,8 +608,13 @@ def _unknown_key_text(key):
 
 
 TOLERANCE_KEYS = ("numeric_ratio, whitespace, regions, "
-                  "eq_pattern, nothing, analogy, constraints, comment, "
-                  "stderr_ignored")
+                  "eq_pattern, nothing, analogy, constraints, "
+                  "constraint_module, comment, stderr_ignored")
+
+
+#  THE PLACE OF A 'constraints' LIST'S VALUE in a 'position_db' -- beside
+#  its key's place, which provenance reads.
+CONSTRAINTS_VALUE_KEY = "tolerance.constraints:value"
 
 
 def _tolerance(entry, file, fault_list):
@@ -658,6 +670,19 @@ def _tolerance(entry, file, fault_list):
         elif inner.key in ("eq_pattern", "nothing"):
             value = _string_list(inner, file, fault_list)
             if value is not None: field_db[inner.key] = value
+        elif inner.key == "constraint_module":
+            #  ONE PYTHON FILE (ruled 2026-11-18), read from the test
+            #  directory; whether it loads is asked where the directory
+            #  is known ('explorer._constraint_module_refused').
+            value = _string(inner, file, fault_list)
+            if value is None: continue
+            if not value.endswith(".py"):
+                fault_list.append(Fault(
+                    E_FaultKind.TYPE, file, inner.node.position,
+                    "'constraint_module' names a Python file, "
+                    "'<name>.py': not '%s'" % value))
+                continue
+            field_db["constraint_module"] = value
         elif inner.key == "constraints":
             if _off_f(inner.node):
                 field_db["constraints"] = ()
@@ -667,9 +692,14 @@ def _tolerance(entry, file, fault_list):
                     #  WHAT IS ADMITTED HERE IS WHAT THE RUN CAN COMPILE
                     #  (G-3): compare's own door judges each expression,
                     #  and a refused one is a fault with its position.
+                    #  A CALL TO A NAME THE FIXED NAMESPACE DOES NOT HOLD
+                    #  is judged where the constraint module is known --
+                    #  it may come from a 'hwut.conf' above
+                    #  ('explorer._constraint_module_refused').
                     good_f = True
                     for expression in value:
-                        reason = constraint_fault_of(expression)
+                        reason = constraint_fault_of(expression,
+                                                     open_call_f=True)
                         if reason is None: continue
                         good_f = False
                         fault_list.append(Fault(

@@ -49,7 +49,11 @@ from .adapter import TOLERANCE_LEAF_TUPLE, tolerance_applied
 PANE_FILE = "<tolerance pane>"
 
 _INDENT       = "    "
-_KEY_WIDTH    = max(len(leaf) for leaf in TOLERANCE_LEAF_TUPLE)
+#  THE PANE'S OWN KEYS ('leaf_db_of'): 'constraint_module' names a file,
+#  not a tolerance one edits beside a difference, and stands not here.
+_PANE_LEAF_TUPLE = tuple(leaf for leaf in TOLERANCE_LEAF_TUPLE
+                         if leaf != "constraint_module")
+_KEY_WIDTH    = max(len(leaf) for leaf in _PANE_LEAF_TUPLE)
 _VALUE_COLUMN = 42
 
 

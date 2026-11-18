@@ -65,8 +65,35 @@ import contextvars
 import keyword
 import re
 
-from .constraint_namespace import (CONSTANT_DB, FUNCTION_DB,
-                                   STR_METHOD_SET, namespace_of)
+from .constraint_namespace import (ArgumentUnitError,
+                                   CONSTANT_DB, FUNCTION_DB,
+                                   FIXED_NAMESPACE, ConstraintModuleError,
+                                   STR_METHOD_SET, namespace_for)
+
+
+#  AN INTEGER PREFIXED AS PYTHON WRITES IT (book D-93): what a register,
+#  an address or a mask prints. A law reads '0x14' as 20; a binding
+#  '((register: 0x14))' binds 20 too -- one reading on both sides.
+PREFIXED_INTEGER_SRC = r"[-+]?0(?:[xX][0-9a-fA-F]+|[oO][0-7]+|[bB][01]+)\b"
+
+
+class UnreadableValue:
+    """A BINDING'S VALUE THAT CANNOT BE READ (book D-93): a number and a
+    word that is no unit -- '((room: 12 socks))'. It enters no law: the
+    binding is refused where it is read, and the finding names the word
+    ('enter_line').
+
+        written     the value as the line wrote it, '12 socks'
+        reason      why it cannot be read, a sentence naming the word
+    """
+    __slots__ = ("written", "reason")
+
+    def __init__(self, written, reason):
+        self.written, self.reason = written, reason
+
+    def __str__(self):
+        """RETURN: str, the value as written."""
+        return self.written
 
 
 class ConstraintSpecError(Exception):
@@ -99,6 +126,19 @@ _CONSTANT_SAID_DB = {"pi": "the circle's ratio", "e": "Euler's number",
                      "tau": "two pi", "inf": "infinity",
                      "nan": "not a number"}
 SAFE_STR_METHOD_SET = STR_METHOD_SET
+
+
+def _constant_said(name, namespace):
+    """RETURN: str, how the constant 'name' is said: the fixed ones in
+               words ('Euler's number'), one of a constraint module as
+               coming from that file."""
+    if name in _CONSTANT_SAID_DB and name in CONSTANT_DB \
+       and namespace.constant_db.get(name) is CONSTANT_DB[name]:
+        return _CONSTANT_SAID_DB[name]
+    if namespace.module_path is not None:
+        import os
+        return "from %s" % os.path.basename(namespace.module_path)
+    return _CONSTANT_SAID_DB.get(name, name)
 
 _SAFE_NODE_TYPES = (
     ast.Expression, ast.BinOp, ast.UnaryOp, ast.BoolOp, ast.Compare,
@@ -191,14 +231,21 @@ class ConstraintExpression:
     happens against the current constraint space values.
     """
     __slots__ = ("text", "variable", "depend_set", "_code", "_quantity_f",
-                 "_code_q", "glued_tuple")
+                 "_code_q", "glued_tuple", "namespace", "_open_call_f",
+                 "argument_db")
 
-    def __init__(self, variable, text):
+    def __init__(self, variable, text, namespace=FIXED_NAMESPACE,
+                 open_call_f=False):
         """RETURNS: (constructor) -- raises ConstraintSpecError if 'text' is
-        not a pure whitelisted expression.
+        not a pure whitelisted expression over 'namespace' (the fixed
+        names, and those of a constraint module). 'open_call_f' admits a
+        call to any bare name: the door asked where the module is not yet
+        known ('spec_fault_of').
         """
-        self.text     = text
-        self.variable = variable
+        self.text      = text
+        self.variable  = variable
+        self.namespace = namespace
+        self._open_call_f = open_call_f
         glued_list = []
         try:
             source = with_quantity_literals(text, glued_list)
@@ -212,6 +259,14 @@ class ConstraintExpression:
                 "constraint for '%s': %r is not parseable (%s)"
                 % (variable, text, e.msg)) from None
         self.depend_set  = self._validate(tree)
+        #  WHAT EACH FUNCTION IS CALLED ON, as the law writes it -- the
+        #  first call of each: a refusal names the argument (D-92).
+        self.argument_db = {}
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
+                self.argument_db.setdefault(
+                    node.func.id, tuple(_as_written(ast.unparse(a))
+                                        for a in node.args))
         #  (literal, unit part) of every glued unit word -- 'kg*a' in
         #  '2 kg*a': where a binding is called 'a', the law is ambiguous.
         self.glued_tuple = tuple(glued_list)
@@ -236,6 +291,8 @@ class ConstraintExpression:
                     any construct outside the whitelist.
         """
         depend_set = set()
+        function_db = self.namespace.function_db
+        constant_db = self.namespace.constant_db
         #  A FUNCTION'S NAME STANDS ONLY WHERE IT IS CALLED. Anywhere
         #  else it is meant as a VARIABLE, and a variable may not carry a
         #  name of the namespace ('README-constraint_namespace.txt', 4).
@@ -260,12 +317,13 @@ class ConstraintExpression:
             elif isinstance(node, ast.Call):
                 func = node.func
                 if isinstance(func, ast.Name):
-                    if func.id not in SAFE_FUNCTION_DB or node.keywords:
+                    if node.keywords or (func.id not in function_db
+                                         and not self._open_call_f):
                         raise ConstraintSpecError(
                             "constraint for '%s': %r: only calls to %s "
                             "or string methods are allowed"
                             % (self.variable, self.text,
-                               ", ".join(sorted(SAFE_FUNCTION_DB))))
+                               ", ".join(sorted(function_db))))
                 elif isinstance(func, ast.Attribute):
                     pass  # checked as ast.Attribute below
                 else:
@@ -280,15 +338,16 @@ class ConstraintExpression:
                         % (self.variable, self.text, node.attr,
                            ", ".join(sorted(SAFE_STR_METHOD_SET))))
             elif isinstance(node, ast.Name):
-                if (node.id in SAFE_FUNCTION_DB
+                if (node.id in function_db
                         and id(node) not in called_set):
                     raise ConstraintSpecError(
                         "constraint for '%s': %r: '%s' is a function of "
                         "the constraint namespace -- a variable cannot "
                         "carry that name"
                         % (self.variable, self.text, node.id))
-                if (node.id not in SAFE_FUNCTION_DB
-                        and node.id not in SAFE_CONSTANT_DB):
+                if (node.id not in function_db
+                        and node.id not in constant_db
+                        and id(node) not in called_set):
                     # ANY other name is a VARIABLE of the constraint space.
                     # Whether it is BOUND is a RUNTIME question: until it
                     # is, the expression does not fire (C-19) -- never a
@@ -305,7 +364,7 @@ class ConstraintExpression:
             #  the remedy, as E-193 does where the binding is read.
             constant_list = sorted({node.id for node in ast.walk(tree)
                                     if isinstance(node, ast.Name)
-                                    and node.id in SAFE_CONSTANT_DB})
+                                    and node.id in constant_db})
             if constant_list:
                 raise ConstraintSpecError(
                     "constraint for '%s': %r names no variable: %s -- a "
@@ -314,7 +373,8 @@ class ConstraintExpression:
                     % (self.variable, self.text,
                        "; ".join("'%s' is a constant of the constraint "
                                  "namespace (%s)"
-                                 % (name, _CONSTANT_SAID_DB.get(name, name))
+                                 % (name, _constant_said(name,
+                                                         self.namespace))
                                  for name in constant_list)))
             raise ConstraintSpecError(
                 "constraint for '%s': %r names no variable -- it "
@@ -335,7 +395,7 @@ class ConstraintExpression:
         quantity_f = self._quantity_f \
                      or any(hasattr(v, "units") for v in value_db.values())
         value_db = _bare_numbers_dimensionless(value_db, self._quantity_f)
-        scope = namespace_of(value_db)
+        scope = self.namespace.scope(value_db)
         if not quantity_f:
             return eval(self._code, {"__builtins__": {}}, scope)  # noqa: S307
         from ....auxiliary.units import registry
@@ -418,15 +478,42 @@ def _with_dimensionless_numbers(tree):
     return ast.fix_missing_locations(Wrap().visit(tree))
 
 
-def failure_reason(error):
+def _as_written(text):
+    """RETURN: str, an argument's source as the law wrote it: a literal
+               'quantity("30 m")' read back as '30 m'."""
+    return re.sub(r"""quantity\((['"])(.*?)\1\)""", r"\2", text)
+
+
+def _dimension_said(value):
+    """RETURN: str, what 'value' is, as a refusal says it: its dimension
+               ('[length]'), 'an angle', or 'a plain number'."""
+    if not hasattr(value, "units"): return "a plain number"
+    if value.dimensionless:
+        return "an angle" if "radian" in str(value.to_base_units().units) \
+               else "a plain number"
+    return str(value.dimensionality)
+
+
+def failure_reason(error, expression=None):
     """
     RETURN: str, why a law over quantities could not be judged, said in a
             reader's words -- a number without unit against a quantity, an
             offset temperature in arithmetic, two units that do not
-            compare -- if 'error' is pint's;
+            compare, a maths function given a dimension it cannot take
+            (D-92: "sin needs an angle or a plain number -- 'east' is
+            [length]", the argument as 'expression' writes it) -- if
+            'error' is pint's or the namespace's;
             None, else (a division by zero, a type clash: said as before).
     """
     name = type(error).__name__
+    if isinstance(error, ArgumentUnitError):
+        written = getattr(expression, "argument_db", {}).get(error.function,
+                                                             ())
+        said = ", ".join("'%s' is %s"
+                         % (written[i] if i < len(written) else value,
+                            _dimension_said(value))
+                         for i, value in error.pair_list)
+        return "%s needs %s -- %s" % (error.function, error.need, said)
     text = str(error)
     if name == "OffsetUnitCalculusError":
         return ("an absolute temperature in arithmetic -- write the "
@@ -495,21 +582,23 @@ class ConstraintDb:
     brings it up, and it fires once all are bound. Filed twice (the page's
     list gives it to each of its variables), it is held once per variable.
     """
-    __slots__ = ("db",)
+    __slots__ = ("db", "namespace")
 
-    def __init__(self, spec_db):
+    def __init__(self, spec_db, namespace=FIXED_NAMESPACE):
         """RETURNS: (constructor) -- raises ConstraintSpecError on any
         malformed constraint.
 
         'spec_db': dict variable name -> expression string, or list/tuple of
         expression strings (e.g. Configuration.constraint_db).
+        'namespace': the names the laws may use (ConstraintNamespace).
         """
+        self.namespace = namespace
         text_db = {}                  # variable -> {text: expression}
         for variable, spec in spec_db.items():
             if isinstance(spec, str): spec_list = (spec,)
             else:                     spec_list = tuple(spec)
             for text in spec_list:
-                expression = ConstraintExpression(variable, text)
+                expression = ConstraintExpression(variable, text, namespace)
                 for name in sorted(expression.depend_set | {variable}):
                     text_db.setdefault(name, {}).setdefault(text, expression)
         self.db = {variable: tuple(by_text.values())
@@ -564,6 +653,11 @@ class ConstraintSpace:
         for expression in self.constraint_db.get(name):
             if not expression.depend_set <= self.value_db.keys():
                 continue            # not all bound yet: does not fire
+            #  A VALUE THAT COULD NOT BE READ (D-93) is refused where it
+            #  was bound; no law judges it a second time.
+            if any(isinstance(self.value_db[n], UnreadableValue)
+                   for n in expression.depend_set):
+                continue
             #  A UNIT WORD THAT SWALLOWED A BINDING'S NAME (E-193): '2 kg*a'
             #  reads kilogram-annum where a binding 'a' stands -- said, never
             #  judged either way.
@@ -582,7 +676,8 @@ class ConstraintSpace:
             except Exception as error:
                 ok = False          # div-zero / type clash / any failure
                 #  WHY, WHERE A READER CAN ACT ON IT (ND12, E-191).
-                self.reason_db[expression.text] = failure_reason(error)
+                self.reason_db[expression.text] = failure_reason(error,
+                                                                 expression)
             if not ok:
                 #  A GLUED UNIT WORD WHOSE BINDING MAY STILL COME (E-193):
                 #  remembered, said only where that binding does come
@@ -624,7 +719,8 @@ def quoted_expression(expression):
 def _value_said(value):
     """RETURN: str, a bound value as a page says it: a string quoted, a
                quantity in short form ('2.5 ms', RQ-7), a number as is."""
-    if isinstance(value, str): return '"%s"' % value
+    if isinstance(value, str):             return '"%s"' % value
+    if isinstance(value, UnreadableValue): return str(value)
     from ....auxiliary.units import shown
     return shown(value)
 
@@ -636,6 +732,9 @@ class ConstraintFinding:
         side        "OUTPUT" (the subject) or "GOOD" (the nominal)
         kind        "violated" -- a binding broke the expression (or its
                                   evaluation failed)
+                    "misnamed" -- a binding named like a constant
+                    "unreadable" -- a binding whose value cannot be read,
+                                  a word that is no unit (D-93)
                     "unbound"  -- the stream ended with 'variable' never
                                   bound
         expression  the expression as written
@@ -664,7 +763,7 @@ class ConstraintFinding:
         if self.kind == "unbound":
             return "%s: constraint %s: '%s' never bound" \
                    % (self.side, quoted_expression(self.expression), self.variable)
-        if self.kind == "misnamed":
+        if self.kind in ("misnamed", "unreadable"):
             return "%s: binding ((%s: %s))%s -- %s" \
                    % (self.side, self.variable, _value_said(self.value),
                       "" if self.line_n is None else ", line %s" % self.line_n,
@@ -688,7 +787,7 @@ class ConstraintFinding:
                 A binding named like a constant: 'error: binding "<name>"
                 -- <reason>'.
         """
-        if self.kind == "misnamed":
+        if self.kind in ("misnamed", "unreadable"):
             return 'error: binding "%s" -- %s' % (self.variable, self.reason)
         pair_list = []
         for name in sorted(set(self.value_db) | {self.variable}):
@@ -788,8 +887,24 @@ def context_new(config, finding_list=None, free_f=False):
     spec_db = getattr(config, "constraint_db", None)
     if not spec_db:
         return context_constraint_context.set(None)
+    namespace = configured_namespace(config)
     return context_constraint_context.set(
-        ConstraintContext(ConstraintDb(spec_db), finding_list, free_f))
+        ConstraintContext(ConstraintDb(spec_db, namespace), finding_list,
+                          free_f))
+
+
+def configured_namespace(config):
+    """
+    RETURN: ConstraintNamespace, the names the laws of 'config' may use --
+            the fixed ones, and those of its 'constraint_module';
+            raises ConstraintSpecError naming the file and the reason,
+            where that file cannot be loaded (a fault of the
+            specification, before any line is read).
+    """
+    try:
+        return namespace_for(getattr(config, "constraint_module", None))
+    except ConstraintModuleError as error:
+        raise ConstraintSpecError(str(error)) from None
 
 
 def context_get():
@@ -841,12 +956,25 @@ def enter_line(context, subject_line, nominal_line):
             #  A BINDING NAMED LIKE A CONSTANT OF THE NAMESPACE (services
             #  E-193): a law reads 'e' as Euler's number, never as this
             #  binding -- refused where the binding is read, by name.
-            if name in CONSTANT_DB:
+            namespace = space.constraint_db.namespace
+            if name in namespace.constant_db:
                 context.finding_list.append(ConstraintFinding(
                     side, "misnamed", "", name, value, line.line_n,
                     reason="'%s' is a constant of the constraint namespace "
                            "(%s) -- rename the binding"
-                           % (name, _CONSTANT_SAID_DB.get(name, name))))
+                           % (name, _constant_said(name, namespace))))
+                context.kill()
+                held_f = False
+                if not context.free_f: return False
+                continue
+            #  A VALUE THAT CANNOT BE READ (book D-93): '((room: 12
+            #  socks))' -- refused here, naming the word; it is kept in
+            #  the space so that no law asks for it as never bound.
+            if isinstance(value, UnreadableValue):
+                space.value_db[name] = value
+                context.finding_list.append(ConstraintFinding(
+                    side, "unreadable", "", name, value, line.line_n,
+                    reason=value.reason))
                 context.kill()
                 held_f = False
                 if not context.free_f: return False
@@ -887,18 +1015,23 @@ def check_no_bindings_nominal(line_list, scope_name):
                 % (name, value, scope_name))
 
 
-def spec_fault_of(expression):
+def spec_fault_of(expression, namespace=FIXED_NAMESPACE, open_call_f=False):
     """
     RETURN: str, why 'expression' cannot stand as a constraint -- it
-                 does not parse, or reaches outside the namespace;
+                 does not parse, or reaches outside 'namespace' (the
+                 fixed names, and those of a constraint module);
             None, where it can.
+
+    'open_call_f' admits a call to any bare name -- for the door that reads
+    one scope, where a constraint module stated above is not yet known; the
+    call is judged again where it is.
 
     THE DOOR'S OWN JUDGEMENT, ASKED BEFORE A RUN (G-3): whoever reads a
     constraint out of a specification asks here, so that what the
     validator admits is what the run can compile.
     """
     try:
-        ConstraintExpression("?", expression)
+        ConstraintExpression("?", expression, namespace, open_call_f)
     except ConstraintSpecError as error:
         text = str(error)
         prefix = "constraint for '?': "

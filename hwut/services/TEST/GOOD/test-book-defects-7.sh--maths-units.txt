@@ -1,0 +1,29 @@
+-- constraints = ["hypot(east, north) <= radius"]  over  ((east: 30 m)) ((north: 40 m)) ((radius: 60 m))
+ACCEPTED  1 of 1
+-- constraints = ["hypot(east, north) <= 33 m"]  over  ((east: 30 m)) ((north: 40 ft))
+ACCEPTED  1 of 1
+-- constraints = ["hypot(east, north) <= 32 m"]  over  ((east: 30 m)) ((north: 40 ft))
+REFUSED constraint: 'test-law.sh .stdout' -- the candidate breaks its constraints:
+    constraint "hypot(east, north) <= 32 m": broken by ((north: 40 ft)), line 1
+ACCEPTED  0 of 1
+-- constraints = ["sqrt(area) < 20 m"]  over  ((area: 144 m**2))
+ACCEPTED  1 of 1
+-- constraints = ["pow(side, 2) == area"]  over  ((side: 3 m)) ((area: 9 m**2))
+ACCEPTED  1 of 1
+-- constraints = ["floor(t) == 3 s and ceil(t) == 4 s and trunc(t) == 3 s"]  over  ((t: 3.7 s))
+ACCEPTED  1 of 1
+-- constraints = ["fabs(u) == 3 V and copysign(w, u) == -2 V"]  over  ((u: -3 V)) ((w: 2 V))
+ACCEPTED  1 of 1
+-- constraints = ["fmod(a, b) == 1 m"]  over  ((a: 7 m)) ((b: 300 cm))
+ACCEPTED  1 of 1
+-- constraints = ["isclose(a, b)"]  over  ((a: 1 m)) ((b: 100 cm))
+ACCEPTED  1 of 1
+-- constraints = ["atan2(north, east) > 0.9"]  over  ((east: 30 m)) ((north: 40 m))
+ACCEPTED  1 of 1
+-- constraints = ["sin(phi) > 0.49 and degrees(phi) == 30"]  over  ((phi: 30 deg))
+ACCEPTED  1 of 1
+-- constraints = ["abs(u) == 3 V and round(w) == 2 V and min(a, b) == b and max(a, b) == a"]  over  ((u: -3 V)) ((w: 2.4 V)) ((a: 30 m)) ((b: 40 ft))
+ACCEPTED  1 of 1
+-- constraints = ["hypot(east, north) < 5 and sin(x) < 1"]  over  ((east: 3)) ((north: 3)) ((x: 0.5))
+ACCEPTED  1 of 1
+<hwut-end>

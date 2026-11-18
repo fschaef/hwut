@@ -8795,3 +8795,45 @@ READ OUT  'session.refresh' has no caller left. Kept: its removal is a
 CHECKED   services/TEST test-play.py [look_hints]: unchanged -> no HINT;
           edited, equivalent -> HINT + 'nothing differs'; edited,
           differing -> HINT + the RECORDING shown; merge -> HINT.
+
+E-233  A BINDING READ AS WRITTEN; THE AUTHOR'S OWN LAW NAMES      (2026-11-18)
+------------------------------------------------------------------------------
+PROBLEM   The book's D-93 (DEVELOPMENT-REQ-26y11m18d): a binding pint
+          cannot read became text, silently. MEASURED on 67bbf0f:
+          '((register: 0x14))' bound "0 x14" -- the numeral took '0', the
+          unit word 'x14' -- and 'register % 4 == 0' was broken by a value
+          the output never printed; '((room: 12 socks))' bound "12 socks"
+          and 'room == 12 ft' failed with no reason. Asked with it: a
+          Python module whose functions the laws may use.
+DECISION  (Frank-Rene, 2026-11-18) D-93: '0x14', '0o17', '0b101' bind the
+          integer a law reads ('PREFIXED_INTEGER_SRC', one pattern for the
+          pattern finder and the binding); a unit may follow. A number
+          with a word pint does not know is REFUSED WHERE THE BINDING IS
+          READ: an 'UnreadableValue', and a finding of its own,
+          'unreadable' -- "binding ((room: 12 socks)), line 1 -- 'socks'
+          is no unit pint knows (hwut.pype --units lists them)", the value
+          as the line wrote it; no law over it is judged a second time.
+          THE MODULE: 'tolerance { constraint_module = "laws.py" }', ONE
+          file, read from the test directory; "anything must come from
+          here; anything is imported flat": every public name of it --
+          '__all__', else no leading '_' -- called bare; a fixed name it
+          defines is REPLACED, "said once" (a NOTE on stderr where it is
+          loaded); a file that does not load is a spec fault before any
+          line is read; its code is the author's, unfenced (compare C-24,
+          README-constraint_namespace.txt 6).
+          WHERE A CALL IS JUDGED: the door of one tolerance scope admits a
+          call to any bare name (the module may be stated in a 'hwut.conf'
+          above); 'explorer._constraint_module_refused' judges it where the
+          application is folded and the test directory known -- refused,
+          'spec [FAIL]', listing every function there is -- at the place
+          the list of laws is written (the validator records it,
+          'CONSTRAINTS_VALUE_KEY'), a module's fault at the place of
+          'constraint_module', in a 'hwut.conf' where it stands there.
+          The module is no wallflower. The merge screen's tolerance pane
+          does not show the key: it names a file, not a tolerance one
+          edits beside a difference.
+READ OUT  The run's HINTS say "EXECUTION -- application invocation error"
+          under a 'constraint [FAIL]' -- on 67bbf0f too, for any broken
+          law: not this change's, left for a ruling of its own.
+CHECKED   services/TEST test-book-defects-7.sh: unit-hex, unit-word,
+          module-names, module-replaces, module-inherited, module-faults.

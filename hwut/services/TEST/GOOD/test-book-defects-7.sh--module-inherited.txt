@@ -1,0 +1,12 @@
+ACCEPTED  1 of 1
+-- level 3 V
+END   test-law.sh .................................................. [OK]
+RESULTS: 1 ok, 0 fail, <t> [sec], <t> [sec] total
+-- level 9 V
+END   test-law.sh ..................................... constraint [FAIL]
+RESULTS: 0 ok, 1 fail, <t> [sec], <t> [sec] total
+            | ^ BROKEN: OUTPUT: constraint "in_band(level, 1 V, 5 V)": broken by ((level: 9 V)), line 1
+-- a name neither holds
+ERROR test-law.sh:2:37: REFUSED: constraint 'in_bnd(level, 1 V, 5 V)': only calls to <the namespace> or string methods are allowed
+RESULTS: 0 ok, 1 fail, <t> [sec], <t> [sec] total
+<hwut-end>

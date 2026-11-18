@@ -4670,6 +4670,11 @@ bookkeeper RATIONALE B-32, amended 2026-11-03 (plan/42 P-8).
 The author's findings of 2026-11-04 stand fixed: a trailing '/' on '--dir' is punctuation, a directory the wish never asked about is not explored and says nothing, and a silent run's stdout carries events alone.
 services RATIONALE E-221.
 
+[[book-defects-round-4]]
+documents: engine/compare/engine/README-constraint_namespace.txt
+A binding '0x14' binds the integer a law reads, a number with a word pint does not know is refused where it is read, naming the word, the maths of a law keep the unit or say what they need, and 'constraint_module = "laws.py"' brings the public names of one Python file into the laws -- a fixed name replaced is said, a file that does not load refuses the application.
+services RATIONALE E-233; compare C-24, C-25.
+
 [[pipe-filter]]
 documents: services/lib/pype/README.txt, services/lib/pype/MANUAL.txt, ../README.md
 A pype script runs as a filter in an operating-system pipe -- named as argument or called as a she-bang script -- and turns lines arriving in any order into one deterministic text.

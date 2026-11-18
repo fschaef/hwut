@@ -17,6 +17,7 @@
 --- Configuration ---
     constraint_expression_list     []
     constraint_db                  {}
+    constraint_module              None
     region                         {'potpourri': {'max_comparisons': 128}}
     diff_display_parameters        ConfigurationDiffDisplayParameters(search_budget=20000, margin=0.1, lowest_n=4, context_k=1)
 <hwut-end>

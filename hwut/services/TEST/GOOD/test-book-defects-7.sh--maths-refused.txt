@@ -1,0 +1,29 @@
+-- constraints = ["sin(east) < 1"]  over  ((east: 30 m))
+REFUSED constraint: 'test-law.sh .stdout' -- the candidate breaks its constraints:
+    constraint "sin(east) < 1": broken by ((east: 30 m)), line 1 -- sin needs an angle or a plain number -- 'east' is [length]
+ACCEPTED  0 of 1
+-- constraints = ["exp(t) > 1"]  over  ((t: 2 s))
+REFUSED constraint: 'test-law.sh .stdout' -- the candidate breaks its constraints:
+    constraint "exp(t) > 1": broken by ((t: 2 s)), line 1 -- exp needs an angle or a plain number -- 't' is [time]
+ACCEPTED  0 of 1
+-- constraints = ["atan2(north, dt) > 0"]  over  ((north: 3 m)) ((dt: 2 s))
+REFUSED constraint: 'test-law.sh .stdout' -- the candidate breaks its constraints:
+    constraint "atan2(north, dt) > 0": broken by ((dt: 2 s)), line 1 -- atan2 needs values of one dimension -- 'north' is [length], 'dt' is [time]
+ACCEPTED  0 of 1
+-- constraints = ["hypot(east, 3) < 5 m"]  over  ((east: 3 m))
+REFUSED constraint: 'test-law.sh .stdout' -- the candidate breaks its constraints:
+    constraint "hypot(east, 3) < 5 m": broken by ((east: 3 m)), line 1 -- hypot needs values of one dimension -- 'east' is [length], '3' is a plain number
+ACCEPTED  0 of 1
+-- constraints = ["asin(phi) < 1"]  over  ((phi: 30 deg))
+REFUSED constraint: 'test-law.sh .stdout' -- the candidate breaks its constraints:
+    constraint "asin(phi) < 1": broken by ((phi: 30 deg)), line 1 -- asin needs plain numbers -- 'phi' is an angle
+ACCEPTED  0 of 1
+-- constraints = ["pow(x, n) < 1 m"]  over  ((x: 3 m)) ((n: 2 s))
+REFUSED constraint: 'test-law.sh .stdout' -- the candidate breaks its constraints:
+    constraint "pow(x, n) < 1 m": broken by ((n: 2 s)), line 1 -- pow needs a plain number as its exponent -- 'n' is [time]
+ACCEPTED  0 of 1
+-- constraints = ["gcd(a, 2) == 2"]  over  ((a: 4 m))
+REFUSED constraint: 'test-law.sh .stdout' -- the candidate breaks its constraints:
+    constraint "gcd(a, 2) == 2": broken by ((a: 4 m)), line 1 -- gcd needs plain numbers -- 'a' is [length]
+ACCEPTED  0 of 1
+<hwut-end>

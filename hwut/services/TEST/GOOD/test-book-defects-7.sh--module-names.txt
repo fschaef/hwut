@@ -1,0 +1,26 @@
+-- constraint_module = "laws.py" constraints = ["in_band(level, 1 V, 5 V)"]  over  ((level: 3 V))
+ACCEPTED  1 of 1
+-- constraint_module = "laws.py" constraints = ["in_band(level, 1 V, 5 V)"]  over  ((level: 7 V))
+REFUSED constraint: 'test-law.sh .stdout' -- the candidate breaks its constraints:
+    constraint "in_band(level, 1 V, 5 V)": broken by ((level: 7 V)), line 1
+ACCEPTED  0 of 1
+-- constraint_module = "laws.py" constraints = ["fmean((a, b)) < LIMIT"]  over  ((a: 3)) ((b: 4))
+ACCEPTED  1 of 1
+-- constraint_module = "laws.py" constraints = ["a < 1"]  over  ((LIMIT: 3))
+REFUSED constraint: 'test-law.sh .stdout' -- the candidate breaks its constraints:
+    binding ((LIMIT: 3)), line 1 -- 'LIMIT' is a constant of the constraint namespace (from laws.py) -- rename the binding
+ACCEPTED  0 of 1
+-- constraint_module = "laws.py" constraints = ["_helper(a) < 1"]  over  ((a: 3))
+FAULT: test-law.sh:2:67: REFUSED: constraint '_helper(a) < 1': only calls to <the namespace> or string methods are allowed
+-- constraint_module = "laws.py" constraints = ["math(a) < 1"]  over  ((a: 3))
+FAULT: test-law.sh:2:67: REFUSED: constraint 'math(a) < 1': only calls to <the namespace> or string methods are allowed
+-- constraint_module = "laws.py" constraints = ["a < LIMIT"]  over  ((a: 3))
+REFUSED constraint: 'test-law.sh .stdout' -- the candidate breaks its constraints:
+    constraint "a < LIMIT": 'LIMIT' never bound
+ACCEPTED  0 of 1
+-- constraint_module = "laws.py" constraints = ["in_band(level, 1, 5)"]  over  ((level: 3))
+ACCEPTED  1 of 1
+-- the run, its wallflowers
+END   test-law.sh .................................................. [OK]
+RESULTS: 1 ok, 0 fail, <t> [sec], <t> [sec] total
+<hwut-end>

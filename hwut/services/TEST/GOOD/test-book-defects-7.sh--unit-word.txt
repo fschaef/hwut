@@ -1,0 +1,16 @@
+-- constraints = ["room == 12 ft"]  over  ((room: 12 socks))
+REFUSED constraint: 'test-law.sh .stdout' -- the candidate breaks its constraints:
+    binding ((room: 12 socks)), line 1 -- 'socks' is no unit pint knows (hwut.pype --units lists them)
+ACCEPTED  0 of 1
+-- constraints = ["room == 12 ft"]  over  ((room: 12 ft))
+ACCEPTED  1 of 1
+-- constraints = ["a < b"]  over  ((a: 3 socks)) ((b: 4))
+REFUSED constraint: 'test-law.sh .stdout' -- the candidate breaks its constraints:
+    binding ((a: 3 socks)), line 1 -- 'socks' is no unit pint knows (hwut.pype --units lists them)
+ACCEPTED  0 of 1
+-- constraints = ["x > 0"]  over  ((x: 0xg1)) ((y: 12  feet_of_clay))
+REFUSED constraint: 'test-law.sh .stdout' -- the candidate breaks its constraints:
+    binding ((x: 0xg1)), line 1 -- 'xg1' is no unit pint knows (hwut.pype --units lists them)
+    binding ((y: 12  feet_of_clay)), line 1 -- 'feet_of_clay' is no unit pint knows (hwut.pype --units lists them)
+ACCEPTED  0 of 1
+<hwut-end>

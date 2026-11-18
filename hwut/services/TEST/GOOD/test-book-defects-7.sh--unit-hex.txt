@@ -1,0 +1,15 @@
+-- constraints = ["register % 4 == 0"]  over  ((register: 0x14))
+ACCEPTED  1 of 1
+-- constraints = ["register == 20"]  over  ((register: 0X14))
+ACCEPTED  1 of 1
+-- constraints = ["register % 4 == 0"]  over  ((register: 0x15))
+REFUSED constraint: 'test-law.sh .stdout' -- the candidate breaks its constraints:
+    constraint "register % 4 == 0": broken by ((register: 21)), line 1
+ACCEPTED  0 of 1
+-- constraints = ["x == 15 and y == 5"]  over  ((x: 0o17)) ((y: 0b101))
+ACCEPTED  1 of 1
+-- constraints = ["x == -20"]  over  ((x: -0x14))
+ACCEPTED  1 of 1
+-- constraints = ["t < 1 s"]  over  ((t: 0x14 ms))
+ACCEPTED  1 of 1
+<hwut-end>

@@ -1,0 +1,13 @@
+-- constraints = ["hypot(east, north) > 40 m"]  over  ((east: 30 m)) ((north: 40 ft))
+REFUSED constraint: 'test-law.sh .stdout' -- the candidate breaks its constraints:
+    constraint "hypot(east, north) > 40 m": broken by ((north: 40 ft)), line 1
+ACCEPTED  0 of 1
+-- constraint_module = "laws.py" constraints = ["hypot(east, north) > 40 m"]  over  ((east: 30 m)) ((north: 40 ft))
+NOTE constraint_module 'laws.py' replaces the constraint namespace's 'hypot'
+ACCEPTED  1 of 1
+-- constraint_module = "laws.py" constraints = ["hypot(east, north) > 50 m"]  over  ((east: 30 m)) ((north: 40 ft))
+NOTE constraint_module 'laws.py' replaces the constraint namespace's 'hypot'
+REFUSED constraint: 'test-law.sh .stdout' -- the candidate breaks its constraints:
+    constraint "hypot(east, north) > 50 m": broken by ((north: 40 ft)), line 1
+ACCEPTED  0 of 1
+<hwut-end>

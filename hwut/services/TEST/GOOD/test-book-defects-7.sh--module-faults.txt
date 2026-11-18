@@ -1,0 +1,15 @@
+-- constraint_module = "missing.py" constraints = ["a < 1"]  over  ((a: 3))
+FAULT: test-law.sh:2:23: REFUSED: constraint_module 'missing.py': no such file (No such file or directory)
+-- constraint_module = "laws.txt" constraints = ["a < 1"]  over  ((a: 3))
+FAULT: test-law.sh:2:43: TYPE: 'constraint_module' names a Python file, '<name>.py': not 'laws.txt'
+-- constraint_module = "bad.py" constraints = ["a < 1"]  over  ((a: 3))
+FAULT: test-law.sh:2:23: REFUSED: constraint_module 'bad.py' does not load: RuntimeError: boom
+-- constraint_module = "all.py" constraints = ["f(a) < 1"]  over  ((a: 0))
+FAULT: test-law.sh:2:23: REFUSED: constraint_module 'all.py': '__all__' names what it does not define: 'g'
+-- constraint_module = "broken.py" constraints = ["f(a) < 1"]  over  ((a: 0))
+FAULT: test-law.sh:2:23: REFUSED: constraint_module 'broken.py' does not load: SyntaxError: '(' was never closed (broken.py, line 1)
+-- stated in hwut.conf: the conf is named
+-- constraints = ["a < 1"]  over  ((a: 0))
+FAULT: hwut.conf:3:21: REFUSED: constraint_module 'gone.py': no such file (No such file or directory)
+REFUSED: '.' -- its configuration does not read (the FAULT above); nothing is accepted under it
+<hwut-end>

@@ -95,6 +95,10 @@ class Configuration:
     constraint space and checks all its constraints -- see
     'engine/constraints.py'.
 
+    'constraint_module' is the absolute path of the Python file whose
+    public names the constraints may use beside the fixed ones
+    ('engine/constraint_namespace.py'); None: the fixed names alone.
+
     'region' is handler-scoped: shebang name -> {param: value}. A shebang
     parameter ('##! potpourri max_comparisons=64') overrides the section;
     the section overrides the handler's spec default. Valid parameter
@@ -109,6 +113,7 @@ class Configuration:
                             field(default_factory=ConfigurationPatternFinder)
     constraint_expression_list: list = field(default_factory=list)
     constraint_db:              dict = field(default_factory=dict)
+    constraint_module:          str  = None
     region:                     dict = field(default_factory=_region_default)
     diff_display_parameters: ConfigurationDiffDisplayParameters = \
                             field(default_factory=ConfigurationDiffDisplayParameters)
@@ -124,16 +129,29 @@ class Configuration:
         Called after the expressions are set, and by anything that hands
         compare a list of expressions rather than a database.
         """
+        #  A MODULE THAT DOES NOT LOAD is said where the laws are
+        #  compiled ('constraints.configured_namespace'); the relation is
+        #  taken over the fixed names meanwhile.
+        from .engine.constraint_namespace import (FIXED_NAMESPACE,
+                                                  ConstraintModuleError,
+                                                  namespace_for)
+        try:
+            namespace = namespace_for(self.constraint_module)
+        except ConstraintModuleError:
+            namespace = FIXED_NAMESPACE
         self.constraint_db = \
                 related_variable_to_constraint_expression_db(
-                                            self.constraint_expression_list)
+                                            self.constraint_expression_list,
+                                            namespace.not_a_variable_set)
         self.pattern_finder.constraint_f = bool(self.constraint_db)
 
 
-def related_variable_to_constraint_expression_db(expression_list):
+def related_variable_to_constraint_expression_db(expression_list,
+                                                 not_a_variable_set=None):
     """
     RETURN: dict, variable name -> tuple of the constraint expressions
-            that mention it.
+            that mention it -- a name of 'not_a_variable_set' (the
+            configuration's namespace; None: the fixed one) is none.
 
     An expression is written as it stands -- "x < y + 2",
     "abs(sin(z) - x) < epsilon" -- and names whatever variables it names.
@@ -154,7 +172,7 @@ def related_variable_to_constraint_expression_db(expression_list):
     for expression in expression_list:
         for name in sorted(_free_name_set(expression)):
             if keyword.iskeyword(name):        continue
-            if name in NOT_A_VARIABLE_SET:     continue
+            if name in (not_a_variable_set or NOT_A_VARIABLE_SET): continue
             result[name] = result.get(name, ()) + (expression,)
     return result
 

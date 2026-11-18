@@ -154,6 +154,10 @@ class Tolerance(_Scope):
                     the empty tuple is the stated OFF
     'constraints'   the expressions every binding must satisfy; the
                     empty tuple is the stated OFF
+    'constraint_module' the Python file whose public names the
+                    constraints may use beside the fixed ones, as
+                    written -- read from the test directory
+                    ('compare/engine/constraint_namespace.py')
     'comment'       the marker PAIR of an ignored line, '("##", "##")';
                     the empty tuple is the stated OFF
     'stderr_ignored' true: this test writes to stderr ON PURPOSE, and a
@@ -173,6 +177,7 @@ class Tolerance(_Scope):
     nothing:       tuple | None = None
     analogy:       tuple | None = None
     constraints:   tuple | None = None
+    constraint_module: str | None = None
     comment:       tuple | None = None
     stderr_ignored: bool | None = None
 

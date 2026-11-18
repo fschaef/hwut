@@ -852,3 +852,56 @@ DECISION  NOT BUILT. Against it, beyond the measurement:
 REVISIT   where a tree's GOOD files grow to megabytes and a census shows
           the reading, not the launch, on top. Measure first; the
           numbers above are the baseline.
+
+C-24  A CONSTRAINT MODULE: THE AUTHOR'S NAMES BESIDE THE FIXED ONES
+      (ruled 2026-11-18)                                              (2026-11-18)
+------------------------------------------------------------------------------
+PROBLEM   The laws reach only the fixed namespace. A unit-keeping 'hypot',
+          a band check, a mean -- each needed a new fixed name and a
+          release (book D-92 is one such gap).
+DECISION  (Frank-Rene, 2026-11-18) 'Configuration.constraint_module' names
+          one Python file (absolute path). 'ConstraintNamespace' is the
+          fixed names with the file's public names laid over them -- a
+          callable a function, anything else a constant; the file wins
+          over a fixed name. One object answers all three readers (the AST
+          check, the evaluation, the variable finder): 'ConstraintDb' and
+          'ConstraintExpression' carry it, 'context_new' takes it from the
+          configuration ('configured_namespace'), 'derive_constraint_db'
+          relates variables over its 'not_a_variable_set'. A file that
+          does not load raises 'ConstraintSpecError' there, naming it.
+          Loaded once per file while its mtime and size stand.
+          A BINDING THAT CANNOT BE READ (D-93, services E-233) is an
+          'UnreadableValue' in the space: refused where it enters, never
+          judged by a law.
+CHECKED   services/TEST test-book-defects-7.sh (all choices).
+
+C-25  THE MATHS OVER QUANTITIES: KEEP THE UNIT, OR SAY WHAT IS NEEDED
+      (book D-92)                                                     (2026-11-18)
+------------------------------------------------------------------------------
+PROBLEM   The namespace handed laws the plain 'math' functions, which see a
+          magnitude. MEASURED on 67bbf0f: 'hypot(east, north) <= radius'
+          over metres and 'sqrt(area) < 20 m' over m**2 refused as "a
+          number without unit against a quantity -- write its unit", a
+          reason pointing at a test that wrote every unit; so 'pow',
+          'floor', 'ceil', 'fabs', 'fmod', 'copysign', 'isclose',
+          'isfinite', 'atan2'; 'trunc' a TypeError with no reason;
+          'sin(east)' over metres refused with the same wrong reason.
+          'abs', 'min', 'max', 'round', 'sum' kept the unit already.
+DECISION  (Frank-Rene, 2026-11-18: "fix D-92", the item's "Wanted") Each
+          maths name is one of four kinds ('constraint_namespace.py',
+          'UNITS IN THE MATHS'): keeps the unit (pint's arithmetic, the
+          units converted to the first argument's); compares in one unit;
+          takes an angle or a plain number (an angle in radian); takes
+          plain numbers (a dimensionless ratio is one). Over plain
+          numbers every one is math's own. Anything else raises
+          'ArgumentUnitError', said by 'failure_reason' with the argument
+          AS THE LAW WRITES IT ('ConstraintExpression.argument_db', the
+          first call of each function): "sin needs an angle or a plain
+          number -- 'east' is [length]". numpy is not needed: pint's
+          arithmetic carries the unit.
+READ OUT  'region/point_cloud/expression.py' keeps its own table of plain
+          maths, over plain columns; not this ruling's.
+CHECKED   services/TEST test-book-defects-7.sh maths-units, maths-refused
+          (the tutorial's 'test-unit-functions.py' laws hold,
+          'test-unit-angle.py''s is refused with the reason).
+

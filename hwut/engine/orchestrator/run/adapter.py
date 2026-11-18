@@ -120,7 +120,8 @@ def test_configuration_of(app, directory, variant_tuple=(), variant_db=None,
     #  EVERY CHOICE CARRIES ITS OWN CAPS, COMPLETE (O-20): the record
     #  resolves no default, so the fold happens HERE, once, and the
     #  consumers read what they are handed.
-    choice_db = {choice: _choice_of(parameters, _caps_of(parameters, caps))
+    choice_db = {choice: _choice_of(parameters, _caps_of(parameters, caps),
+                                    directory)
                  for choice, parameters in app.choice_db.items()}
 
     return TestConfiguration(
@@ -222,7 +223,7 @@ def script_config_of(directory_spec, env=None):
     return replace(base, **field_db) if field_db else base
 
 
-def _choice_of(parameters, caps):
+def _choice_of(parameters, caps, directory=None):
     """
     RETURN: TestChoiceConfiguration of one choice: the stated 'pype'
             as the stdout canonicaliser (the D of the equivalence),
@@ -242,7 +243,8 @@ def _choice_of(parameters, caps):
         output = tuple("stdout" if name == "<stdout>" else name
                        for name in parameters.output)
     return TestChoiceConfiguration(canonicalisers = canonicalisers,
-                                   compare        = _compare_of(parameters),
+                                   compare        = _compare_of(parameters,
+                                                                directory),
                                    output         = output,
                                    caps           = caps,
                                    stderr_ignored_f = bool(
@@ -251,7 +253,7 @@ def _choice_of(parameters, caps):
                                                      .stderr_ignored))
 
 
-def _compare_of(parameters):
+def _compare_of(parameters, directory=None):
     """
     RETURN: compare's Configuration carrying every TOLERANCE the author
             stated; 'None' where none was stated -- an unstated
@@ -268,6 +270,8 @@ def _compare_of(parameters):
         tolerance.analogy       -> analogy_begin/end_marker      (PAIR)
         tolerance.comment       -> ignored_line_begin/end_marker (PAIR)
         tolerance.constraints   -> constraint expressions
+        tolerance.constraint_module -> constraint_module, read from
+                                   'directory' (the test directory)
 
     EVERY ONE IS A LEAF OF 'tolerance' (E-42): one scope, one walk.
 
@@ -295,20 +299,22 @@ def _compare_of(parameters):
         if stated["diff_display_parameters.%s" % leaf] is not None:
             setattr(options.diff_display_parameters, leaf, stated["diff_display_parameters.%s" % leaf])
 
-    tolerance_applied(options, tolerance)
+    tolerance_applied(options, tolerance, directory)
     return options
 
 
 TOLERANCE_LEAF_TUPLE = ("numeric_ratio", "whitespace", "regions",
                         "eq_pattern", "nothing", "analogy", "constraints",
-                        "comment")
+                        "constraint_module", "comment")
 
 
-def tolerance_applied(options, tolerance):
+def tolerance_applied(options, tolerance, directory=None):
     """
     RETURN: None. Every leaf 'tolerance' STATES is set on 'options'
             (compare's Configuration), by the mapping of '_compare_of';
-            an absent leaf leaves compare's value as it stands.
+            an absent leaf leaves compare's value as it stands. A
+            'constraint_module' is read from 'directory' (the test
+            directory; None: where the face stands).
 
     ONE MAPPING, TWO USERS: the run's own configuration, and the merge
     screen's tolerance pane (intend 21), which applies the author's text
@@ -349,6 +355,11 @@ def tolerance_applied(options, tolerance):
                 raise AssertionError("'%s' is a marker PAIR; %d stated" \
                        % (name, len(pair)))
 
+    if stated["tolerance.constraint_module"] is not None:
+        from ...compare.engine.constraint_namespace import module_path_of
+        options.constraint_module = module_path_of(
+                              stated["tolerance.constraint_module"], directory)
+        options.derive_constraint_db()
     if stated["tolerance.constraints"]:
         #  THE EXPRESSIONS ARE COMPILED HERE, NOT ONLY STORED: compare
         #  checks 'constraint_db', never the list as written. Setting the

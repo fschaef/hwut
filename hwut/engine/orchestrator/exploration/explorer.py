@@ -45,6 +45,90 @@ def _execute_interactive_refused(app):
     return fault_list
 
 
+def _constraint_module_set(app_db, directory):
+    """
+    RETURN: set[str], the absolute path of every constraint module a choice
+            of an application of 'app_db' names.
+    """
+    from ...compare.engine.constraint_namespace import module_path_of
+    return {module_path_of(parameters.tolerance.constraint_module, directory)
+            for app in app_db.values()
+            for parameters in app.choice_db.values()
+            if parameters.tolerance is not None
+               and parameters.tolerance.constraint_module is not None}
+
+
+def _constraint_module_refused(app, directory, spec, directory_spec):
+    """
+    RETURN: list[Fault], one fault per choice of 'app' whose constraint
+            module does not load, or one of whose constraints calls a
+            name neither the fixed namespace nor that module holds -- at
+            the place the module, or the list of laws, is written;
+            empty where every choice's laws stand.
+
+    THE DOOR OF ONE SCOPE cannot judge a call: the module may be stated in
+    a 'hwut.conf' above (ruled 2026-11-18). Here both are folded, the
+    test directory is known, and the fault is said before any line is
+    read -- the application is refused, 'spec [FAIL]'. 'spec' and
+    'directory_spec' are what 'app' was folded from: they say where a
+    value was written.
+    """
+    from ...compare.api import constraint_fault_of
+    from ...compare.engine.constraint_namespace import (
+                                FIXED_NAMESPACE, ConstraintModuleError,
+                                module_path_of, namespace_for)
+    from .validator import CONSTRAINTS_VALUE_KEY
+    fault_list, said_set = [], set()
+    for choice, parameters in sorted(app.choice_db.items(),
+                                     key=lambda item: item[0] or ""):
+        tolerance = parameters.tolerance
+        if tolerance is None: continue
+        namespace = FIXED_NAMESPACE
+        if tolerance.constraint_module is not None:
+            path = module_path_of(tolerance.constraint_module, directory)
+            try:
+                namespace = namespace_for(path)
+            except ConstraintModuleError as error:
+                if str(error) not in said_set:
+                    said_set.add(str(error))
+                    file, position = _written_at(
+                        spec, directory_spec, choice,
+                        "tolerance.constraint_module", app)
+                    fault_list.append(Fault(E_FaultKind.REFUSED, file,
+                                            position, str(error)))
+                continue
+        for expression in tolerance.constraints or ():
+            reason = constraint_fault_of(expression, namespace)
+            if reason is None or reason in said_set: continue
+            said_set.add(reason)
+            file, position = _written_at(spec, directory_spec, choice,
+                                         CONSTRAINTS_VALUE_KEY, app)
+            fault_list.append(Fault(E_FaultKind.REFUSED, file, position,
+                                    "constraint %s" % reason))
+    return fault_list
+
+
+def _written_at(spec, directory_spec, choice, key, app):
+    """
+    RETURN: (str, Position), the file and the place where 'key' stands for
+            'choice' -- the choice's own word, else the application's
+            root, else the directory's 'app_defaults' -- as provenance
+            reads them; the application's own place where none records it.
+    """
+    choice_position_db = (spec.choice_position_db or {}).get(choice, {})
+    for file, position_db in (
+            (spec.source_file, choice_position_db),
+            (spec.source_file, spec.position_db or {})):
+        if key in position_db: return file, position_db[key]
+    conf_position_db = getattr(directory_spec, "app_defaults_position_db",
+                               None) or {}
+    if key in conf_position_db:
+        conf_file_db = getattr(directory_spec, "app_defaults_file_db",
+                               None) or {}
+        return conf_file_db.get(key, "hwut.conf"), conf_position_db[key]
+    return app.source_file, app.position
+
+
 @dataclass(frozen=True, slots=True)
 class ExplorationResult:
     """What one TEST directory yields: the set of what exists, every
@@ -163,7 +247,9 @@ def explore(directory, interview_runner=None, inherited=None):
                 silent_list.append(name)
                 continue
         app = _resolve(spec, directory_spec, directory)
-        pair_fault_list = _execute_interactive_refused(app)
+        pair_fault_list = _execute_interactive_refused(app) \
+                          + _constraint_module_refused(app, directory, spec,
+                                                       directory_spec)
         if pair_fault_list:
             fault_list.extend(pair_fault_list)
             continue                                 # refused, not guessed
@@ -183,7 +269,9 @@ def explore(directory, interview_runner=None, inherited=None):
                 "'apps' names '%s', which does not exist" % name))
             continue
         app = _resolve(spec, directory_spec, directory)
-        pair_fault_list = _execute_interactive_refused(app)
+        pair_fault_list = _execute_interactive_refused(app) \
+                          + _constraint_module_refused(app, directory, spec,
+                                                       directory_spec)
         if pair_fault_list:
             fault_list.extend(pair_fault_list)
             continue                                 # refused, not guessed
@@ -199,6 +287,13 @@ def explore(directory, interview_runner=None, inherited=None):
         conf_file      = finder.CONF_NAME,
         position       = directory_spec.position)
     fault_list.extend(graph_fault_list)
+
+    #  A CONSTRAINT MODULE IS NO WALLFLOWER (ruled 2026-11-18): like a
+    #  pype, it stands beside the tests that name it and is no test.
+    module_set = _constraint_module_set(app_db, directory)
+    silent_list = [name for name in silent_list
+                   if os.path.abspath(os.path.join(directory, name))
+                      not in module_set]
 
     return ExplorationResult(
         app_set    = CTestAppSet(directory      = directory,

@@ -152,6 +152,7 @@ RELATION = {
     "tolerance.constraints":   (ConfigCompare, ("constraint_f",
                                                 "constraint_db"),
                                                CONSTRAINTS),
+    "tolerance.constraint_module": (ConfigCompare, "constraint_module"),
     "tolerance.comment":       (ConfigCompare, ("ignored_line_f",
                                                 "ignored_line_begin_marker",
                                                 "ignored_line_end_marker"),

@@ -220,6 +220,23 @@ class LineElementAnalogy(LineElement):
     # NOTE: '__hash__' cannot be overwritten here.
     #       Equivalence is derived later as a function of consistency.
 
+def number_of(raw):
+    """
+    RETURN: int, the integer 'raw' spells -- decimal ('20', '-3') or
+                 prefixed as Python writes it ('0x14', '0o17', '0b101'),
+                 if it spells one;
+            float, the number 'raw' spells ('2.5', '1e-9'), else.
+
+    'raw' is what the binding pattern took as the numeral; it always
+    spells one of the two.
+    """
+    sign, digits = ("-", raw[1:]) if raw[:1] == "-" else ("", raw.lstrip("+"))
+    if digits[:2].lower() in ("0x", "0o", "0b"):
+        return int(sign + digits, 0)
+    try:               return int(raw)
+    except ValueError: return float(raw)
+
+
 class LineElementConstraintBinding(LineElement):
     """A CONSTRAINT BINDING '(( <name> : <number>|<quoted-string> ))' -- the
     variable '<name>' enters the constraint space with the given value (see
@@ -234,15 +251,22 @@ class LineElementConstraintBinding(LineElement):
 
     _PARSE_RE = None              # built on first use: the unit's words
 
+    #  A REGISTER, AN ADDRESS, A MASK (book D-93): '0x14', '0o17', '0b101'
+    #  bind the integer Python reads in a law. MEASURED before: the
+    #  numeral took '0', the unit word 'x14', and the text "0 x14" was
+    #  bound -- 'register % 4 == 0' broken by a value never printed.
+
     @classmethod
     def _parse_re(cls):
         """RETURN: compiled regex: group 1 the name, group 2 the number
                    or the quoted string, group 3 the unit (RQ-7) or None."""
         if cls._PARSE_RE is None:
             from ....auxiliary.units import UNIT_WORD_SRC
+            from ..engine.constraints import PREFIXED_INTEGER_SRC
             cls._PARSE_RE = re.compile(
                 r'([A-Za-z_]\w*)\s*:\s*'
-                r'([-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?|"[^"]*")'
+                r'(' + PREFIXED_INTEGER_SRC + r'|'
+                r'[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?|"[^"]*")'
                 r'(?:[ \t]*(' + UNIT_WORD_SRC + r'))?')
         return cls._PARSE_RE
 
@@ -254,19 +278,29 @@ class LineElementConstraintBinding(LineElement):
         raw, unit = m.group(2), m.group(3)
         if raw.startswith('"'):
             self.value = raw[1:-1]
-        elif unit is not None:
-            #  A QUANTITY (RQ-7): compared through pint, units converted.
-            #  A word pint does not know binds the text as written, and a
-            #  constraint over it fails on the comparison -- said, not
-            #  swallowed.
-            try:
-                from ....auxiliary.units import quantity_of
-                self.value = quantity_of("%s %s" % (raw, unit))
-            except Exception:                         # noqa: BLE001
-                self.value = "%s %s" % (raw, unit)
-        else:
-            try:               self.value = int(raw)
-            except ValueError: self.value = float(raw)
+            return
+        number = number_of(raw)
+        if unit is None:
+            self.value = number
+            return
+        #  A QUANTITY (RQ-7): compared through pint, units converted. A
+        #  word pint does not know is REFUSED WHERE THE BINDING IS READ
+        #  (book D-93): the value is an 'UnreadableValue', and the
+        #  constraint space says why, naming the word. MEASURED before:
+        #  the text "12 socks" was bound, and the law it then broke was
+        #  named with no reason.
+        from ..engine.constraints import UnreadableValue
+        written = content[m.start(2):m.end(3)]     # as the line wrote it
+        try:
+            from ....auxiliary.units import quantity_of
+            self.value = quantity_of("%s %s" % (number, unit))
+        except ModuleNotFoundError:
+            self.value = UnreadableValue(written,
+                             "a quantity needs pint, which is not installed")
+        except Exception:                             # noqa: BLE001
+            self.value = UnreadableValue(written,
+                             "'%s' is no unit pint knows (hwut.pype --units "
+                             "lists them)" % unit)
 
     def compare(self, nominal):
         """RETURNS: [0] MISFIT,     if 'other' is of another class.

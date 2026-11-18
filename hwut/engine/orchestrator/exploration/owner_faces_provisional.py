@@ -90,6 +90,7 @@ class ConfigCompare:
     analogy_begin_marker:         str   = "(("
     analogy_end_marker:           str   = "))"
     constraint_db:                dict  = None
+    constraint_module:            str   = None
 
 
 @dataclass(frozen=True, slots=True)
