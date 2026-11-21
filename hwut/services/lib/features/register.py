@@ -22,7 +22,7 @@ parent's sentence. A rename is 'hwut.features.rename'.
 EXIT STATUS (E-1, services/_exit.py):
     0  OK       nothing disagrees, or only notes are named
     1  FAULT    a feature file states a fault; it is named
-    2  REFUSED  no 'hwut-root.conf', no forest ('hwut.features.init'), or
+    2  REFUSED  no 'HWUT_ROOT/setup.conf', no forest ('hwut.features.init'), or
                 the command line cannot be read
 ______________________________________________________________________________
 """

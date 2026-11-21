@@ -1,7 +1,7 @@
 """SPDX-License: MIT; Project HWUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 
-PURPOSE: THE EXPLANATION OF THE FEATURES, 'HWUT/feature-doc.txt', read
+PURPOSE: THE EXPLANATION OF THE FEATURES, 'HWUT_ROOT/feature-doc.txt', read
          (spec 43 section 2; intend/43 T-c, T-g, T-p, T-s). ONE file beside
          the forest (t-7 struck, 2026-11-08): blocks headed by a bracketed
          line, each running to the next heading or to the end of the file.
@@ -101,7 +101,7 @@ class CDoc:
 
 def read_doc(top, forest):
     """
-    RETURN: CDoc, what 'top/HWUT/feature-doc.txt' states, the audiences
+    RETURN: CDoc, what 'top/HWUT_ROOT/feature-doc.txt' states, the audiences
             folded down 'forest' (a CForest, or None: no forest)
             None, no such file stands
     RAISES: DocFault, where it cannot be read or states a fault.

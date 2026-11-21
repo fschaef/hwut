@@ -18,22 +18,22 @@ A feature FOLDS ITS OWN RUNS AND ITS CHILDREN'S: its verdict is the worst
 below it -- fail, then untested, then ok. The axes are independent: OPEN
 says nothing proves the claim, and that is no failure.
 
-ONE ID PER FEATURE, AND THREE FILES in 'HWUT/' beside 'hwut-root.conf',
+ONE ID PER FEATURE, AND THREE FILES in 'HWUT_ROOT/',
 each with one job (spec 43):
 
-    HWUT/feature-forest.csv        WHERE a feature stands: its parent
-    HWUT/feature-doc.txt           WHAT it is: its sentence, its documents,
+    HWUT_ROOT/feature-forest.csv        WHERE a feature stands: its parent
+    HWUT_ROOT/feature-doc.txt           WHAT it is: its sentence, its documents,
                                    whom it concerns; the retired
-    HWUT/feature-external-map.csv  what SOMEBODY ELSE calls it
+    HWUT_ROOT/feature-external-map.csv  what SOMEBODY ELSE calls it
 
 and the test headers, which LINK by the id. Nothing encodes a directory:
 a directory that moves changes no file.
 
     gateway/
-      hwut-root.conf
-      HWUT/feature-forest.csv        gateway : forwarding, buses ...
-      HWUT/feature-doc.txt           [[forward]] A CAN frame is ...
-      HWUT/feature-external-map.csv  keep-order ; REQ-4711
+      HWUT_ROOT/setup.conf
+      HWUT_ROOT/feature-forest.csv        gateway : forwarding, buses ...
+      HWUT_ROOT/feature-doc.txt           [[forward]] A CAN frame is ...
+      HWUT_ROOT/feature-external-map.csv  keep-order ; REQ-4711
       router/TEST/test-route.sh      features = ["forward"]
                   test-restart.sh
       can/TEST/test-frame.sh         features = ["decode"]
@@ -122,7 +122,7 @@ A feature in a forest line needs no block -- a child may lean on its
 parent's sentence. A documented feature in NO forest line is UNPLACED: it
 stands, the report lists it apart, and 'register' notes it (section 5).
 
-ONE FOREST FOR THE TREE: a bubble below (an inner 'hwut-root.conf')
+ONE FOREST FOR THE TREE: a bubble below (an inner 'HWUT_ROOT/setup.conf')
 without a forest of its own belongs to the forest above, and is judged
 there whichever directory a face is called in. A bubble WITH its own
 forest begins its own features -- the showcase does, a tree meant to be
@@ -213,7 +213,7 @@ forest; 'not' takes inherited ones off. An audience not declared is a
 FAULT, with 'did you mean'. A set of runs is a label (section 7).
 
 THE OUTSIDE'S NAMES: a customer, a ticket system, a standard has its own
-name for one of our promises. 'HWUT/feature-external-map.csv' says so,
+name for one of our promises. 'HWUT_ROOT/feature-external-map.csv' says so,
 one pair per line:
 
     keep-order ; REQ-4711
@@ -251,9 +251,9 @@ every reference in one step:
 
     $ hwut.features.rename keep-order keeporder
     renamed  keep-order -> keeporder
-        HWUT/feature-forest.csv
-        HWUT/feature-doc.txt
-        HWUT/feature-external-map.csv
+        HWUT_ROOT/feature-forest.csv
+        HWUT_ROOT/feature-doc.txt
+        HWUT_ROOT/feature-external-map.csv
         link renamed in router/TEST/test-route.sh
 
 -- both sides of the forest's lines, the doc heading (its audiences kept),
@@ -286,7 +286,7 @@ face that takes '-l':
 
 'f/' is LIVE: the links decide at the time of use. It combines as every
 label does -- AND, OR, NOT, brackets -- and may stand in a derived label of
-'HWUT/labels.txt':
+'HWUT_ROOT/labels.txt':
 
     [derived]
     focus = f/forwarding AND NOT slow
@@ -302,7 +302,7 @@ a retired one, a word that is no id -- a misspelt word that silently
 selected nothing would let an author believe the set is empty:
 
     $ hwut.report.list -l f/keep-ordr
-    REFUSED: 'f/keep-ordr' names no feature: 'keep-ordr' stands in no line of 'HWUT/feature-forest.csv' and no block of the doc file => hwut.features.tree --list -- did you mean 'keep-order'?
+    REFUSED: 'f/keep-ordr' names no feature: 'keep-ordr' stands in no line of 'HWUT_ROOT/feature-forest.csv' and no block of the doc file => hwut.features.tree --list -- did you mean 'keep-order'?
 
 A feature with no run yet is legal: the selection is empty. Without a
 forest every feature label is refused => hwut.features.init. '-F', '-e'
@@ -528,10 +528,10 @@ ______________________________________________________________________________
     <any face with a wish> -l f/<id>      the runs of a feature (a label)
                            -l 'f/*+<id>'  a glob: every instance of a member
 
-    HWUT/feature-forest.csv        <id> : <child-id>, <child-id>, ...
+    HWUT_ROOT/feature-forest.csv        <id> : <child-id>, <child-id>, ...
                                    <id> : +<prototype>, ...
                                    +<prototype> : <member>, +<prototype>
-    HWUT/feature-doc.txt           [[CUSTOMERS]]
+    HWUT_ROOT/feature-doc.txt           [[CUSTOMERS]]
                                    <audience>: <who that is>
                                    [[<id>]] | [[+<prototype>]]
                                             | [[<owner>+<id>]]
@@ -541,7 +541,7 @@ ______________________________________________________________________________
                                    documents: <path>, ...
                                    <title>
                                    <doc>
-    HWUT/feature-external-map.csv  <our id> ; <their name>
+    HWUT_ROOT/feature-external-map.csv  <our id> ; <their name>
     '@hwut { }' block              features = ["<id>", ...]
                                    doc      = """<text>"""
 

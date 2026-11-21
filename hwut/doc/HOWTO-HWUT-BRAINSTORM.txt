@@ -188,7 +188,7 @@ BIN DISCIPLINE
       census names none, so it never runs them -- and the usage block
       is exactly what an option change moves
     - '-l meta' does NOT reach them either: the silence comes from the
-      test's own declaration, not from an entry in 'HWUT/labels.txt'.
+      test's own declaration, not from an entry in 'HWUT_ROOT/labels.txt'.
       A GLOB LIFTS IT: 'hwut.run --glob "test-*"' from the root ran
       850 cases and showed all 26
     - so the census is the gate for BEHAVIOUR and no gate at all for
@@ -626,7 +626,7 @@ BIN DISCIPLINE
     - A FAULT NAMES ITS COLUMN, AND A MACHINE'S WORD ON THE SAME LINE
       MOVES IT. 'test-run-uncapped.sh misspelt' wrote 'procsitter {
       <platform> { netwerk = false } }' on one line; the fault read
-      'hwut-root.conf:3:26' -- 26 because 'linux' has five letters.
+      'HWUT_ROOT/setup.conf:3:26' -- 26 because 'linux' has five letters.
       Replacing the word in the OUTPUT does not heal a NUMBER derived
       from its length. Healed in the fixture: one entry per line,
       nothing machine-chosen to the left of what a fault points at

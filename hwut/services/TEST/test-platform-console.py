@@ -88,7 +88,8 @@ def tree():
     for where, text in conf_db.items():
         #  ONE ROOT, hwut.conf BELOW IT (intend/45 R-1, R-4).
         os.makedirs(os.path.join(root, where), exist_ok=True)
-        name = "hwut-root.conf" if where == "" else "hwut.conf"
+        name = "HWUT_ROOT/setup.conf" if where == "" else "hwut.conf"
+        os.makedirs(os.path.dirname(os.path.join(root, where, name)), exist_ok=True)
         with open(os.path.join(root, where, name), "w") as fh:
             fh.write("hwut {\n    %s\n}\n" % text)
     for where, name in test_db.items():

@@ -1,7 +1,7 @@
 .. SPDX-License: MIT; Project HWUT; (C) Frank-Rene Schaefer
 
 =============================================================================
-THE TOOLS -- what the platforms of 'hwut-root.conf' announce
+THE TOOLS -- what the platforms of 'HWUT_ROOT/setup.conf' announce
 =============================================================================
 
 Every tool a platform announces (``tools = [...]``) and every tool a conf
@@ -14,7 +14,7 @@ A ``probe:`` line under a tool names the programs it needs on PATH. Where
 a platform declares such a tool and one of them is not found there, the
 declaration stands -- it is the contract -- and every case of a directory
 requiring the tool FAILS, not run: ``platform local does not provide tool
-iverilog (not on PATH: iverilog, vvp; HWUT/tools.rst probe)`` (intend/45
+iverilog (not on PATH: iverilog, vvp; HWUT_ROOT/tools.rst probe)`` (intend/45
 R-5, R-7; services E-228). A tool without a ``probe:`` line is taken as
 declared.
 

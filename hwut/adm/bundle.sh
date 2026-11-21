@@ -726,12 +726,27 @@ header_write() {
         done
         #  THE ANCHOR: a file that stands at the sender's root and must
         #  stand at the receiver's, or the receiver is in the wrong
-        #  directory. A tree root ('hwut/hwut-root.conf' beside the
-        #  package) or a test tree ('hwut-root.conf'); none for a bundle
-        #  cut elsewhere.
-        for anchor in hwut/hwut-root.conf hwut-root.conf; do
-            [[ -f "$anchor" ]] && { printf '# anchor  %s\n' "$anchor"; break; }
+        #  directory. A tree root ('hwut/HWUT_ROOT/setup.conf' beside the
+        #  package) or a test tree ('HWUT_ROOT/setup.conf'), or the same of
+        #  the layout of before ('hwut-root.conf', services E-235); none for
+        #  a bundle cut elsewhere. A ROOT FILE THE BUNDLE DELETES stands at
+        #  the receiver by definition: the bundle that moves a root from
+        #  the old layout anchors on the old file.
+        anchor_found=""
+        for anchor in hwut/HWUT_ROOT/setup.conf HWUT_ROOT/setup.conf \
+                      hwut/hwut-root.conf hwut-root.conf; do
+            for path in ${DELETE_PATHS[@]+"${DELETE_PATHS[@]}"}; do
+                [[ "$(path_normalise "$path")" == "$anchor" ]] \
+                    && { anchor_found=$anchor; break 2; }
+            done
         done
+        if [[ -z "$anchor_found" ]]; then
+            for anchor in hwut/HWUT_ROOT/setup.conf HWUT_ROOT/setup.conf \
+                          hwut/hwut-root.conf hwut-root.conf; do
+                [[ -f "$anchor" ]] && { anchor_found=$anchor; break; }
+            done
+        fi
+        [[ -n "$anchor_found" ]] && printf '# anchor  %s\n' "$anchor_found"
     } >> "$target"
 }
 
@@ -774,6 +789,12 @@ sed -n '/^# mode a+x  /p'  "$S/bundle" | sed 's/^# mode a+x  //' > "$S/modes"
 sed -n '/^# delete  /p'    "$S/bundle" | sed 's/^# delete  //'   > "$S/deletes"
 ANCHOR=$(sed -n '/^# anchor  /p' "$S/bundle" | sed 's/^# anchor  //' | head -1)
 [ -s "$S/manifest" ] || [ -s "$S/deletes" ] || { echo "!! no manifest in this bundle -- REFUSED"; exit 2; }
+#  A DELETED ANCHOR (services E-235): the old root file a bundle moves
+#  into 'HWUT_ROOT/'. Once applied, the new root beside it is the mark.
+if [ -n "$ANCHOR" ] && [ ! -f "$ANCHOR" ] && grep -qxF "$ANCHOR" "$S/deletes" \
+   && [ -f "$(dirname "$ANCHOR")/HWUT_ROOT/setup.conf" ]; then
+    ANCHOR="$(dirname "$ANCHOR")/HWUT_ROOT/setup.conf"
+fi
 if [ -n "$ANCHOR" ] && [ ! -f "$ANCHOR" ] && [ $HERE = 0 ]; then
     echo "!! '$ANCHOR' stands at the sender's root and not here: this is not the"
     echo "   receiving root. REFUSED, '--force' or not; 'sh $SELF --here' applies anyway."; exit 2
@@ -845,8 +866,9 @@ fi
 #  alone, applied where the sender's root conf stands ('hwut/hwut-root.conf'),
 #  is at its root.
 if [ $SAME = 0 ] && [ $CHANGED = 0 ] && [ $DEL = 0 ] && [ ! -f hwut-root.conf ] \
+   && [ ! -f HWUT_ROOT/setup.conf ] \
    && { [ -z "$ANCHOR" ] || [ ! -f "$ANCHOR" ]; } && [ $HERE = 0 ]; then
-    echo "!! not one listed file stands here and no 'hwut-root.conf' marks a root --"
+    echo "!! not one listed file stands here and no 'HWUT_ROOT/setup.conf' marks a root --"
     echo "   this is not the receiving root. REFUSED, '--force' or not; 'sh $SELF --here'"
     echo "   creates them here anyway."; exit 2
 fi

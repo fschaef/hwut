@@ -1,4 +1,4 @@
-# HWUT/feature-doc.txt -- WHAT THE FEATURES ARE (spec 43, intend/43 T-c,
+# HWUT_ROOT/feature-doc.txt -- WHAT THE FEATURES ARE (spec 43, intend/43 T-c,
 # T-g, T-p, T-s). One block per feature, headed '[[<id>]]' -- or
 # '[[<id> to <audience>, ...]]', '[[<id> not <audience>, ...]]',
 # '[[<id>:retired]]'; '[[CUSTOMERS]]' declares the audiences. A block: an
@@ -2255,7 +2255,7 @@ RATIONALE R-69.
 
 [[climb-ends-at-tmp]]
 documents: engine/orchestrator/exploration/README.txt, engine/orchestrator/exploration/RATIONALE.txt
-The climb for the root conf ends at a 'TMP' standing beside a 'GOOD/': a fixture built there does not read the enclosing project's 'hwut-root.conf'.
+The climb for the root conf ends at a 'TMP' standing beside a 'GOOD/': a fixture built there does not read the enclosing project's 'HWUT_ROOT/setup.conf'.
 README section 6; RATIONALE R-76.
 
 [[language-found]]
@@ -2399,7 +2399,7 @@ A gone and a new are paired only where it is certain -- a directory by the finge
 spec 23 VERSION 10 section 7; RATIONALE R-96.
 
 [[platform-list-read]]
-The outermost 'hwut-root.conf' says 'platform = [ ... ]': entries { name, kind, tools, ... }, 'local' with 'tools' alone, read in order as (name, spec) pairs, 'tools' a tuple; 'requires = [ ... ]' read in a root and a 'hwut.conf', added down the hwut.conf files, replaced at an inner root.
+The outermost 'HWUT_ROOT/setup.conf' says 'platform = [ ... ]': entries { name, kind, tools, ... }, 'local' with 'tools' alone, read in order as (name, spec) pairs, 'tools' a tuple; 'requires = [ ... ]' read in a root and a 'hwut.conf', added down the hwut.conf files, replaced at an inner root.
 adm/WORK/spec/42-platforms.txt, sections 1, 10; intend/26 o-50, o-54, o-56, o-57.
 
 [[platform-faults-named]]
@@ -2407,7 +2407,7 @@ A 'platform' list that does not read is refused by name -- not a list, empty, a 
 adm/WORK/spec/42-platforms.txt, section 1; intend/42 rulings 14, 15, 16.
 
 [[platform-root-only]]
-'platform' stands in 'hwut-root.conf' alone: in a tree level's or a test directory's 'hwut.conf' it is refused with the reason.
+'platform' stands in 'HWUT_ROOT/setup.conf' alone: in a tree level's or a test directory's 'hwut.conf' it is refused with the reason.
 adm/WORK/spec/42-platforms.txt, section 1; intend/42 rulings 3, 10.
 
 [[platform-bubble-decides-alone]]
@@ -2526,7 +2526,7 @@ exploration RATIONALE R-48, R-80.
 
 [[cap-lack-acknowledged]]
 documents: engine/orchestrator/exploration/RATIONALE.txt
-An acknowledgement of the platform's lack in 'hwut-root.conf' lifts the refusal for that cap on that platform alone.
+An acknowledgement of the platform's lack in 'HWUT_ROOT/setup.conf' lifts the refusal for that cap on that platform alone.
 exploration RATIONALE R-80.
 
 [[wish-taken-by-face]]
@@ -2700,7 +2700,7 @@ Before the first event every bubble the walk meets is decided from the tools it 
 adm/WORK/spec/42-platforms.txt, sections 3, 10; intend/26 o-54, o-57, o-58.
 
 [[bubble-refused]]
-Confs that cannot be decided are refused at the call, before anything is explored, each named: a 'platform' in an inner root, a tool 'HWUT/tools.rst' does not explain.
+Confs that cannot be decided are refused at the call, before anything is explored, each named: a 'platform' in an inner root, a tool 'HWUT_ROOT/tools.rst' does not explain.
 adm/WORK/spec/42-platforms.txt, section 10; intend/26 o-52, o-53.
 
 [[bubble-inner-decided-alone]]
@@ -2736,7 +2736,7 @@ A bubble handed to a platform whose far wish selects nothing ends EMPTY: no faul
 engine/platforms '_status.py'; services RATIONALE E-221.
 
 [[bubble-local-probed]]
-A tool a platform declares whose 'probe:' line in 'HWUT/tools.rst' finds a program missing there stays declared; the cases requiring it FAIL, not run, 'platform <p> does not provide tool <t>', the programs named. A tool without a 'probe:' line is taken as declared.
+A tool a platform declares whose 'probe:' line in 'HWUT_ROOT/tools.rst' finds a program missing there stays declared; the cases requiring it FAIL, not run, 'platform <p> does not provide tool <t>', the programs named. A tool without a 'probe:' line is taken as declared.
 engine/orchestrator/plan 'bubble.py'; services RATIONALE E-226, E-228.
 
 [[concurrent-dispatch]]
@@ -3034,7 +3034,7 @@ RATIONALE E-151 (CHEAP); gathered/0s open (b).
 
 [[complete-dear]]
 documents: services/RATIONALE.txt
-A TAB completes the labels of the tree's 'HWUT/labels.txt' and the targets the current directory's 'hwut.conf' binds.
+A TAB completes the labels of the tree's 'HWUT_ROOT/labels.txt' and the targets the current directory's 'hwut.conf' binds.
 RATIONALE E-151 (DEAR).
 
 [[complete-silent]]
@@ -3079,12 +3079,12 @@ README first paragraph; RATIONALE E-101 .. E-105.
 
 [[tree-boundary-refused]]
 documents: services/RATIONALE.txt
-A tree without 'hwut-root.conf' is refused by every face in one line that names the way out, 'hwut.sanitize root'.
+A tree without 'HWUT_ROOT/setup.conf' is refused by every face in one line that names the way out, 'hwut.sanitize root'.
 RATIONALE E-25; 'hwut.sanitize.propose --help' (no option).
 
 [[sanitize-root]]
 documents: services/RATIONALE.txt
-'hwut.sanitize root <dir>' writes 'hwut-root.conf' with its language table; without <dir> it asks with a menu of the repository roots, the current directory and 'q', and refuses where nobody can answer.
+'hwut.sanitize root <dir>' writes 'HWUT_ROOT/setup.conf' with its language table; without <dir> it asks with a menu of the repository roots, the current directory and 'q', and refuses where nobody can answer.
 RATIONALE E-25; 'hwut.sanitize --help' (root).
 
 [[preferences-person-overlay]]
@@ -3214,7 +3214,7 @@ RATIONALE E-123, E-136 (4).
 
 [[run-cap-refused]]
 documents: services/RATIONALE.txt
-A test stating a cap the platform cannot enforce fails 'uncapped', not run, counted, named in HINTS with the 'hwut-root.conf' entry that acknowledges it; the run exits 1.
+A test stating a cap the platform cannot enforce fails 'uncapped', not run, counted, named in HINTS with the 'HWUT_ROOT/setup.conf' entry that acknowledges it; the run exits 1.
 RATIONALE E-135.
 
 [[run-cap-refused-every-door]]
@@ -3798,7 +3798,7 @@ documents: engine/coverage/RATIONALE.txt
 
 [[help-explains-cap-refusal]]
 documents: services/RATIONALE.txt
-'hwut.help' says what the next run fails 'uncapped', for want of an enforceable cap: the caps, the utility that is missing and how it is installed, the 'hwut-root.conf' entry that acknowledges.
+'hwut.help' says what the next run fails 'uncapped', for want of an enforceable cap: the caps, the utility that is missing and how it is installed, the 'HWUT_ROOT/setup.conf' entry that acknowledges.
 RATIONALE E-135.
 
 [[sanitize-propose-acts-on-nothing]]
@@ -3848,12 +3848,12 @@ RATIONALE E-234 (CR-8).
 
 [[sanitize-directories]]
 documents: services/RATIONALE.txt
-A TEST directory 'HWUT/directories.txt' records that does not stand is proposed for 'move <old> <new>' where it is the one missing and one directory holding a book is not on the roster, and for 'forget <old>' else; 'move' replaces the entry and carries the labels' targets, 'forget' drops both.
+A TEST directory 'HWUT_ROOT/directories.txt' records that does not stand is proposed for 'move <old> <new>' where it is the one missing and one directory holding a book is not on the roster, and for 'forget <old>' else; 'move' replaces the entry and carries the labels' targets, 'forget' drops both.
 RATIONALE E-234 (CR-3).
 
 [[roster-records-directories]]
 documents: engine/bookkeeper/README.txt
-'HWUT/directories.txt' holds the root-relative TEST directories that hold records, sorted; the Bookkeeper writes it when a directory gets its first record and when it loses its last, never otherwise; a directory below ground no walk enters is never entered.
+'HWUT_ROOT/directories.txt' holds the root-relative TEST directories that hold records, sorted; the Bookkeeper writes it when a directory gets its first record and when it loses its last, never otherwise; a directory below ground no walk enters is never entered.
 bookkeeper B-33 (CR-2).
 
 [[roster-gone-fails]]
@@ -3873,18 +3873,18 @@ RATIONALE E-234 (CR-7).
 
 [[record-directory]]
 documents: services/RATIONALE.txt
-The framework's files of a tree stand in 'HWUT/' beside 'hwut-root.conf': 'labels.txt', 'directories.txt', 'feature-forest.csv', 'feature-doc.txt', 'feature-external-map.csv', 'tools.rst'; no walk enters 'HWUT/'.
-RATIONALE E-234 (CR-1).
+Everything tree-wide stands in ONE directory, 'HWUT_ROOT/': the person's 'setup.conf', whose standing marks the root, and the framework's 'labels.txt', 'directories.txt', 'feature-forest.csv', 'feature-doc.txt', 'feature-external-map.csv', 'tools.rst'; no walk enters a directory named 'HWUT_ROOT'; 'hwut.sanitize root' writes 'HWUT_ROOT/setup.conf'.
+RATIONALE E-234 (CR-1), E-235.
 
 [[old-place-refused]]
 documents: services/RATIONALE.txt
-A framework file at its old place beside 'hwut-root.conf' ('hwut-root.labels', 'hwut-feature-*', 'hwut-tools.rst') is refused by name with the remedy '=> hwut.renovate' -- by every face that runs the tree and by the readers of labels and features; both places standing is refused as two copies.
-RATIONALE E-234 (CR-4).
+A file of the flat layout of before ('hwut-root.conf', 'hwut-root.labels', 'hwut-feature-*', 'hwut-tools.rst') is refused by name with the remedy '=> hwut.renovate': a root that is still a 'hwut-root.conf' by every face, as it climbs; the others by every face that runs the tree and by the readers of labels and features; both places standing is refused as two copies.
+RATIONALE E-234 (CR-4), E-235.
 
 [[renovate-root-files]]
 documents: services/README.txt
-'hwut.renovate' reports, and with '--apply' moves, every framework file at its old place into 'HWUT/' under its new name, by 'git mv' where git tracks it.
-RATIONALE E-234 (CR-4).
+'hwut.renovate' reports, and with '--apply' moves, every file of the flat layout -- 'hwut-root.conf' among them, into 'HWUT_ROOT/setup.conf' -- into 'HWUT_ROOT/' under its new name, by 'git mv' where git tracks it, and begins the roster.
+RATIONALE E-234 (CR-4), E-235.
 
 [[sanitize-move]]
 documents: services/RATIONALE.txt
@@ -4253,7 +4253,7 @@ Services E-99 ('a root tolerance is refused'); the help: a specification carryin
 
 [[init-writes]]
 documents: adm/WORK/spec/23-features.txt
-'hwut.features.init' writes 'hwut-root-features.conf' beside 'hwut-root.conf' -- a header of comments, an id per directory whose TEST directory defines features, every feature an unplaced leaf under its first external id -- and refuses where the file stands or files of the past stand.
+'hwut.features.init' writes 'hwut-root-features.conf' in 'HWUT_ROOT/' -- a header of comments, an id per directory whose TEST directory defines features, every feature an unplaced leaf under its first external id -- and refuses where the file stands or files of the past stand.
 spec 23 VERSION 10 section 8; RATIONALE R-96.
 
 [[register-adds:retired]]
@@ -4321,7 +4321,7 @@ services RATIONALE E-220.
 
 [[create-snapshot]]
 documents: services/lib/labels/create.py, services/RATIONALE.txt
-'hwut.labels.create <label> <wish>' makes a new label from the runs the wish selects at that moment, names each run in its report, and writes them to 'HWUT/labels.txt' as literal targets, sorted and elided, never as a glob.
+'hwut.labels.create <label> <wish>' makes a new label from the runs the wish selects at that moment, names each run in its report, and writes them to 'HWUT_ROOT/labels.txt' as literal targets, sorted and elided, never as a glob.
 The help of 'hwut.labels.create'; services E-19.
 
 [[create-refuses-standing]]
@@ -4384,7 +4384,7 @@ The help of 'hwut.labels.remove', EXIT STATUS 2.
 
 [[comments-travel]]
 documents: services/RATIONALE.txt
-A hand comment glued to an entry of 'HWUT/labels.txt' is written back beside it when the file is rewritten and goes when the entry goes.
+A hand comment glued to an entry of 'HWUT_ROOT/labels.txt' is written back beside it when the file is rewritten and goes when the entry goes.
 Services E-96, which supersedes E-19's COST.
 
 [[list-counts]]
@@ -5656,7 +5656,7 @@ README.txt, sections 2, 3; ../python/README-hwut_vterm.txt.
 
 [[support-written]]
 documents: services/lib/support/core.py
-'hwut.support <language> <dir>' writes '<dir>/<language>' (the language's test writing support, its own TEST left out), '<dir>/TEST' (the demonstration in that language, every '.link' resolved into the nominal it names) and '<dir>/hwut-root.conf' (the template), from 'support/' in a clone or from the archive an installed hwut carries; and the written demonstration runs green as it stands.
+'hwut.support <language> <dir>' writes '<dir>/<language>' (the language's test writing support, its own TEST left out), '<dir>/TEST' (the demonstration in that language, every '.link' resolved into the nominal it names) and '<dir>/HWUT_ROOT/setup.conf' (the template), from 'support/' in a clone or from the archive an installed hwut carries; and the written demonstration runs green as it stands.
 The face's docstring; services RATIONALE E-217.
 
 [[support-importable]]
@@ -5823,7 +5823,7 @@ README 'ACCEPT IS PARTIAL BY DEFAULT'; RATIONALE E-60; README.md 'Accept'.
 
 [[forest-read]]
 documents: engine/orchestrator/exploration/README.txt
-'HWUT/feature-forest.csv' is read line by line, '<id> : <child>, ...': comments, blanks and whitespace dropped; the roots are what stands as no child, in file order; a feature id is '[A-Za-z0-9_-]+', case kept and compared.
+'HWUT_ROOT/feature-forest.csv' is read line by line, '<id> : <child>, ...': comments, blanks and whitespace dropped; the roots are what stands as no child, in file order; a feature id is '[A-Za-z0-9_-]+', case kept and compared.
 
 [[forest-faults-named]]
 documents: engine/orchestrator/exploration/README.txt
@@ -5835,7 +5835,7 @@ A line '+<prototype> : <member>, +<prototype>, ...' declares a prototype; a feat
 
 [[doc-read]]
 documents: engine/orchestrator/exploration/README.txt
-'HWUT/feature-doc.txt' is read in blocks headed '[[<id>]]': an optional 'documents:' line, then the prose -- its first line the title, the rest the doc; '[[<id>:retired]]' keeps a retired claim as it was.
+'HWUT_ROOT/feature-doc.txt' is read in blocks headed '[[<id>]]': an optional 'documents:' line, then the prose -- its first line the title, the rest the doc; '[[<id>:retired]]' keeps a retired claim as it was.
 
 [[doc-audiences-fold]]
 documents: engine/orchestrator/exploration/README.txt
@@ -5851,7 +5851,7 @@ A member's block documents it in every instance, '[[+<prototype>]]' every instan
 
 [[external-read]]
 documents: engine/orchestrator/exploration/README.txt
-'HWUT/feature-external-map.csv' maps our feature id to the outside's names, '<id> ; <their name>', several per id; their name is a free string, never checked.
+'HWUT_ROOT/feature-external-map.csv' maps our feature id to the outside's names, '<id> ; <their name>', several per id; their name is a free string, never checked.
 
 [[external-faults-named]]
 documents: engine/orchestrator/exploration/README.txt

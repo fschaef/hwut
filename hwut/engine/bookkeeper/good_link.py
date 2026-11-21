@@ -15,7 +15,7 @@ THE RULES, each refused by name where broken:
     a link names a '.txt'       never another '.link' -- no chains, no
                                 circles, one step from a case to its text
     a link never leaves its ROOT
-                                the 'hwut-root.conf' that bounds the link
+                                the 'HWUT_ROOT/setup.conf' that bounds the link
                                 bounds its target, or the target lies in a
                                 bubble below it: a bubble is closed
                                 (E-200) -- no way out, every way in -- so a
@@ -44,7 +44,7 @@ from   pathlib import Path
 from ...auxiliary.no_entry import (OUT_DIRECTORY_NAME, TRANSIENT_DIRECTORY_NAME,
                                    own_ground_f)
 
-ROOT_CONF_NAME = "hwut-root.conf"
+from hwut.auxiliary.no_entry import ROOT_CONF_NAME       # noqa: E402  (E-235)
 LINK_SUFFIX    = "link"
 TEXT_SUFFIX    = "txt"
 
@@ -102,7 +102,7 @@ def text_path_of(link_path):
 
 def root_of(directory):
     """
-    RETURN: str, the absolute directory holding the 'hwut-root.conf' that
+    RETURN: str, the absolute directory holding the 'HWUT_ROOT/setup.conf' that
                  bounds 'directory' -- the innermost one at or above it.
             None, where none stands.
     """
@@ -217,7 +217,7 @@ def write_link(link_path, target):
 
 def _outermost_root_of(directory):
     """
-    RETURN: str, the absolute directory of the OUTERMOST 'hwut-root.conf'
+    RETURN: str, the absolute directory of the OUTERMOST 'HWUT_ROOT/setup.conf'
                  at or above 'directory' -- every bubble whose links may
                  reach it lies below. The climb ENDS at a test directory's
                  'TMP/' (E-24): a fixture built there is no bubble of the
@@ -241,7 +241,7 @@ def _outermost_root_of(directory):
 def link_tuple(root, inner_f=False):
     """
     RETURN: tuple[Path], every 'GOOD/*.link' under 'root', sorted -- the
-            walk stops at an inner 'hwut-root.conf' (a link of a bubble
+            walk stops at an inner 'HWUT_ROOT/setup.conf' (a link of a bubble
             below is that bubble's) unless 'inner_f', and never enters
             'OUT/', 'TMP/' or '.git/'.
     """

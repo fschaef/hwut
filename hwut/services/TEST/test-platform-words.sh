@@ -47,7 +47,8 @@ trap 'rm -rf "$WORK"' EXIT
 cd "$WORK"
 
 #  A TREE WHOSE BUBBLE REQUIRES NO PLATFORM: 'local' alone (ruling 10).
-printf 'hwut {\n}\n' > hwut-root.conf
+mkdir -p HWUT_ROOT
+printf 'hwut {\n}\n' > HWUT_ROOT/setup.conf
 mkdir -p TEST/GOOD
 printf '#! /bin/sh\n# @hwut { title = "A" }\necho hello\necho "<hwut-end>"\n' \
        > TEST/test-a.sh

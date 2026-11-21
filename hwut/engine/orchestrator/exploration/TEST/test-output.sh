@@ -46,7 +46,8 @@ cd "$WORK"
 #  THE TREE'S BOUNDARY. Every face ASCENDS collecting 'hwut.conf'
 #  until it meets this file; a tree without one is refused, so a
 #  fixture states its own. Empty says only 'the tree ends here'.
-printf 'hwut {\n}\n' > hwut-root.conf
+mkdir -p HWUT_ROOT
+printf 'hwut {\n}\n' > HWUT_ROOT/setup.conf
 
 #  THE MACHINE'S OWN FACTS ARE MASKED: the wall clock, and the
 #  elapsed seconds a run reports. A recorded duration is a fact about

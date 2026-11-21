@@ -39,8 +39,9 @@ WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
 mkdir -p "$WORK/TEST"
 cd "$WORK"
+mkdir -p HWUT_ROOT
 printf 'hwut {\n    language-setup { bash { extensions = [".sh"] interpreter = "bash" } }\n}\n' \
-       > hwut-root.conf
+       > HWUT_ROOT/setup.conf
 cd TEST
 printf 'hwut { ignore = ["mode", "flash.sh", "flashed.log", "Makefile", "app", "broken"] }\n' > hwut.conf
 shown() {

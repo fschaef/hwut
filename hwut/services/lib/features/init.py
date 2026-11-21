@@ -2,8 +2,8 @@
 ______________________________________________________________________________
 
 PURPOSE: THE 'hwut.features.init' COMMAND LINE -- begin the features of a
-         tree: an empty 'HWUT/feature-forest.csv' and an empty
-         'HWUT/feature-doc.txt' beside 'hwut-root.conf' (spec 43 section 5).
+         tree: an empty 'HWUT_ROOT/feature-forest.csv' and an empty
+         'HWUT_ROOT/feature-doc.txt' in 'HWUT_ROOT/' (spec 43 section 5).
 
     hwut.features.init [--directory=<path>]
 
@@ -14,7 +14,7 @@ written: it starts absent (T-r).
 
 EXIT STATUS (E-1, services/_exit.py):
     0  OK       written
-    2  REFUSED  no 'hwut-root.conf', both files stand already, or the
+    2  REFUSED  no 'HWUT_ROOT/setup.conf', both files stand already, or the
                 command line cannot be read
 ______________________________________________________________________________
 """

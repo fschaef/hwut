@@ -29,7 +29,7 @@ Python's:
       PyText
 
 A PowerShell test is 'test-<stem>.ps1', run by 'pwsh' as it stands -- the
-'powershell' interpreter of 'hwut-root.conf'; nothing is built. It finds the
+'powershell' interpreter of 'HWUT_ROOT/setup.conf'; nothing is built. It finds the
 modules by 'using module' with a path relative to its OWN file, so it runs
 from any working directory:
 

@@ -106,7 +106,7 @@ uses -- '<dir>/verilog/README.txt').
 NOT HERE, ON PURPOSE
 ------------------------------------------------------------------------------
 'language-setup', 'variant_group', 'procsitter', 'free_disk_min_mb'
-                  the root's alone ('hwut-root.conf' beside this directory)
+                  the root's alone ('HWUT_ROOT/setup.conf' beside this directory)
 '##! unaccepted', '##! constraint-violation'
                   written by hwut itself, into a recording or a GOOD
 'diff_display_parameters'

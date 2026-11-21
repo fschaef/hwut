@@ -91,7 +91,7 @@ def main(argv=None, write=None):
                   % (label, _file.DERIVED_HEADING, derivation[0],
                      derivation[2]))
             return E_ExitCode.REFUSED
-        write("REFUSED: no label '%s' stands in 'HWUT/labels.txt'"
+        write("REFUSED: no label '%s' stands in 'HWUT_ROOT/labels.txt'"
               % label)
         return E_ExitCode.REFUSED
 

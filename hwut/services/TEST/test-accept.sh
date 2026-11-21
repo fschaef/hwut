@@ -71,7 +71,8 @@ cd "$WORK"
 #  THE TREE'S BOUNDARY. Every face ASCENDS collecting 'hwut.conf'
 #  until it meets this file; a tree without one is refused, so a
 #  fixture states its own. Empty says only 'the tree ends here'.
-printf 'hwut {\n}\n' > hwut-root.conf
+mkdir -p HWUT_ROOT
+printf 'hwut {\n}\n' > HWUT_ROOT/setup.conf
 
 mask() { sed -E 's/[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}/<when>/g; s/[0-9]{2}:[0-9]{2}:[0-9]{2}/hh:mm:ss/g'; }
 record() {              # every case here gets its recording (E-165)

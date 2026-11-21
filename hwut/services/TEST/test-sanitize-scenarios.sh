@@ -77,9 +77,11 @@ WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
 cd "$WORK"
 
-printf 'hwut {\n}\n' > hwut-root.conf
+mkdir -p HWUT_ROOT
+printf 'hwut {\n}\n' > HWUT_ROOT/setup.conf
 mkdir tree
-printf 'hwut {\n}\n' > tree/hwut-root.conf
+mkdir -p tree/HWUT_ROOT
+printf 'hwut {\n}\n' > tree/HWUT_ROOT/setup.conf
 
 propose() {               #  <argument>...: status and both streams
     echo "\$ hwut.sanitize.propose $*"

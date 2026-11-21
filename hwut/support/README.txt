@@ -18,7 +18,7 @@ support -- WHAT HELPS A USER, BESIDE WHAT HWUT IS
                     its own (not in the package).
 
 'hwut.support <language> <dir>' writes '<dir>/<language>' (the support),
-'<dir>/TEST' (the demonstration) and '<dir>/hwut-root.conf', and says how
+'<dir>/TEST' (the demonstration) and '<dir>/HWUT_ROOT/setup.conf', and says how
 to make the support importable for a test of your own (services E-217).
 
 EXIT 77, in every language: a test application exits 77 where the device

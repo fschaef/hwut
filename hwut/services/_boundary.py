@@ -4,8 +4,8 @@ ______________________________________________________________________________
 PURPOSE: THE BOUNDARY -- WHAT IS WRITTEN, AND WHERE IT MAY GO.
 
 Every face of this framework works inside a TREE, and a tree is what
-'hwut-root.conf' bounds. Without it there is no root to make a path
-relative to, no place for 'HWUT/labels.txt', and no answer to 'which
+'HWUT_ROOT/setup.conf' bounds. Without it there is no root to make a path
+relative to, no place for 'HWUT_ROOT/labels.txt', and no answer to 'which
 directories are mine'. A face that proceeds without one is guessing,
 so every face refuses -- and HINTS at the way out
 ('tree_explorer.ROOT_CONF_HINT_STR').
@@ -48,7 +48,7 @@ REPOSITORY_MARK_TUPLE = ((".git",      "git"),
                          (".fslckout", "fossil"),
                          ("_FOSSIL_",  "fossil"))
 
-ROOT_CONF_NAME = "hwut-root.conf"
+from hwut.auxiliary.no_entry import ROOT_CONF_NAME       # noqa: E402  (E-235)
 
 #  WHAT IS WRITTEN (E-25): the boundary WITH the language table. Every
 #  per-language default HWUT once carried in code -- the coverage
@@ -350,11 +350,12 @@ def writeable_f(path):
 
 def written(directory):
     """
-    RETURN: str, the path of the 'hwut-root.conf' written into
-                 'directory' -- the template, whole
+    RETURN: str, the path of the 'HWUT_ROOT/setup.conf' written into
+                 'directory' -- the template, whole, 'HWUT_ROOT/' made
             raises OSError, where the file cannot be written
     """
     path = os.path.join(directory, ROOT_CONF_NAME)
+    os.makedirs(os.path.dirname(path), exist_ok=True)               # E-235
     with open(path, "w", encoding="utf-8") as file_handle:
         file_handle.write(ROOT_CONF_TEXT)
     return path

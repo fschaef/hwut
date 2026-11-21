@@ -94,7 +94,8 @@ def test_lines():
 
 def test_booked():
     root = tempfile.mkdtemp(prefix="hwut_unacc_")
-    with open(os.path.join(root, "hwut-root.conf"), "w") as fh:
+    os.makedirs(os.path.join(root, "HWUT_ROOT"), exist_ok=True)
+    with open(os.path.join(root, "HWUT_ROOT/setup.conf"), "w") as fh:
         fh.write(ROOT_CONF)
     test = os.path.join(root, "TEST")
     os.makedirs(test)

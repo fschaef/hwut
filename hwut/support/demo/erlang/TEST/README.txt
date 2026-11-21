@@ -15,7 +15,7 @@ SAME GOOD FILES -- 'GOOD/*.link' names the Python demonstration's text
 wherever the output is the same; four cases have a GOOD of their own (see
 '../RATIONALE.txt', DEMO-ERLANG-7).
 
-Every test application is an ESCRIPT -- 'hwut-root.conf' runs '.erl' with
+Every test application is an ESCRIPT -- 'HWUT_ROOT/setup.conf' runs '.erl' with
 'escript' -- whose header ('%% @hwut { }', line 1 onwards: escript skips
 line 1) is its whole configuration; 'hwut.conf' is what the directory
 says. A file's comment says what each of its choices shows. Where a run
@@ -101,7 +101,7 @@ the C port's 'hwut_vterm.c': it wants '<dir>/c' beside it.
 NOT HERE, ON PURPOSE
 ------------------------------------------------------------------------------
 'language-setup', 'variant_group', 'procsitter', 'free_disk_min_mb'
-                  the root's alone ('hwut-root.conf')
+                  the root's alone ('HWUT_ROOT/setup.conf')
 'build'           a compiled test application's word: an escript is run
                   as it stands
 '##! unaccepted', '##! constraint-violation'

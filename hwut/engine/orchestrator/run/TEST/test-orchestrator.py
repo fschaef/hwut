@@ -105,7 +105,7 @@ def tree_of(file_db):
     """
     root = tempfile.mkdtemp(prefix="hwut_orch_")
     #  THE TREE'S BOUNDARY: the climb stops here; a tree without
-    #  a 'hwut-root.conf' above it is refused.
+    #  a 'HWUT_ROOT/setup.conf' above it is refused.
     tree_boundary(root)
     for relative, content in file_db.items():
         path = os.path.join(root, relative)

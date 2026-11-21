@@ -11,7 +11,7 @@ directory can say, each thing shown once (SWI-Prolog 9)
 
 The same demonstration as '../../python/TEST', choice for choice, written in
 Prolog over the Prolog test support ('support/test_writing/prolog'). hwut
-runs a '.pro' with the 'swipl' interpreter of 'hwut-root.conf': 'swipl
+runs a '.pro' with the 'swipl' interpreter of 'HWUT_ROOT/setup.conf': 'swipl
 demo.pro <choice>'. Every test application is a file whose header ('% @hwut
 { }') is its whole configuration; 'hwut.conf' is what the directory says. A
 file's comment says what each of its choices shows. Where a run is seeded
@@ -111,7 +111,7 @@ tree where the variable is not set.
 NOT HERE, ON PURPOSE
 ------------------------------------------------------------------------------
 'language-setup', 'variant_group', 'procsitter', 'free_disk_min_mb'
-                  the root's alone ('hwut-root.conf')
+                  the root's alone ('HWUT_ROOT/setup.conf')
 'build'           a compiled test application's word: the demonstrations
                   over compiled languages. The two foreign libraries are
                   built by the modules that load them, not by hwut

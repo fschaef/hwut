@@ -56,7 +56,8 @@ cd "$WORK"
 tree() {                # $1: 'plain' or 'multi'
     local mode=$1
     mkdir -p tree/suite/TEST/GOOD
-    printf 'hwut {\n}\n' > hwut-root.conf
+    mkdir -p HWUT_ROOT
+    printf 'hwut {\n}\n' > HWUT_ROOT/setup.conf
     printf 'hwut {\n}\n' > tree/suite/TEST/hwut.conf
     case $mode in
         plain) offender_plain ;;

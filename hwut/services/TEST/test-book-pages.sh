@@ -45,8 +45,9 @@ WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
 mkdir -p "$WORK/TEST"
 cd "$WORK"
+mkdir -p HWUT_ROOT
 printf 'hwut {\n    language-setup { bash { extensions = [".sh"] interpreter = "bash" } }\n}\n' \
-       > hwut-root.conf
+       > HWUT_ROOT/setup.conf
 for t in a b; do
     printf '#! /bin/bash\n# @hwut { title = "%s" choices = ["x", "y"] }\necho "$1"; echo "<hwut-end>"\n' \
            $t > TEST/test-$t.sh

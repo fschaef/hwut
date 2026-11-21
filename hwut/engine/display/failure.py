@@ -61,7 +61,7 @@ class E_Failure(Enum):
     SOURCE_NOT_FOUND            = "source-not-found"
     SPEC_BROKEN                 = "spec-broken"
     #  A CONFIGURATION GOVERNING THE CASE CANNOT BE READ (ND7, services
-    #  E-190): 'hwut-root.conf' or a 'hwut.conf' at or above it.
+    #  E-190): 'HWUT_ROOT/setup.conf' or a 'hwut.conf' at or above it.
     CONF_BROKEN                 = "conf-broken"
     STDERR_UNDECIDED            = "stderr-undecided"
     TARGET_NOT_BUILT            = "target-not-built"
@@ -103,7 +103,7 @@ class E_FailureCategory(Enum):
         DEVIATION    the subject and the nominal differ -- the ordinary
                      business of a test; no word before '[FAIL]'
         BOOK         the book disagrees with the tree, or stains a case
-        ROSTER       a TEST directory 'HWUT/directories.txt' records does
+        ROSTER       a TEST directory 'HWUT_ROOT/directories.txt' records does
                      not stand (CR-2)
         EXECUTION    the application ran and misbehaved: killed, cut
                      short, silent, stalled, speaking on stderr, its
@@ -417,7 +417,7 @@ failure_db = MappingProxyType({f.failure_id: f for f in (
              "Connect, power or start the device the NOTE names; a test "
              "that needs no device never exits 77."),
     _failure(_F.CONF_BROKEN, "its configuration does not read",
-             "A 'hwut-root.conf' or 'hwut.conf' at or above the test's "
+             "A 'HWUT_ROOT/setup.conf' or 'hwut.conf' at or above the test's "
              "directory does not read, so no case it governs runs as "
              "written. The ERROR line above names the file and the key.",
              "Mend the file ('hwut.config.show' reads it back)."),
@@ -454,7 +454,7 @@ failure_db = MappingProxyType({f.failure_id: f for f in (
              "drops every record of it: nominals, candidates, its row in "
              "'GOOD/book.csv', register id."),
     _failure(_F.DIRECTORY_GONE, "in roster, no such directory",
-             "'HWUT/directories.txt' records a TEST directory that holds "
+             "'HWUT_ROOT/directories.txt' records a TEST directory that holds "
              "records, and it does not stand: deleted, moved, or lost in a "
              "merge -- its books went with it, and without the roster the "
              "run would only have grown smaller (CR-2).",
@@ -549,7 +549,7 @@ failure_db = MappingProxyType({f.failure_id: f for f in (
              "the case was not started, or was ended, so the operating "
              "system stays operable -- whoever filled the disk (D-24).",
              "Free space on that disk, or lower the floor in "
-             "'hwut-root.conf': 'hwut { free_disk_min_mb = ... }'."),
+             "'HWUT_ROOT/setup.conf': 'hwut { free_disk_min_mb = ... }'."),
     _failure(_F.TEST_APP_SESSION_GONE, "not run; process already dead",
              "An interactive application serves several choices; it died "
              "on an earlier one, so this one never ran (O-21).",
@@ -585,19 +585,19 @@ failure_db = MappingProxyType({f.failure_id: f for f in (
              "Run the command by hand to see why."),
     _failure(_F.TOOL_NOT_PROVIDED, "platform does not provide tool; not run",
              "The platform this directory runs on declares a tool it "
-             "requires, and the tool's 'probe:' line in 'HWUT/tools.rst' "
+             "requires, and the tool's 'probe:' line in 'HWUT_ROOT/tools.rst' "
              "finds a program missing on that platform: the declaration "
              "is the contract, its breach a failing case (intend/45 R-5, "
              "R-7).",
              "Install what the reason names on that platform, or take the "
-             "tool out of its 'tools' in 'hwut-root.conf'."),
+             "tool out of its 'tools' in 'HWUT_ROOT/setup.conf'."),
     _failure(_F.UNCAPPED, "cap not enforceable here; not run",
              "The test states a cap the supervisor cannot watch on this "
-             "machine, and 'hwut-root.conf' does not acknowledge it: the "
+             "machine, and 'HWUT_ROOT/setup.conf' does not acknowledge it: the "
              "promise cannot be kept, so the case is not run, and fails "
              "(services E-159).",
              "Install what the line behind '=>' names, or acknowledge the "
-             "cap in 'hwut-root.conf' as it says -- the test then runs "
+             "cap in 'HWUT_ROOT/setup.conf' as it says -- the test then runs "
              "with that cap unwatched."),
     _failure(_F.DISK_SHORT, "disk has no room; not run",
              "The case needs twice its 'disk_mb' -- or what it last held, "
@@ -605,7 +605,7 @@ failure_db = MappingProxyType({f.failure_id: f for f in (
              "running on that disk would make room by ending: it is not "
              "started, and fails (D-24).",
              "Free space on that disk; or lower the case's 'caps { "
-             "disk_mb = ... }', or the floor in 'hwut-root.conf'."),
+             "disk_mb = ... }', or the floor in 'HWUT_ROOT/setup.conf'."),
     _failure(_F.UNSUPPORTED, "supporter failed; not run",
              "A case this one depends on ended badly, so this one was not "
              "run (P-5).",

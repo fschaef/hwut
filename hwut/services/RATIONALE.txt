@@ -8906,3 +8906,44 @@ COST      Every book page and tutorial naming the old files changes; GOOD
           Regression: 'services/TEST/test-roster.sh', nine choices.
           OPEN (not in the CR): the wallflower design; the two rescue paths
           ('adm/rescue_goods.py' and 'sanitize move').
+
+E-235  ONE ROOT DIRECTORY: 'HWUT_ROOT/', THE ROOT MARKED BY 'setup.conf' (2026-11-21)
+--------------------------------------------------------------------------------
+PROBLEM   E-234 CR-1 left two things at the root: 'hwut-root.conf' and the
+          'HWUT/' beside it. Two names for one fact, and 'HWUT/' collides with
+          a 'hwut/' beside it on a file system blind to case (macOS, Windows).
+DECISION  (Frank-Rene, 2026-11-21: "a 'HWUT_ROOT' directory with all the
+          files ... 'hwut.sanitize' creates HWUT_ROOT/setup.conf ... this is
+          cleaner") Everything tree-wide stands in ONE directory, 'HWUT_ROOT/':
+              setup.conf                the person's -- what 'hwut-root.conf'
+                                        was; its standing MARKS THE ROOT
+              labels.txt, directories.txt, feature-forest.csv,
+              feature-doc.txt, feature-external-map.csv, tools.rst
+                                        as E-234 named them, in 'HWUT/'
+          THE FILE MARKS THE ROOT, NOT THE DIRECTORY: an empty 'HWUT_ROOT/'
+          left behind, or one copied by accident, cuts no tree. No walk enters
+          a directory named 'HWUT_ROOT', wherever it stands ('no_entry_f');
+          the name alone tells. The names stand once, in 'auxiliary/
+          no_entry.py' ('ROOT_CONF_NAME' is now 'HWUT_ROOT/setup.conf'; the
+          four copies of the constant import it). Where a file name was
+          compared against the root conf's name, the last two parts of the
+          path are ('root_conf_path_f'). 'hwut.sanitize root'/'sub-root'
+          write 'HWUT_ROOT/setup.conf', the directory made.
+          THE LAYOUT OF BEFORE IS REFUSED BY NAME: a climb that meets a
+          'hwut-root.conf' and no 'HWUT_ROOT/setup.conf' beside it raises
+          'OldRootConf' -- "'hwut-root.conf' is the old place of
+          'HWUT_ROOT/setup.conf' => hwut.renovate" -- never "no root", which
+          would climb past the tree's own boundary into an enclosing one.
+          'hwut.renovate' meets such a root, reports (and with '--apply'
+          moves) the flat files only, and is run again for the rest.
+          'adm/bundle.sh' anchors on 'hwut/HWUT_ROOT/setup.conf' or, for the
+          bundle that moves a root, on the old file it deletes; the applier
+          takes the new root beside a deleted anchor as the mark, so a
+          rerun says "already applied".
+COST      Every page writing a fixture root makes 'HWUT_ROOT/' first (the
+          shell pages by 'mkdir -p' before the statement, the Python ones by
+          'os.makedirs'); 87 GOOD files re-recorded, each diff read -- the
+          name, a file listing that now shows 'HWUT_ROOT' and its
+          'setup.conf', the anchor line of 'test-bundle.sh'. E-234's and
+          bookkeeper B-33's 'HWUT/' read 'HWUT_ROOT/' from here on; their
+          text stays as written.

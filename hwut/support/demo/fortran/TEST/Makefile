@@ -11,7 +11,7 @@
 #     demo chamber door build garage shop screen
 #                       the tests -- hwut builds '<stem>.exe' by the header's
 #                       'build'; '<stem>.cov.exe' is the same with
-#                       '--coverage' (hwut-root.conf's 'coverage_target')
+#                       '--coverage' (HWUT_ROOT/setup.conf's 'coverage_target')
 #     viewer            the program 'screen.exe' runs
 #     fixture producer  helpers -- 'on_entry' in 'hwut.conf' builds them, and
 #                       'shop.exe', which 'delivery.json' is executed by, and

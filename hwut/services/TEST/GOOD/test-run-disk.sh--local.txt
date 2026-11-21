@@ -1,5 +1,5 @@
 DIR  TEST                                                                     
-ERROR hwut.conf:1:7: VOCABULARY: 'free_disk_min_mb' outside 'hwut-root.conf': the floor is a property of the DISK, not of a directory: every case on it shares one (D-24)
+ERROR hwut.conf:1:7: VOCABULARY: 'free_disk_min_mb' outside 'HWUT_ROOT/setup.conf': the floor is a property of the DISK, not of a directory: every case on it shares one (D-24)
 SKIP  test-a.sh ............................................. spec [FAIL]  ||0
       test-b.sh ............................................. spec [FAIL]  ||0
 

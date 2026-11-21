@@ -151,7 +151,7 @@ def main(argv=None, write=None):
     unknown = [name for name in label_name_tuple(tree)
                if name not in view.defined]
     if unknown:
-        write("REFUSED: no label '%s' stands in 'HWUT/labels.txt'"
+        write("REFUSED: no label '%s' stands in 'HWUT_ROOT/labels.txt'"
               % "', '".join(unknown))
         return E_ExitCode.REFUSED
 

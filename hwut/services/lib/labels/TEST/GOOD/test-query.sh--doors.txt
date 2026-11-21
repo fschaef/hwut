@@ -1,7 +1,7 @@
 --- a label that does not stand
 STATUS: 2
 STDOUT {
-    REFUSED: no label 'concren' stands in 'HWUT/labels.txt'
+    REFUSED: no label 'concren' stands in 'HWUT_ROOT/labels.txt'
 }
 --- an expression that cannot be read
 STATUS: 2

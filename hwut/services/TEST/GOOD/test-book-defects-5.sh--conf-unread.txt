@@ -38,10 +38,10 @@ exit 1
 FAULT: hwut.conf:2:5: VOCABULARY: unknown key 'no_such_key'
 REFUSED: 'a/TEST' -- its configuration does not read (the FAULT above); nothing is accepted under it
 exit 1
-######## hwut-root.conf: 'caps' at the root
+######## HWUT_ROOT/setup.conf: 'caps' at the root
 == hwut.run
 exit 1
-ERROR hwut-root.conf:3:5: VOCABULARY: 'caps' at the root of hwut-root.conf: the root carries directory keys only; a test parameter belongs in 'app_defaults' (every application of the directory) or an 'apps' entry
+ERROR HWUT_ROOT/setup.conf:3:5: VOCABULARY: 'caps' at the root of HWUT_ROOT/setup.conf: the root carries directory keys only; a test parameter belongs in 'app_defaults' (every application of the directory) or an 'apps' entry
 SKIP  test-c.sh  x .......................................... spec [FAIL]
       :          y .......................................... spec [FAIL]
 SKIP  test-c.sh  x .......................................... spec [FAIL]
@@ -55,11 +55,11 @@ RESULTS: 0 ok, 4 fail, <t> [sec], <t> [sec] total
 ./z/TEST/test-c.sh x
 ./z/TEST/test-c.sh y
 == hwut.play a/TEST
-FAULT: hwut-root.conf:3:5: VOCABULARY: 'caps' at the root of hwut-root.conf: the root carries directory keys only; a test parameter belongs in 'app_defaults' (every application of the directory) or an 'apps' entry
+FAULT: HWUT_ROOT/setup.conf:3:5: VOCABULARY: 'caps' at the root of HWUT_ROOT/setup.conf: the root carries directory keys only; a test parameter belongs in 'app_defaults' (every application of the directory) or an 'apps' entry
 nothing played: a directory that cannot be fully read cannot say what it offers
 exit 1
 == hwut.accept --directory=a/TEST
-FAULT: hwut-root.conf:3:5: VOCABULARY: 'caps' at the root of hwut-root.conf: the root carries directory keys only; a test parameter belongs in 'app_defaults' (every application of the directory) or an 'apps' entry
+FAULT: HWUT_ROOT/setup.conf:3:5: VOCABULARY: 'caps' at the root of HWUT_ROOT/setup.conf: the root carries directory keys only; a test parameter belongs in 'app_defaults' (every application of the directory) or an 'apps' entry
 REFUSED: 'a/TEST' -- its configuration does not read (the FAULT above); nothing is accepted under it
 exit 1
 <hwut-end>

@@ -2,7 +2,7 @@
 # SPDX-License: MIT; Project HWUT; (C) Frank-Rene Schaefer
 #
 # @hwut {
-#     title      = "test management: the roster, 'HWUT/', and what sanitize says of moves"
+#     title      = "test management: the roster, 'HWUT_ROOT/', and what sanitize says of moves"
 #     features   = ["roster-records-directories"]
 #     choices {
 #         roster       { features = ["roster-records-directories", "record-directory"] }
@@ -23,7 +23,7 @@
 # B-33), one choice per item. MEASURED BEFORE on e434b21, Schwarm 51 stage 5:
 #
 # roster       (CR-1, CR-2) a directory's first record enters it in
-#              'HWUT/directories.txt'; its last record removed takes it out.
+#              'HWUT_ROOT/directories.txt'; its last record removed takes it out.
 # gone         (CR-2) a recorded TEST directory deleted whole: before, the
 #              run said '26 ok, 0 fail', exit 0 -- the books went with it.
 #              Now one case fails, 'in roster, no such directory'; the
@@ -41,8 +41,9 @@
 # rubbish-last (CR-8) before, 'remove <dir>/OUT' led every proposal.
 # pending-move (CR-7) 'hwut.rename' across directories before 'git mv':
 #              before, the old place said only 'no GOOD file ... accept'.
-# old-place    (CR-4) 'hwut-root.labels' beside 'hwut-root.conf' refused by
-#              name; 'hwut.renovate --apply' moves it to 'HWUT/labels.txt'.
+# old-place    (CR-4, E-235) a tree of before -- 'hwut-root.conf',
+#              'hwut-root.labels' -- refused by name; 'hwut.renovate --apply'
+#              moves them into 'HWUT_ROOT/' and begins the roster.
 # ---------------------------------------------------------------------------
 HERE=$(cd "$(dirname "$0")" && pwd)
 ROOT=$(cd "$HERE/../../.." && pwd)
@@ -52,7 +53,7 @@ unset NO_COLOR CI COLUMNS
 
 case "$1" in
     --hwut-info)
-        echo "test management: the roster, 'HWUT/', and what sanitize says of moves;"
+        echo "test management: the roster, 'HWUT_ROOT/', and what sanitize says of moves;"
         echo "CHOICES: roster, gone, scope, directories, empty-dir, rename-noted, rubbish-last, pending-move, old-place;"
         exit 0 ;;
 esac
@@ -79,7 +80,8 @@ app() {                   #  <path> <choice>...: a test printing its choice
 
 tree() {                  #  a fresh, accepted tree of three directories
     rm -rf "$WORK/t"; mkdir -p "$WORK/t"; cd "$WORK/t"
-    printf 'hwut {\n}\n' > hwut-root.conf
+    mkdir -p HWUT_ROOT
+    printf 'hwut {\n}\n' > HWUT_ROOT/setup.conf
     app game/TEST/test-loop.sh   step
     app input/TEST/test-keys.sh  left right
     app render/TEST/test-screen.sh start win
@@ -90,7 +92,7 @@ tree() {                  #  a fresh, accepted tree of three directories
 }
 
 roster() {                #  the roster's entries
-    echo "ROSTER {"; grep -v '^#' HWUT/directories.txt | sed 's/^/    /'; echo "}"
+    echo "ROSTER {"; grep -v '^#' HWUT_ROOT/directories.txt | sed 's/^/    /'; echo "}"
 }
 
 ran() {                   #  [<argument>...]: hwut.run's verdict and exit
@@ -117,8 +119,8 @@ roster)
     ( cd render/TEST && "$BIN/hwut.play" --all --plain > /dev/null 2>&1 \
                      && "$BIN/hwut.accept" > /dev/null 2>&1 )
     roster
-    echo "--- 'HWUT/' is walked by nobody: a TEST below it is no test"
-    app HWUT/TEST/test-no.sh one
+    echo "--- 'HWUT_ROOT/' is walked by nobody: a TEST below it is no test"
+    app HWUT_ROOT/TEST/test-no.sh one
     ran
     ;;
 gone)
@@ -145,7 +147,7 @@ directories)
     echo "--- moved, nothing run"
     mv render gfx; proposed --directories
     "$BIN/hwut.sanitize" move render/TEST gfx/TEST
-    roster; grep -v '^#' HWUT/labels.txt | sed 's/^/    /'
+    roster; grep -v '^#' HWUT_ROOT/labels.txt | sed 's/^/    /'
     echo "--- moved again, and run since"
     mkdir -p lib; mv gfx lib/gfx; ran; proposed --directories
     echo "--- forget"
@@ -187,18 +189,22 @@ pending-move)
 old-place)
     tree
     "$BIN/hwut.labels.create" screens --glob "test-screen.sh" > /dev/null
-    mv HWUT/labels.txt hwut-root.labels
+    echo "--- the layout of before: flat files beside the root"
+    mv HWUT_ROOT/setup.conf hwut-root.conf
+    mv HWUT_ROOT/labels.txt hwut-root.labels
+    rm -rf HWUT_ROOT
     echo "--- run";   ran; grep -E "REFUSED|FAULT" run.txt | sed 's/^/    /'
-    echo "--- labels"; "$BIN/hwut.labels.list" 2>&1 | sed 's/^/    /'
-    echo "--- renovate"; "$BIN/hwut.renovate" 2>&1 | grep -E "labels|change" \
+    echo "--- renovate"; "$BIN/hwut.renovate" 2>&1 | grep -E "' -> '|written|change" \
         | sed 's/^/    /'
     "$BIN/hwut.renovate" --apply > /dev/null 2>&1
-    for f in hwut-root.labels HWUT/labels.txt; do
+    for f in hwut-root.conf hwut-root.labels HWUT_ROOT/setup.conf \
+             HWUT_ROOT/labels.txt HWUT_ROOT/directories.txt; do
         if [ -f $f ]; then echo "    stands: $f"; else echo "    gone:   $f"; fi
     done
     echo "--- run"; ran
+    echo "--- labels"; "$BIN/hwut.labels.list" 2>&1 | sed 's/^/    /'
     echo "--- both places: two copies"
-    cp HWUT/labels.txt hwut-root.labels; ran; grep -E "REFUSED|FAULT" run.txt | sed 's/^/    /'
+    cp HWUT_ROOT/labels.txt hwut-root.labels; ran; grep -E "REFUSED|FAULT" run.txt | sed 's/^/    /'
     ;;
 esac
 echo "<hwut-end>"

@@ -27,7 +27,7 @@ and ends with status 1. Where nothing is missing and no tree stands -- the
 place a person is in right after installing -- it says so and how a tree
 begins, status 0:
 
-    INSTALLED: hwut 2.0.0 -- no 'hwut-root.conf' in or above '/home/you' => hwut.sanitize root
+    INSTALLED: hwut 2.0.0 -- no 'HWUT_ROOT/setup.conf' in or above '/home/you' => hwut.sanitize root
 
 A FIRST GREEN RUN, in any form:
 

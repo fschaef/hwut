@@ -106,7 +106,7 @@ def _tree(root):
     """RETURN: None. A tree of four TEST directories below 'root' -- one
     whose tests link nothing -- a feature file of the past beside one,
     and the book verdicts written by the bookkeeper."""
-    _write(root, "hwut-root.conf", "hwut {\n}\n")
+    _write(root, "HWUT_ROOT/setup.conf", "hwut {\n}\n")
     _write(root, "engine/compare/core/TEST/hwut-features.conf",
            'features {\n  childs { line-pairing { } }\n}\n')
     _test(root, "engine/compare/core/TEST/test-pair.sh",

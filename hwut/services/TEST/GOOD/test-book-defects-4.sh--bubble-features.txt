@@ -2,5 +2,5 @@
    TEST . . . . . . . . . . . . . . . . . . . . . . . . . .      [OK]      2/2
 RESULTS: 2 ok, 0 fail, <t> [sec], <t> [sec] total
 == above: hwut.run --label f/flow
-REFUSED: 'f/flow' asks for a feature: no 'HWUT/feature-forest.csv' stands at '$WORK' => hwut.features.init
+REFUSED: 'f/flow' asks for a feature: no 'HWUT_ROOT/feature-forest.csv' stands at '$WORK' => hwut.features.init
 <hwut-end>

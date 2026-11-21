@@ -10,7 +10,7 @@
 # targets, so hwut may build several tests of this directory at once
 # (services E-210: the build runs here, where this Makefile stands).
 #
-# '%.cov.exe' is the coverage-capable build hwut-root.conf names for Fortran
+# '%.cov.exe' is the coverage-capable build HWUT_ROOT/setup.conf names for Fortran
 # ('coverage_target'): the same, compiled with '--coverage'.
 #______________________________________________________________________________
 FC      ?= gfortran

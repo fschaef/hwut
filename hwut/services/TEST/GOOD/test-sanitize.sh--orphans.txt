@@ -15,7 +15,8 @@ STDOUT {
     TOUCHED (the re-run trigger): 1 test application(s)
 }
 STANDING {
-    hwut-root.conf
+    HWUT_ROOT
+    HWUT_ROOT/setup.conf
     suite
     suite/TEST
     suite/TEST/GOOD

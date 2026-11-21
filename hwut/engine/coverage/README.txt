@@ -633,7 +633,7 @@ see DISCUSSIONS disc-9 and its amendment.
     (2) the language's 'coverage' list in the SHIPPED ROOT CONF
         ('services/_boundary.ROOT_CONF_TEXT', D-26): the candidate
         tools, in PREFERENCE order. A tree already placed carries its
-        own copy in 'hwut-root.conf' and edits that.
+        own copy in 'HWUT_ROOT/setup.conf' and edits that.
     (3) a module under 'readers/' with 'call_scheme', 'report_argv' and
         'harvest', passed to 'reader.register', and imported by
         'readers/__init__.py'

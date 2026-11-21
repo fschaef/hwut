@@ -114,7 +114,7 @@ def _made(carrier, own_text, file, position_db, name, conf_file,
        or carrier is None and file == conf_file:
         #  THE CONF THAT SPOKE: the directory's own is 'hwut.conf'; one
         #  met on the climb is named by its path FROM THE TEST DIRECTORY
-        #  ('../hwut.conf', '../../hwut-root.conf'), never by an absolute
+        #  ('../hwut.conf', '../../HWUT_ROOT/setup.conf'), never by an absolute
         #  path -- two confs of one name are two places (R-87).
         if not os.path.isabs(conf_file): label = conf_file
         elif directory is None:          label = os.path.basename(conf_file)

@@ -15,17 +15,22 @@ DESCRIPTION
 
        WHAT IT TRANSLATES, today:
 
-           beside 'hwut-root.conf' (CR-4, 2026-11-20):
-               hwut-root.labels              -> HWUT/labels.txt
-               hwut-feature-forest.csv       -> HWUT/feature-forest.csv
-               hwut-feature-doc.dat          -> HWUT/feature-doc.txt
-               hwut-feature-external-map.csv -> HWUT/feature-external-map.csv
-               hwut-tools.rst                -> HWUT/tools.rst
+           the root's flat files (E-234, E-235, 2026-11-21):
+               hwut-root.conf                -> HWUT_ROOT/setup.conf
+               hwut-root.labels              -> HWUT_ROOT/labels.txt
+               hwut-feature-forest.csv       -> HWUT_ROOT/feature-forest.csv
+               hwut-feature-doc.dat          -> HWUT_ROOT/feature-doc.txt
+               hwut-feature-external-map.csv -> HWUT_ROOT/feature-external-map.csv
+               hwut-tools.rst                -> HWUT_ROOT/tools.rst
                                              moved by 'git mv' where git
                                              tracks the file; every other
                                              face refuses the old place
-               no 'HWUT/directories.txt'     -> written from every book
+               no 'HWUT_ROOT/directories.txt' -> written from every book
                                              that stands (bookkeeper B-33)
+                                             A tree whose root is still a
+                                             'hwut-root.conf' gets ONLY
+                                             these moves: run it again
+                                             after '--apply' for the rest.
 
            hwut-info.dat, line 1          -> 'title = "..."' in hwut.conf
                                              (X-INFO-DAT)
@@ -71,6 +76,7 @@ import re
 import sys
 
 from ..engine.orchestrator.exploration.tree_explorer import (RootConfMissing,
+                                                                 OldRootConf,
                                                                  explore_tree,
                                                                  root_conf_directory)
 from ..engine.orchestrator.exploration import finder
@@ -155,11 +161,15 @@ def do(request):
     try:
         tree = explore_tree(root)
         top  = root_conf_directory(root)
+    except OldRootConf as error:
+        #  A ROOT OF THE OLD LAYOUT (E-235): no walk reads it, so the
+        #  root's own moves are all there is to do -- the rest after them.
+        tree, top = [], error.directory
     except RootConfMissing as error:
         raise Refused("REFUSED: %s" % error) from error
     directory_list = [directory for directory, _ in tree]
-    #  THE ROOT'S OWN FILES FIRST (CR-4): the old places beside
-    #  'hwut-root.conf' carried into 'HWUT/'.
+    #  THE ROOT'S OWN FILES FIRST (CR-4, E-235): the old flat files
+    #  carried into 'HWUT_ROOT/'.
     root_plan = root_plan_of(top)
     if not directory_list and not root_plan.change_list \
        and not root_plan.note_list:
@@ -255,7 +265,7 @@ class Plan:
 def root_plan_of(top):
     """
     RETURN: Plan, what the root 'top' needs (CR-4): every framework file
-            at its OLD place beside 'hwut-root.conf' moved into 'HWUT/'
+            at its OLD place beside 'HWUT_ROOT/' moved into it
             under its new name -- by 'git mv' where git tracks it, so the
             history follows; a note, and nothing done, where the new file
             stands as well.

@@ -47,7 +47,8 @@ esac
 WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
 cd "$WORK"
-printf 'hwut {\n}\n' > hwut-root.conf
+mkdir -p HWUT_ROOT
+printf 'hwut {\n}\n' > HWUT_ROOT/setup.conf
 
 face() {                  #  <face> <argument>...: status and output
     $1 "${@:2}" > out.txt 2>&1
@@ -66,7 +67,8 @@ app() {                   #  <name> <body line>...: a test, booked by a run
 
 tree() {
     mkdir -p tree/TEST/GOOD
-    printf 'hwut {\n}\n' > tree/hwut-root.conf
+    mkdir -p tree/HWUT_ROOT
+    printf 'hwut {\n}\n' > tree/HWUT_ROOT/setup.conf
     printf 'hwut {\n}\n' > tree/TEST/hwut.conf
     name=test-dev.sh; app "Dev" 'echo "what the run says"' 'echo "<hwut-end>"'
     printf 'what GOOD expects\n<hwut-end>\n' > tree/TEST/GOOD/test-dev.sh.txt

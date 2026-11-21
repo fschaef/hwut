@@ -38,7 +38,7 @@
 #
 # NOT IN THE CENSUS: it fetches the dependencies from PyPI, and the later
 # forms need a container engine. The page carries the label 'meta'
-# ('HWUT/labels.txt'), silent unless a wish names a label:
+# ('HWUT_ROOT/labels.txt'), silent unless a wish names a label:
 #
 #     hwut.run -l meta -k packaging
 #

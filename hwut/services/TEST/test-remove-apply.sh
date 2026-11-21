@@ -57,7 +57,8 @@ face() {                  #  <face> <argument>...: status and both streams
 
 tree() {                  #  two directories; lost ground of three kinds
     mkdir -p suite/TEST/GOOD other/TEST
-    printf 'hwut {\n}\n' > hwut-root.conf
+    mkdir -p HWUT_ROOT
+    printf 'hwut {\n}\n' > HWUT_ROOT/setup.conf
     for d in suite other; do
         printf 'hwut {\n    on_entry = "true"\n    on_exit  = "true"\n}\n' \
             > $d/TEST/hwut.conf

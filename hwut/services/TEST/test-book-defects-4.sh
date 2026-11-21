@@ -32,7 +32,7 @@
 # numeral         RQ-6: a number binding takes the longest numeral; '5.5'
 #                 is no 'int'. MEASURED before: 'count 5.5' bound n = 5.
 # nested-root     RQ-1, RQ-9 (E-200), AMENDED by intend/45 R-2, R-3
-#                 (2026-11-15): an inner 'hwut-root.conf' is A PROJECT OF
+#                 (2026-11-15): an inner 'HWUT_ROOT/setup.conf' is A PROJECT OF
 #                 ITS OWN -- from inside it governs, the climb stops at it;
 #                 from above no walk enters it, a NOTE says so; the
 #                 retired '--no-boundary' is refused (E-202).
@@ -45,7 +45,7 @@
 #                 's', 'h', 'ms', 'us', 'ns'.
 # sub-root        RQ-1, ruled: 'hwut.sanitize root' below a root REFUSES,
 #                 naming 'hwut.sanitize sub-root'; 'sub-root' writes the
-#                 inner 'hwut-root.conf', and refuses where no tree stands
+#                 inner 'HWUT_ROOT/setup.conf', and refuses where no tree stands
 #                 above. MEASURED before: 'nothing to do: a boundary stands'.
 # tick            RQ-3: 'tick: 0.5 => "<tick {time_sec}>"' -- lines of
 #                 time, in the active mode, between the input lines; a
@@ -85,8 +85,9 @@ WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
 mkdir -p "$WORK/TEST"
 cd "$WORK"
+mkdir -p HWUT_ROOT
 printf 'hwut {\n    language-setup { bash { extensions = [".sh"] interpreter = "bash" } }\n}\n' \
-       > hwut-root.conf
+       > HWUT_ROOT/setup.conf
 cd TEST
 shown() {
     sed -E "s|$WORK|\$WORK|g; s/[0-9]+\.[0-9]+ \[sec\]/<t> [sec]/g; s/, [0-9:]+$/, <t>/;
@@ -147,7 +148,7 @@ case "$1" in
             printf '#!/bin/sh\nexec %s "$@"\n' "$(command -v $p)" > "$WORK/nocov/$p"
             chmod +x "$WORK/nocov/$p"
         done
-        OUT=$(mktemp -d)        # no 'hwut-root.conf' in or above it
+        OUT=$(mktemp -d)        # no 'HWUT_ROOT/setup.conf' in or above it
         ( cd "$OUT" && PATH="$WORK/nocov" COLUMNS=72 "$BIN/hwut.help" 2>&1 \
              | grep -E -A2 "MISSING: the program 'coverage'"; echo "exit ${PIPESTATUS[0]}" )
         rm -rf "$OUT" ;;
@@ -159,8 +160,9 @@ case "$1" in
         #  root caps every case at 1 s; world/TEST/test-slow.sh sleeps 2 s.
         W="$WORK/world"
         mkdir -p "$W/TEST"
+        mkdir -p "$W/HWUT_ROOT"
         sed 's/^hwut {/hwut {\n    app_defaults { caps { timeout_sec = 1 } }/' \
-            "$WORK/hwut-root.conf" > "$W/hwut-root.conf"
+            "$WORK/HWUT_ROOT/setup.conf" > "$W/HWUT_ROOT/setup.conf"
         page "$W/TEST/test-slow.sh" 'title = "slow"' \
              '[ -f "$(dirname "$0")/slow" ] && sleep 2' 'echo "done"'
         page test-top.sh 'title = "top"' 'echo "top"'
@@ -274,7 +276,7 @@ PYEOF2
         ;;
     bubble-labels|bubble-features|bubble-fault)
         #  RQ-9 (services E-200), AMENDED by intend/45 R-2, R-3
-        #  (2026-11-15): a 'hwut-root.conf' below the root is A PROJECT OF
+        #  (2026-11-15): a 'HWUT_ROOT/setup.conf' below the root is A PROJECT OF
         #  ITS OWN -- from inside it governs and nothing above is seen;
         #  from above it is not walked: its labels, features and faults
         #  are its own. $WORK holds TEST/test-top.sh; world/ is another
@@ -282,10 +284,11 @@ PYEOF2
         #  MEASURED before: from above, world/ was not walked (a NOTE);
         #  '--no-boundary' walked it, but '--label' gave its runs no
         #  label, '-F' refused without the outer feature file, and a
-        #  broken 'world/hwut-root.conf' was named 'hwut-root.conf'.
+        #  broken 'world/HWUT_ROOT/setup.conf' was named 'HWUT_ROOT/setup.conf'.
         W="$WORK/world"
         mkdir -p "$W/TEST"
-        cp "$WORK/hwut-root.conf" "$W/hwut-root.conf"
+        mkdir -p "$W/HWUT_ROOT"
+        cp "$WORK/HWUT_ROOT/setup.conf" "$W/HWUT_ROOT/setup.conf"
         page "$W/TEST/test-w.sh" 'choices = ["x", "y"]' 'echo "world $1"'
         page test-top.sh 'choices = ["x", "y"]' 'echo "top $1"'
         record; "$BIN/hwut.accept" --whole > /dev/null 2>&1
@@ -305,7 +308,7 @@ PYEOF2
             echo "== above: hwut.labels.create fast"
             "$BIN/hwut.labels.create" fast --glob 'test-*' 2>&1
             echo "== above: the outer file's entries"
-            grep -E "^[.:]" HWUT/labels.txt
+            grep -E "^[.:]" HWUT_ROOT/labels.txt
             ran inside --label slow
             ran above  --label slow
             ran above  --label fast ;;
@@ -313,18 +316,22 @@ PYEOF2
             #  THE BUBBLE BEGINS FEATURES OF ITS OWN (spec 43; the
             #  showcase's case, ruled 2026-11-08): its forest and doc file.
             ( cd world && "$BIN/hwut.features.init" > /dev/null 2>&1 )
-            printf 'flows : flow\n' >> "$W/HWUT/feature-forest.csv"
-            printf '[[flow]]\na flow\n' >> "$W/HWUT/feature-doc.txt"
+            mkdir -p "$W/HWUT_ROOT"
+            printf 'flows : flow\n' >> "$W/HWUT_ROOT/feature-forest.csv"
+            mkdir -p "$W/HWUT_ROOT"
+            printf '[[flow]]\na flow\n' >> "$W/HWUT_ROOT/feature-doc.txt"
             sed -i 's/choices = \["x", "y"\]/features = ["flow"] choices = ["x", "y"]/' "$W/TEST/test-w.sh"
             ( cd world && "$BIN/hwut.run" --plain > /dev/null 2>&1 )
             #  A FEATURE IS THE LABEL 'f/<feature>' (intend/three-worlds).
             ran inside --label f/flow
             ran above  --label f/flow ;;
         bubble-fault)
-            printf 'hwut {\n    no_such_key = 1\n}\n' > "$W/hwut-root.conf"
+            mkdir -p "$W/HWUT_ROOT"
+            printf 'hwut {\n    no_such_key = 1\n}\n' > "$W/HWUT_ROOT/setup.conf"
             ran above
-            cp hwut-root.conf "$W/hwut-root.conf"
-            sed -i 's/^hwut {/hwut {\n    no_such_key = 1/' hwut-root.conf
+            mkdir -p "$W/HWUT_ROOT"
+            cp HWUT_ROOT/setup.conf "$W/HWUT_ROOT/setup.conf"
+            sed -i 's/^hwut {/hwut {\n    no_such_key = 1/' HWUT_ROOT/setup.conf
             ran inside
             ran above ;;
         esac ;;
@@ -339,7 +346,8 @@ PYEOF2
             mkdir -p "$WORK/$d"
             page "$WORK/$d/test-t.sh" 'choices = ["x", "y"]' 'echo "$1"'
         done
-        cp "$WORK/hwut-root.conf" "$WORK/world/hwut-root.conf"
+        mkdir -p "$WORK/world/HWUT_ROOT"
+        cp "$WORK/HWUT_ROOT/setup.conf" "$WORK/world/HWUT_ROOT/setup.conf"
         cd "$WORK"
         listed() {      # <file>: what 'hwut.report.list' selects by it
             echo "== $1"; sed 's/^/   | /' "$1"

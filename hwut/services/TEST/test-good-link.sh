@@ -70,7 +70,8 @@ WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
 cd "$WORK"
 CONF='hwut {\n    language-setup { bash { extensions = [".sh"] interpreter = "bash" } }\n}\n'
-printf "$CONF" > hwut-root.conf
+mkdir -p HWUT_ROOT
+printf "$CONF" > HWUT_ROOT/setup.conf
 shown() {
     sed -E "s|$WORK|\$WORK|g; s/[0-9]+\.[0-9]+ \[sec\]/<t> [sec]/g;
             s/ +\|\|[0-9]+$//"
@@ -133,7 +134,8 @@ case "$1" in
         mkdir -p d/TEST
         said hwut.good.link a/TEST/GOOD/test-a.sh--x.txt d/TEST
         echo "== out of a bubble"
-        app e; printf "$CONF" > e/hwut-root.conf
+        mkdir -p e/HWUT_ROOT
+        app e; printf "$CONF" > e/HWUT_ROOT/setup.conf
         said hwut.good.link a/TEST/GOOD/test-a.sh--x.txt e/TEST
         echo "== hwut.good.link.show a/TEST/GOOD/test-a.sh--x.txt"
         said hwut.good.link.show a/TEST/GOOD/test-a.sh--x.txt
@@ -173,10 +175,12 @@ case "$1" in
         echo "== the link reads"; cat d/TEST/GOOD/test-a.sh--x.link
         echo "== hwut.run in d/TEST (y has no GOOD)"; run_of d
         echo "== into a bubble: the link follows inward"
-        mkdir -p e/TEST; printf "$CONF" > e/hwut-root.conf
+        mkdir -p e/HWUT_ROOT
+        mkdir -p e/TEST; printf "$CONF" > e/HWUT_ROOT/setup.conf
         said hwut.move b2/TEST/test-a.sh e/TEST/ --dont-ask | grep -E "REFUSED|NOTE|link|exit" ;;
     inward)
-        app e; printf "$CONF" > e/hwut-root.conf; accepted e
+        mkdir -p e/HWUT_ROOT
+        app e; printf "$CONF" > e/HWUT_ROOT/setup.conf; accepted e
         echo "== hwut.good.link e/TEST/GOOD/test-a.sh--x.txt c/TEST"
         said hwut.good.link e/TEST/GOOD/test-a.sh--x.txt c/TEST
         echo "== the link reads"; cat c/TEST/GOOD/test-a.sh--x.link

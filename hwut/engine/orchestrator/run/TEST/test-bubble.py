@@ -44,7 +44,7 @@ local      S = {local}: '.', none/, both/ run here; linux/ NOT RUN,
            'available', and linux/inner/ with it: it inherits ghdl
            (intend/45 R-4; no inner root, nothing replaces).
 refused    REFUSED at the call, named, nothing explored: a 'platform' in
-           a hwut.conf below the root (o-53); a tool 'HWUT/tools.rst'
+           a hwut.conf below the root (o-53); a tool 'HWUT_ROOT/tools.rst'
            beside the root does not explain (o-52).
 first      the FIRST DEFINED wins, '-p' narrows and never orders (o-58):
            '-p linux' -- both/ runs here, 'local' defined first; the
@@ -99,7 +99,7 @@ book       after 'hwut.run' and 'hwut.run --exclude-local -p linux': each
            'platform'.
 
 probe      the declaration is the contract (intend/45 R-5, amending
-           E-226, 2026-11-15): 'HWUT/tools.rst' gives iverilog 'probe:
+           E-226, 2026-11-15): 'HWUT_ROOT/tools.rst' gives iverilog 'probe:
            hwut-bubble-probe'. Not on PATH: both/ and a directory below
            none/ requiring iverilog run here as declared, their cases
            FAIL 'platform local does not provide tool iverilog', the
@@ -158,7 +158,8 @@ def tree(definitions=None, none_text=""):
     for where, text in conf_db.items():
         #  ONE ROOT, hwut.conf BELOW IT (intend/45 R-1, R-4).
         os.makedirs(os.path.join(root, where), exist_ok=True)
-        name = "hwut-root.conf" if where == "" else "hwut.conf"
+        name = "HWUT_ROOT/setup.conf" if where == "" else "hwut.conf"
+        os.makedirs(os.path.dirname(os.path.join(root, where, name)), exist_ok=True)
         with open(os.path.join(root, where, name), "w") as fh:
             fh.write("hwut {\n    %s\n}\n" % text)
     for where, name in test_db.items():
@@ -273,7 +274,8 @@ def test_refused():
     root = tree()
     try:
         os.makedirs(os.path.join(root, "HWUT"), exist_ok=True)
-        with open(os.path.join(root, "HWUT/tools.rst"), "w") as fh:
+        os.makedirs(os.path.join(root, "HWUT_ROOT"), exist_ok=True)
+        with open(os.path.join(root, "HWUT_ROOT/tools.rst"), "w") as fh:
             fh.write("[[iverilog]]\n    Icarus Verilog.\n")
         decided(root, [])
     finally:
@@ -626,11 +628,12 @@ def test_far_empty():
 
 
 def test_probe():
-    """RETURN: None. 'local' probed through 'HWUT/tools.rst'."""
+    """RETURN: None. 'local' probed through 'HWUT_ROOT/tools.rst'."""
     root, bin_dir = tree(), tempfile.mkdtemp(prefix="hwut_bubble_probe_")
     try:
         os.makedirs(os.path.join(root, "HWUT"), exist_ok=True)
-        with open(os.path.join(root, "HWUT/tools.rst"), "w") as fh:
+        os.makedirs(os.path.join(root, "HWUT_ROOT"), exist_ok=True)
+        with open(os.path.join(root, "HWUT_ROOT/tools.rst"), "w") as fh:
             fh.write("[[iverilog]]\n    Icarus Verilog.\n"
                      "    probe: hwut-bubble-probe\n"
                      "[[ghdl]]\n    GHDL, no probe line.\n")

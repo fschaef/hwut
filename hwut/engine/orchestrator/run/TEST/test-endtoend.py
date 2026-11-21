@@ -100,7 +100,7 @@ def fixture(entry_command="true"):
     """
     root = tempfile.mkdtemp(prefix="hwut_e2e_")
     #  THE TREE'S BOUNDARY: the climb stops here; a tree without
-    #  a 'hwut-root.conf' above it is refused.
+    #  a 'HWUT_ROOT/setup.conf' above it is refused.
     tree_boundary(root)
     test = os.path.join(root, "suite", "TEST")
     good = os.path.join(test, "GOOD")

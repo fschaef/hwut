@@ -17,9 +17,9 @@ DESCRIPTION
                                 TRANSIENT_DIRECTORY_NAME,
                                 OUT_DIRECTORY_NAME: hwut's own two
                                 grounds, standing beside 'GOOD'
-       or  it is the 'HWUT' beside 'hwut-root.conf'
-                                RECORD_DIRECTORY_NAME: the tree's own
-                                files (CR-1)
+       or  it is named 'HWUT_ROOT'
+                                RECORD_DIRECTORY_NAME: a tree's root
+                                files (E-235)
 
            no_entry_f(path)         the question every walk asks
            marked_no_entry(path)    the marker placed
@@ -88,17 +88,18 @@ def marked_no_entry(path):
     return path
 
 
-#  WHERE A PROJECT OF ITS OWN BEGINS (RQ-1): a directory holding this file.
-ROOT_CONF_NAME = "hwut-root.conf"
-
-#  THE FRAMEWORK'S FILES OF A TREE (CR-1, 2026-11-20): one visible
-#  directory beside 'hwut-root.conf', capitals like 'TEST', 'GOOD', 'TMP'
-#  and 'OUT'; every file in it named without a 'hwut-' prefix and with an
-#  extension an editor opens. 'hwut-root.conf' stays outside: it is the
-#  person's file and the marker the root search climbs to. Every name is
-#  '/'-separated and relative to the root -- what a message prints, and
-#  what 'os.path.join(root, ...)' opens on every platform.
-RECORD_DIRECTORY_NAME = "HWUT"
+#  THE ROOT OF A TREE (2026-11-21, services E-235): ONE directory,
+#  'HWUT_ROOT', holding everything tree-wide -- the person's 'setup.conf'
+#  and the framework's records. A project begins where a directory holds
+#  'HWUT_ROOT/setup.conf' (RQ-1): THE FILE marks it, not the directory, so
+#  an empty 'HWUT_ROOT/' left behind cuts no tree. No walk enters a
+#  directory named 'HWUT_ROOT', wherever it stands. Every name below is
+#  '/'-separated and relative to the directory holding 'HWUT_ROOT' -- what
+#  a message prints, and what 'os.path.join(root, ...)' opens on every
+#  platform. Capitals and the underscore: no clash with a 'hwut/' beside
+#  it on a file system blind to case.
+RECORD_DIRECTORY_NAME = "HWUT_ROOT"
+ROOT_CONF_NAME        = RECORD_DIRECTORY_NAME + "/setup.conf"
 LABELS_FILE_NAME      = RECORD_DIRECTORY_NAME + "/labels.txt"
 ROSTER_FILE_NAME      = RECORD_DIRECTORY_NAME + "/directories.txt"
 FOREST_FILE_NAME      = RECORD_DIRECTORY_NAME + "/feature-forest.csv"
@@ -106,9 +107,11 @@ DOC_FILE_NAME         = RECORD_DIRECTORY_NAME + "/feature-doc.txt"
 EXTERNAL_FILE_NAME    = RECORD_DIRECTORY_NAME + "/feature-external-map.csv"
 TOOLS_FILE_NAME       = RECORD_DIRECTORY_NAME + "/tools.rst"
 
-#  THE OLD PLACES (CR-4): beside 'hwut-root.conf', before CR-1. A face that
-#  finds one refuses by name; 'hwut.renovate' moves it.
+#  THE OLD PLACES (E-234 CR-4, E-235): the flat files of before. A face
+#  that finds one refuses by name; 'hwut.renovate' moves it.
+OLD_ROOT_CONF_NAME = "hwut-root.conf"
 OLD_PLACE_DB = {
+    OLD_ROOT_CONF_NAME:              ROOT_CONF_NAME,
     "hwut-root.labels":              LABELS_FILE_NAME,
     "hwut-feature-forest.csv":       FOREST_FILE_NAME,
     "hwut-feature-doc.dat":          DOC_FILE_NAME,
@@ -117,20 +120,28 @@ OLD_PLACE_DB = {
 }
 
 
+def root_conf_path_f(path):
+    """
+    RETURN: bool, True where 'path' names a root's setup file -- its last
+            two parts are 'HWUT_ROOT' and 'setup.conf' (E-235); a file name
+            alone no longer tells.
+    """
+    parts = os.path.normpath(path).replace(os.sep, "/").split("/")
+    return parts[-2:] == ROOT_CONF_NAME.split("/")
+
+
 def record_directory_f(path):
     """
-    RETURN: True,  'path' is a tree's 'HWUT/' -- named so and standing
-                   beside a 'hwut-root.conf'
+    RETURN: True,  'path' is named 'HWUT_ROOT' -- a tree's root files, which
+                   no walk enters, wherever it stands
             False, else
     """
-    return os.path.basename(path) == RECORD_DIRECTORY_NAME \
-           and os.path.isfile(os.path.join(os.path.dirname(path),
-                                           ROOT_CONF_NAME))
+    return os.path.basename(os.path.normpath(path)) == RECORD_DIRECTORY_NAME
 
 
 def made_record_directory(root):
     """
-    RETURN: str, the absolute 'HWUT/' of the tree rooted at 'root', made
+    RETURN: str, the absolute 'HWUT_ROOT/' of the tree rooted at 'root', made
             where it did not stand. Raises OSError where it cannot be.
     """
     path = os.path.join(os.path.abspath(root), RECORD_DIRECTORY_NAME)
@@ -141,7 +152,8 @@ def made_record_directory(root):
 def old_place_refusal_list(root):
     """
     RETURN: list of str, one refusal per framework file that still stands
-            at its OLD place beside 'hwut-root.conf' in 'root' (CR-4),
+            at its OLD place in 'root' (E-235): a flat file beside where
+            'HWUT_ROOT/' stands or would stand,
             naming it and the remedy -- or two copies, where the new one
             stands as well. Empty where none does.
     """
@@ -159,8 +171,9 @@ def old_place_refusal_list(root):
 
 def inner_root_f(path):
     """
-    RETURN: bool, True where the directory 'path' holds a 'hwut-root.conf'
-            of its own -- a project a walk from above does not enter (RQ-1).
+    RETURN: bool, True where the directory 'path' holds a
+            'HWUT_ROOT/setup.conf' of its own -- a project a walk from above
+            does not enter (RQ-1).
     """
     return os.path.isfile(os.path.join(path, ROOT_CONF_NAME))
 

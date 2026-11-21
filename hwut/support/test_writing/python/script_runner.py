@@ -9,7 +9,7 @@ PURPOSE: A THROWAWAY EXECUTABLE SCRIPT, for tests that need a real
     CRunScript  the same, as a context manager: the script is deleted
                 when the block ends, whatever ended it.
     tree_boundary()
-                writes the 'hwut-root.conf' that ENDS a fixture's
+                writes the 'HWUT_ROOT/setup.conf' that ENDS a fixture's
                 tree, so the climb has somewhere to stop.
 
 A test that supervises processes, times them, or reads their streams
@@ -91,7 +91,7 @@ def tree_boundary(directory, content="hwut {\n}\n"):
 
     THE BOUNDARY OF A FIXTURE'S TREE. Every face ASCENDS from where it
     is called, collecting each 'hwut.conf' it passes, until it meets a
-    'hwut-root.conf'; a tree with none above it is REFUSED. So a
+    'HWUT_ROOT/setup.conf'; a tree with none above it is REFUSED. So a
     fixture that builds a tree states its own end, and an empty block
     is a complete statement -- it says only 'the tree ends here'.
 
@@ -99,7 +99,8 @@ def tree_boundary(directory, content="hwut {\n}\n"):
     apply to every test of that tree unless a nearer conf or a source
     header says otherwise.
     """
-    target = Path(directory) / "hwut-root.conf"
+    target = Path(directory) / "HWUT_ROOT" / "setup.conf"
+    target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(content, encoding="utf-8")
     return str(target)
 

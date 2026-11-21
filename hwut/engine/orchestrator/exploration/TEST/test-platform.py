@@ -28,7 +28,7 @@
 """SPDX-License: MIT; Project HWUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 
-PURPOSE: 'platform = [ ... ]' OF A BUBBLE'S 'hwut-root.conf' (spec/42
+PURPOSE: 'platform = [ ... ]' OF A BUBBLE'S 'HWUT_ROOT/setup.conf' (spec/42
          section 1; intend/42 rulings 3, 4, 10, 14, 15, 16, 19): the
          list a tree walk reads, and every fault of it by name.
 
@@ -38,7 +38,7 @@ CHOICES: reads, bubble, root-only, tools, requires, tools-faults, and one
 reads           "local" and a 'container' entry: the tuple of (name,
                 spec) in the list's order, and it reaches the bubble's
                 test directory.
-bubble          an inner 'hwut-root.conf' is a project of its own: not
+bubble          an inner 'HWUT_ROOT/setup.conf' is a project of its own: not
                 walked from above (intend/45 R-3, 2026-11-15) -- only the
                 root's test directory is reached.
 root-only       'platform' in a tree level's 'hwut.conf' and in a test
@@ -70,7 +70,7 @@ LINUX = ('{ name = "linux", kind = "container", image = "hwut-dev", '
 
 def walked(root_text, file_db=None):
     """
-    RETURN: None. A tree whose 'hwut-root.conf' says 'root_text' inside
+    RETURN: None. A tree whose 'HWUT_ROOT/setup.conf' says 'root_text' inside
             'hwut { }', one test directory 'TEST' (and 'file_db' beside
             it), walked: per test directory its 'platform_tuple', then
             whether its cases run (no conf fault at it or above), its own
@@ -85,7 +85,7 @@ def walked(root_text, file_db=None):
             path = os.path.join(root, relative)
             os.makedirs(os.path.dirname(path), exist_ok=True)
             with open(path, "w") as fh: fh.write(content)
-        print("hwut-root.conf:  hwut { %s }" % root_text)
+        print("HWUT_ROOT/setup.conf:  hwut { %s }" % root_text)
         for relative in sorted(file_db):
             if not relative.endswith(".py"):
                 print("%-16s %s" % (relative + ":", file_db[relative].strip()))
@@ -115,7 +115,7 @@ def test_reads():
 def test_bubble():
     """RETURN: None. An inner root: a project of its own, not walked."""
     walked("platform = [ %s ]" % LINUX,
-           {"inner/hwut-root.conf":     "hwut {\n}\n",
+           {"inner/HWUT_ROOT/setup.conf":     "hwut {\n}\n",
             "inner/TEST/test-b.py":     '# @hwut { title = "B" }\n'})
 
 
@@ -142,9 +142,9 @@ def test_requires():
            {"sub/hwut.conf":          'hwut { requires = ["ghdl"] }\n',
             "sub/TEST/test-b.py":     '# @hwut { title = "B" }\n',
             "sub/TEST/hwut.conf":     'hwut { requires = ["ghdl", "gcc"] }\n',
-            "inner/hwut-root.conf":   'hwut { requires = ["gcc"] }\n',
+            "inner/HWUT_ROOT/setup.conf":   'hwut { requires = ["gcc"] }\n',
             "inner/TEST/test-c.py":   '# @hwut { title = "C" }\n',
-            "bare/hwut-root.conf":    'hwut {\n}\n',
+            "bare/HWUT_ROOT/setup.conf":    'hwut {\n}\n',
             "bare/TEST/test-d.py":    '# @hwut { title = "D" }\n'})
 
 

@@ -343,7 +343,7 @@ $ hwut.cov.formats --help
     DESCRIPTION
         hwut.cov.formats            the table. Which tool serves a language
                                     is not the registry's to say: it stands
-                                    in 'language-setup' of 'hwut-root.conf'
+                                    in 'language-setup' of 'HWUT_ROOT/setup.conf'
         hwut.cov.formats --help     this text
 
     The registry is the ONE author of the table; a machine that lacks a

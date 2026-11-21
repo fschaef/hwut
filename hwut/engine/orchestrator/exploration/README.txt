@@ -43,8 +43,8 @@ Four gates, in order. A file passes all four or it is no test application.
        - the default ignore globs '*.txt', '*.xml', '*.json', '*.pype',
          '*.pypes', and the directory's own 'ignore' globs -- silent;
        - THE FRAMEWORK'S OWN FILES, by name, never by glob: 'hwut.conf',
-         'hwut-root.conf', 'hwut-info.dat', 'hwut-traces.csv',
-         'HWUT/labels.txt';
+         'HWUT_ROOT/setup.conf', 'hwut-info.dat', 'hwut-traces.csv',
+         'HWUT_ROOT/labels.txt';
        - a BACKUP-SHAPED name -- '*~', '#*#', '*.bak', '*.backup', '*.orig',
          '*.old', '*.save', '*.rej', '*.copy', '*.swp', '*.tmp' -- which is
          REPORTED with its reason, not passed over.
@@ -164,7 +164,7 @@ cannot make.
     REQUIRES
         requires    the tools this test -- or this choice -- needs beyond
                     its directory's (intend/26 o-59): a list of names the
-                    outermost hwut-root.conf's platforms announce. A case
+                    outermost HWUT_ROOT/setup.conf's platforms announce. A case
                     whose platform does not announce one is refused, named,
                     not counted (plan/bubble.py 'case_refusal').
 
@@ -413,7 +413,7 @@ expands to the stem of its source file -- 'test-parse.c' gives
 
     build.framework                        header, 'apps'
     build.target                           header, 'apps'
-    language-setup.<lang>.coverage_target  hwut-root.conf     '%.cov.exe'
+    language-setup.<lang>.coverage_target  HWUT_ROOT/setup.conf     '%.cov.exe'
 
 It is NOT admitted in 'target { }' of 'hwut.conf': a target is the
 directory's word, and a directory has no stem. Nothing else expands it.
@@ -518,7 +518,7 @@ as 'hwut.conf:<line>' (section 7.1).
 5.1a  VARIANT GROUPS
 ______________________________________________________________________________
 
-'hwut-root.conf' may carry 'variant_group { }'. Each GROUP is a DIMENSION of
+'HWUT_ROOT/setup.conf' may carry 'variant_group { }'. Each GROUP is a DIMENSION of
 configuration; each of its alternatives is a point on that dimension.
 
     variant_group {
@@ -566,7 +566,7 @@ a framework key.
 6  EXCLUSIVITY
 ______________________________________________________________________________
 
-    KEY                          HEADER  hwut.conf  hwut-root.conf
+    KEY                          HEADER  hwut.conf  HWUT_ROOT/setup.conf
     ------------------------------------------------------------------
     title                          x        x          -
     language                       x        x          -
@@ -590,9 +590,9 @@ THE CLIMB ENDS AT 'TEST/TMP' (R-76). Ascending from a directory that
 stands under a test directory's transient root -- a 'TMP' beside a
 'GOOD/' -- stops there and finds no root conf: what a run makes under
 'TMP/' is outside every tree, and a fixture built there does not read
-the enclosing project's 'hwut-root.conf' as its own.
+the enclosing project's 'HWUT_ROOT/setup.conf' as its own.
 
-A 'hwut-root.conf' CLOSES A BUBBLE (RQ-9, services E-200). From inside
+A 'HWUT_ROOT/setup.conf' CLOSES A BUBBLE (RQ-9, services E-200). From inside
 there is no way out: every climb -- configuration, labels, features --
 ends at the NEAREST root. From outside every way in: a walk that selects
 or runs enters each inner root it meets and resets the configuration from
@@ -629,7 +629,7 @@ parameters for the directory at large.
 ______________________________________________________________________________
 
 THE LANGUAGE IS THE ACTIVATION KEY (R-73). A test application's language
-selects ONE ENTRY of 'language-setup' in 'hwut-root.conf', and
+selects ONE ENTRY of 'language-setup' in 'HWUT_ROOT/setup.conf', and
 everything HWUT does with the file follows from that entry:
 
     hwut {
@@ -671,7 +671,7 @@ HOW A FILE'S LANGUAGE IS FOUND, in this order:
 A language with no 'language-setup' entry is called by its own name
 (R-10): 'language = "heartfun"' calls 'heartfun test-app.hf'.
 
-'language-setup' STANDS IN 'hwut-root.conf' AND NOWHERE ELSE. The
+'language-setup' STANDS IN 'HWUT_ROOT/setup.conf' AND NOWHERE ELSE. The
 framework ships no table: the boundary face writes one when it places
 the root conf (services E-25), and 'hwut.config.show --root-conf-template'
 prints that text for pasting into a root conf placed by hand.
@@ -1008,14 +1008,14 @@ THREE FILES AND ONE BLOCK say what a tree claims to do and which test runs
 prove it (spec 43; intend/43 T-a..T-u). One feature id, '[A-Za-z0-9_-]+',
 names a feature everywhere; nothing encodes a directory (t-1).
 
-    <top>/HWUT/feature-forest.csv        <id> : <child>, <child>, ...
-    <top>/HWUT/feature-doc.txt           [[<id>]] blocks: 'documents:',
+    <top>/HWUT_ROOT/feature-forest.csv        <id> : <child>, <child>, ...
+    <top>/HWUT_ROOT/feature-doc.txt           [[<id>]] blocks: 'documents:',
                                          title, doc; '[[<id>:retired]]';
                                          '[[CUSTOMERS]]' and 'to'/'not'
-    <top>/HWUT/feature-external-map.csv  <our id> ; <their name>
+    <top>/HWUT_ROOT/feature-external-map.csv  <our id> ; <their name>
     a test's '@hwut { }' block           features = ["<id>", ...]
 
-'<top>' is the 'hwut-root.conf' that holds the forest, found by
+'<top>' is the 'HWUT_ROOT/setup.conf' that holds the forest, found by
 'tree_explorer.forest_top': a bubble without a forest belongs to the forest
 above (E-220, T-m); a bubble with one begins its own (the showcase, ruled
 2026-11-08) and the walks from above stop at it ('forest_gate_of').

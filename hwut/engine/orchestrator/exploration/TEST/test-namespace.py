@@ -23,8 +23,8 @@ PURPOSE: THE NAMESPACE, AS THE READER ENFORCES IT -- not as a table says.
 
 The places:
 
-    root        'hwut-root.conf', top level
-    root.def    'hwut-root.conf', inside 'app_defaults'
+    root        'HWUT_ROOT/setup.conf', top level
+    root.def    'HWUT_ROOT/setup.conf', inside 'app_defaults'
     dir         a test directory's 'hwut.conf', top level
     dir.def     a test directory's 'hwut.conf', inside 'app_defaults'
     dir.app     a test directory's 'hwut.conf', inside one 'apps' entry
@@ -114,7 +114,8 @@ def _verdict_in(work, place, key):
     os.makedirs(os.path.join(work, "t", "TEST"))
     root, directory, header = tree_of(place, VALUE_DB[key])
     if place == "header" and key == "title": header = '@hwut {\n    title = "T"\n}'
-    open(os.path.join(work, "hwut-root.conf"), "w").write(root)
+    os.makedirs(os.path.join(work, "HWUT_ROOT"), exist_ok=True)
+    open(os.path.join(work, "HWUT_ROOT/setup.conf"), "w").write(root)
     if directory is not None:
         open(os.path.join(work, "t", "TEST", "hwut.conf"), "w").write(directory)
     for name in ("test-x.sh", "test-y.sh"):

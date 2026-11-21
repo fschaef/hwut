@@ -32,7 +32,7 @@ heads of the '.erl' files say how each module is used; where a Python README
 explains a module ('../python/README-hwut_fsm.txt', '-hwut_hocon',
 '-hwut_vterm', '-hwut_runner'), it explains the Erlang module too.
 
-AN ERLANG TEST IS AN ESCRIPT -- hwut-root.conf runs '.erl' with 'escript':
+AN ERLANG TEST IS AN ESCRIPT -- HWUT_ROOT/setup.conf runs '.erl' with 'escript':
 
     %% @hwut { choices = ["plain", "tricky"]  interactive = true }
     -mode(compile).

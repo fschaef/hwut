@@ -1,12 +1,12 @@
 == hwut.features.register
 NOTE  'empty' is documented and stands in no forest line => hwut.features.tree
-NOTE  editor/: a project of its own (hwut-root.conf) => run hwut inside it
+NOTE  editor/: a project of its own (HWUT_ROOT/setup.conf) => run hwut inside it
 == hwut.sanitize.propose
 NOTE: 'empty' is documented and stands in no forest line => hwut.features.tree
-NOTE  editor/: a project of its own (hwut-root.conf) => run hwut inside it
+NOTE  editor/: a project of its own (HWUT_ROOT/setup.conf) => run hwut inside it
 == hwut.renovate
 nothing to renovate below '.'
-NOTE  editor/: a project of its own (hwut-root.conf) => run hwut inside it
+NOTE  editor/: a project of its own (HWUT_ROOT/setup.conf) => run hwut inside it
 == hwut.sanitize root editor
-nothing to do: root editor -- a bubble stands: 'editor/hwut-root.conf'
+nothing to do: root editor -- a bubble stands: 'editor/HWUT_ROOT/setup.conf'
 <hwut-end>

@@ -69,6 +69,6 @@ $ hwut.config.show test-b.py --no-default
             }
         }
     }
-    FAULT: WORK/HWUT/labels.txt:1: a target starts './' -- the file's own ground -- and 'x' does not
+    FAULT: WORK/HWUT_ROOT/labels.txt:1: a target starts './' -- the file's own ground -- and 'x' does not
     [status 1]
 <hwut-end>

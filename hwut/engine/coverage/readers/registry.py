@@ -19,7 +19,7 @@ DESCRIPTION
        THE CONFIGURATION NAMES A TOOL; THE COMPONENT RESOLVES THE READER
        (RATIONALE D-2). THE TABLE IS NOT HERE (D-26): the candidate
        tools of a language stand in 'language-setup.<lang>.coverage' of
-       'hwut-root.conf', and the boundary face writes the shipped table
+       'HWUT_ROOT/setup.conf', and the boundary face writes the shipped table
        into a new root conf. 'elect' takes the candidate tuple it is
        handed; this module ships no table of its own.
 

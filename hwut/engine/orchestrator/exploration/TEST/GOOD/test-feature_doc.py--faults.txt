@@ -1,14 +1,14 @@
-text before       FAULT: HWUT/feature-doc.txt:1: text before the first heading -- '[[<id>]]' opens a block
-heading shape     FAULT: HWUT/feature-doc.txt:1: '[[a b c]]' is no heading -- '[[<id>]]', '[[<id> to <audience>, ...]]', '[[<id> not <audience>, ...]]', '[[<id>:retired]]', '[[CUSTOMERS]]'
-to nothing        FAULT: HWUT/feature-doc.txt:1: '[[a to]]' is no heading -- '[[<id>]]', '[[<id> to <audience>, ...]]', '[[<id> not <audience>, ...]]', '[[<id>:retired]]', '[[CUSTOMERS]]'
-not an id         FAULT: HWUT/feature-doc.txt:1: 'a.b' is no feature id -- '[A-Za-z0-9_-]+', '+<prototype>' or '<owner>+<id>'
-audience no id    FAULT: HWUT/feature-doc.txt:4: '[[a to x.y]]': an audience is a word '[A-Za-z0-9_-]+', ',' between
-CUSTOMERS id      FAULT: HWUT/feature-doc.txt:1: 'CUSTOMERS' is reserved and no feature id
-CUSTOMERS retired FAULT: HWUT/feature-doc.txt:1: 'CUSTOMERS' is reserved and no feature id
-twice             FAULT: HWUT/feature-doc.txt:3: 'a' is documented twice (line 1)
-plain, retired    FAULT: HWUT/feature-doc.txt:3: 'a' is documented twice (line 1)
-retired in forest FAULT: HWUT/feature-doc.txt:1: 'keeporder' is retired and stands in a forest line (HWUT/feature-forest.csv:2) -- strike one
-audience unknown  FAULT: HWUT/feature-doc.txt:4: 'gateway': the audience 'integeng' is not declared in '[[CUSTOMERS]]' -- did you mean 'integreng'?
-audience line     FAULT: HWUT/feature-doc.txt:2: 'manager the one' is no audience line -- '<audience>: <who that is>'
-CUSTOMERS twice   FAULT: HWUT/feature-doc.txt:4: '[[CUSTOMERS]]' stands twice (line 1)
+text before       FAULT: HWUT_ROOT/feature-doc.txt:1: text before the first heading -- '[[<id>]]' opens a block
+heading shape     FAULT: HWUT_ROOT/feature-doc.txt:1: '[[a b c]]' is no heading -- '[[<id>]]', '[[<id> to <audience>, ...]]', '[[<id> not <audience>, ...]]', '[[<id>:retired]]', '[[CUSTOMERS]]'
+to nothing        FAULT: HWUT_ROOT/feature-doc.txt:1: '[[a to]]' is no heading -- '[[<id>]]', '[[<id> to <audience>, ...]]', '[[<id> not <audience>, ...]]', '[[<id>:retired]]', '[[CUSTOMERS]]'
+not an id         FAULT: HWUT_ROOT/feature-doc.txt:1: 'a.b' is no feature id -- '[A-Za-z0-9_-]+', '+<prototype>' or '<owner>+<id>'
+audience no id    FAULT: HWUT_ROOT/feature-doc.txt:4: '[[a to x.y]]': an audience is a word '[A-Za-z0-9_-]+', ',' between
+CUSTOMERS id      FAULT: HWUT_ROOT/feature-doc.txt:1: 'CUSTOMERS' is reserved and no feature id
+CUSTOMERS retired FAULT: HWUT_ROOT/feature-doc.txt:1: 'CUSTOMERS' is reserved and no feature id
+twice             FAULT: HWUT_ROOT/feature-doc.txt:3: 'a' is documented twice (line 1)
+plain, retired    FAULT: HWUT_ROOT/feature-doc.txt:3: 'a' is documented twice (line 1)
+retired in forest FAULT: HWUT_ROOT/feature-doc.txt:1: 'keeporder' is retired and stands in a forest line (HWUT_ROOT/feature-forest.csv:2) -- strike one
+audience unknown  FAULT: HWUT_ROOT/feature-doc.txt:4: 'gateway': the audience 'integeng' is not declared in '[[CUSTOMERS]]' -- did you mean 'integreng'?
+audience line     FAULT: HWUT_ROOT/feature-doc.txt:2: 'manager the one' is no audience line -- '<audience>: <who that is>'
+CUSTOMERS twice   FAULT: HWUT_ROOT/feature-doc.txt:4: '[[CUSTOMERS]]' stands twice (line 1)
 <hwut-end>

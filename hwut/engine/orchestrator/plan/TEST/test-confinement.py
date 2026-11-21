@@ -122,7 +122,8 @@ def test_gate():
              "    procsitter { linux { network = false } }\n"),
             ("acknowledged for 'windows' only",
              "    procsitter { windows { network = false } }\n")):
-            with open(os.path.join(root, "hwut-root.conf"), "w") as handle:
+            os.makedirs(os.path.join(root, "HWUT_ROOT"), exist_ok=True)
+            with open(os.path.join(root, "HWUT_ROOT/setup.conf"), "w") as handle:
                 handle.write("hwut {\n%s}\n" % conf)
             inherited, fault_list = ascended_spec(directory)
             result = explore(directory, inherited=inherited)

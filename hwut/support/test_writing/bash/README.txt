@@ -39,7 +39,7 @@ A bash test starts:
     hwut_runner_new runner "my title" choice_map
     hwut_runner_run runner "$@"
 
-hwut runs it with the 'bash' interpreter of 'hwut-root.conf' ('.sh'); there
+hwut runs it with the 'bash' interpreter of 'HWUT_ROOT/setup.conf' ('.sh'); there
 is nothing to build. The heads of the '.sh' files say how each module is
 used; where a Python README explains a module ('../python/README-hwut_fsm.txt',
 '-hwut_hocon', '-hwut_vterm', '-hwut_runner'), it explains the bash module

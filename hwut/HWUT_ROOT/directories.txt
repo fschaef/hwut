@@ -1,4 +1,4 @@
-#  HWUT/directories.txt -- the TEST directories of this tree that hold
+#  HWUT_ROOT/directories.txt -- the TEST directories of this tree that hold
 #  records. Written by hwut when a directory gets its first record and
 #  when it loses its last. An entry whose directory is gone FAILS the
 #  run: 'hwut.sanitize.propose' says whether it moved or went.

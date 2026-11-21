@@ -13,7 +13,7 @@ guile, haskell, prolog, fortran.
 
 <dir> receives
 
-    hwut-root.conf      the template a new root receives
+    HWUT_ROOT/setup.conf      the template a new root receives
     <language>/         the language's test writing support
     <required>/         each port it stands on ('requires' in LANGUAGES.conf,
                         e.g. 'c' below 'cpp')
@@ -229,11 +229,11 @@ def _marked_line_set(test_dir, language, replacement):
 def _demo_features_written(language, target):
     """
     RETURN: int, the number of document paths the copy's doc file names:
-            'target/HWUT/feature-doc.txt' written with the block of the
+            'target/HWUT_ROOT/feature-doc.txt' written with the block of the
             demonstration's one promise, 'demo-<language>' (intend/43
             T-k), and the blocks of the prototypes it aggregates and of
             their members (intend/44 p-8), taken from this installation's
-            doc file; 'target/HWUT/feature-forest.csv' beside it stating
+            doc file; 'target/HWUT_ROOT/feature-forest.csv' beside it stating
             'demo-<language> : +<prototype>, ...' and every prototype line
             reached from there -- each relative document, as it resolved
             from hwut's top, made to point at its copy in 'target' (the

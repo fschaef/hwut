@@ -190,7 +190,7 @@ def validate_conf(hwut_node, file):
             parameters, position_db = _app_defaults(entry, file, fault_list)
             field_db["app_defaults"]            = parameters
             field_db["app_defaults_position_db"] = position_db
-            #  WHICH FILE SAID IT: a value from 'hwut-root.conf' is not
+            #  WHICH FILE SAID IT: a value from 'HWUT_ROOT/setup.conf' is not
             #  a value from 'hwut.conf', and provenance must not say so.
             field_db["app_defaults_file_db"] = {key: file for key in position_db}
         elif entry.key == "language-setup":
@@ -528,7 +528,7 @@ def _build(entry, file, fault_list):
             fault_list.append(Fault(
                 E_FaultKind.VOCABULARY, file, inner.key_position,
                 "'coverage_target' is not a 'build' key: it stands in "
-                "'language-setup.<language>' of 'hwut-root.conf' "
+                "'language-setup.<language>' of 'HWUT_ROOT/setup.conf' "
                 "(R-73), '%' the source file's stem"))
         elif inner.key == "executable":
             #  RENAMED (intend/26 o-48, 2026-11-07): build, deploy, execute

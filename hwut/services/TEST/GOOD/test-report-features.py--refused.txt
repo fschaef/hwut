@@ -10,16 +10,16 @@ status: REFUSED
 status: REFUSED
 
 --- no forest at the top ---
-    REFUSED: no 'HWUT/feature-forest.csv' stands at '<tree>' => hwut.features.init
+    REFUSED: no 'HWUT_ROOT/feature-forest.csv' stands at '<tree>' => hwut.features.init
 status: REFUSED
 
 --- a forest that states a fault ---
-    REFUSED: FAULT: HWUT/feature-forest.csv:2: 'b' stands under two parents: 'a', 'c' -- a feature has one parent
+    REFUSED: FAULT: HWUT_ROOT/feature-forest.csv:2: 'b' stands under two parents: 'a', 'c' -- a feature has one parent
     usage: hwut.report.features [<id>]... [--matrix] [--code] [--cov-dir=<dir>] [--html=<file>] [--ods=<file>] [--cov-html=<dir>] [--directory=<path>] [--help]
 status: REFUSED
 
---- a tree no 'hwut-root.conf' bounds ---
-    REFUSED: no 'hwut-root.conf' stands in or above '<tree>' -- the tree has no boundary (the climb ends at the transient ground 'TMP/', E-24)
+--- a tree no 'HWUT_ROOT/setup.conf' bounds ---
+    REFUSED: no 'HWUT_ROOT/setup.conf' stands in or above '<tree>' -- the tree has no boundary (the climb ends at the transient ground 'TMP/', E-24)
 HINT: use 'hwut.sanitize root [dir]' to place one.
     usage: hwut.report.features [<id>]... [--matrix] [--code] [--cov-dir=<dir>] [--html=<file>] [--ods=<file>] [--cov-html=<dir>] [--directory=<path>] [--help]
 status: REFUSED

@@ -67,7 +67,8 @@ cd "$WORK"
 #  THE TREE'S BOUNDARY. Every face ASCENDS collecting 'hwut.conf'
 #  until it meets this file; a tree without one is refused, so a
 #  fixture states its own. Empty says only 'the tree ends here'.
-printf 'hwut {\n}\n' > hwut-root.conf
+mkdir -p HWUT_ROOT
+printf 'hwut {\n}\n' > HWUT_ROOT/setup.conf
 
 mask() {                # THE ELAPSED STAMP IS THE MACHINE'S. A run
                         # line carries 'hh:mm:ss' and a run that
@@ -129,20 +130,20 @@ labels)
     #  THE BOUNDARY RECORDS FOLLOW ('services/_follow.py', disc-8
     #  section 5): a dropped test's label entries drop with it,
     #  symmetric with the book and the register (E-12) -- a run named
-    #  in 'HWUT/labels.txt' but no longer offered would look merely
+    #  in 'HWUT_ROOT/labels.txt' but no longer offered would look merely
     #  unlabelled, which is the silent failure this forbids.
     choice_app
     python3 -m hwut.services.lib.labels.create concern \
         --glob "test-app.sh" --directory=tree > /dev/null
-    echo "THE FILE, BEFORE {"; grep -v "^#" HWUT/labels.txt \
+    echo "THE FILE, BEFORE {"; grep -v "^#" HWUT_ROOT/labels.txt \
         | sed 's/^/    /'; echo "}"
     echo "--- one choice forgotten: its entry alone drops"
     face $REMOVE --directory=tree/suite/TEST test-app.sh one --dont-ask
-    echo "THE FILE {"; grep -v "^#" HWUT/labels.txt \
+    echo "THE FILE {"; grep -v "^#" HWUT_ROOT/labels.txt \
         | sed 's/^/    /'; echo "}"
     echo "--- the whole test forgotten: the label empties, the file goes"
     face $REMOVE --directory=tree/suite/TEST test-app.sh --dont-ask
-    if [ -f HWUT/labels.txt ]; then echo "THE FILE: still stands"
+    if [ -f HWUT_ROOT/labels.txt ]; then echo "THE FILE: still stands"
     else echo "THE FILE: absent -- no label exists"; fi
     ;;
 

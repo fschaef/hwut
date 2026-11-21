@@ -47,7 +47,7 @@
 # THE LABELS (disc-8): a bare run SILENCES what the standard label
 # marks; naming a label lifts the silence; a label that does not
 # stand is refused by name. The view is built at the boundary before
-# anything runs; a broken 'HWUT/labels.txt' is a FAULT at the door.
+# anything runs; a broken 'HWUT_ROOT/labels.txt' is a FAULT at the door.
 # AN EXPLICIT LITERAL TARGET OVERRIDES THE SILENCE; a glob does not,
 # and where it meets only silenced runs it WARNS, naming the remedy.
 #
@@ -89,7 +89,8 @@ cd "$WORK"
 #  THE TREE'S BOUNDARY. Every face ASCENDS collecting 'hwut.conf'
 #  until it meets this file; a tree without one is refused, so a
 #  fixture states its own. Empty says only 'the tree ends here'.
-printf 'hwut {\n}\n' > hwut-root.conf
+mkdir -p HWUT_ROOT
+printf 'hwut {\n}\n' > HWUT_ROOT/setup.conf
 
 mask() {                # THE RAW PATH's deterministicalization: the
                         # wall clock and the mktemp ground are facts
@@ -483,7 +484,8 @@ labels)
     echo "--- a GLOB does not; wholly swallowed, it warns"
     face --plain --brief --no-store --directory=tree "alpha/TEST/test-tw*.sh"
     echo "--- a broken labels file is a FAULT at the door"
-    mkdir -p HWUT; echo "x : y" >> HWUT/labels.txt
+    mkdir -p HWUT_ROOT
+    mkdir -p HWUT; echo "x : y" >> HWUT_ROOT/labels.txt
     face --plain --brief --no-store --directory=tree
     ;;
 

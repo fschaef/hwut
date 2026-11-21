@@ -40,7 +40,7 @@
 #     hwut.config.show demo.sh   prints what hwut READ from the header above
 #
 # The header above is the whole configuration: a title, and one scope per
-# choice. hwut calls 'demo.sh <choice>' (with the 'bash' of hwut-root.conf)
+# choice. hwut calls 'demo.sh <choice>' (with the 'bash' of HWUT_ROOT/setup.conf)
 # and compares what it prints on stdout with 'GOOD/demo.sh--<choice>.txt' --
 # here a '.link' to the Python demo's GOOD: the same text, byte for byte.
 # '<hwut-end>' closes the stream.

@@ -32,7 +32,7 @@ class CoverageConfig:
 
     THE LANGUAGE AND THE TOOL ARE NOT HERE (D-26): both come from the
     'language-setup' entry the test's language selects, in
-    'hwut-root.conf'. What stands here is what THIS RUN GATHERS."""
+    'HWUT_ROOT/setup.conf'. What stands here is what THIS RUN GATHERS."""
     include:       Sequence[str] = field(default_factory=tuple)
     omit:          Sequence[str] = field(default_factory=tuple)
     counts:        bool          = False

@@ -21,7 +21,7 @@
 # A page stating 'caps { network = false }' FAILS, not run, where the
 # procsitter cannot deny the network (exploration R-48, R-80; services
 # E-159): 'uncapped [FAIL]' in the flow, counted, the cap and the
-# 'hwut-root.conf' entry that acknowledges it beside it in HINTS. The
+# 'HWUT_ROOT/setup.conf' entry that acknowledges it beside it in HINTS. The
 # other tests run.
 #
 # THE PLATFORM'S WORD IS THE MACHINE'S FACT: it is shown as '<platform>'.
@@ -75,8 +75,9 @@ mkdir "$WORK/TEST"
 cd "$WORK/TEST"
 
 conf() {                # <line of the root conf's own>
+    mkdir -p ../HWUT_ROOT
     printf 'hwut {\n    language-setup { bash { extensions = [".sh"] interpreter = "bash" } }\n%s}\n' \
-           "$1" > ../hwut-root.conf
+           "$1" > ../HWUT_ROOT/setup.conf
 }
 shown() {               # stdin -> stdout: no machine-chosen word
     sed "s|$WORK|\$WORK|g; s/$PLATFORM/<platform>/g; \

@@ -41,7 +41,8 @@ WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
 cd "$WORK"
 
-printf 'hwut {\n}\n' > hwut-root.conf
+mkdir -p HWUT_ROOT
+printf 'hwut {\n}\n' > HWUT_ROOT/setup.conf
 
 face() {
     local cmd="$1"; shift
@@ -54,8 +55,8 @@ face() {
 }
 
 the_file() {
-    if [ -f HWUT/labels.txt ]; then
-        echo "THE FILE {"; sed 's/^/    /' < HWUT/labels.txt; echo "}"
+    if [ -f HWUT_ROOT/labels.txt ]; then
+        echo "THE FILE {"; sed 's/^/    /' < HWUT_ROOT/labels.txt; echo "}"
     else
         echo "THE FILE: absent -- no label exists"
     fi

@@ -45,6 +45,6 @@
     usage: hwut.features.tree [<id>] [--list] [-e] [--directory=<path>]
     exit 2
 >>> a map that names an id the forest does not hold
-    FAULT: HWUT/feature-external-map.csv:1: 'nobody' stands in no forest line
+    FAULT: HWUT_ROOT/feature-external-map.csv:1: 'nobody' stands in no forest line
     exit 1
 <hwut-end>

@@ -58,7 +58,8 @@ apply() {               # <bundle> [args...] -- status and stdout
 
 fixture() {
     mkdir -p send/a/b recv/a/b
-    touch send/hwut-root.conf recv/hwut-root.conf
+    mkdir -p send/HWUT_ROOT recv/HWUT_ROOT
+    touch send/HWUT_ROOT/setup.conf recv/HWUT_ROOT/setup.conf
     printf 'one\ntwo\n'         > send/a/b/same.txt
     printf 'sender line\n'      > send/a/b/edited.txt
     printf 'no final newline'   > send/a/b/short.txt

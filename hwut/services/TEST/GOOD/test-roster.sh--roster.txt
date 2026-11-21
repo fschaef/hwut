@@ -15,7 +15,7 @@ ROSTER {
     ./input/TEST
     ./render/TEST
 }
---- 'HWUT/' is walked by nobody: a TEST below it is no test
+--- 'HWUT_ROOT/' is walked by nobody: a TEST below it is no test
 EXIT: 0
     RESULTS: 5 ok, 0 fail
 <hwut-end>

@@ -60,8 +60,9 @@ esac
 WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
 cd "$WORK"
+mkdir -p HWUT_ROOT
 printf 'hwut {\n    language-setup { bash { extensions = [".sh"] interpreter = "bash" } }\n}\n' \
-       > hwut-root.conf
+       > HWUT_ROOT/setup.conf
 shown() {
     sed -E "s|$WORK|\$WORK|g; s/[0-9]+\.[0-9]+ \[sec\]/<t> [sec]/g;
             s/, [0-9:]+$/, <t>/; s/ +\|\|[0-9]+$//"
@@ -129,7 +130,8 @@ case "$1" in
                             && "$BIN/hwut.accept" > /dev/null 2>&1 )
         cd "$WORK"
         #  THE FOREST STANDS AND KNOWS NOTHING OF 'one': the hint is due.
-        mkdir -p HWUT; : > HWUT/feature-forest.csv
+        mkdir -p HWUT_ROOT
+        mkdir -p HWUT; : > HWUT_ROOT/feature-forest.csv
         echo "== hwut.run --plain: the hint stands on stdout"
         "$BIN/hwut.run" --plain 2>&1 | grep -E "link\(s\) to no feature" | shown \
             | sed 's/^/    /'

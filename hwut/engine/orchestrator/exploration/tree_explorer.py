@@ -9,11 +9,11 @@ PURPOSE: THE TREE WALK -- the stage before 'explore()'. It walks down
 
 THE CHAIN IS CLIMBED BEFORE IT IS DESCENDED. From the directory the
 caller names, the walk ASCENDS through the parents, collecting every
-'hwut.conf' it passes, until it reaches a 'hwut-root.conf'. The
+'hwut.conf' it passes, until it reaches a 'HWUT_ROOT/setup.conf'. The
 collected confs are then applied OUTERMOST FIRST, so the innermost
 word wins -- the same law as the descent, reached from the other end:
 
-    path/hwut-root.conf                        (4)  applied first
+    path/HWUT_ROOT/setup.conf                        (4)  applied first
     path/to/hwut.conf                          (3)
     path/to/my/test/hwut.conf                  (2)
     path/to/my/test/directory/TEST/hwut.conf   (1)  applied last
@@ -24,7 +24,7 @@ TREE, not about where the person happened to stand. Running from the
 project root and running from inside a test directory must agree, and
 the suite says they do.
 
-A TREE WITH NO 'hwut-root.conf' ABOVE IT IS AN ERROR, not a default.
+A TREE WITH NO 'HWUT_ROOT/setup.conf' ABOVE IT IS AN ERROR, not a default.
 An author has to know that global configuration exists and that an
 inheriting, shadowing chain is in force; discovering it by accident,
 years later, from a value nobody can account for, is worse than being
@@ -55,7 +55,7 @@ and flow nowhere.
 
 AND WHAT BELONGS TO THE ROOT ALONE: 'variant_group'. A variant group
 is a DIMENSION, and the selection is made once for the whole run; it
-is declared once, in 'hwut-root.conf', and refused anywhere else.
+is declared once, in 'HWUT_ROOT/setup.conf', and refused anywhere else.
 
 The walk descends in sorted order, skips names beginning '.', and does
 not descend INTO a test directory: what stands below one is that
@@ -72,7 +72,8 @@ from .fault     import Fault, E_FaultKind
 from .configuration_tree import DirectorySpec
 from ....auxiliary.no_entry import (TRANSIENT_DIRECTORY_NAME,
                                     below_no_entry_f, no_entry_f,
-                                    own_ground_f, entered)
+                                    own_ground_f, entered,
+                                    OLD_ROOT_CONF_NAME)
 
 
 FALLBACK_TEST_DIRECTORY = "TEST"
@@ -168,7 +169,7 @@ class CTreeExploration:
         yield from self.result_tuple
 
 
-#  A 'hwut-root.conf' CLOSES A BUBBLE (RQ-9, services E-200, amending
+#  A 'HWUT_ROOT/setup.conf' CLOSES A BUBBLE (RQ-9, services E-200, amending
 #  E-174): from inside there is no way out -- every climb ends at the
 #  NEAREST root; from outside a walk that SELECTS OR RUNS enters every
 #  bubble it meets, the configuration RESET from that bubble's file, so a
@@ -182,19 +183,19 @@ class CTreeExploration:
 def inner_root_note(relative):
     """
     RETURN: str, the NOTE a walk that MAINTAINS a root's own files says
-            where it stops at an inner 'hwut-root.conf' (RQ-1, RQ-9):
+            where it stops at an inner 'HWUT_ROOT/setup.conf' (RQ-1, RQ-9):
             which directory, and where to do it for that bubble. Walks
             that select or run enter, unless the wish says
             '--no-bubbles' -- then they say this NOTE too.
     """
-    return "NOTE  %s/: a project of its own (hwut-root.conf) => run " \
+    return "NOTE  %s/: a project of its own (HWUT_ROOT/setup.conf) => run " \
            "hwut inside it" % relative
 
 
 def inner_root_f(path):
     """
     RETURN: bool, True where the directory 'path' holds a
-            'hwut-root.conf' of its own -- a project of its own, which a
+            'HWUT_ROOT/setup.conf' of its own -- a project of its own, which a
             walk from above does not enter (RQ-1).
     """
     return os.path.isfile(os.path.join(path, ROOT_CONF_NAME))
@@ -203,7 +204,7 @@ def inner_root_f(path):
 def inner_root_tuple(directory):
     """
     RETURN: tuple[str], the ABSOLUTE directories below 'directory' that
-            hold a 'hwut-root.conf' of their own -- the bubbles a walk
+            hold a 'HWUT_ROOT/setup.conf' of their own -- the bubbles a walk
             from 'directory' enters (RQ-9) -- walk order, nested ones
             included; empty where there is none.
     """
@@ -218,7 +219,7 @@ def inner_root_tuple(directory):
 
 def inner_root_note_tuple(directory):
     """
-    RETURN: tuple[str], one NOTE per OUTERMOST inner 'hwut-root.conf'
+    RETURN: tuple[str], one NOTE per OUTERMOST inner 'HWUT_ROOT/setup.conf'
             below 'directory' -- 'NOTE  editor/: own root, not walked =>
             do it inside it', the path from 'directory' -- what a face
             that MAINTAINS a root's own files says of the bubbles it does
@@ -237,14 +238,14 @@ def inner_root_note_tuple(directory):
 
 
 #  ONE PROJECT, ONE FOREST (intend/45 R-1, R-3; amends spec 43 T-m): a
-#  'hwut-root.conf' below the root is another project with features of its
+#  'HWUT_ROOT/setup.conf' below the root is another project with features of its
 #  own, or none -- never part of the forest above. The walks that read the
 #  features stop at it, with its NOTE.
 
 
 def forest_owner_f(path):
     """
-    RETURN: bool, True where the directory 'path' holds a 'hwut-root.conf'
+    RETURN: bool, True where the directory 'path' holds a 'HWUT_ROOT/setup.conf'
             -- another project, where a walk of the features from above
             stops (intend/45 R-3).
     """
@@ -255,11 +256,11 @@ def forest_top(start):
     """
     RETURN: str, the ABSOLUTE directory whose forest governs the tree
             'start' stands in: climbing bubble by bubble from the nearest
-            'hwut-root.conf', the first that holds a
-            'HWUT/feature-forest.csv'; the nearest bubble's directory where none above
+            'HWUT_ROOT/setup.conf', the first that holds a
+            'HWUT_ROOT/feature-forest.csv'; the nearest bubble's directory where none above
             holds one (its faces then say that none stands).
 
-    Raises RootConfMissing where no 'hwut-root.conf' bounds 'start'.
+    Raises RootConfMissing where no 'HWUT_ROOT/setup.conf' bounds 'start'.
     """
     #  THE NEAREST ROOT IS THE PROJECT (intend/45 R-2): its forest, or
     #  none -- a root above it is beyond the radar.
@@ -273,7 +274,7 @@ def forest_gate_of(root):
             GATE_HANDED -- not walked here -- where it holds a forest of
             its own, GATE_RUN, entered, else.
 
-    Raises RootConfMissing where no 'hwut-root.conf' bounds 'root'.
+    Raises RootConfMissing where no 'HWUT_ROOT/setup.conf' bounds 'root'.
     """
     own = os.path.normpath(root_conf_directory(root))
     return lambda path: GATE_RUN \
@@ -329,7 +330,7 @@ def explore_tree_stream(root, interview_runner=None, fault_list=None,
     WALK ORDER IS PRESERVED. The recursion is the same, sorted the
     same; only the accumulator became a yield.
 
-    AN INNER 'hwut-root.conf' IS A BOUNDARY (RQ-1): a project of its own
+    AN INNER 'HWUT_ROOT/setup.conf' IS A BOUNDARY (RQ-1): a project of its own
     starts there, and the walk does not enter it -- 'note_list', the
     caller's accumulator, receives one NOTE per inner root. With
     'boundary_f' False (a selecting walk) the walk enters, and at the
@@ -373,7 +374,7 @@ def explore_tree_stream(root, interview_runner=None, fault_list=None,
                                   os.path.join(here, ROOT_CONF_NAME))):
         return
     #  WHAT GOVERNS FROM ABOVE (ND7): the faults of the files the climb
-    #  read -- the root's 'hwut-root.conf' and every 'hwut.conf' on the
+    #  read -- the root's 'HWUT_ROOT/setup.conf' and every 'hwut.conf' on the
     #  way down to here.
     above_tuple = tuple(f for f in ascent_fault_list if conf_fault_f(f))
     if state == GATE_HANDED: return
@@ -623,13 +624,38 @@ ROOT_CONF_HINT_STR = "HINT: use 'hwut.sanitize root [dir]' to place one."
 
 
 class RootConfMissing(Exception):
-    """No 'hwut-root.conf' stands above the named directory. Its text is
+    """No 'HWUT_ROOT/setup.conf' stands above the named directory. Its text is
     the refusal's line and, under it, 'ROOT_CONF_HINT_STR' -- so every
     face that writes the one writes the other."""
 
     def __init__(self, text):
         """RETURN: None. 'text' is the refusal; the hint is appended."""
         super().__init__("%s\n%s" % (text, ROOT_CONF_HINT_STR))
+
+
+class OldRootConf(RootConfMissing):
+    """A root in the OLD LAYOUT stands on the climb (services E-235): a
+    'HWUT_ROOT/setup.conf' and no 'HWUT_ROOT/setup.conf' beside it. Its text is
+    the refusal with the remedy, 'hwut.renovate'; 'directory' is where the
+    old file stands, so 'hwut.renovate' can move it."""
+
+    def __init__(self, directory):
+        """RETURN: None. 'directory' holds the old 'HWUT_ROOT/setup.conf'."""
+        self.directory = directory
+        #  SHOWN FROM WHERE HWUT WAS CALLED, as every refusal names a path.
+        shown = os.path.relpath(os.path.join(directory, OLD_ROOT_CONF_NAME))
+        Exception.__init__(self,
+            "'%s' is the old place of '%s' => hwut.renovate"
+            % (shown.replace(os.sep, "/"), ROOT_CONF_NAME))
+
+
+def refuse_old_root(here):
+    """RETURN: None. Raises OldRootConf where 'here' holds the old
+    'HWUT_ROOT/setup.conf' and no 'HWUT_ROOT/setup.conf' (E-235): read as no root
+    at all, a tree of before would climb past its own boundary."""
+    if os.path.isfile(os.path.join(here, OLD_ROOT_CONF_NAME)) \
+       and not os.path.isfile(os.path.join(here, ROOT_CONF_NAME)):
+        raise OldRootConf(here)
 
 
 TRANSIENT_ROOT_NAME = TRANSIENT_DIRECTORY_NAME
@@ -650,7 +676,7 @@ def transient_ground_f(path):
 def path_from_root_conf(directory):
     """
     RETURN: str, 'directory' as its path from the directory that holds
-            the tree's 'hwut-root.conf', '/' between -- 'router/TEST'
+            the tree's 'HWUT_ROOT/setup.conf', '/' between -- 'router/TEST'
             None, 'directory' IS that directory, or no root conf stands
             above it
     """
@@ -664,13 +690,13 @@ def path_from_root_conf(directory):
 
 def root_conf_directory(start):
     """
-    RETURN: str, the ABSOLUTE directory holding the 'hwut-root.conf'
+    RETURN: str, the ABSOLUTE directory holding the 'HWUT_ROOT/setup.conf'
             that bounds the tree 'start' stands in -- the same
             boundary 'ascended_spec' climbs to, found the same way.
 
     Raises RootConfMissing where no such file stands above 'start'.
     The boundary is a FACT ABOUT THE TREE and everything anchored
-    there -- 'HWUT/labels.txt' among it (disc-8) -- must anchor at
+    there -- 'HWUT_ROOT/labels.txt' among it (disc-8) -- must anchor at
     the same place the configuration climb ends, or two climbs could
     name two trees.
     """
@@ -678,6 +704,7 @@ def root_conf_directory(start):
     while True:
         if os.path.isfile(os.path.join(here, ROOT_CONF_NAME)):
             return here
+        refuse_old_root(here)
         parent = os.path.dirname(here)
         if parent == here or transient_ground_f(here):
             raise RootConfMissing(
@@ -691,12 +718,12 @@ def root_conf_directory(start):
 
 def outermost_root_directory(start):
     """
-    RETURN: str, the ABSOLUTE directory of the OUTERMOST 'hwut-root.conf'
+    RETURN: str, the ABSOLUTE directory of the OUTERMOST 'HWUT_ROOT/setup.conf'
             at or above 'start' -- the climb goes past every inner root,
             up to the file system's root or the transient ground 'TMP/'
             (intend/26 o-51: the platforms are defined there alone).
 
-    Raises RootConfMissing where no 'hwut-root.conf' stands above 'start'.
+    Raises RootConfMissing where no 'HWUT_ROOT/setup.conf' stands above 'start'.
     """
     found = root_conf_directory(start)
     here  = found
@@ -712,22 +739,22 @@ def ascended_spec(start, root_shown=ROOT_CONF_NAME):
     """
     RETURN: [0] DirectorySpec, every 'hwut.conf' ABOVE 'start' folded
                 in OUTERMOST FIRST, so the innermost word wins; the
-                'hwut-root.conf' that ended the climb folded first of
+                'HWUT_ROOT/setup.conf' that ended the climb folded first of
                 all.
             [1] list[Fault], what the climbed confs got wrong --
-                the root conf named 'root_shown': 'inner/hwut-root.conf'
+                the root conf named 'root_shown': 'inner/HWUT_ROOT/setup.conf'
                 where a walk from outside reset at a bubble (RQ-9), so
                 the reader at the start opens the right file.
 
     Raises RootConfMissing where the climb reaches the file system's
-    own root without meeting a 'hwut-root.conf'. A tree with no root
+    own root without meeting a 'HWUT_ROOT/setup.conf'. A tree with no root
     conf is an ERROR, not a default (see this module's PURPOSE).
 
     THE CLIMB LOOKS FOR ITS BOUNDARY IN 'start' ITSELF, and for a
     plain 'hwut.conf' only ABOVE it: 'start''s own conf is read by the
     walk that follows, or by 'explore()' where 'start' is a test
     directory, and reading it twice would fold it onto itself. A
-    'hwut-root.conf' is a different file and no such double arises --
+    'HWUT_ROOT/setup.conf' is a different file and no such double arises --
     which matters, because the ordinary way to run is to stand AT the
     project root, where that file lies.
 
@@ -745,6 +772,7 @@ def ascended_spec(start, root_shown=ROOT_CONF_NAME):
         if os.path.isfile(root_path):
             climbed.append((root_path, root_shown, True))
             break
+        refuse_old_root(here)
         if not at_start:
             conf_path = os.path.join(here, finder.CONF_NAME)
             if os.path.isfile(conf_path):

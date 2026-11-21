@@ -16,7 +16,7 @@ PURPOSE: THE PLATFORMS HELPER (intend/42, rulings 14, 16, 20) -- where a
     check(name, spec)                     the faults of an entry's own keys
     kind_tuple()                          the kinds a conf may name
 
-'spec' is the platform's entry in a 'hwut-root.conf', as read: hwut
+'spec' is the platform's entry in a 'HWUT_ROOT/setup.conf', as read: hwut
 knows 'name' and 'kind'; every other key is the kind's (ruling 14).
 'local' is the reserved platform (ruling 16): no entry, no keys, always
 available -- the machine this hwut runs on.

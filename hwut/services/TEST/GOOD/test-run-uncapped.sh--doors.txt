@@ -1,6 +1,6 @@
 == hwut.play test-net.sh a
 REFUSED: test-net.sh a -- cap 'network' not enforceable on '<platform>'
-    => hwut-root.conf: procsitter { <platform> { network = false } }
+    => HWUT_ROOT/setup.conf: procsitter { <platform> { network = false } }
 STATUS: 2
 == hwut.accept test-net.sh a: it runs nothing, no cap concerns it
 REFUSED lines: 0

@@ -45,8 +45,9 @@ app() {     #  <name> <header line> <body line>: one test application
 
 tree() {    #  a fresh tree, run and accepted; the shell stands in its TEST
     rm -rf "$WORK/tree"; mkdir -p "$WORK/tree/TEST"; cd "$WORK/tree/TEST"
+    mkdir -p ../HWUT_ROOT
     printf 'hwut {\n    language-setup { bash { extensions = [".sh"] interpreter = "bash" } }\n}\n' \
-        > ../hwut-root.conf
+        > ../HWUT_ROOT/setup.conf
     app test-parse.sh 'title = "parse"' 'echo parsed'
     app test-old.sh   'title = "old"'   'echo old'
     app test-gone.sh  'title = "gone"'  'echo gone'

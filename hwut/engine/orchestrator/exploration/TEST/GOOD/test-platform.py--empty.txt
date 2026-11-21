@@ -1,5 +1,5 @@
-hwut-root.conf:  hwut { platform = [] }
+HWUT_ROOT/setup.conf:  hwut { platform = [] }
     TEST         platform_tuple=None
                  runs not: 1 conf fault(s)
-    FAULT hwut-root.conf:2:16: VOCABULARY: 'platform' names no platform -- leave it out for the local machine alone
+    FAULT HWUT_ROOT/setup.conf:2:16: VOCABULARY: 'platform' names no platform -- leave it out for the local machine alone
 <hwut-end>

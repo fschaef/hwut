@@ -52,7 +52,7 @@ def root_of(directory, write, nearest_f=False):
     'directory' ('tree_explorer.forest_top': a bubble without one is the
     forest's above) -- or, 'nearest_f', the nearest bubble's, where the
     features are to be begun ('hwut.features.init'). Raises Refused
-    (REFUSED) where no 'hwut-root.conf' stands; the reason is written."""
+    (REFUSED) where no 'HWUT_ROOT/setup.conf' stands; the reason is written."""
     try:
         return root_conf_directory(directory) if nearest_f \
                else forest_top(directory)

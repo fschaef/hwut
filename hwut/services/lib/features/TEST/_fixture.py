@@ -35,11 +35,11 @@ def test(root, path, body):
 
 
 def tree(file_db=None):
-    """RETURN: str, the root of a new scratch tree: 'hwut-root.conf' and
+    """RETURN: str, the root of a new scratch tree: 'HWUT_ROOT/setup.conf' and
     the files of 'file_db' (path below the root -> text)."""
     root = tempfile.mkdtemp(prefix="hwut-features-", dir="/tmp")
     _ROOT_LIST.append(root)
-    write(root, "hwut-root.conf", "hwut {\n}\n")
+    write(root, "HWUT_ROOT/setup.conf", "hwut {\n}\n")
     for path, text in (file_db or {}).items():
         write(root, path, text)
     return root
@@ -121,9 +121,9 @@ EXTERNAL = "keep-order ; REQ-4711\ngateway ; GW\n"
 def gateway():
     """RETURN: str, the root of the gateway tree: the three files, a test
     linking features in its header, a conf whose application links one."""
-    root = tree({"HWUT/feature-forest.csv": FOREST,
-                 "HWUT/feature-doc.txt": DOC,
-                 "HWUT/feature-external-map.csv": EXTERNAL,
+    root = tree({"HWUT_ROOT/feature-forest.csv": FOREST,
+                 "HWUT_ROOT/feature-doc.txt": DOC,
+                 "HWUT_ROOT/feature-external-map.csv": EXTERNAL,
                  "gw/TEST/hwut.conf":
                      'hwut {\n    apps {\n        note.json { execute = '
                      '"cat $file"  features = ["keep-order", "fwd"] }\n'

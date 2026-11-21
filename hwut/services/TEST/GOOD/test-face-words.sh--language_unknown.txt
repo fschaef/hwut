@@ -1,11 +1,11 @@
-hwut.run               exit 2  REFUSED: '--language=cobol' names no entry of 'language-setup' in 'hwut-root
-hwut.accept            exit 2  REFUSED: '--language=cobol' names no entry of 'language-setup' in 'hwut-root
-hwut.plan              exit 2  REFUSED: '--language=cobol' names no entry of 'language-setup' in 'hwut-root
-hwut.report            exit 2  REFUSED: '--language=cobol' names no entry of 'language-setup' in 'hwut-root
-hwut.report.list       exit 2  REFUSED: '--language=cobol' names no entry of 'language-setup' in 'hwut-root
-hwut.report.details    exit 2  REFUSED: '--language=cobol' names no entry of 'language-setup' in 'hwut-root
-hwut.run.stability     exit 2  REFUSED: '--language=cobol' names no entry of 'language-setup' in 'hwut-root
-hwut.diff              exit 2  REFUSED: '--language=cobol' names no entry of 'language-setup' in 'hwut-root
-hwut.sanitize.propose  exit 2  REFUSED: '--language=cobol' names no entry of 'language-setup' in 'hwut-root
-hwut.cov.run           exit 2  REFUSED: '--language=cobol' names no entry of 'language-setup' in 'hwut-root
+hwut.run               exit 2  REFUSED: '--language=cobol' names no entry of 'language-setup' in 'HWUT_ROOT
+hwut.accept            exit 2  REFUSED: '--language=cobol' names no entry of 'language-setup' in 'HWUT_ROOT
+hwut.plan              exit 2  REFUSED: '--language=cobol' names no entry of 'language-setup' in 'HWUT_ROOT
+hwut.report            exit 2  REFUSED: '--language=cobol' names no entry of 'language-setup' in 'HWUT_ROOT
+hwut.report.list       exit 2  REFUSED: '--language=cobol' names no entry of 'language-setup' in 'HWUT_ROOT
+hwut.report.details    exit 2  REFUSED: '--language=cobol' names no entry of 'language-setup' in 'HWUT_ROOT
+hwut.run.stability     exit 2  REFUSED: '--language=cobol' names no entry of 'language-setup' in 'HWUT_ROOT
+hwut.diff              exit 2  REFUSED: '--language=cobol' names no entry of 'language-setup' in 'HWUT_ROOT
+hwut.sanitize.propose  exit 2  REFUSED: '--language=cobol' names no entry of 'language-setup' in 'HWUT_ROOT
+hwut.cov.run           exit 2  REFUSED: '--language=cobol' names no entry of 'language-setup' in 'HWUT_ROOT
 <hwut-end>

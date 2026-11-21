@@ -39,7 +39,7 @@ PURPOSE: 'hwut.cov.run' END TO END -- the coverage run through the real
                                ids for test-py and test-hang
 
     The tool is the WITNESS reader, registered here and NAMED IN THE
-    FIXTURE'S OWN 'hwut-root.conf' -- 'language-setup { python {
+    FIXTURE'S OWN 'HWUT_ROOT/setup.conf' -- 'language-setup { python {
     coverage = ["witness"] } }' (coverage D-26, the one source) -- with
     a 'witness' executable placed on PATH so that election finds it. The
     run is deterministic on any machine: the chain is the unit, not a

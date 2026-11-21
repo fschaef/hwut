@@ -6,8 +6,8 @@ PURPOSE: Find what a TEST directory offers: 'hwut.conf', if present, and
          ignored.
 
 Ignored by default: '*.txt', '*.xml', '*.json', '*.pype', and THE
-FRAMEWORK'S OWN FILES -- 'hwut.conf', 'hwut-root.conf', 'hwut-info.dat',
-'hwut-traces.csv', 'HWUT/labels.txt' (README section 0). The directory's own 'ignore'
+FRAMEWORK'S OWN FILES -- 'hwut.conf', 'HWUT_ROOT/setup.conf', 'hwut-info.dat',
+'hwut-traces.csv', 'HWUT_ROOT/labels.txt' (README section 0). The directory's own 'ignore'
 globs add to these. The walk is one directory deep: a TEST directory
 stands alone, and so does its file list.
 
@@ -34,13 +34,13 @@ import os
 from fnmatch import fnmatch
 
 CONF_NAME          = "hwut.conf"
-ROOT_CONF_NAME     = "hwut-root.conf"
+from hwut.auxiliary.no_entry import ROOT_CONF_NAME       # noqa: E402  (E-235)
 
 #  THE FRAMEWORK'S OWN FILES: never source file candidates. The book
 #  and the traces stand in every TEST directory (X-INTERVIEW): they were
 #  MEASURED interviewed on every walk, two programs run per directory
 #  to answer nothing.
-#  THE FEATURE FILES (spec 43), beside the 'hwut-root.conf' that begins
+#  THE FEATURE FILES (spec 43), in the 'HWUT_ROOT/' that begins
 #  the features of a tree: the forest, the explanation, the map to the
 #  outside's names. The files of the past -- a TEST directory's feature
 #  file, the central registry, the map of published ids -- are read by
@@ -53,8 +53,8 @@ from hwut.auxiliary.no_entry import (FOREST_FILE_NAME,      # noqa: E402,F401
 def refuse_old_place(top, old, fault_class):
     """
     RETURN: None. Raises 'fault_class' with the refusal where the file
-            'old' still stands at its OLD place beside 'hwut-root.conf' in
-            'top' (CR-4): 'hwut.renovate' moves it into 'HWUT/'.
+            'old' still stands at its OLD place in 'HWUT_ROOT/' in
+            'top' (CR-4): 'hwut.renovate' moves it into 'HWUT_ROOT/'.
     """
     from hwut.auxiliary.no_entry import old_place_refusal_list
     for text in old_place_refusal_list(top):
@@ -64,7 +64,8 @@ def refuse_old_place(top, old, fault_class):
 PAST_FILE_TUPLE       = ("hwut-features.conf", "hwut-feature-map.conf",
                          "hwut-root-features.conf")
 
-OWN_FILE_TUPLE     = (CONF_NAME, ROOT_CONF_NAME, "hwut-info.dat",
+OWN_FILE_TUPLE     = (CONF_NAME, ROOT_CONF_NAME, "hwut-root.conf",
+                      "hwut-info.dat",
                       "hwut-traces.csv", "hwut-root.labels",
                       FOREST_FILE_NAME, DOC_FILE_NAME,
                       EXTERNAL_FILE_NAME) + PAST_FILE_TUPLE

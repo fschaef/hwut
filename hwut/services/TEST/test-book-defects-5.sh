@@ -100,7 +100,7 @@
 #                 sibling directory runs. Root file, a parent's 'hwut.conf'
 #                 and a TEST directory's own. 'hwut.play' and 'hwut.accept'
 #                 refuse, exit 1. MEASURED before: 'caps' at the root of
-#                 'hwut-root.conf' -- play recorded under the default cap
+#                 'HWUT_ROOT/setup.conf' -- play recorded under the default cap
 #                 and said nothing, accept blessed, the run said '1 ok'.
 # unit-algebra    ND12, E-191 (ruled 2026-10-25, (a)): a unit-less number in
 #                 a law fails where it meets a quantity ('t > 0' over
@@ -152,8 +152,9 @@ WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
 mkdir -p "$WORK/TEST"
 cd "$WORK"
+mkdir -p HWUT_ROOT
 printf 'hwut {\n    language-setup { bash { extensions = [".sh"] interpreter = "bash" } }\n}\n' \
-       > hwut-root.conf
+       > HWUT_ROOT/setup.conf
 cd TEST
 shown() {
     sed -E "s|$WORK|\$WORK|g; s/[0-9]+\.[0-9]+ \[sec\]/<t> [sec]/g; s/, [0-9:]+$/, <t>/;
@@ -340,7 +341,7 @@ PY
         "$BIN/hwut.support" python "$WORK/demo" > /dev/null 2>&1; echo "exit $?"
         #  SINCE spec 43: the copy carries the demonstration's ONE promise,
         #  'demo-python', in a doc file of its own (T-k).
-        python3 - "$WORK/demo/HWUT/feature-doc.txt" <<'EOF2'
+        python3 - "$WORK/demo/HWUT_ROOT/feature-doc.txt" <<'EOF2'
 import os, re, sys
 text = open(sys.argv[1]).read()
 path_list = [p.strip() for line in re.findall(r'^documents:(.*)$', text, re.M)
@@ -391,8 +392,8 @@ EOF2
         printf "$unknown" > a/hwut.conf; probe; rm a/hwut.conf
         echo "######## a/TEST/hwut.conf: unknown key"
         printf "$unknown" > a/TEST/hwut.conf; probe; rm a/TEST/hwut.conf
-        echo "######## hwut-root.conf: 'caps' at the root"
-        sed -i 's/^}$/    caps { timeout_sec = 1 }\n}/' hwut-root.conf; probe ;;
+        echo "######## HWUT_ROOT/setup.conf: 'caps' at the root"
+        sed -i 's/^}$/    caps { timeout_sec = 1 }\n}/' HWUT_ROOT/setup.conf; probe ;;
     unit-algebra)
         judged() {      # <law> <line printed>: blessed, or the refusal's reason
             page test-u.sh "tolerance { constraints = [\"$1\"] }" "echo \"$2\""
@@ -552,7 +553,8 @@ EOF2
             printf '#!/bin/sh\nexec %s "$@"\n' "$(command -v $p)" > "$WORK/nocov/$p"
             chmod +x "$WORK/nocov/$p"
         done
-        printf 'hwut {\n    language-setup { python { extensions = [".py"] interpreter = "python3"\n        coverage = ["coverage", "slipcover", "trace"] } }\n}\n' > "$WORK/hwut-root.conf"
+        mkdir -p "$WORK/HWUT_ROOT"
+        printf 'hwut {\n    language-setup { python { extensions = [".py"] interpreter = "python3"\n        coverage = ["coverage", "slipcover", "trace"] } }\n}\n' > "$WORK/HWUT_ROOT/setup.conf"
         printf '#! /usr/bin/env python3\n# @hwut { choices = ["x"] }\nprint("hi")\nprint("<hwut-end>")\n' > test-a.py
         chmod +x test-a.py
         echo "== no tool on PATH"
@@ -578,12 +580,14 @@ EOF2
         #  forest of its own, so the forest above spans it -- 'register'
         #  judges its links, no NOTE; the other faces still name it.
         mkdir -p "$WORK/editor/TEST"
-        cp "$WORK/hwut-root.conf" "$WORK/editor/hwut-root.conf"
+        mkdir -p "$WORK/editor/HWUT_ROOT"
+        cp "$WORK/HWUT_ROOT/setup.conf" "$WORK/editor/HWUT_ROOT/setup.conf"
         page "$WORK/editor/TEST/test-e.sh" 'features = ["empty"] choices = ["x"]' 'echo "$1"'
         page test-t.sh 'choices = ["x"]' 'echo "$1"'
         cd "$WORK"
         "$BIN/hwut.features.init" > /dev/null 2>&1
-        printf '[[empty]]\ne\n' >> HWUT/feature-doc.txt
+        mkdir -p HWUT_ROOT
+        printf '[[empty]]\ne\n' >> HWUT_ROOT/feature-doc.txt
         echo "== hwut.features.register";   "$BIN/hwut.features.register" 2>&1 | shown
         echo "== hwut.sanitize.propose";    "$BIN/hwut.sanitize.propose" -o f.txt 2>&1 | shown
         echo "== hwut.renovate";            "$BIN/hwut.renovate" 2>&1 | shown
@@ -605,7 +609,8 @@ EOF2
         done
         cd "$WORK"
         "$BIN/hwut.features.init" > /dev/null 2>&1
-        printf '[[same-seed]]\ns\n' >> HWUT/feature-doc.txt
+        mkdir -p HWUT_ROOT
+        printf '[[same-seed]]\ns\n' >> HWUT_ROOT/feature-doc.txt
         ( cd world/TEST && record && "$BIN/hwut.accept" --whole > /dev/null 2>&1 )
         ids() { sed -E 's/[A-Za-z0-9_-]{8}:same-seed/<id>:same-seed/g'; }
         if [ "$1" = move-one-base ]; then

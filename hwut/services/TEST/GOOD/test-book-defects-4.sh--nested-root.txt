@@ -1,5 +1,5 @@
 == from above
-NOTE  world/: a project of its own (hwut-root.conf) => run hwut inside it
+NOTE  world/: a project of its own (HWUT_ROOT/setup.conf) => run hwut inside it
 END   test-top.sh .................................................. [OK]  ||0
 RESULTS: 1 ok, 0 fail, <t> [sec], <t> [sec] total
 == from inside
@@ -7,8 +7,8 @@ END   test-slow.sh ........................................ killed [FAIL]  ||0
 RESULTS: 0 ok, 1 fail, <t> [sec], <t> [sec] total
 == from above, --no-bubbles
 == from above, --no-boundary (retired)
-REFUSED: '--no-boundary' is retired: an inner 'hwut-root.conf' is a project of its own, never walked from above (intend/45 R-3) => run hwut inside it
+REFUSED: '--no-boundary' is retired: an inner 'HWUT_ROOT/setup.conf' is a project of its own, never walked from above (intend/45 R-3) => run hwut inside it
 == hwut.report.list from above
-NOTE  world/: a project of its own (hwut-root.conf) => run hwut inside it
+NOTE  world/: a project of its own (HWUT_ROOT/setup.conf) => run hwut inside it
 ./TEST/test-top.sh
 <hwut-end>

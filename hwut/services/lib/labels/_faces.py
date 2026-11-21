@@ -111,7 +111,7 @@ def selected_key_tuple(directory, wish, view):
     found  = selection.of_tree(root, wish, view)
 
     #  A FILE LABELS ITS OWN BUBBLE (RQ-9, E-200): a run inside an inner
-    #  'hwut-root.conf' is labelled by THAT bubble's file -- said, and
+    #  'HWUT_ROOT/setup.conf' is labelled by THAT bubble's file -- said, and
     #  left out of this one, where nothing would ever read it.
     key_list    = []
     bubble_db   = {}
@@ -134,7 +134,7 @@ def selected_key_tuple(directory, wish, view):
                     for text in found.warning_tuple]
     for bubble, run_n in sorted(bubble_db.items()):
         warning_list.append("WARNING: %d run(s) in '%s/' not labelled here "
-                            "-- a bubble of its own (hwut-root.conf) => "
+                            "-- a bubble of its own (HWUT_ROOT/setup.conf) => "
                             "label them inside it" % (run_n, bubble))
     for glob_text in wish.glob_tuple:
         if glob_text in found.met_set: continue

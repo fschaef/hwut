@@ -19,7 +19,7 @@ PURPOSE: 'container' -- a bubble run in a podman or docker image, the
     engine   'podman' or 'docker'; absent: the first of them on PATH.
 
 THE BUBBLE AND THE HWUT ARE MOUNTED AT THEIR OWN PATHS: the bubble's
-directory (its own 'hwut-root.conf' bounds the far run's climb) and the
+directory (its own 'HWUT_ROOT/setup.conf' bounds the far run's climb) and the
 hwut that runs here -- the directory holding the package 'hwut/' -- so
 both sides are one version (CONTRACT: HWUT), a path inside is the same
 path outside, and what a test writes there it writes here (ruling 22).

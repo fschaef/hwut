@@ -26,7 +26,7 @@ node.js test author here, with the same behaviour and the same printed words
     pytext.js                 --                       text as Python prints it
 
 A node test is run by 'node' as it stands -- the 'javascript' interpreter of
-'hwut-root.conf'; nothing is built. It finds the modules by a path relative to
+'HWUT_ROOT/setup.conf'; nothing is built. It finds the modules by a path relative to
 its OWN file, so it runs from any working directory:
 
     // @hwut {

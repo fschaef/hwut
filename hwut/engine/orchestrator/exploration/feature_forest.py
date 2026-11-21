@@ -1,9 +1,9 @@
 """SPDX-License: MIT; Project HWUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 
-PURPOSE: THE FOREST OF THE FEATURES, 'HWUT/feature-forest.csv', read
+PURPOSE: THE FOREST OF THE FEATURES, 'HWUT_ROOT/feature-forest.csv', read
          (spec 43 section 1; intend/43 T-a, T-b, T-i, T-o). ONE file beside
-         the 'hwut-root.conf' that begins the features of a tree:
+         the 'HWUT_ROOT/setup.conf' that begins the features of a tree:
 
     # comment
     gateway    : forwarding, buses
@@ -113,7 +113,7 @@ class CForest:
 
 def read_forest(top):
     """
-    RETURN: CForest, what 'top/HWUT/feature-forest.csv' states
+    RETURN: CForest, what 'top/HWUT_ROOT/feature-forest.csv' states
             None, no such file stands
     RAISES: ForestFault, where it cannot be read or states a fault.
     """

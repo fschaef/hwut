@@ -1,7 +1,7 @@
 """SPDX-License: MIT; Project HWUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 
-PURPOSE: THE MAP TO EXTERNAL NAMES, 'HWUT/feature-external-map.csv', read
+PURPOSE: THE MAP TO EXTERNAL NAMES, 'HWUT_ROOT/feature-external-map.csv', read
          (spec 43 section 3; intend/43 T-e, T-f, T-r). Beside the forest:
 
     # our feature id ; the outside's name for it

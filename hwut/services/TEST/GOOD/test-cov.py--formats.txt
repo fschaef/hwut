@@ -23,7 +23,7 @@ $ hwut.cov.formats
       verilator          verilator-dat            -
       verilator_coverage lcov-tracefile           lcov
 
-    The candidates per language stand in 'language-setup' of 'hwut-root.conf'.
+    The candidates per language stand in 'language-setup' of 'HWUT_ROOT/setup.conf'.
     [status 0]
 SUCCESS: the table has one author, the registry, and this is its printout.
 <hwut-end>

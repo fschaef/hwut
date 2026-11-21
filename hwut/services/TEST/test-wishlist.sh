@@ -74,7 +74,8 @@ cd "$WORK"
 #  THE TREE'S BOUNDARY. Every face ASCENDS collecting 'hwut.conf'
 #  until it meets this file; a tree without one is refused, so a
 #  fixture states its own. Empty says only 'the tree ends here'.
-printf 'hwut {\n}\n' > hwut-root.conf
+mkdir -p HWUT_ROOT
+printf 'hwut {\n}\n' > HWUT_ROOT/setup.conf
 
 face() {                # <args...> -- status and stdout
     $FACE "$@" > out.txt 2> err.txt
@@ -269,7 +270,8 @@ LIST
 
 dirs)
     #  a/TEST, a/keep/TEST, b/TEST -- five orders of the two rules
-    printf 'hwut {\n}\n' > hwut-root.conf
+    mkdir -p HWUT_ROOT
+    printf 'hwut {\n}\n' > HWUT_ROOT/setup.conf
     for where in a a/keep b; do
         mkdir -p "tree/$where/TEST"
         printf '#!/bin/bash\n# @hwut { title = "T" }\necho x\necho "<hwut-end>"\n' \

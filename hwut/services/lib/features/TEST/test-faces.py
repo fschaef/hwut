@@ -22,7 +22,7 @@ CHOICES: init, register, tree, bubbles, prototypes;
 init      an empty forest and doc file written where none stands, their
           headers saying how they are written, no map; one standing kept
           and the other written; refused where both stand, where no
-          'hwut-root.conf' stands, and for a word it does not take.
+          'HWUT_ROOT/setup.conf' stands, and for a word it does not take.
 
 register  the notes, each with 'did you mean' where an id is near: a
           documented feature in no forest line, an undocumented root, a
@@ -35,7 +35,7 @@ tree      the forest with titles, roots first, children indented, the
           per line; a subtree; an id that stands nowhere, refused with
           'did you mean'; a word it does not take.
 
-bubbles   a 'hwut-root.conf' below the root is another project (intend/45
+bubbles   a 'HWUT_ROOT/setup.conf' below the root is another project (intend/45
           R-1, R-3, 2026-11-15, amending spec 43 T-m): from above not
           walked, NOTEd, with a forest or without; inside one without a
           forest the faces refuse, naming 'hwut.features.init'; one with
@@ -63,17 +63,17 @@ def run_init():
     """RETURN: None. 'hwut.features.init'."""
     root = fx.tree()
     fx.call("hwut.features.init", init, [], root)
-    for each in ("HWUT/feature-forest.csv", "HWUT/feature-doc.txt"):
+    for each in ("HWUT_ROOT/feature-forest.csv", "HWUT_ROOT/feature-doc.txt"):
         print("    [%s]" % each)
         with open(os.path.join(root, each)) as fh:
             for line in fh.read().split("\n"):
                 if line: print("    | %s" % line)
-    fx.shown(root, "HWUT/feature-external-map.csv")
+    fx.shown(root, "HWUT_ROOT/feature-external-map.csv")
     fx.call("again: both stand", init, [], root)
-    os.remove(os.path.join(root, "HWUT/feature-doc.txt"))
+    os.remove(os.path.join(root, "HWUT_ROOT/feature-doc.txt"))
     fx.call("the doc file gone: only it is written", init, [], root)
     fx.call("a word it does not take", init, ["gw"], root)
-    fx.call("no hwut-root.conf", init, [], "/")
+    fx.call("no HWUT_ROOT/setup.conf", init, [], "/")
 
 
 def run_register():
@@ -81,20 +81,21 @@ def run_register():
     root = fx.gateway()
     fx.test(root, "bus/TEST/test-bus.sh",
             ['features = ["decod", "gone"]'])
-    with open(os.path.join(root, "HWUT/feature-doc.txt"), "a") as fh:
+    os.makedirs(os.path.join(root, "HWUT_ROOT"), exist_ok=True)
+    with open(os.path.join(root, "HWUT_ROOT/feature-doc.txt"), "a") as fh:
         fh.write("\n[[gone:retired]]\nOnce.\n")
     fx.write(root, "old/TEST/hwut-features.conf", "features { }\n")
     fx.call("hwut.features.register", register, [], root)
     fx.call("called below the top: the same notes", register, [],
             os.path.join(root, "gw/TEST"))
-    agree = fx.tree({"HWUT/feature-forest.csv": "gateway : fwd\n",
-                     "HWUT/feature-doc.txt": "[[gateway]]\nThe gateway.\n"})
+    agree = fx.tree({"HWUT_ROOT/feature-forest.csv": "gateway : fwd\n",
+                     "HWUT_ROOT/feature-doc.txt": "[[gateway]]\nThe gateway.\n"})
     fx.test(agree, "gw/TEST/test-fwd.sh", ['features = ["fwd"]'])
     fx.call("a tree that agrees", register, [], agree)
     fx.call("a word it does not take", register, ["gw"], agree)
-    os.remove(os.path.join(agree, "HWUT/feature-forest.csv"))
+    os.remove(os.path.join(agree, "HWUT_ROOT/feature-forest.csv"))
     fx.call("no forest", register, [], agree)
-    fx.write(agree, "HWUT/feature-forest.csv", "a : b\nb : a\n")
+    fx.write(agree, "HWUT_ROOT/feature-forest.csv", "a : b\nb : a\n")
     fx.call("a forest that states a fault", register, [], agree)
 
 
@@ -108,7 +109,7 @@ def run_tree():
     fx.call("a subtree, --list", tree, ["forwarding", "--list"], root)
     fx.call("an id that stands nowhere", tree, ["forwardng"], root)
     fx.call("a word it does not take", tree, ["-b"], root)
-    fx.write(root, "HWUT/feature-external-map.csv", "nobody ; X\n")
+    fx.write(root, "HWUT_ROOT/feature-external-map.csv", "nobody ; X\n")
     fx.call("a map that names an id the forest does not hold", tree, [],
             root)
 
@@ -116,11 +117,11 @@ def run_tree():
 def run_bubbles():
     """RETURN: None. The forest and the bubbles below its root."""
     root = fx.gateway()
-    fx.write(root, "inner/hwut-root.conf", "hwut {\n}\n")
+    fx.write(root, "inner/HWUT_ROOT/setup.conf", "hwut {\n}\n")
     fx.test(root, "inner/x/TEST/test-x.sh", ['features = ["fwdd"]'])
-    fx.write(root, "own/hwut-root.conf", "hwut {\n}\n")
-    fx.write(root, "own/HWUT/feature-forest.csv", "show : case\n")
-    fx.write(root, "own/HWUT/feature-doc.txt", "[[show]]\nThe showcase.\n")
+    fx.write(root, "own/HWUT_ROOT/setup.conf", "hwut {\n}\n")
+    fx.write(root, "own/HWUT_ROOT/feature-forest.csv", "show : case\n")
+    fx.write(root, "own/HWUT_ROOT/feature-doc.txt", "[[show]]\nThe showcase.\n")
     fx.test(root, "own/y/TEST/test-y.sh", ['features = ["case", "nix"]'])
     fx.call("from the top", register, [], root)
     fx.call("inside the bubble without a forest", register, [],
@@ -133,12 +134,12 @@ def run_bubbles():
 def run_prototypes():
     """RETURN: None. Two ports aggregating one prototype."""
     root = fx.tree({
-        "HWUT/feature-forest.csv":
+        "HWUT_ROOT/feature-forest.csv":
             "gateway   : can-port, most-port\n"
             "can-port  : +port\nmost-port : +port\n"
             "+port     : receive, send, +errors\n"
             "+errors   : bus-off, overrun\n+spare : idle\n",
-        "HWUT/feature-doc.txt":
+        "HWUT_ROOT/feature-doc.txt":
             "[[gateway]]\nThe gateway forwards what reaches it.\n"
             "[[+port]]\nWhat every port does.\n"
             "[[receive]]\nA frame is received.\n"

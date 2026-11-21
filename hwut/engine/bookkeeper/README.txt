@@ -25,7 +25,7 @@ Status:  A COMPONENT of its own since 2026-08-25 (RATIONALE B-1). It
                       divergence verdicts. (Configuration: none --
                       B-6.)
     stream_store.py   The candidate/nominal streams beneath the naming.
-    roster.py         THE ROSTER of a tree, 'HWUT/directories.txt': which
+    roster.py         THE ROSTER of a tree, 'HWUT_ROOT/directories.txt': which
                       TEST directories hold records (B-33). Written by
                       the book's writer on two transitions only -- a
                       directory's first record, its last one gone; read
@@ -54,7 +54,7 @@ Beside them, not in them:
 
 Above every directory, one file of the tree:
 
-    <root>/HWUT/directories.txt the ROSTER (B-33): the root-relative TEST
+    <root>/HWUT_ROOT/directories.txt the ROSTER (B-33): the root-relative TEST
                                 directories holding records, sorted;
                                 versioned with the tests
 

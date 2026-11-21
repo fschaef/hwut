@@ -662,7 +662,7 @@ def root_named(where):
                  named from the tree's root, as 'DIR' and HINTS name it
                  ('game/TEST' where the call stands in it, not '.'; the
                  book's D-28)
-            'where' itself, where no 'hwut-root.conf' bounds it
+            'where' itself, where no 'HWUT_ROOT/setup.conf' bounds it
     """
     from ..engine.orchestrator.exploration.tree_explorer \
         import root_conf_directory, RootConfMissing

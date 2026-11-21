@@ -49,7 +49,7 @@
 # command-refused '-c' without commands; a word after them; '+x' and
 #                '--default' beside it; neither a target nor '-c'.
 # boundary       '--directory=' naming no directory: refused, for a target
-#                and for '-c'; '-c' where no 'hwut-root.conf' stands
+#                and for '-c'; '-c' where no 'HWUT_ROOT/setup.conf' stands
 #                above: refused -- it walks the test directories as
 #                'hwut.run' does. A target needs no root. MEASURED
 #                2026-11-03 before: '-c' died in a traceback each time
@@ -93,7 +93,8 @@ target_tree() {         # tree/alpha and tree/beta/TEST, both binding 'clean'
     printf '#!/bin/bash\necho "beta fixed"\n' > tree/beta/TEST/fix.sh
 }
 test_tree() {           # a root, two test directories, one without tests
-    printf 'hwut {\n}\n' > hwut-root.conf
+    mkdir -p HWUT_ROOT
+    printf 'hwut {\n}\n' > HWUT_ROOT/setup.conf
     for where in a b/c; do
         mkdir -p "tree/$where/TEST"
         printf '#!/bin/bash\n# @hwut { title = "T" }\necho x\necho "<hwut-end>"\n' \

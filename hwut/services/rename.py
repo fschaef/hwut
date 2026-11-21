@@ -277,7 +277,7 @@ class Rename:
                 [1] (link, new text) for every OTHER case's '.link' that
                     names a '.txt' of the key -- it follows the text
                 [2] why the rename must not move: a link that would come
-                    to name across a root ('hwut-root.conf' bounds it)
+                    to name across a root ('HWUT_ROOT/setup.conf' bounds it)
 
         A link whose text moves along -- one choice of the test linking
         another -- names the text's new place.

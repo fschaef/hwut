@@ -57,7 +57,8 @@ TEST = os.path.join(ROOT, "suite", "TEST")
 def fixture():
     """RETURN: None. A tree of two applications, one with two choices."""
     os.makedirs(TEST, exist_ok=True)
-    with open(os.path.join(ROOT, "hwut-root.conf"), "w") as fh:
+    os.makedirs(os.path.join(ROOT, "HWUT_ROOT"), exist_ok=True)
+    with open(os.path.join(ROOT, "HWUT_ROOT/setup.conf"), "w") as fh:
         fh.write("hwut {\n}\n")
     for name, extra in (("test-a.sh", ' choices = ["one", "two"]'),
                         ("test-b.sh", "")):

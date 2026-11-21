@@ -451,7 +451,7 @@ def test_election():
     #  THE SHIPPED TABLE, as the boundary face writes it.
     from hwut.services._boundary import ROOT_CONF_TEXT
     from hwut.engine.orchestrator.exploration.reader import read_conf
-    spec, _apps, fault_list = read_conf(ROOT_CONF_TEXT, "hwut-root.conf")
+    spec, _apps, fault_list = read_conf(ROOT_CONF_TEXT, "HWUT_ROOT/setup.conf")
     table = {name: entry.coverage
              for name, entry in spec.language_setup.items()}
 

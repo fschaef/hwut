@@ -73,7 +73,7 @@ def test_bites():
             "# reads %s/x.pl\n" % PERL_PATH)
         put(os.path.join(root, "engine", "RATIONALE.txt"),
             "E-1 once lived in %s\n" % PERL_PATH)
-        put(os.path.join(root, "HWUT/feature-doc.txt"),
+        put(os.path.join(root, "HWUT_ROOT/feature-doc.txt"),
             '[[perl-port]]\ndocuments: %s/README.txt\nThe port.\n' % PERL_PATH)
         put(os.path.join(root, "services", "y.txt"),
             "uses support/test_writing/python only\n")

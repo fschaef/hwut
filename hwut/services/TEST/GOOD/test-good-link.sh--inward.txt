@@ -12,7 +12,7 @@ c/TEST/GOOD/test-a.sh--x.link -> e/TEST/GOOD/test-a.sh--x.txt
 REFUSED: 'GOOD/test-a.sh--x.txt' is the GOOD of 1 other case(s), by link: ../../c/TEST/GOOD/test-a.sh--x.link => 'hwut.good.link.show GOOD/test-a.sh--x.txt' names them; 'hwut.good.isolate GOOD/test-a.sh--x.txt' gives each its own copy; 'hwut.good.rebase GOOD/test-a.sh--x.txt <other.txt>' points them elsewhere
    exit 2
 == the way back out
-REFUSED: 'e/TEST/GOOD/test-a.sh--y.link' -> 'a/TEST/GOOD/test-a.sh--y.txt': the target stands beyond the link's root 'e/hwut-root.conf'
+REFUSED: 'e/TEST/GOOD/test-a.sh--y.link' -> 'a/TEST/GOOD/test-a.sh--y.txt': the target stands beyond the link's root 'e/HWUT_ROOT/setup.conf'
 NOTE: nothing was linked
    exit 2
 <hwut-end>

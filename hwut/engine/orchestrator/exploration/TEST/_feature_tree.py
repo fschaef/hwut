@@ -35,7 +35,7 @@ def test(root, path, body):
 
 def tree(forest, doc, external=None, test_db=None, verdict_db=None):
     """
-    RETURN: str, the root of a new scratch tree: 'hwut-root.conf', the
+    RETURN: str, the root of a new scratch tree: 'HWUT_ROOT/setup.conf', the
             forest and doc file as given ('external' the map, None: none),
             the tests of 'test_db' (path -> lines of its block), and the
             verdicts of 'verdict_db' ((TEST directory, test, choice) ->
@@ -44,11 +44,11 @@ def tree(forest, doc, external=None, test_db=None, verdict_db=None):
     from hwut.engine.bookkeeper.api import Bookkeeper
     root = tempfile.mkdtemp(prefix="hwut-features-", dir="/tmp")
     _ROOT_LIST.append(root)
-    write(root, "hwut-root.conf", "hwut {\n}\n")
-    write(root, "HWUT/feature-forest.csv", forest)
-    write(root, "HWUT/feature-doc.txt", doc)
+    write(root, "HWUT_ROOT/setup.conf", "hwut {\n}\n")
+    write(root, "HWUT_ROOT/feature-forest.csv", forest)
+    write(root, "HWUT_ROOT/feature-doc.txt", doc)
     if external is not None:
-        write(root, "HWUT/feature-external-map.csv", external)
+        write(root, "HWUT_ROOT/feature-external-map.csv", external)
     for path, body in (test_db or {}).items():
         test(root, path, body)
     for (directory, name, choice), verdict in (verdict_db or {}).items():

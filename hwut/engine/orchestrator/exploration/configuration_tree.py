@@ -84,7 +84,7 @@ class Caps(_Scope):
     author stated.
 
     A cap procsitter cannot enforce refuses the test (R-48), unless
-    'hwut-root.conf' acknowledges it: 'procsitter { <platform> { <cap> =
+    'HWUT_ROOT/setup.conf' acknowledges it: 'procsitter { <platform> { <cap> =
     false } }'."""
     timeout_sec:          float | None = None
     cpu_sec:              int   | None = None   # RLIMIT_CPU: whole seconds
@@ -262,7 +262,7 @@ class TestAppSpec:
 
 @dataclass(frozen=True, slots=True)
 class LanguageSetup:
-    """EVERYTHING HWUT DOES WITH ONE LANGUAGE, as 'hwut-root.conf' states
+    """EVERYTHING HWUT DOES WITH ONE LANGUAGE, as 'HWUT_ROOT/setup.conf' states
     it (R-73). The entry's NAME is the language, and a file's 'language'
     word selects it by that name.
 
@@ -342,11 +342,11 @@ class DirectorySpec:
     'platform_tuple' holds the PLATFORMS DEFINED, 'platform = [ ... ]'
     as read: one (name, spec) pair per entry, 'spec' the entry's keys,
     its 'tools' a tuple (intend/26 o-50 .. o-53). Only the OUTERMOST
-    'hwut-root.conf' may state it ('plan/bubble.py' refuses it in an
+    'HWUT_ROOT/setup.conf' may state it ('plan/bubble.py' refuses it in an
     inner one).
 
     'requires_tuple' names the TOOLS the subtree needs (o-51, o-57): a
-    'hwut.conf' adds to what it inherits; an inner 'hwut-root.conf'
+    'hwut.conf' adds to what it inherits; an inner 'HWUT_ROOT/setup.conf'
     replaces it, nothing being inherited into a root (o-54). None where
     nothing above says one."""
     title:           str | None = None   # the directory's own (X-INFO-DAT)

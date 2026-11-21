@@ -1,10 +1,10 @@
 >>> from the top
     NOTE  'spare' is documented and stands in no forest line => hwut.features.tree
-    NOTE  inner/: a project of its own (hwut-root.conf) => run hwut inside it
-    NOTE  own/: a project of its own (hwut-root.conf) => run hwut inside it
+    NOTE  inner/: a project of its own (HWUT_ROOT/setup.conf) => run hwut inside it
+    NOTE  own/: a project of its own (HWUT_ROOT/setup.conf) => run hwut inside it
     exit 0
 >>> inside the bubble without a forest
-    REFUSED: no 'HWUT/feature-forest.csv' stands at '<root>/inner' => hwut.features.init
+    REFUSED: no 'HWUT_ROOT/feature-forest.csv' stands at '<root>/inner' => hwut.features.init
     exit 2
 >>> inside the bubble with one
     NOTE  'nix' is linked by y/TEST/test-y.sh and stands in no forest line and no doc block

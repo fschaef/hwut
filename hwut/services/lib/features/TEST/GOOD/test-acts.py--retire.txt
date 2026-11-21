@@ -1,25 +1,25 @@
 >>> hwut.features.retire fwd
     retired  fwd
-        HWUT/feature-forest.csv
-        HWUT/feature-doc.txt
+        HWUT_ROOT/feature-forest.csv
+        HWUT_ROOT/feature-doc.txt
     exit 0
-    [HWUT/feature-forest.csv]
+    [HWUT_ROOT/feature-forest.csv]
     | gateway    : forwarding, buses
     | forwarding : keep-order
     | buses      : decode
 >>> hwut.features.retire keep-order: its parent's line goes
     retired  keep-order
-        HWUT/feature-forest.csv
-        HWUT/feature-doc.txt
+        HWUT_ROOT/feature-forest.csv
+        HWUT_ROOT/feature-doc.txt
     exit 0
 >>> hwut.features.retire decode: no block of its own
     retired  decode
-        HWUT/feature-forest.csv
-        HWUT/feature-doc.txt
+        HWUT_ROOT/feature-forest.csv
+        HWUT_ROOT/feature-doc.txt
     exit 0
-    [HWUT/feature-forest.csv]
+    [HWUT_ROOT/feature-forest.csv]
     | gateway    : forwarding, buses
-    [HWUT/feature-doc.txt]
+    [HWUT_ROOT/feature-doc.txt]
     | [[CUSTOMERS]]
     | manager: the one who asks
     | [[gateway to manager]]

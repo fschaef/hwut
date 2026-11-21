@@ -53,7 +53,7 @@ labels     'hwut.config.show' must say why a test did not run (disc-8
            section 6): the '==[ LABELS ]' section names the entries
            that concern what is shown, THE SILENT ONES MARKED; a bare
            directory without a boundary shows no section; a broken
-           'HWUT/labels.txt' is a fault, said aloud.
+           'HWUT_ROOT/labels.txt' is a fault, said aloud.
 ______________________________________________________________________________
 """
 import os
@@ -145,10 +145,12 @@ def test_above():
         directory = os.path.join(ground, "physics", "TEST")
         os.makedirs(directory)
         for path, text in (
-                ("hwut-root.conf",         conf % "memory_mb = 77"),
+                ("HWUT_ROOT/setup.conf",         conf % "memory_mb = 77"),
                 ("physics/hwut.conf",      conf % "timeout_sec = 10"),
                 ("physics/TEST/hwut.conf", conf % "cpu_sec = 5"),
                 ("physics/TEST/test-push.py", '# @hwut { title = "Push" }\n')):
+            os.makedirs(os.path.dirname(os.path.join(ground, path)),
+                        exist_ok=True)
             with open(os.path.join(ground, path), "w") as fh: fh.write(text)
         banner("own conf, the conf above, the root's")
         call(directory, ["test-push.py", "--no-default"])
@@ -191,11 +193,11 @@ def test_refused():
 
 def test_labels():
     """RETURN: None. The section, the mark, the fault, the absence."""
-    labels = ("#  HWUT/labels.txt\n"
+    labels = ("#  HWUT_ROOT/labels.txt\n"
               "./test-a.py one : meta\n"
               "./test-b.py     : concern\n")
-    directory = build_directory({"hwut-root.conf":   "hwut {\n}\n",
-                                 "HWUT/labels.txt": labels})
+    directory = build_directory({"HWUT_ROOT/setup.conf":   "hwut {\n}\n",
+                                 "HWUT_ROOT/labels.txt": labels})
     try:
         banner("the directory: entries shown, the silent one marked")
         call(directory, ["--no-default"])
@@ -211,8 +213,8 @@ def test_labels():
     finally:
         shutil.rmtree(directory, ignore_errors=True)
 
-    directory = build_directory({"hwut-root.conf":   "hwut {\n}\n",
-                                 "HWUT/labels.txt": "x : y\n"})
+    directory = build_directory({"HWUT_ROOT/setup.conf":   "hwut {\n}\n",
+                                 "HWUT_ROOT/labels.txt": "x : y\n"})
     try:
         banner("a broken labels file: the fault said aloud")
         #  The fault names the file by its REAL path -- right for a

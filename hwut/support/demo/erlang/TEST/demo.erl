@@ -39,7 +39,7 @@
 %%
 %% The header above is the whole configuration: a title, and one scope per
 %% choice. hwut calls 'escript demo.erl <choice>' (the 'erlang' interpreter of
-%% 'hwut-root.conf') and compares what it prints on stdout with
+%% 'HWUT_ROOT/setup.conf') and compares what it prints on stdout with
 %% 'GOOD/demo.erl--<choice>.txt' -- a link to the Python demo's GOOD: the
 %% same choice prints the same text. '<hwut-end>' closes the stream: a stream
 %% without it never COMPLETED and is not accepted.

@@ -20,7 +20,7 @@
 #              root's: 'b' shows the root's numeric_ratio and its own
 #              whitespace; 'a', with no conf of its own, the root's alone.
 # provenance   every value names the file it stands in: the root's as
-#              'hwut-root.conf:<n>', the directory's as 'hwut.conf:<n>'.
+#              'HWUT_ROOT/setup.conf:<n>', the directory's as 'hwut.conf:<n>'.
 # stray        a test parameter written directly under 'hwut { }' in a
 #              conf -- outside 'app_defaults' -- is REFUSED by name, not
 #              silently dropped.
@@ -41,7 +41,8 @@ esac
 WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
 cd "$WORK"
-printf 'hwut {\n    app_defaults {\n        tolerance { numeric_ratio = 0.2 }\n    }\n}\n' > hwut-root.conf
+mkdir -p HWUT_ROOT
+printf 'hwut {\n    app_defaults {\n        tolerance { numeric_ratio = 0.2 }\n    }\n}\n' > HWUT_ROOT/setup.conf
 for where in a b; do
     mkdir -p "$where/TEST"
     printf '#!/bin/bash\n# @hwut { title = "T" }\necho x\necho "<hwut-end>"\n' \
@@ -71,7 +72,8 @@ stray)
     echo "--- a test parameter directly under 'hwut { }' in a conf"
     $SHOW a/TEST/test-x.sh > out.txt 2>&1; echo "STATUS: $?"
     grep -vE "^ " out.txt | sed "s|$WORK|\$WORK|g"
-    printf 'hwut {\n    tolerance { whitespace = false }\n}\n' > hwut-root.conf
+    mkdir -p HWUT_ROOT
+    printf 'hwut {\n    tolerance { whitespace = false }\n}\n' > HWUT_ROOT/setup.conf
     rm a/TEST/hwut.conf
     echo "--- the same in the root conf"
     $SHOW a/TEST/test-x.sh > out.txt 2>&1; echo "STATUS: $?"

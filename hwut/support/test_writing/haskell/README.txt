@@ -140,7 +140,7 @@ differs from its GOOD, as the Python test does. The two applications
 
 says whether the library is there.
 
-'hwut-root.conf' runs '.hs' with 'runghc'; the tests here declare a make
+'HWUT_ROOT/setup.conf' runs '.hs' with 'runghc'; the tests here declare a make
 build instead. MEASURED: 'runghc' takes 0.7 - 0.9 s per CASE (it compiles
 the modules to bytecode at every call; the fuzz takes 3.7 s), and cannot run
 'test-hwut_vterm.hs' at all (it needs the hsc2hs step and the C object);

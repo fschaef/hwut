@@ -1,5 +1,5 @@
 == the budget, as the configuration shows it
- search_budget = 3 # hwut-root.conf:3
+ search_budget = 3 # HWUT_ROOT/setup.conf:3
 == hwut.diff test-d.sh --console
 S    1      | [line 1 of the new text]
 N         1 | [line 1 of the old text]

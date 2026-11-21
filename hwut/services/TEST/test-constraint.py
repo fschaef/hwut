@@ -97,7 +97,8 @@ def tree_of(load, said=None):
     root = tempfile.mkdtemp(prefix="hwut_constraint_")
     test = os.path.join(root, "TEST")
     os.makedirs(test)
-    with open(os.path.join(root, "hwut-root.conf"), "w") as fh:
+    os.makedirs(os.path.join(root, "HWUT_ROOT"), exist_ok=True)
+    with open(os.path.join(root, "HWUT_ROOT/setup.conf"), "w") as fh:
         fh.write("hwut {\n}\n")
     path = os.path.join(test, "t.py")
     with open(path, "w") as fh: fh.write(APP)
@@ -113,7 +114,8 @@ def test_tightened():
     try:
         test = os.path.join(root, "TEST")
         os.makedirs(test)
-        with open(os.path.join(root, "hwut-root.conf"), "w") as fh:
+        os.makedirs(os.path.join(root, "HWUT_ROOT"), exist_ok=True)
+        with open(os.path.join(root, "HWUT_ROOT/setup.conf"), "w") as fh:
             fh.write("hwut {\n}\n")
         path = os.path.join(test, "t.py")
         with open(path, "w") as fh:

@@ -19,7 +19,7 @@ grows is a language nobody documents.
 
 'f/<id>' IS THE LABEL THAT TIES TO A FEATURE (intend/three-worlds,
 ruled 2026-10-31; spec 43): the runs linked to the feature whose id is
-<id>, and to every feature below it in 'HWUT/feature-forest.csv'. An id is
+<id>, and to every feature below it in 'HWUT_ROOT/feature-forest.csv'. An id is
 '[A-Za-z0-9_-]+' (T-i) and names ONE feature; the forest gives its place.
 An instance of a prototype is '<owner>+<id>' (intend/44 p-1). A GLOB
 ('*', '?', '[...]') may stand anywhere (intend/44 P-g): every feature it
@@ -33,7 +33,7 @@ THE ENGINE ANSWERS IT, not this module: the query hands the runs of the
 features asked into 'CLabelView.label_set_of' as 'extra'.
 
 THIS MODULE PARSES AND EVALUATES; it does not read the labels file.
-The file is 'HWUT/labels.txt' and its reader and writer are the label
+The file is 'HWUT_ROOT/labels.txt' and its reader and writer are the label
 faces' ('services/lib/labels/_file.py'). What the engine needs of the
 file's CONTENT arrives as a 'CLabelView', built there, handed down
 here -- data flows into the engine, the engine imports nothing back.
@@ -65,7 +65,7 @@ def feature_label_f(name):
     """
     RETURN: bool, True where 'name' is a feature label 'f/<id>' --
             the runs of a feature, answered from the feature relation,
-            never assigned in 'HWUT/labels.txt'.
+            never assigned in 'HWUT_ROOT/labels.txt'.
     """
     return name.startswith(FEATURE_PREFIX)
 
@@ -147,7 +147,7 @@ def evaluate_f(tree, label_set):
 
 @dataclass(frozen=True, slots=True)
 class CLabelView:
-    """What the engine sees of 'HWUT/labels.txt': WHERE the file's
+    """What the engine sees of 'HWUT_ROOT/labels.txt': WHERE the file's
     ground is, WHAT it assigns, and WHICH labels stand. Built by the
     file's reader ('services/lib/labels/_file.py'), handed down, read
     only.
@@ -167,7 +167,7 @@ class CLabelView:
     #  labels, assigned and derived so far, answer its tree.
     derived:  tuple = ()
     #  THE BUBBLES BELOW (RQ-9, E-200): one view per inner
-    #  'hwut-root.conf' below 'boundary', each over its OWN file. A run
+    #  'HWUT_ROOT/setup.conf' below 'boundary', each over its OWN file. A run
     #  in a bubble is labelled by that bubble's file alone -- as it is
     #  when hwut is called inside it.
     inner_tuple: tuple = ()
@@ -214,11 +214,11 @@ class CLabelView:
         relative = relative.replace(os.sep, "/")
         if relative.startswith("../"): return frozenset(extra)
         #  NOTHING CROSSES A BOUNDARY (RQ-1): a run inside an inner
-        #  'hwut-root.conf' is not labelled by this file -- its own
+        #  'HWUT_ROOT/setup.conf' is not labelled by this file -- its own
         #  bubble's view answers above (RQ-9); one no view holds, none.
         here = os.path.dirname(os.path.abspath(absolute_path))
         while len(here) > len(self.boundary):
-            if os.path.isfile(os.path.join(here, "hwut-root.conf")):
+            if os.path.isfile(os.path.join(here, "HWUT_ROOT", "setup.conf")):
                 return frozenset(extra)
             here = os.path.dirname(here)
         found = self.entry_db.get((relative, None), frozenset()) | extra
@@ -255,7 +255,7 @@ def literal_target_f(text):
     RETURN: bool, True where the target names a run EXACTLY -- no
             glob mark in either member.
 
-    THE LINE THE FRAMEWORK DRAWS TWICE: 'HWUT/labels.txt' holds
+    THE LINE THE FRAMEWORK DRAWS TWICE: 'HWUT_ROOT/labels.txt' holds
     literal targets only for the same reason a literal target lifts
     the standard label's silence (disc-8). A literal names ONE run
     and is spent as certainty; a glob names a set nobody has seen
@@ -288,7 +288,7 @@ def swallowed_warning_tuple(met_set, visible_set):
 def empty_view(boundary):
     """
     RETURN: CLabelView assigning nothing -- what an ABSENT
-            'HWUT/labels.txt' means: no label exists, no silence
+            'HWUT_ROOT/labels.txt' means: no label exists, no silence
             imposed, the tree behaves as one that labels nothing.
     """
     return CLabelView(boundary = boundary,

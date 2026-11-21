@@ -36,7 +36,7 @@
 ;;
 ;; The header above is the whole configuration: a title, and one scope per
 ;; choice. hwut calls 'guile --no-auto-compile demo.scm <choice>' (the 'scheme'
-;; interpreter of 'hwut-root.conf') and compares what it prints on stdout
+;; interpreter of 'HWUT_ROOT/setup.conf') and compares what it prints on stdout
 ;; with 'GOOD/demo.scm--<choice>.txt' -- a '.link' to the Python demo's GOOD:
 ;; the same choice prints the same text. '<hwut-end>' closes the stream.
 ;;

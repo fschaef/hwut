@@ -52,7 +52,7 @@ def admit_of(directory, app_set=None):
 
     A THIRD, WHERE 'app_set' IS GIVEN (exploration R-48, R-80): a case
     that could run but states a cap the procsitter cannot enforce on
-    this platform, unacknowledged in 'hwut-root.conf' -- 'confinement'.
+    this platform, unacknowledged in 'HWUT_ROOT/setup.conf' -- 'confinement'.
     """
     confined = None if app_set is None else confinement.admit_of(app_set)
 

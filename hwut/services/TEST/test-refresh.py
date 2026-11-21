@@ -95,7 +95,7 @@ def tree_of(built_f):
     """
     root = tempfile.mkdtemp(prefix="hwut_refresh_")
     test = os.path.join(root, "suite", "TEST")
-    put(os.path.join(root, "hwut-root.conf"), "hwut {\n}\n")
+    put(os.path.join(root, "HWUT_ROOT/setup.conf"), "hwut {\n}\n")
     put(os.path.join(test, "hwut.conf"),
         'hwut {\n    ignore = ["run.log", "compile.log"]\n}\n')
     if built_f:

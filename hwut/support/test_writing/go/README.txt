@@ -58,7 +58,7 @@ the support packages are found through the 'go.mod' above it.
 'TEST/Makefile' is the example. A test may also be run by hand with
 'go run test-x.go <choice>' from its directory.
 
-WHY A MAKEFILE AND NOT 'go run' (hwut-root.conf's interpreter for '.go'):
+WHY A MAKEFILE AND NOT 'go run' (HWUT_ROOT/setup.conf's interpreter for '.go'):
 'go run' finds the support packages from 'TEST/' (the 'go.mod' in '..') and
 works -- but it COMPILES AT EVERY CALL, under the RUN's caps. MEASURED: on a
 cold build cache Go writes its runtime archive, above the default 10 MB per

@@ -58,7 +58,7 @@ def _governing_of(directory):
                 directory's OWN 'hwut.conf' folded in over it -- exactly
                 what exploration applies ('explore()' reads that conf
                 itself, which is why the climb leaves it out).
-                None where no 'hwut-root.conf' stands above.
+                None where no 'HWUT_ROOT/setup.conf' stands above.
             [1] list[Fault], what the climbed confs and the directory's
                 own conf got wrong. A conf's fault is the author's to
                 see; this face does not drop it.
@@ -80,7 +80,7 @@ def _inherited_of(directory):
     RETURN: DirectorySpec, the root's word folded down to 'directory'
             ('tree_explorer.ascended_spec') -- so that 'language-setup'
             reaches a single-directory reading (R-73).
-            None where no 'hwut-root.conf' stands above: 'hwut.show'
+            None where no 'HWUT_ROOT/setup.conf' stands above: 'hwut.show'
             works on a bare directory, and reads it bare.
     """
     from .tree_explorer import ascended_spec, RootConfMissing

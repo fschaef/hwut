@@ -1,37 +1,37 @@
 >>> hwut.features.init
-    'HWUT/feature-forest.csv' written
-    'HWUT/feature-doc.txt' written
+    'HWUT_ROOT/feature-forest.csv' written
+    'HWUT_ROOT/feature-doc.txt' written
     exit 0
-    [HWUT/feature-forest.csv]
-    | # HWUT/feature-forest.csv -- THE FEATURE TREES (spec 43). One line per
+    [HWUT_ROOT/feature-forest.csv]
+    | # HWUT_ROOT/feature-forest.csv -- THE FEATURE TREES (spec 43). One line per
     | # feature that has children:
     | #
     | #     <feature-id> : <child-id>, <child-id>, ...
     | #
     | # A feature id is '[A-Za-z0-9_-]+'. An id standing as no child is a ROOT.
     | # Every id stands once as a child (one parent); no circle. What a feature
-    | # is, is said in 'HWUT/feature-doc.txt'; a retired one stands in no line.
-    [HWUT/feature-doc.txt]
-    | # HWUT/feature-doc.txt -- WHAT THE FEATURES ARE (spec 43). One block per
+    | # is, is said in 'HWUT_ROOT/feature-doc.txt'; a retired one stands in no line.
+    [HWUT_ROOT/feature-doc.txt]
+    | # HWUT_ROOT/feature-doc.txt -- WHAT THE FEATURES ARE (spec 43). One block per
     | # feature, headed '[[<id>]]' -- or '[[<id> to <audience>, ...]]',
     | # '[[<id> not <audience>, ...]]', '[[<id>:retired]]'; '[[CUSTOMERS]]'
     | # declares the audiences. A block: an optional 'documents:' line (paths
     | # from this file's directory, ',' between), then the prose -- its first
     | # line the title, the rest the doc.
-    [HWUT/feature-external-map.csv]
+    [HWUT_ROOT/feature-external-map.csv]
     (absent)
 >>> again: both stand
-    REFUSED: 'HWUT/feature-forest.csv' and 'HWUT/feature-doc.txt' stand already
+    REFUSED: 'HWUT_ROOT/feature-forest.csv' and 'HWUT_ROOT/feature-doc.txt' stand already
     exit 2
 >>> the doc file gone: only it is written
-    'HWUT/feature-doc.txt' written
+    'HWUT_ROOT/feature-doc.txt' written
     exit 0
 >>> a word it does not take
     REFUSED: 'hwut.features.init' takes 0 word(s): gw
     usage: hwut.features.init [--directory=<path>]
     exit 2
->>> no hwut-root.conf
-    REFUSED: no 'hwut-root.conf' stands in or above '.' -- the tree has no boundary
+>>> no HWUT_ROOT/setup.conf
+    REFUSED: no 'HWUT_ROOT/setup.conf' stands in or above '.' -- the tree has no boundary
     HINT: use 'hwut.sanitize root [dir]' to place one.
     exit 2
 <hwut-end>

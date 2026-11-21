@@ -24,7 +24,7 @@ WHAT IS REFUSED, by name, and then nothing is written:
     link the text it names)
     a target whose test does not stand in its directory
     a link onto its own case
-    a target beyond the source's root ('hwut-root.conf' bounds a link)
+    a target beyond the source's root ('HWUT_ROOT/setup.conf' bounds a link)
 
 WHAT IS NOT OVERWRITTEN: a target case that has a '.txt' or a '.link'
 already. Each is listed, and kept; '--force' replaces it.

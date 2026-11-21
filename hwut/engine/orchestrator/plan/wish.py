@@ -77,7 +77,7 @@ allowed in both. It is sugar for '--glob' and nothing else, so the
 short form can never mean what the long form cannot say.
 
     -l, --label <expr>  the runs the label expression names, out of
-                        'HWUT/labels.txt' (disc-8): 'AND', 'OR',
+                        'HWUT_ROOT/labels.txt' (disc-8): 'AND', 'OR',
                         'NOT', brackets, 'all' the universe, ',' sugar
                         for 'OR'; 'f/<id>' the runs of a feature
                         (plan/label). A UNION among the labels it names
@@ -212,7 +212,7 @@ PLATFORM_USAGE_TOKEN_TUPLE = ("[-p <platform>]...", "[--exclude-local]")
 PLATFORM_HELP = """PLATFORM -- where the selected runs run
     -p <platform>       ADDS the platform to those specified; 'local',
                         this machine, is specified without it. A bubble
-                        whose 'hwut-root.conf' says 'platform = [...]'
+                        whose 'HWUT_ROOT/setup.conf' says 'platform = [...]'
                         requires those platforms; one with none requires
                         'local'. A bubble runs where the two meet; where
                         they do not, it is not run. May stand several
@@ -319,7 +319,7 @@ class Wish:
     dir_rule_tuple:    tuple = ()
     #  THE WALK STAYS OUT OF INNER BUBBLES (RQ-9, E-202): '--no-bubbles',
     #  or '!<hwut-root>' in a wishlist. By default a walk that selects
-    #  enters every inner 'hwut-root.conf'. A word about the WALK: it
+    #  enters every inner 'HWUT_ROOT/setup.conf'. A word about the WALK: it
     #  states nothing of what is wanted.
     no_bubbles_f:      bool  = False
     #  THE RECORDINGS A WISHLIST NAMES BY DIGEST (E-168): pairs
@@ -439,7 +439,7 @@ class Wish:
     def asks_label_f(self):
         """
         RETURN: bool, True where the wish names labels -- a question
-                only 'HWUT/labels.txt' can answer, so a CLabelView
+                only 'HWUT_ROOT/labels.txt' can answer, so a CLabelView
                 must be handed down wherever it is asked.
         """
         return self.label_spec is not None
@@ -810,7 +810,7 @@ _DIGEST_SUFFIX_RE = re.compile(r"\s+--digest=(\S+)\s*$")
 _GLOB_MARK_TUPLE  = ("*", "?", "[")
 
 #  THE ONE RESERVED WORD OF A WISHLIST (RQ-9, E-202): '!<hwut-root>'
-#  keeps the walk out of every inner 'hwut-root.conf'.
+#  keeps the walk out of every inner 'HWUT_ROOT/setup.conf'.
 BUBBLE_WORD = "<hwut-root>"
 
 
@@ -890,14 +890,14 @@ def _label_remedy(first, second, either_form):
 _LABEL_LINE_RE = re.compile(r"^label\s*:(.*)$")
 
 #  '--no-boundary' and '--no-bubbles' asked what no walk does, or what
-#  every walk does (intend/45 R-3): an inner 'hwut-root.conf' is another
+#  every walk does (intend/45 R-3): an inner 'HWUT_ROOT/setup.conf' is another
 #  project, never walked from above.
 NO_BOUNDARY_RETIRED_TEXT = (
-    "'--no-boundary' is retired: an inner 'hwut-root.conf' is a project "
+    "'--no-boundary' is retired: an inner 'HWUT_ROOT/setup.conf' is a project "
     "of its own, never walked from above (intend/45 R-3) => run hwut "
     "inside it")
 NO_BUBBLES_RETIRED_TEXT = (
-    "'--no-bubbles' is retired: no walk enters an inner 'hwut-root.conf' "
+    "'--no-bubbles' is retired: no walk enters an inner 'HWUT_ROOT/setup.conf' "
     "-- a project of its own (intend/45 R-3) => drop it")
 
 
@@ -1025,7 +1025,7 @@ def _wishlist_read(file_name, digest_f):
                 raise refused("'%s' is no word of a wishlist" % text)
             #  RETIRED (intend/45 o-4, E-230), with '--no-bubbles'.
             raise refused("'%s%s' is retired: no walk enters an inner "
-                          "'hwut-root.conf' -- a project of its own "
+                          "'HWUT_ROOT/setup.conf' -- a project of its own "
                           "(intend/45 R-3) => drop the line"
                           % ("!" if negated_f else "", BUBBLE_WORD))
         tag   = None

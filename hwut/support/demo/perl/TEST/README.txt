@@ -95,7 +95,7 @@ needs; 'Hwut::Vterm' (and 'ShopDb.pm' here) want FFI::Platypus as well.
 NOT HERE, ON PURPOSE
 ------------------------------------------------------------------------------
 'language-setup', 'variant_group', 'procsitter', 'free_disk_min_mb'
-                  the root's alone ('hwut-root.conf')
+                  the root's alone ('HWUT_ROOT/setup.conf')
 'build'           a compiled test application's word: Perl is run as it
                   stands, no Makefile
 '##! unaccepted', '##! constraint-violation'

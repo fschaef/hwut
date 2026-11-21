@@ -13,7 +13,7 @@ PURPOSE: THE 'hwut.config.show' COMMAND LINE -- what the framework READ. It
     --provenance                name the place of every stated value
     --gnu                       name it as 'file:line:column'
     --directory=<path>          where to read; the current one else
-    --root-conf-template        the 'hwut-root.conf' the boundary face
+    --root-conf-template        the 'HWUT_ROOT/setup.conf' the boundary face
                                 would write -- the language table
                                 (E-25) -- for pasting into a root conf
                                 placed by hand; reads nothing
@@ -129,7 +129,7 @@ def labels_line_tuple(directory, name):
                 find the answer in the first place they look (disc-8).
                 Empty where no entry concerns what is shown -- the
                 feature unused costs no line of output.
-            [1] str | None, the fault where 'HWUT/labels.txt' cannot
+            [1] str | None, the fault where 'HWUT_ROOT/labels.txt' cannot
                 be read; the section is then the fault's alone.
 
     NO BOUNDARY, NO SECTION: 'hwut.config.show' works on a bare directory,

@@ -1,11 +1,11 @@
-# HWUT/feature-forest.csv -- THE FEATURE TREES of this tree (spec 43,
+# HWUT_ROOT/feature-forest.csv -- THE FEATURE TREES of this tree (spec 43,
 # intend/43 T-a, T-b). One line per feature that has children:
 #
 #     <feature-id> : <child-id>, <child-id>, ...
 #
 # A feature id is '[A-Za-z0-9_-]+'. An id standing as no child is a ROOT.
 # Every id stands once as a child (one parent); no circle. What a feature
-# is, is said in 'HWUT/feature-doc.txt'; a retired one stands in no line.
+# is, is said in 'HWUT_ROOT/feature-doc.txt'; a retired one stands in no line.
 
 delivery                    : one-version, one-requirement-list, wheel-installs, pipx-installs, deb-installs, deb-removes, image-runs, image-owner, help-names-missing, demo-green
 adm                         : bundle-self-applying, bundle-classifies, bundle-manifest-proved, bundle-wrong-root-refused, bundle-self-limits, bundle-selection, bundle-dependencies, bundle-documents-by-default, bundle-chmod-script, graph-depth, graph-formats, layering-direction, layering-sealed-and-door, shared-names, unreadable-reported, graph-refusals, graph-of-this-tree, unread-modules, static-analysis-report, static-analysis-needs-ruff, requirement-check, stain-conversion, good-audit, rescue-goods, fail-book, support-layout-holds, support-layout-bites

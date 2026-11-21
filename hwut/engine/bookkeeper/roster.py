@@ -1,11 +1,11 @@
 """SPDX-License: MIT; Project HWUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 
-PURPOSE: THE ROSTER, 'HWUT/directories.txt' (CR-2, 2026-11-20) -- the TEST
+PURPOSE: THE ROSTER, 'HWUT_ROOT/directories.txt' (CR-2, 2026-11-20) -- the TEST
          directories of a tree that hold records, one root-relative path
          per line, sorted, rewritten whole:
 
-             #  HWUT/directories.txt -- the TEST directories of this tree
+             #  HWUT_ROOT/directories.txt -- the TEST directories of this tree
              #  that hold records. Written by hwut; ...
              ./game/TEST
              ./physics/TEST
@@ -48,7 +48,7 @@ except ImportError:                                  # not on every platform
     fcntl = None
 
 HEADER = (
-    "#  HWUT/directories.txt -- the TEST directories of this tree that hold",
+    "#  HWUT_ROOT/directories.txt -- the TEST directories of this tree that hold",
     "#  records. Written by hwut when a directory gets its first record and",
     "#  when it loses its last. An entry whose directory is gone FAILS the",
     "#  run: 'hwut.sanitize.propose' says whether it moved or went.",
@@ -58,7 +58,7 @@ HEADER = (
 def root_of(directory):
     """
     RETURN: str, the absolute directory holding the nearest
-                 'hwut-root.conf' at or above 'directory'
+                 'HWUT_ROOT/setup.conf' at or above 'directory'
             None, where none stands
     """
     here = os.path.abspath(directory)

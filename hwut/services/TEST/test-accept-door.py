@@ -72,7 +72,8 @@ def tree():
     root = tempfile.mkdtemp(prefix="hwut-door-")
     directory = os.path.join(root, "suite", "TEST")
     os.makedirs(directory)
-    with open(os.path.join(root, "hwut-root.conf"), "w") as fh:
+    os.makedirs(os.path.join(root, "HWUT_ROOT"), exist_ok=True)
+    with open(os.path.join(root, "HWUT_ROOT/setup.conf"), "w") as fh:
         fh.write("hwut {\n}\n")
     app = os.path.join(directory, "test-v.sh")
     def write_app(word):

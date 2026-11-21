@@ -43,7 +43,7 @@ A Prolog test starts:
     tricky :- ... .
     main   :- hwut_runner_run("my title", [plain-plain, tricky-tricky], []).
 
-hwut runs it with the 'swipl' interpreter of 'hwut-root.conf' ('.pro'):
+hwut runs it with the 'swipl' interpreter of 'HWUT_ROOT/setup.conf' ('.pro'):
 'swipl test-x.pro <choice>'; under 'initialization(main, main)' the flag
 'argv' holds what follows the file. There is nothing to build -- but for
 'hwut_vterm' (section 3). The heads of the modules say how each is used;

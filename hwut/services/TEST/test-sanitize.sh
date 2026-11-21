@@ -75,7 +75,8 @@ WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
 cd "$WORK"
 
-printf 'hwut {\n}\n' > hwut-root.conf
+mkdir -p HWUT_ROOT
+printf 'hwut {\n}\n' > HWUT_ROOT/setup.conf
 
 face() {                  #  <face> <argument>...: status and both streams
     $1 "${@:2}" > out.txt 2> err.txt
@@ -111,7 +112,8 @@ tree() {                  #  one directory, one application, one choice
         > tree/suite/TEST/test-app.sh
     chmod +x tree/suite/TEST/test-app.sh
     printf 'line\n<hwut-end>\n' > tree/suite/TEST/GOOD/test-app.sh.txt
-    printf 'hwut {\n}\n' > tree/hwut-root.conf
+    mkdir -p tree/HWUT_ROOT
+    printf 'hwut {\n}\n' > tree/HWUT_ROOT/setup.conf
 }
 
 listing() {               #  what still stands, so 'report' can be proved

@@ -14,7 +14,7 @@ HINTS
 ------------------------------------------------------------------------------
 ENVIRONMENT -- error around the test
     TEST
-        test-net.sh  a   cap not enforceable here; not run  (cap 'network' not enforceable on '<platform>' => hwut-root.conf: procsitter { <platform> { network = false } })
+        test-net.sh  a   cap not enforceable here; not run  (cap 'network' not enforceable on '<platform>' => HWUT_ROOT/setup.conf: procsitter { <platform> { network = false } })
         :            b   :
 
 HINT: use 'hwut.help' for explanation of subtle issues.

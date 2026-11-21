@@ -138,7 +138,7 @@ class ExplorationResult:
     fault_list:    tuple
     refused_tuple: tuple = ()
     #  THE CONFIGURATION THAT CANNOT BE READ (ND7, services E-190): every
-    #  fault of a 'hwut-root.conf' or 'hwut.conf' at this directory or
+    #  fault of a 'HWUT_ROOT/setup.conf' or 'hwut.conf' at this directory or
     #  above it. Where one stands, no case here runs: each fails by name.
     conf_fault_tuple: tuple = ()
 
@@ -146,7 +146,7 @@ class ExplorationResult:
 def conf_fault_f(fault):
     """
     RETURN: bool, True if 'fault' says a configuration file --
-            'hwut.conf' or 'hwut-root.conf' -- does not READ as written:
+            'hwut.conf' or 'HWUT_ROOT/setup.conf' -- does not READ as written:
             a syntax, a key refused or unknown, a value of the wrong
             shape;
             False, else: a test's header, a candidate, no file at all,
@@ -154,8 +154,10 @@ def conf_fault_f(fault):
             disagree with what the directory offers ('dependency' naming
             a test that is not there), answered case by case (P-6).
     """
-    name = os.path.basename(getattr(fault, "file", None) or "")
-    if name not in (finder.CONF_NAME, finder.ROOT_CONF_NAME): return False
+    from hwut.auxiliary.no_entry import root_conf_path_f
+    path = getattr(fault, "file", None) or ""
+    if os.path.basename(path) != finder.CONF_NAME \
+       and not root_conf_path_f(path): return False
     return getattr(fault, "kind", None) is not E_FaultKind.DIRECTORY
 
 

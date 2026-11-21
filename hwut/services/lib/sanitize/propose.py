@@ -52,7 +52,7 @@ candidates.
                 not proposed, and said on stderr. Healed by 'remove'.
     --directories
                 A TEST DIRECTORY THE ROSTER RECORDS THAT DOES NOT STAND
-                ('HWUT/directories.txt', CR-3). Healed by 'move <old>
+                ('HWUT_ROOT/directories.txt', CR-3). Healed by 'move <old>
                 <new>' where exactly one is missing and exactly one
                 directory holding a book is not on the roster -- the roster
                 entry replaced, the labels' targets carried -- and by
@@ -99,7 +99,7 @@ candidates.
                 root, a link to an id that stands nowhere or is retired,
                 a file of the past.
     (no option) A TREE WITHOUT A BOUNDARY (E-25): where no
-                'hwut-root.conf' stands in or above the directory, the
+                'HWUT_ROOT/setup.conf' stands in or above the directory, the
                 proposal is 'root <dir>' and nothing else -- nothing
                 else can be judged without one. The repository's root
                 stands uncommented, the current directory as a

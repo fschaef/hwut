@@ -75,12 +75,12 @@ no_record_db = {
         "no 'coverage_target' in 'language-setup'",
         E_NoRecordCategory.SETUP,
         "The test is compiled, and its language entry in "
-        "'hwut-root.conf' names no 'coverage_target'. A coverage run "
+        "'HWUT_ROOT/setup.conf' names no 'coverage_target'. A coverage run "
         "builds that target in place of the executable; without the "
         "name there is nothing instrumented to run, so the case was "
         "not run.",
         "State 'coverage_target' for the language in 'language-setup' "
-        "of 'hwut-root.conf' -- '%' is the source file's stem -- and "
+        "of 'HWUT_ROOT/setup.conf' -- '%' is the source file's stem -- and "
         "let the build rules instrument that target."),
     "not-registered": NoRecord(
         "not in book",

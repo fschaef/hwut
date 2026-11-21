@@ -59,7 +59,8 @@ WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
 cd "$WORK"
 
-printf 'hwut {\n}\n' > hwut-root.conf
+mkdir -p HWUT_ROOT
+printf 'hwut {\n}\n' > HWUT_ROOT/setup.conf
 
 register_of() {         # <TEST dir> -- the register, through the
                         # bookkeeper's door: the book IS the register
@@ -81,8 +82,8 @@ face() {                # <command> <args...> -- status and stdout
 }
 
 the_file() {
-    if [ -f HWUT/labels.txt ]; then
-        echo "THE FILE {"; grep -v "^#" HWUT/labels.txt \
+    if [ -f HWUT_ROOT/labels.txt ]; then
+        echo "THE FILE {"; grep -v "^#" HWUT_ROOT/labels.txt \
             | sed 's/^/    /'; echo "}"
     else
         echo "THE FILE: absent -- no label exists"
@@ -136,8 +137,9 @@ labels)
     echo "STATUS: $?"
     grep -E "labels|REFUSED" out.txt | sed 's/^/    /'
     echo "--- a fresh name that stands only in the FILE: a fault, not a merge"
+    mkdir -p HWUT_ROOT
     echo "./tree/suite/TEST/test-fresh.sh stale : concern" \
-        >> HWUT/labels.txt
+        >> HWUT_ROOT/labels.txt
     ( cd tree/suite/TEST \
       && printf 'y\n' | $RENAME test-fresh.sh first -to stale ) \
         > out.txt 2> err.txt

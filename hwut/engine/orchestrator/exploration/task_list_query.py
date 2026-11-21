@@ -176,7 +176,7 @@ class CTestTaskListQuery(CTestTaskList):
                       common form. 'None' where no absolute target can
                       arise.
 
-        'label_view'  what 'HWUT/labels.txt' assigns (CLabelView,
+        'label_view'  what 'HWUT_ROOT/labels.txt' assigns (CLabelView,
                       plan/label.py), built by the file's reader and
                       handed down. Required where the wish asks a
                       LABEL question; where handed at all, the query
@@ -381,7 +381,7 @@ class CTestTaskListQuery(CTestTaskList):
             if name not in setup_db:
                 raise SelectionError(
                     "'--language=%s' names no entry of 'language-setup' "
-                    "in 'hwut-root.conf'; declared: %s"
+                    "in 'HWUT_ROOT/setup.conf'; declared: %s"
                     % (name, ", ".join(sorted(setup_db)) or "(none)"))
         self.language_db = {app.source_file: app.language
                             for app in app_set}
@@ -413,7 +413,7 @@ class CTestTaskListQuery(CTestTaskList):
         if not self.wish.asks_label_f(): return
         if self.label_view is None:
             raise SelectionError(
-                "'--label %s' asks 'HWUT/labels.txt', and no label "
+                "'--label %s' asks 'HWUT_ROOT/labels.txt', and no label "
                 "view reaches this selection" % self.wish.label_spec)
         self.label_tree = parse_expression(self.wish.label_spec)
         unknown = [name for name in label_name_tuple(self.label_tree)
@@ -421,7 +421,7 @@ class CTestTaskListQuery(CTestTaskList):
                    and not feature_label_f(name)]
         if unknown:
             raise SelectionError(
-                "no label '%s' stands in 'HWUT/labels.txt'"
+                "no label '%s' stands in 'HWUT_ROOT/labels.txt'"
                 % "', '".join(unknown))
 
     def _settle_feature_label(self):

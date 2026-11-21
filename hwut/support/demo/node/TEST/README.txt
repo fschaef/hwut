@@ -12,7 +12,7 @@ everything a test directory can say, each thing shown once
 The same demonstration as '../../python/TEST', choice for choice, written
 in JavaScript for node (22 or later) over the node test support
 ('support/test_writing/node'). Nothing is built: 'node' runs each '.js' as
-it stands (the 'javascript' interpreter of 'hwut-root.conf').
+it stands (the 'javascript' interpreter of 'HWUT_ROOT/setup.conf').
 
 Every test application is a file whose header ('// @hwut { }') is its
 whole configuration; 'hwut.conf' is what the directory says. A file's
@@ -104,7 +104,7 @@ and a test of one's own then writes
 NOT HERE, ON PURPOSE
 ------------------------------------------------------------------------------
 'language-setup', 'variant_group', 'procsitter', 'free_disk_min_mb'
-                  the root's alone ('hwut-root.conf')
+                  the root's alone ('HWUT_ROOT/setup.conf')
 'build'           a compiled test application's word: node builds nothing
                   (no Makefile)
 '##! unaccepted', '##! constraint-violation'

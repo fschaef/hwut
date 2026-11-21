@@ -1,7 +1,7 @@
 """SPDX-License: MIT; Project HWUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 
-PURPOSE: OPENING 'HWUT/labels.txt' FOR EDITING -- climb, read, build
+PURPOSE: OPENING 'HWUT_ROOT/labels.txt' FOR EDITING -- climb, read, build
          the view, select what the wish states.
 
 'create', 'add' and 'remove' had the IDENTICAL nine lines apiece:
@@ -45,7 +45,7 @@ from   ._faces                               import selected_key_tuple
 class COpenLabels:
     """The tree's labels, open for editing.
 
-    'boundary'  where 'hwut-root.conf' stands, and the labels file
+    'boundary'  where 'HWUT_ROOT/setup.conf' stands, and the labels file
                 beside it.
     'entry_db'  what the file assigns, mutable: a face edits it and
                 asks for it to be written.

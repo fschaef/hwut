@@ -231,7 +231,7 @@ Make the tool electable:
                        root conf ('services/_boundary.py'), in
                        preference order -- readable formats first. THE
                        TABLE IS NOT IN THIS COMPONENT (D-26): an author's
-                       tree carries its own copy in 'hwut-root.conf'.
+                       tree carries its own copy in 'HWUT_ROOT/setup.conf'.
     EXTENSION_DB       only where the source extension is new; it
                        serves 'hwut.cov.conv.to_humans' and the record header
 

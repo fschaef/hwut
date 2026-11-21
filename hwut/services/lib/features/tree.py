@@ -6,9 +6,9 @@ PURPOSE: THE 'hwut.features.tree' COMMAND LINE -- the forest of features
 
     hwut.features.tree [<id>] [--list] [-e] [--directory=<path>]
 
-prints the roots of 'HWUT/feature-forest.csv' first, each feature's
+prints the roots of 'HWUT_ROOT/feature-forest.csv' first, each feature's
 children indented below it, every feature with its title from
-'HWUT/feature-doc.txt'. The unplaced -- documented, in no forest line --
+'HWUT_ROOT/feature-doc.txt'. The unplaced -- documented, in no forest line --
 follow under '(unplaced)'. Retired claims are not printed. A prototype's
 instances stand in the trees as '<owner>+<id>', each with the title that
 documents it (intend/44 p-5); the prototypes as declared, their members
@@ -19,12 +19,12 @@ below them, follow under '(prototypes)'.
                 pasted into a label expression as 'f/<id>', or given to
                 'hwut.report.features'
     -e          each feature with the outside's names for it, where
-                'HWUT/feature-external-map.csv' holds some
+                'HWUT_ROOT/feature-external-map.csv' holds some
 
 EXIT STATUS (E-1, services/_exit.py):
     0  OK       printed
     1  FAULT    a feature file states a fault; it is named
-    2  REFUSED  no 'hwut-root.conf', no forest, an <id> the forest does not
+    2  REFUSED  no 'HWUT_ROOT/setup.conf', no forest, an <id> the forest does not
                 hold, or the command line cannot be read
     3  EMPTY    nothing to print
 ______________________________________________________________________________

@@ -1,5 +1,5 @@
-hwut-root.conf:  hwut { platform = [ { name = "linux", kind = "container", image = "hwut-dev", recipe = "../adm/container/Containerfile" } ] }
-inner/hwut-root.conf: hwut {
+HWUT_ROOT/setup.conf:  hwut { platform = [ { name = "linux", kind = "container", image = "hwut-dev", recipe = "../adm/container/Containerfile" } ] }
+inner/HWUT_ROOT/setup.conf: hwut {
 }
     TEST         platform_tuple=(('linux', {'name': 'linux', 'kind': 'container', 'image': 'hwut-dev', 'recipe': '../adm/container/Containerfile'}),)
                  runs

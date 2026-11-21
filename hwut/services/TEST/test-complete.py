@@ -30,7 +30,7 @@ THE COMPLETION (services E-151, adm/WORK/gathered/0s). Every choice but
     values    an option's words ('enum'), '--opt=value', directories
     apps      the short form: applications here, then the choices of
               one -- 'choices = [...]' and a 'choices { }' block
-    labels    'HWUT/labels.txt' at the boundary, plus 'all', 'meta'
+    labels    'HWUT_ROOT/labels.txt' at the boundary, plus 'all', 'meta'
     targets   the targets the current directory's 'hwut.conf' binds
     silent    a broken line, a missing table, an unreadable file: no
               candidate, nothing on stderr, status 0
@@ -111,7 +111,7 @@ def ask(line, shell="bash", table_db=TABLE_DB):
 
 def fixture_tree():
     """
-    RETURN: str, a fresh tree in '/tmp': 'hwut-root.conf', a labels file,
+    RETURN: str, a fresh tree in '/tmp': 'HWUT_ROOT/setup.conf', a labels file,
             'TEST/' with two applications, a plain file and a 'hwut.conf'
             binding two targets, 'TEST/sub/', and 'GOOD/', 'OUT/', 'TMP/'
             and a marked 'hwut.coverage/' that hold no application.
@@ -124,8 +124,8 @@ def fixture_tree():
     open(os.path.join(test, "hwut.coverage",
                       "hwut.no-entry-here.marker"), "w").close()
     files = {
-        "hwut-root.conf":   "hwut { }\n",
-        "HWUT/labels.txt": "#  HWUT/labels.txt\n#___\n"
+        "HWUT_ROOT/setup.conf":   "hwut { }\n",
+        "HWUT_ROOT/labels.txt": "#  HWUT_ROOT/labels.txt\n#___\n"
                             "./TEST/test-a.sh : smoke nightly\n"
                             ":/test-b.py      : nightly\n",
         "TEST/test-a.sh":   APP_A,

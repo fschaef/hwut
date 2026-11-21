@@ -130,8 +130,9 @@ WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
 mkdir "$WORK/TEST"
 cd "$WORK/TEST"
+mkdir -p ../HWUT_ROOT
 printf 'hwut {\n    language-setup { bash { extensions = [".sh"] interpreter = "bash" } }\n}\n' \
-       > ../hwut-root.conf
+       > ../HWUT_ROOT/setup.conf
 
 page() {                # <file> <header lines> <body line>
     printf '#! /bin/bash\n# @hwut {\n%b# }\n%s\necho "<hwut-end>"\n' "$2" "$3" > "$1"
@@ -249,8 +250,9 @@ case "$1" in
         rm hwut.conf
         $SHOW test-b.sh --no-default 2>&1 | grep -c "timeout_sec" ;;
     region)
+        mkdir -p ../HWUT_ROOT
         printf 'hwut {\n    language-setup { bash { extensions = [".sh", ".sql", ".c", ".txt"] interpreter = "bash" } }\n}\n' \
-               > ../hwut-root.conf
+               > ../HWUT_ROOT/setup.conf
         printf -- '-- @hwut {\n--     title = "two dashes"\n-- }\n'       > a.sql
         printf '// @hwut {\n//     title = "two slashes"\n// }\n'         > b.c
         printf '/* @hwut {\n *     title = "a star block"\n * } */\n'     > c.c
@@ -364,8 +366,9 @@ case "$1" in
         python3 -m hwut.services.run --jobs=1 --deterministic --no-colour --plain 2>&1 \
             | grep "^END" ;;
     budget_spent)
+        mkdir -p ../HWUT_ROOT
         printf 'hwut {\n    language-setup { bash { extensions = [".sh"] interpreter = "bash" } }\n    app_defaults { diff_display_parameters { search_budget = 3 } }\n}\n' \
-               > ../hwut-root.conf
+               > ../HWUT_ROOT/setup.conf
         page test-d.sh '#     title = "d"\n' \
              'for i in 1 2 3; do echo "line $i of the new text"; done'
         mkdir GOOD

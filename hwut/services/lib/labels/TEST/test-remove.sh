@@ -42,7 +42,8 @@ WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
 cd "$WORK"
 
-printf 'hwut {\n}\n' > hwut-root.conf
+mkdir -p HWUT_ROOT
+printf 'hwut {\n}\n' > HWUT_ROOT/setup.conf
 
 face() {
     local cmd="$1"; shift
@@ -55,8 +56,8 @@ face() {
 }
 
 the_file() {
-    if [ -f HWUT/labels.txt ]; then
-        echo "THE FILE {"; sed 's/^/    /' < HWUT/labels.txt; echo "}"
+    if [ -f HWUT_ROOT/labels.txt ]; then
+        echo "THE FILE {"; sed 's/^/    /' < HWUT_ROOT/labels.txt; echo "}"
     else
         echo "THE FILE: absent -- no label exists"
     fi
@@ -110,7 +111,7 @@ comments)
     $ADD    meta    --glob "tree/storage/TEST/test-a.sh one" > /dev/null
     python3 - <<'PY'
 import re
-text = open("HWUT/labels.txt").read().splitlines()
+text = open("HWUT_ROOT/labels.txt").read().splitlines()
 out, seen = [], 0
 for line in text:
     if line.startswith("#"): out.append(line); continue
@@ -121,11 +122,11 @@ for line in text:
         out += ["# above the second entry", line]
     else:
         out.append(line)
-open("HWUT/labels.txt", "w").write("\n".join(out) + "\n")
+open("HWUT_ROOT/labels.txt", "w").write("\n".join(out) + "\n")
 PY
     #  E-98: the PREAMBLE -- everything down to the first '#___' rule --
     #  is the person's, kept verbatim; a note added there survives.
-    sed -i '1s/^/# my own note, above the rule\n/' HWUT/labels.txt
+    sed -i '1s/^/# my own note, above the rule\n/' HWUT_ROOT/labels.txt
     echo "--- as edited by hand"
     the_file
     echo "--- a label taken off an entry that is NOT the commented ones"

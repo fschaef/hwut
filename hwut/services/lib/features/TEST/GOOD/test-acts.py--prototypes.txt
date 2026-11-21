@@ -1,34 +1,34 @@
 >>> hwut.features.rename greet hello: a member
     renamed  greet -> hello
-        HWUT/feature-forest.csv
-        HWUT/feature-doc.txt
-        HWUT/feature-external-map.csv
+        HWUT_ROOT/feature-forest.csv
+        HWUT_ROOT/feature-doc.txt
+        HWUT_ROOT/feature-external-map.csv
         link renamed in p/TEST/test-p.sh
     exit 0
 >>> hwut.features.rename talk chat: an inner prototype
     renamed  talk -> chat
-        HWUT/feature-forest.csv
+        HWUT_ROOT/feature-forest.csv
     exit 0
 >>> hwut.features.rename port gate: an owner
     renamed  port -> gate
-        HWUT/feature-forest.csv
-        HWUT/feature-doc.txt
-        HWUT/feature-external-map.csv
+        HWUT_ROOT/feature-forest.csv
+        HWUT_ROOT/feature-doc.txt
+        HWUT_ROOT/feature-external-map.csv
         link renamed in p/TEST/test-p.sh
     exit 0
-    [HWUT/feature-forest.csv]
+    [HWUT_ROOT/feature-forest.csv]
     | gate : +show, own
     | +show : hello, bye, +chat
     | +chat : ask
     | +lone : solo
-    [HWUT/feature-doc.txt]
+    [HWUT_ROOT/feature-doc.txt]
     | [[+show]]
     | What every port shows.
     | [[hello]]
     | It says hello.
     | [[gate+bye]]
     | This port says goodbye.
-    [HWUT/feature-external-map.csv]
+    [HWUT_ROOT/feature-external-map.csv]
     | gate+hello ; REQ-1
     [p/TEST/test-p.sh] features = ["gate+hello", "gate+ask", "gate+bye", "own"]
 >>> hwut.features.retire: the last member
@@ -44,26 +44,26 @@
     REFUSED: 'bye': blocks of its instances stand: [[gate+bye]] -- take them out first
     exit 2
 >>> hwut.features.retire hello: the map names an instance
-    REFUSED: 'hello': an instance is named in 'HWUT/feature-external-map.csv': the outside was told it -- take its line out first
+    REFUSED: 'hello': an instance is named in 'HWUT_ROOT/feature-external-map.csv': the outside was told it -- take its line out first
     exit 2
 >>> hwut.features.retire hello: a member
     retired  hello (a member of '+show', in every instance)
-        HWUT/feature-forest.csv
-        HWUT/feature-doc.txt
+        HWUT_ROOT/feature-forest.csv
+        HWUT_ROOT/feature-doc.txt
     exit 0
-    [HWUT/feature-forest.csv]
+    [HWUT_ROOT/feature-forest.csv]
     | gate : +show, own
     | +show : bye, +chat
     | +chat : ask
     | +lone : solo
-    [HWUT/feature-doc.txt]
+    [HWUT_ROOT/feature-doc.txt]
     | [[+show]]
     | What every port shows.
     | [[hello:retired]]
     | It says hello.
     | [[gate+bye]]
     | This port says goodbye.
-    [HWUT/feature-external-map.csv]
+    [HWUT_ROOT/feature-external-map.csv]
     | own ; REQ-2
     [p/TEST/test-p.sh] features = ["gate+hello", "gate+ask", "gate+bye", "own"]
 >>> f/gate+hello

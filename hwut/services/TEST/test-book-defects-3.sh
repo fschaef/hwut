@@ -90,7 +90,7 @@
 # demo-root          D-43, D-45: 'hwut.support python' writes the template
 #                    root. MEASURED before: 'hwut { }'.
 # cov-dir            D-50: 'hwut.cov.run' takes '--cov-dir' beside '-o'.
-# labels-derived     D-56: '[derived]' in 'HWUT/labels.txt' -- recursive,
+# labels-derived     D-56: '[derived]' in 'HWUT_ROOT/labels.txt' -- recursive,
 #                    'missing in expression evaluation', a circle refused,
 #                    kept verbatim by a rewrite, '--label' reaches it.
 # play-choices       a test with several choices and none named is refused
@@ -124,8 +124,9 @@ WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
 mkdir -p "$WORK/TEST"
 cd "$WORK"
+mkdir -p HWUT_ROOT
 printf 'hwut {\n    language-setup { bash { extensions = [".sh"] interpreter = "bash" } }\n}\n' \
-       > hwut-root.conf
+       > HWUT_ROOT/setup.conf
 cd TEST
 shown() {
     sed -E "s|$WORK|\$WORK|g; s/[0-9]+\.[0-9]+ \[sec\]/<t> [sec]/g; s/, [0-9:]+$/, <t>/"
@@ -357,9 +358,9 @@ PYPE
     demo-root)
         "$BIN/hwut.support" python demo > /dev/null 2>&1
         "$BIN/hwut.config.show" --root-conf-template > template.txt 2>/dev/null
-        cmp -s demo/hwut-root.conf template.txt && echo "root: the template" \
+        cmp -s demo/HWUT_ROOT/setup.conf template.txt && echo "root: the template" \
             || echo "root: NOT the template"
-        grep -c "language-setup" demo/hwut-root.conf | sed 's/^/language-setup blocks: /' ;;
+        grep -c "language-setup" demo/HWUT_ROOT/setup.conf | sed 's/^/language-setup blocks: /' ;;
     cov-dir)
         "$BIN/hwut.cov.run" --help 2>&1 | grep -o -- "--cov-dir[^]]*" | head -1
         "$BIN/hwut.cov.run" --cov-dir 2>&1 | head -1 ;;
@@ -372,16 +373,18 @@ PYPE
         "$BIN/hwut.labels.create" slow --glob "test-m.sh" > /dev/null
         { echo; echo "[derived]"; echo "# what this machine cannot do"
           echo "needs-outside = needs-container OR needs-pwsh"
-          echo "quick = NOT needs-outside AND NOT slow"; } >> ../HWUT/labels.txt
+          mkdir -p ../HWUT_ROOT
+          echo "quick = NOT needs-outside AND NOT slow"; } >> ../HWUT_ROOT/labels.txt
         echo "== list"; "$BIN/hwut.labels.list"
         echo "== query quick"; "$BIN/hwut.labels.query" quick
         echo "== a rewrite keeps the section"
         "$BIN/hwut.labels.add" slow --glob "test-l.sh y" > /dev/null
-        sed -n '/^\[derived\]/,$p' ../HWUT/labels.txt
+        sed -n '/^\[derived\]/,$p' ../HWUT_ROOT/labels.txt
         echo "== remove a derived label"
         "$BIN/hwut.labels.remove" quick --glob "test-l.sh y"; echo "exit $?"
         echo "== a circle"
-        echo "a = b" >> ../HWUT/labels.txt; echo "b = a" >> ../HWUT/labels.txt
+        mkdir -p ../HWUT_ROOT
+        echo "a = b" >> ../HWUT_ROOT/labels.txt; echo "b = a" >> ../HWUT_ROOT/labels.txt
         "$BIN/hwut.labels.list" 2>&1 | shown; echo "exit ${PIPESTATUS[0]}" ;;
     play-choices)
         page test-two.sh 'choices = ["a", "b"]' 'echo "$1"'

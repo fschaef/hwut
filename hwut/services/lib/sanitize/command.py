@@ -201,7 +201,7 @@ class CContext:
                                                    error))
 
     def _do_root(self, word_tuple):
-        """RETURN: CDone -- 'hwut-root.conf' written into the directory
+        """RETURN: CDone -- 'HWUT_ROOT/setup.conf' written into the directory
                    named; NOTHING where a boundary already stands in or
                    above it, REFUSED where it is no directory or cannot
                    be written in."""
@@ -227,7 +227,7 @@ class CContext:
         return self._root_written(directory)
 
     def _do_sub_root(self, word_tuple):
-        """RETURN: CDone -- 'hwut-root.conf' written into the directory
+        """RETURN: CDone -- 'HWUT_ROOT/setup.conf' written into the directory
                    named, a project of its own inside a tree (RQ-1): a
                    walk from above stops there; NOTHING where the
                    directory is a root already, REFUSED where no tree
@@ -252,7 +252,7 @@ class CContext:
         return self._root_written(directory)
 
     def _root_written(self, directory):
-        """RETURN: CDone, DONE where the template 'hwut-root.conf' was
+        """RETURN: CDone, DONE where the template 'HWUT_ROOT/setup.conf' was
                    written into 'directory'; REFUSED where it cannot be
                    written in, FAULT where writing failed."""
         from ... import _boundary
@@ -278,7 +278,7 @@ class CContext:
         try:
             root_conf_directory(directory)
         except RootConfMissing:
-            return CDone(E_Done.REFUSED, "no 'hwut-root.conf' stands in or "
+            return CDone(E_Done.REFUSED, "no 'HWUT_ROOT/setup.conf' stands in or "
                                          "above it: not a tree of hwut's")
         if not os.path.isdir(path):
             return CDone(E_Done.NOTHING, "nothing stands there")

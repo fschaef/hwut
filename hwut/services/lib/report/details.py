@@ -60,7 +60,7 @@ DESCRIPTION
        metadata -- absence reported, never guessed (the house law).
 
        THE HEAD IS A FORMAL INPUT. It names WHERE the test stands --
-       the directory relative to 'hwut-root.conf', the one ground
+       the directory relative to 'HWUT_ROOT/setup.conf', the one ground
        every reader shares -- WHAT ran, and BOTH readings, which are
        two questions and get two fields:
 
@@ -379,10 +379,10 @@ def _both_text(good_db, out_db):
 def _place(directory):
     """
     RETURN: str, where this test stands, RELATIVE TO THE TREE'S
-            BOUNDARY -- the directory holding 'hwut-root.conf', which
+            BOUNDARY -- the directory holding 'HWUT_ROOT/setup.conf', which
             is the one place every reader of a pack shares. '.' where
             the test sits at the boundary itself.
-            "<no 'hwut-root.conf' above>" where the directory stands
+            "<no 'HWUT_ROOT/setup.conf' above>" where the directory stands
             in no tree: said, never guessed at, and never an absolute
             path -- a pack is MACHINE-FREE.
     """
@@ -392,7 +392,7 @@ def _place(directory):
     try:
         boundary = root_conf_directory(directory)
     except RootConfMissing:
-        return "<no 'hwut-root.conf' above>"
+        return "<no 'HWUT_ROOT/setup.conf' above>"
     relative = _p.relpath(_p.abspath(directory), boundary)
     return relative.replace(os.sep, "/")
 

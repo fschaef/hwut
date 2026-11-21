@@ -63,11 +63,11 @@ def coverage_setup_of(app, configuration, demand, entry):
         raise CoverageRefused(
             "'%s' has no language: coverage needs one to elect a tool. "
             "State 'language' in its header, or claim its extension in "
-            "'language-setup' of 'hwut-root.conf'." % app.source_file)
+            "'language-setup' of 'HWUT_ROOT/setup.conf'." % app.source_file)
     if entry is None:
         raise CoverageRefused(
             "no 'language-setup' entry stands for language '%s' of '%s' "
-            "in 'hwut-root.conf'" % (app.language, app.source_file))
+            "in 'HWUT_ROOT/setup.conf'" % (app.language, app.source_file))
     reader = framework_of(elect(app.language, entry.coverage))
     note   = None
     if configuration.build is not None and entry.coverage_target is None:

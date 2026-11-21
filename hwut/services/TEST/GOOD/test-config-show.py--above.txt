@@ -8,7 +8,7 @@ $ hwut.config.show test-push.py --no-default
                 caps {
                     timeout_sec = 10.0            # ../hwut.conf:3
                     cpu_sec = 5                   # hwut.conf:3
-                    memory_mb = 77                # hwut-root.conf:3
+                    memory_mb = 77                # HWUT_ROOT/setup.conf:3
                 }
             }
         }
@@ -23,7 +23,7 @@ $ hwut.config.show test-push.py --no-default
             - {
                 caps {
                     timeout_sec = 5.0             # hwut.conf:3
-                    memory_mb = 77                # hwut-root.conf:3
+                    memory_mb = 77                # HWUT_ROOT/setup.conf:3
                 }
             }
         }
@@ -38,7 +38,7 @@ $ hwut.config.show test-push.py --no-default --provenance
             - {
                 caps {
                     timeout_sec = 10.0            # ../hwut.conf:3
-                    memory_mb = 77                # hwut-root.conf:3
+                    memory_mb = 77                # HWUT_ROOT/setup.conf:3
                 }
             }
         }

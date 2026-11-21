@@ -1,13 +1,13 @@
 --- a directory where nothing listed stands, no root marker
 STATUS: 2
 STDOUT {
-    !! 'hwut-root.conf' stands at the sender's root and not here: this is not the
+    !! 'HWUT_ROOT/setup.conf' stands at the sender's root and not here: this is not the
        receiving root. REFUSED, '--force' or not; 'sh ../b.sh --here' applies anyway.
 }
 --- and '--force' does not make it the right directory
 STATUS: 2
 STDOUT {
-    !! 'hwut-root.conf' stands at the sender's root and not here: this is not the
+    !! 'HWUT_ROOT/setup.conf' stands at the sender's root and not here: this is not the
        receiving root. REFUSED, '--force' or not; 'sh ../b.sh --here' applies anyway.
 }
 --- '--here' does: the one word that says 'yes, this empty place'
@@ -34,7 +34,7 @@ STDOUT {
 --- a directory where ONE listed file stands, but not the anchor
 STATUS: 2
 STDOUT {
-    !! 'hwut-root.conf' stands at the sender's root and not here: this is not the
+    !! 'HWUT_ROOT/setup.conf' stands at the sender's root and not here: this is not the
        receiving root. REFUSED, '--force' or not; 'sh ../b.sh --here' applies anyway.
 }
 --- tampered after signing: a member no longer rebuilds to its sha256

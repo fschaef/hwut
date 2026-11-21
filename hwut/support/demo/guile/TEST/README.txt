@@ -13,7 +13,7 @@ The same demonstration as '../../python/TEST', choice for choice: every
 Python application has its Scheme application of the same stem, and its
 GOOD files are '.link's to the Python demo's -- the same choice prints the
 same text. Every '.scm' runs as 'guile --no-auto-compile <file> <choice>'
-(the 'scheme' interpreter of 'hwut-root.conf'); nothing is built. A file's
+(the 'scheme' interpreter of 'HWUT_ROOT/setup.conf'); nothing is built. A file's
 header ';; @hwut { }' is its whole configuration; 'hwut.conf' is what the
 directory says. Where a run is seeded by the clock or the scheduler its
 output differs from run to run, and every choice passes anyway.
@@ -101,7 +101,7 @@ and the test then writes
 NOT HERE, ON PURPOSE
 ------------------------------------------------------------------------------
 'language-setup', 'variant_group', 'procsitter', 'free_disk_min_mb'
-                  the root's alone ('hwut-root.conf')
+                  the root's alone ('HWUT_ROOT/setup.conf')
 'build'           a compiled test application's word: Guile interprets,
                   so this directory has no Makefile
 '##! unaccepted', '##! constraint-violation'

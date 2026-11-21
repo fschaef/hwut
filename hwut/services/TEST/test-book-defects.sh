@@ -60,11 +60,11 @@
 #                  put only on a terminal, so the asking function is
 #                  called with stdin closed.
 # cov-outside      D-21: 'hwut.cov.run --dont-ask' where no
-#                  'hwut-root.conf' stands: REFUSED, and NOTHING written;
+#                  'HWUT_ROOT/setup.conf' stands: REFUSED, and NOTHING written;
 #                  it left an empty 'hwut.coverage/' behind.
 # jobs-help        D-22: what '--jobs' says of its absence is what the
 #                  run does -- the number of CPUs; it said 'unbounded'.
-# help-outside     D-11: 'hwut.help' where no 'hwut-root.conf' stands -- the
+# help-outside     D-11: 'hwut.help' where no 'HWUT_ROOT/setup.conf' stands -- the
 #                  place right after installing: INSTALLED, the version,
 #                  where a tree begins; status 0. It refused, status 2.
 # refused-remedy   D-6: a refusal that names its remedy (' => ') ends on
@@ -87,7 +87,8 @@ esac
 WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
 cd "$WORK"
-printf 'hwut {\n}\n' > hwut-root.conf
+mkdir -p HWUT_ROOT
+printf 'hwut {\n}\n' > HWUT_ROOT/setup.conf
 
 page() {            # <path> <choices block> ; body on stdin
     mkdir -p "$(dirname "$1")"
@@ -168,7 +169,7 @@ help-outside)
     ;;
 
 refused-remedy)
-    echo "--- no 'HWUT/feature-forest.csv': the remedy is another command"
+    echo "--- no 'HWUT_ROOT/feature-forest.csv': the remedy is another command"
     said hwut.report.features | sed "s|$WORK|<tree>|"
     page a/TEST/test-r.py 'one { }' <<'EOF2'
 print("x")
@@ -213,7 +214,8 @@ EOF
     ;;
 
 coverage-ground)
-    cp "$BIN/../hwut-root.conf" hwut-root.conf
+    mkdir -p HWUT_ROOT
+    cp "$BIN/../HWUT_ROOT/setup.conf" HWUT_ROOT/setup.conf
     page a/TEST/test-m.py 'one { }' <<'EOF'
 print("hello")
 EOF
@@ -279,7 +281,8 @@ if sys.argv[1] == "first": one()
 else:                      two()
 EOF
     #  THE TREE'S OWN ROOT CONF: it names the coverage tool of python.
-    cp "$BIN/../hwut-root.conf" hwut-root.conf
+    mkdir -p HWUT_ROOT
+    cp "$BIN/../HWUT_ROOT/setup.conf" HWUT_ROOT/setup.conf
     page a/TEST/test-m.py 'first { }  second { }' < a_TEST_body
     rm a_TEST_body
     cd a/TEST

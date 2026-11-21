@@ -32,7 +32,7 @@ modules ('(system foreign)', SRFI-1, -9, -41, '(ice-9 ...)'), and libvterm at
 run time for '(hwut vterm)'.
 
 A Scheme test starts (hwut runs it by the 'scheme' interpreter of
-'hwut-root.conf', 'guile --no-auto-compile <test> <choice>'):
+'HWUT_ROOT/setup.conf', 'guile --no-auto-compile <test> <choice>'):
 
     ;; @hwut {
     ;;     choices = ["plain", "tricky"]
@@ -118,7 +118,7 @@ says, module by module, what the language made of each):
 
 3  WHAT IT WANTS
 ------------------------------------------------------------------------------
-GNU Guile 3.0 (measured on 3.0.9) -- 'guile' on the PATH, as hwut-root.conf
+GNU Guile 3.0 (measured on 3.0.9) -- 'guile' on the PATH, as HWUT_ROOT/setup.conf
 names it -- and, for '(hwut vterm)' alone, libvterm AT RUN TIME (Debian: apt
 install libvterm0, as for Python). No package beyond Guile: the library is
 loaded by '(system foreign)' -- 'libvterm.so.0', or the file HWUT_LIBVTERM

@@ -7,7 +7,7 @@ port-b+ask    +talk           ('user',)
 port-a        None            ()
 solo          None            ()
 x+solo        +lone (only '[[+lone]]' stands)
-undeclared    FAULT: HWUT/feature-doc.txt:1: '+nothing' heads a block and no prototype '+nothing' is declared
-no instance   FAULT: HWUT/feature-doc.txt:1: 'port-c+greet' heads a block and names no instance of the forest -- did you mean 'port-a+greet' or 'port-b+greet'?
-member twice  FAULT: HWUT/feature-doc.txt:3: 'greet' is documented twice (line 1)
+undeclared    FAULT: HWUT_ROOT/feature-doc.txt:1: '+nothing' heads a block and no prototype '+nothing' is declared
+no instance   FAULT: HWUT_ROOT/feature-doc.txt:1: 'port-c+greet' heads a block and names no instance of the forest -- did you mean 'port-a+greet' or 'port-b+greet'?
+member twice  FAULT: HWUT_ROOT/feature-doc.txt:3: 'greet' is documented twice (line 1)
 <hwut-end>

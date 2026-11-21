@@ -156,7 +156,7 @@ def relation_of_tree(root, interview_runner=None, fault_list=None):
             entered (its configuration its own), one with a forest of its
             own not ('forest_gate_of').
 
-    Raises RootConfMissing where no 'hwut-root.conf' bounds the tree.
+    Raises RootConfMissing where no 'HWUT_ROOT/setup.conf' bounds the tree.
     """
     return relation_of_exploration(
         root, explore_tree_stream(root, interview_runner, fault_list,

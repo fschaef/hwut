@@ -37,7 +37,7 @@ relative to '--directory' (the current directory where none is given):
                                  is stained 'constraint'
     run    <dir> <target>        the project's own verb (E-7), through
                                  'hwut.execute', in <dir> and below
-    root   [<dir>]               no 'hwut-root.conf' stands in or above
+    root   [<dir>]               no 'HWUT_ROOT/setup.conf' stands in or above
                                  <dir>: the file is written there, with
                                  its 'language-setup' table (E-25).
                                  WITH NO <dir> IT ASKS: a menu of the
@@ -47,7 +47,7 @@ relative to '--directory' (the current directory where none is given):
                                  and 'q' to quit
                                  BELOW A ROOT IT REFUSES, naming 'sub-root'
     sub-root <dir>               a bubble of its own inside a tree
-                                 (RQ-1): 'hwut-root.conf' is written into
+                                 (RQ-1): 'HWUT_ROOT/setup.conf' is written into
                                  <dir> though a root stands above; a walk
                                  from above stops there with a NOTE. No
                                  judgement proposes it
@@ -128,14 +128,14 @@ class CIssueKind:
 #  first, the rubbish a run makes again after it.
 ISSUE_KIND_TUPLE = (
     CIssueKind("directory-moved", "move", (
-        "DIRECTORY MOVED: 'HWUT/directories.txt' records a TEST directory",
+        "DIRECTORY MOVED: 'HWUT_ROOT/directories.txt' records a TEST directory",
         "that does not stand, and ONE directory holding a book stands that",
         "the roster does not know (CR-3) -- moved, and nothing run since.",
         "'move' replaces the roster entry and carries the labels' targets",
         "after it; the books moved with the directory. To drop it instead,",
         "write 'forget <dir>'.")),
     CIssueKind("directory-gone", "forget", (
-        "DIRECTORY GONE: 'HWUT/directories.txt' records a TEST directory",
+        "DIRECTORY GONE: 'HWUT_ROOT/directories.txt' records a TEST directory",
         "that does not stand; the run fails it (CR-2).",
         "'forget' drops the roster entry and the labels' targets below it.",
         "WAS IT MOVED? Then 'move <old> <new>' carries the labels instead;",
@@ -208,9 +208,9 @@ ISSUE_KIND_TUPLE = (
         "'run' calls it through 'hwut.execute' in the directory and every",
         "directory below that binds it.")),
     CIssueKind("root", "root", (
-        "NO BOUNDARY: no 'hwut-root.conf' stands in or above this directory.",
+        "NO BOUNDARY: no 'HWUT_ROOT/setup.conf' stands in or above this directory.",
         "A tree needs one: it is the root every path is relative to, and",
-        "the place 'HWUT/labels.txt' stands (E-25).",
+        "the place 'HWUT_ROOT/labels.txt' stands (E-25).",
         "'root' writes the file, with its 'language-setup' table, into the",
         "directory named. ONE line stands; to place it elsewhere, comment",
         "that line and uncomment another -- or name any directory.")),
@@ -579,6 +579,20 @@ def orphan_issue_list(directory, app_set):
     return [issue_db[k] for k in sorted(issue_db)], note_list
 
 
+class CCommandNote:
+    """A note that spells a command (E-234 CR-6): 'pattern' takes the
+    entity as its line spells it and 'word', the new name or place -- so
+    the command runs where the line does."""
+
+    def __init__(self, pattern, word):
+        """RETURN: None."""
+        self.pattern, self.word = pattern, word
+
+    def __call__(self, entity):
+        """RETURN: str, the note for the line spelling 'entity'."""
+        return self.pattern % (entity, self.word)
+
+
 def _note_renames(issue_db, case_set, offered, directory):
     """
     RETURN: None. Every orphan in 'issue_db' that has ONE likely new name
@@ -609,8 +623,7 @@ def _note_renames(issue_db, case_set, offered, directory):
             wanted = set(c for t, c in case_set if t == old and c is not None)
             pair   = [t for t in fresh_list if offered_db[t] == wanted]
             if len(pair) != 1: continue
-            note = (lambda entity, new=pair[0]:
-                        "renamed? hwut.rename %s -to %s" % (entity, new))
+            note = CCommandNote("renamed? hwut.rename %s -to %s", pair[0])
         else:
             test, old = key
             orphan_list = [k for k in issue_db
@@ -619,8 +632,8 @@ def _note_renames(issue_db, case_set, offered, directory):
             fresh_choice = sorted(c for c in offered_db.get(test, ())
                                   if (test, c) not in case_set)
             if len(orphan_list) != 1 or len(fresh_choice) != 1: continue
-            note = (lambda entity, new=fresh_choice[0]:
-                        "renamed? hwut.rename %s -to %s" % (entity, new))
+            note = CCommandNote("renamed? hwut.rename %s -to %s",
+                                fresh_choice[0])
         issue_db[key] = CIssue(issue.kind, issue.directory, issue.word_tuple,
                                payload=issue.payload, note=note)
 
@@ -669,10 +682,9 @@ def directory_issue_tuple(start, exploration, wish=None):
                 if os.path.basename(os.path.dirname(d)) == name]
         note = None
         if len(pair) == 1:
-            note = (lambda entity, new=pair[0]:
-                        "moved? hwut.sanitize move %s %s"
-                        % (entity, shown(os.getcwd(), new)
-                                   .replace(os.sep, "/")))
+            note = CCommandNote("moved? hwut.sanitize move %s %s",
+                                shown(os.getcwd(), pair[0])
+                                .replace(os.sep, "/"))
         issue_list.append(CIssue("directory-gone", gone, (), note=note))
     return issue_list, []
 

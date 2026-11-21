@@ -47,7 +47,8 @@ law)
 #  THE TREE'S BOUNDARY. Every face ASCENDS collecting 'hwut.conf'
 #  until it meets this file; a tree without one is refused, so a
 #  fixture states its own. Empty says only 'the tree ends here'.
-printf 'hwut {\n}\n' > hwut-root.conf
+mkdir -p HWUT_ROOT
+printf 'hwut {\n}\n' > HWUT_ROOT/setup.conf
 
 echo "THE ENUM (services/_exit.py):"
 python3 - <<'PYEOF'
@@ -135,7 +136,8 @@ signal)
     #  interpreter would print is the face's innards, and the person
     #  asked it to stop, not to read them.
     mkdir -p tree/suite/TEST/GOOD
-    printf 'hwut {\n}\n' > tree/hwut-root.conf
+    mkdir -p tree/HWUT_ROOT
+    printf 'hwut {\n}\n' > tree/HWUT_ROOT/setup.conf
     printf 'hwut {\n    on_entry = "true"\n    on_exit  = "true"\n}\n' \
         > tree/suite/TEST/hwut.conf
     printf '#!/bin/bash\n# @hwut { title = "Slow" }\nsleep 30\necho "<hwut-end>"\n' \

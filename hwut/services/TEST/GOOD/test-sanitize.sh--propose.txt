@@ -28,7 +28,8 @@ STDOUT {
 }
 '-o' writes what stdout carries: yes
 STANDING {
-    hwut-root.conf
+    HWUT_ROOT
+    HWUT_ROOT/setup.conf
     suite
     suite/TEST
     suite/TEST/GOOD

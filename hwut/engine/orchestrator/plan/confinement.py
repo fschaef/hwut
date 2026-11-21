@@ -8,7 +8,7 @@ PURPOSE: AN UNENFORCEABLE CAP REFUSES THE TEST (exploration R-48, R-80)
     procsitter's board ------.
                              +--> uncapped_tuple() --> the refusal,
     the case's caps ---------'        minus what          by cap name,
-                                  'hwut-root.conf'        with the line
+                                  'HWUT_ROOT/setup.conf'        with the line
                                     acknowledges          that lifts it
 
 WHAT A CASE REQUIRES. The five caps that carry a default are in force
@@ -26,7 +26,7 @@ from ...bookkeeper.api  import CAPS_FIELD_DB
 from ...procsitter.api  import (INSTALL_DB, capability_db,
                                 platform_name, utility_of)
 
-ROOT_CONF_NAME = "hwut-root.conf"
+from hwut.auxiliary.no_entry import ROOT_CONF_NAME       # noqa: E402  (E-235)
 
 #  The opening of every refusal made here: the display groups by reason,
 #  and 'hwut.help' may recognise the kind by it.
@@ -90,7 +90,7 @@ def missing_utility_tuple(uncapped, platform):
 
 def acknowledgement_of(uncapped, platform):
     """
-    RETURN: str, the 'hwut-root.conf' entry that acknowledges the caps
+    RETURN: str, the 'HWUT_ROOT/setup.conf' entry that acknowledges the caps
             'uncapped' on 'platform', as it is written there.
     """
     return "procsitter { %s { %s } }" % (
@@ -102,7 +102,7 @@ def reason_of(uncapped, platform):
     RETURN: str, the one-line refusal for the caps 'uncapped': what is
             not enforceable where, the utility whose absence is the
             cause where one is, and behind ' => ' what lifts it -- the
-            install, the 'hwut-root.conf' entry that acknowledges.
+            install, the 'HWUT_ROOT/setup.conf' entry that acknowledges.
     """
     utility_tuple = missing_utility_tuple(uncapped, platform)
     head = "%s %s %s '%s'" % (

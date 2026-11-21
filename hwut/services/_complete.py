@@ -303,12 +303,13 @@ def _choices(path):
 def _root_directory():
     """
     RETURN: str, the nearest directory at or above the current one that
-            holds 'hwut-root.conf'.
+            holds 'HWUT_ROOT/setup.conf'.
             None, where none does.
     """
     here = os.getcwd()
     while True:
-        if os.path.isfile(os.path.join(here, "hwut-root.conf")): return here
+        if os.path.isfile(os.path.join(here, "HWUT_ROOT", "setup.conf")):
+            return here
         parent = os.path.dirname(here)
         if parent == here: return None
         here = parent
@@ -317,13 +318,13 @@ def _root_directory():
 def _labels(word):
     """
     RETURN: list[str], the labels that stand in the tree's
-            'HWUT/labels.txt' -- and 'all', 'meta' -- that start with
+            'HWUT_ROOT/labels.txt' -- and 'all', 'meta' -- that start with
             'word'.
     """
     name_set = set(STANDARD_LABEL_TUPLE)
     root = _root_directory()
     if root is not None:
-        path = os.path.join(root, "HWUT/labels.txt")
+        path = os.path.join(root, "HWUT_ROOT/labels.txt")
         if os.path.isfile(path):
             with open(path, errors="replace") as fh:
                 for line in fh:

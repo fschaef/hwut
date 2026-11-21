@@ -681,7 +681,7 @@ def orchestrate(root, wish, build_interview=None, label_view=None):
 
     The Bookkeeper of each directory is made HERE and handed down,
     and only where the wish asks the base. THE LABEL VIEW IS NOT: the
-    engine never opens 'HWUT/labels.txt' -- a face builds it
+    engine never opens 'HWUT_ROOT/labels.txt' -- a face builds it
     ('services/lib/labels.view_at') and hands it in, and 'None' means no
     label knowledge reaches the selection (disc-8).
 
@@ -850,7 +850,7 @@ def pending_move_note_tuple(tree_plan):
 
 def roster_gone_tuple(root, wish):
     """
-    RETURN: tuple of str, the TEST directories 'HWUT/directories.txt'
+    RETURN: tuple of str, the TEST directories 'HWUT_ROOT/directories.txt'
             records that do not stand, below 'root' and wanted by the
             wish's directory rules -- relative to 'root', '/'-separated,
             sorted (CR-2). Empty where no roster stands, and where the wish

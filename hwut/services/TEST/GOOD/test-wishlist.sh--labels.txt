@@ -39,6 +39,6 @@ STDOUT {
 --- a label that does not stand, refused by name
 STATUS: 2
 STDOUT {
-    REFUSED: no label 'cocnern' stands in 'HWUT/labels.txt'
+    REFUSED: no label 'cocnern' stands in 'HWUT_ROOT/labels.txt'
 }
 <hwut-end>

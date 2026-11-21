@@ -69,7 +69,7 @@ compiler.pype     'same = true' -- serial and parallel share one GOOD;
 NOT HERE, ON PURPOSE
 ------------------------------------------------------------------------------
 'language-setup', 'variant_group', 'procsitter', 'free_disk_min_mb'
-                  the root's alone ('hwut-root.conf', which
+                  the root's alone ('HWUT_ROOT/setup.conf', which
                   'hwut.support python' writes beside this directory)
 'build'           a compiled test application's word: the demonstrations
                   over compiled languages

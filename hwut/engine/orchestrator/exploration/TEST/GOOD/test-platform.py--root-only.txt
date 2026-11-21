@@ -1,10 +1,10 @@
-hwut-root.conf:  hwut {  }
+HWUT_ROOT/setup.conf:  hwut {  }
 TEST/hwut.conf:  hwut { platform = [ "local" ] }
 sub/hwut.conf:   hwut { platform = [ "local" ] }
     TEST         platform_tuple=(('local', {}),)
                  runs not: 1 conf fault(s)
-                 FAULT hwut.conf:1:7: VOCABULARY: 'platform' outside 'hwut-root.conf': the platforms are defined once, in the outermost root; below it a conf says 'requires = [ <tool> ]' (intend/26 o-53)
+                 FAULT hwut.conf:1:7: VOCABULARY: 'platform' outside 'HWUT_ROOT/setup.conf': the platforms are defined once, in the outermost root; below it a conf says 'requires = [ <tool> ]' (intend/26 o-53)
     sub/TEST     platform_tuple=(('local', {}),)
                  runs not: 1 conf fault(s)
-    FAULT sub/hwut.conf:1:7: VOCABULARY: 'platform' outside 'hwut-root.conf': the platforms are defined once, in the outermost root; below it a conf says 'requires = [ <tool> ]' (intend/26 o-53)
+    FAULT sub/hwut.conf:1:7: VOCABULARY: 'platform' outside 'HWUT_ROOT/setup.conf': the platforms are defined once, in the outermost root; below it a conf says 'requires = [ <tool> ]' (intend/26 o-53)
 <hwut-end>

@@ -22,7 +22,7 @@ PATH completes from then on:
     hwut.play <TAB>                the test applications here
     hwut.play test-a.sh <TAB>      that application's choices
     hwut.run test-a.sh <TAB>           the same: the short form
-    hwut.run -l <TAB>                  the labels of 'HWUT/labels.txt'
+    hwut.run -l <TAB>                  the labels of 'HWUT_ROOT/labels.txt'
     hwut.execute <TAB>                 the targets this 'hwut.conf' binds
     hwut.run --dir <TAB>               directories
 

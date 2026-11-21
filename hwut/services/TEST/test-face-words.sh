@@ -28,7 +28,7 @@
 # the face answers is printed. Three of them were measured otherwise
 # first (G-13, G-14) -- the parser held and a face did not.
 #
-# boundary          a tree without 'hwut-root.conf' (E-25, amended
+# boundary          a tree without 'HWUT_ROOT/setup.conf' (E-25, amended
 #                   2026-10-08): every face refuses in one line and
 #                   HINTS at 'hwut.sanitize root [dir]'. With no
 #                   directory that command ASKS -- a menu of the
@@ -147,8 +147,9 @@ WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
 mkdir "$WORK/TEST"
 cd "$WORK/TEST"
+mkdir -p ../HWUT_ROOT
 printf 'hwut {\n    language-setup { bash { extensions = [".sh"] interpreter = "bash" } }\n}\n' \
-       > ../hwut-root.conf
+       > ../HWUT_ROOT/setup.conf
 
 page() {                # <file> <header lines> <body line>
     printf '#! /bin/bash\n# @hwut {\n%b# }\n%s\necho "<hwut-end>"\n' "$2" "$3" > "$1"
@@ -253,8 +254,9 @@ case "$1" in
             echo
         done ;;
     coverage_serial)
+        mkdir -p ../HWUT_ROOT
         printf 'hwut {\n    language-setup { python { extensions = [".py"] interpreter = "python3" coverage = ["coverage"] } }\n}\n' \
-               > ../hwut-root.conf
+               > ../HWUT_ROOT/setup.conf
         printf 'def f(x):\n    if x > 0:\n        return "pos"\n    return "neg"\n' > unit.py
         cat > test-a.py <<'PAGE'
 # @hwut {
@@ -284,7 +286,7 @@ print(sum(1 for a, b in zip(span, span[1:]) if b[0] < a[1]) and 'overlap' or 'on
     boundary)
         #  A PROJECT WITH ITS TOP MARKED, AND NO BOUNDARY: the one the
         #  other choices stand under is taken away.
-        rm ../hwut-root.conf
+        rm ../HWUT_ROOT/setup.conf
         mkdir -p ../proj/sub/TEST ../proj/.git
         cd ../proj/sub/TEST
         page test-a.sh '#     title = "a"\n' 'echo "a"'
@@ -319,7 +321,7 @@ PYTHON
         sed -n '/NO BOUNDARY/,$p' proposal.txt | sed 's/^/    /'
         echo "== hwut.sanitize.apply proposal.txt"
         face hwut.sanitize.apply proposal.txt 2>&1 | shown | grep "root\|Done"
-        echo "    written: $(cd ../.. && ls hwut-root.conf), $(grep -c extensions ../../hwut-root.conf) 'extensions' lines"
+        echo "    written: $(cd ../.. && ls HWUT_ROOT/setup.conf), $(grep -c extensions ../../HWUT_ROOT/setup.conf) 'extensions' lines"
         echo "== a face, now"
         face hwut.report.list < /dev/null 2>&1 | shown
         echo "STATUS: ${PIPESTATUS[0]}"

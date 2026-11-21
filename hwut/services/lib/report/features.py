@@ -9,12 +9,12 @@ PURPOSE: THE 'hwut.report.features' COMMAND LINE -- print what the tree
                          [--html=<file>] [--ods=<file>] [--cov-html=<dir>]
                          [--directory=<path>]
 
-THE STATEMENTS READ, beside the 'hwut-root.conf' that begins the features:
+THE STATEMENTS READ, in the 'HWUT_ROOT/' that begins the features:
 
-    HWUT/feature-forest.csv         the place: '<id> : <child>, ...'
-    HWUT/feature-doc.txt            the explanation: '[[<id>]]' blocks,
+    HWUT_ROOT/feature-forest.csv         the place: '<id> : <child>, ...'
+    HWUT_ROOT/feature-doc.txt            the explanation: '[[<id>]]' blocks,
                                     the retired, the audiences
-    HWUT/feature-external-map.csv   the outside's names, where it stands
+    HWUT_ROOT/feature-external-map.csv   the outside's names, where it stands
     a test's '@hwut { }' block      features = ["<id>", ...]
 
     Where no forest stands, nothing is reported => hwut.features.init.

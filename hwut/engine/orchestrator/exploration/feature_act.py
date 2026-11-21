@@ -22,22 +22,21 @@ from .feature_external import external_of_text, ExternalFault
 from .feature_link_edit import (links_planned, write_atomic,
                                 _LINK_LIST_RE, _QUOTED_RE)
 from .finder           import (FOREST_FILE_NAME, DOC_FILE_NAME,
-                               EXTERNAL_FILE_NAME, CONF_NAME,
-                               ROOT_CONF_NAME)
+                               EXTERNAL_FILE_NAME, CONF_NAME)
 from .suggestion       import did_you_mean
 
 FOREST_HEAD = (
-    "HWUT/feature-forest.csv -- THE FEATURE TREES (spec 43). One line per",
+    "HWUT_ROOT/feature-forest.csv -- THE FEATURE TREES (spec 43). One line per",
     "feature that has children:",
     "",
     "    <feature-id> : <child-id>, <child-id>, ...",
     "",
     "A feature id is '[A-Za-z0-9_-]+'. An id standing as no child is a ROOT.",
     "Every id stands once as a child (one parent); no circle. What a feature",
-    "is, is said in 'HWUT/feature-doc.txt'; a retired one stands in no line.",
+    "is, is said in 'HWUT_ROOT/feature-doc.txt'; a retired one stands in no line.",
 )
 DOC_HEAD = (
-    "HWUT/feature-doc.txt -- WHAT THE FEATURES ARE (spec 43). One block per",
+    "HWUT_ROOT/feature-doc.txt -- WHAT THE FEATURES ARE (spec 43). One block per",
     "feature, headed '[[<id>]]' -- or '[[<id> to <audience>, ...]]',",
     "'[[<id> not <audience>, ...]]', '[[<id>:retired]]'; '[[CUSTOMERS]]'",
     "declares the audiences. A block: an optional 'documents:' line (paths",
@@ -195,10 +194,11 @@ def _external_renamed(text, old, new):
 
 def _conf_links_planned(top, map_f):
     """RETURN: dict, path -> new text: every 'hwut.conf' and
-    'hwut-root.conf' below 'top' (a bubble with a forest of its own not
+    'HWUT_ROOT/setup.conf' below 'top' (a bubble with a forest of its own not
     entered) whose 'features = [...]' lists 'map_f' changes -- the links
     of the applications a conf declares."""
     from .tree_explorer import forest_owner_f
+    from hwut.auxiliary.no_entry import root_conf_path_f
     plan_db = {}
     for here, directory_list, file_list in os.walk(top):
         directory_list[:] = sorted(
@@ -206,8 +206,8 @@ def _conf_links_planned(top, map_f):
             and each not in ("TMP", "OUT", "__pycache__")
             and not forest_owner_f(os.path.join(here, each)))
         for name in file_list:
-            if name not in (CONF_NAME, ROOT_CONF_NAME): continue
             path = os.path.join(here, name)
+            if name != CONF_NAME and not root_conf_path_f(path): continue
             before = _text_of(path)
 
             def quoted(match):

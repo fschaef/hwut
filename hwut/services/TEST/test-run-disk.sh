@@ -11,7 +11,7 @@
 #
 # THE DISK GUARD SEEN FROM THE RUN (scheduler S-5, exploration R-99,
 # DEFECTS-hwut-78e11f7 D-24). 'hwut { free_disk_min_mb = <n> }' in
-# 'hwut-root.conf' is every disk's floor; a case needs twice its
+# 'HWUT_ROOT/setup.conf' is every disk's floor; a case needs twice its
 # 'caps { disk_mb }' free above it.
 #
 # short   a floor above anything a disk holds: every case 'no-disk
@@ -51,8 +51,9 @@ mkdir "$WORK/TEST"
 cd "$WORK/TEST"
 
 conf() {                # <line of the root conf's own>
+    mkdir -p ../HWUT_ROOT
     printf 'hwut {\n    language-setup { bash { extensions = [".sh"] interpreter = "bash" } }\n%s}\n' \
-           "$1" > ../hwut-root.conf
+           "$1" > ../HWUT_ROOT/setup.conf
 }
 shown() {               # stdin -> stdout: no machine-chosen word
     sed "s|$WORK|\$WORK|g; s/free [0-9]* MB/free <n> MB/g; \

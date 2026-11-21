@@ -131,7 +131,7 @@ EXAMPLE_DB = {
         "hwut.accept.propose -o changes.txt\n"
         "hwut.accept.apply changes.txt",
     "hwut.sanitize":
-        "hwut.sanitize root           asks where 'hwut-root.conf' shall stand\n"
+        "hwut.sanitize root           asks where 'HWUT_ROOT/setup.conf' shall stand\n"
         "hwut.sanitize remove TMP        the transient space of this directory",
     "hwut.sanitize.propose":
         "hwut.sanitize.propose -o heal.txt\n"

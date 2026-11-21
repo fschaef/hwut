@@ -1,5 +1,5 @@
-hwut-root.conf:  hwut { platform = [ { kind = "container", image = "x" } ] }
+HWUT_ROOT/setup.conf:  hwut { platform = [ { kind = "container", image = "x" } ] }
     TEST         platform_tuple=None
                  runs not: 1 conf fault(s)
-    FAULT hwut-root.conf:2:19: VOCABULARY: a 'platform' entry without 'name'
+    FAULT HWUT_ROOT/setup.conf:2:19: VOCABULARY: a 'platform' entry without 'name'
 <hwut-end>

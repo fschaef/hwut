@@ -7,7 +7,7 @@ PURPOSE: 'hwut.cov.formats' -- the table of coverage tools, formats and
 
     hwut.cov.formats            the table. Which tool serves a language
                                 is not the registry's to say: it stands
-                                in 'language-setup' of 'hwut-root.conf'
+                                in 'language-setup' of 'HWUT_ROOT/setup.conf'
     hwut.cov.formats --help     this text
 
 The registry is the ONE author of the table; a machine that lacks a
@@ -30,7 +30,7 @@ def formats_text():
             else: every tool this build READS with its format and, for
             an alias, the reader it reads through. WHICH TOOL SERVES A
             LANGUAGE is not the registry's to say (coverage D-26): it
-            stands in 'language-setup' of the tree's 'hwut-root.conf'.
+            stands in 'language-setup' of the tree's 'HWUT_ROOT/setup.conf'.
     """
     readable  = set(registered_tuple())
     line_list = ["TOOLS READ BY THIS BUILD",
@@ -42,7 +42,7 @@ def formats_text():
                          % (tool, reader.source_format,
                             through.name if through is not None else "-"))
     line_list += ["", "The candidates per language stand in "
-                      "'language-setup' of 'hwut-root.conf'."]
+                      "'language-setup' of 'HWUT_ROOT/setup.conf'."]
     return "\n".join(line_list)
 
 

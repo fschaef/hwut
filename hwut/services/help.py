@@ -52,7 +52,7 @@ DESCRIPTION
        selected case under a cap the procsitter cannot enforce on this
        platform and the root conf does not acknowledge -- the caps, the
        utility that is missing where one is ('psutil'), how it is
-       installed, and the 'hwut-root.conf' entry that acknowledges.
+       installed, and the 'HWUT_ROOT/setup.conf' entry that acknowledges.
        Judged now, by the gate the run asks; no book holds the case.
 
        A FILE THAT IS NOT SEEN is ignored: the default set ('*.txt',
@@ -403,8 +403,8 @@ def unregistered_explanation_line_list(pair_list):
     """
     paragraph_list = [
         "Each test run below links, in its '@hwut { }' block, a feature "
-        "id that stands in no line of 'HWUT/feature-forest.csv' and no "
-        "block of 'HWUT/feature-doc.txt' -- a misspelt id, a feature "
+        "id that stands in no line of 'HWUT_ROOT/feature-forest.csv' and no "
+        "block of 'HWUT_ROOT/feature-doc.txt' -- a misspelt id, a feature "
         "never written down, or one that was retired. It is NOT a "
         "failure: the test runs and is judged. But the link proves "
         "nothing anybody can find.",
@@ -438,7 +438,7 @@ def nonsense_explanation_line_list(case_list):
         "-- a test run that proves nothing anybody claimed is either a "
         "claim nobody wrote down, or a test nobody needs.",
         HEAL_OPENER_STR + "write the feature the test run proves into "
-        "'HWUT/feature-doc.txt' and the forest, and name it under "
+        "'HWUT_ROOT/feature-doc.txt' and the forest, and name it under "
         "'features' in the test's '@hwut { }' block; or link the test "
         "run to a feature that stands already; or remove the test "
         "('hwut.remove')."]
@@ -502,11 +502,11 @@ def introduction_line_list(case_n, failure_n):
 
 def installed_line(directory):
     """
-    RETURN: str, 'INSTALLED: hwut <version> -- no 'hwut-root.conf' in or
+    RETURN: str, 'INSTALLED: hwut <version> -- no 'HWUT_ROOT/setup.conf' in or
                  above '<directory>' => hwut.sanitize root', where no
                  tree bounds 'directory' -- what a person reads right
                  after installing.
-            None, where a 'hwut-root.conf' bounds it.
+            None, where a 'HWUT_ROOT/setup.conf' bounds it.
     """
     from ..engine.orchestrator.exploration.tree_explorer \
                                         import RootConfMissing, \
@@ -515,7 +515,7 @@ def installed_line(directory):
         root_conf_directory(directory)
     except RootConfMissing:
         import hwut.adm.version as version
-        return ("INSTALLED: hwut %s -- no 'hwut-root.conf' in or above "
+        return ("INSTALLED: hwut %s -- no 'HWUT_ROOT/setup.conf' in or above "
                 "'%s' => hwut.sanitize root"
                 % (version.string, os.path.abspath(directory)))
     return None

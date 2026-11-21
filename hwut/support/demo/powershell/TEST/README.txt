@@ -120,7 +120,7 @@ DEMO-POWERSHELL-2).
 NOT HERE, ON PURPOSE
 ------------------------------------------------------------------------------
 'language-setup', 'variant_group', 'procsitter', 'free_disk_min_mb'
-                  the root's alone ('hwut-root.conf')
+                  the root's alone ('HWUT_ROOT/setup.conf')
 'build'           a compiled test application's word: pwsh runs a
                   '.ps1' as it stands
 '##! unaccepted', '##! constraint-violation'
