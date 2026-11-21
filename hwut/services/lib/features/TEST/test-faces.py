@@ -63,14 +63,14 @@ def run_init():
     """RETURN: None. 'hwut.features.init'."""
     root = fx.tree()
     fx.call("hwut.features.init", init, [], root)
-    for each in ("hwut-feature-forest.csv", "hwut-feature-doc.dat"):
+    for each in ("HWUT/feature-forest.csv", "HWUT/feature-doc.txt"):
         print("    [%s]" % each)
         with open(os.path.join(root, each)) as fh:
             for line in fh.read().split("\n"):
                 if line: print("    | %s" % line)
-    fx.shown(root, "hwut-feature-external-map.csv")
+    fx.shown(root, "HWUT/feature-external-map.csv")
     fx.call("again: both stand", init, [], root)
-    os.remove(os.path.join(root, "hwut-feature-doc.dat"))
+    os.remove(os.path.join(root, "HWUT/feature-doc.txt"))
     fx.call("the doc file gone: only it is written", init, [], root)
     fx.call("a word it does not take", init, ["gw"], root)
     fx.call("no hwut-root.conf", init, [], "/")
@@ -81,20 +81,20 @@ def run_register():
     root = fx.gateway()
     fx.test(root, "bus/TEST/test-bus.sh",
             ['features = ["decod", "gone"]'])
-    with open(os.path.join(root, "hwut-feature-doc.dat"), "a") as fh:
+    with open(os.path.join(root, "HWUT/feature-doc.txt"), "a") as fh:
         fh.write("\n[[gone:retired]]\nOnce.\n")
     fx.write(root, "old/TEST/hwut-features.conf", "features { }\n")
     fx.call("hwut.features.register", register, [], root)
     fx.call("called below the top: the same notes", register, [],
             os.path.join(root, "gw/TEST"))
-    agree = fx.tree({"hwut-feature-forest.csv": "gateway : fwd\n",
-                     "hwut-feature-doc.dat": "[[gateway]]\nThe gateway.\n"})
+    agree = fx.tree({"HWUT/feature-forest.csv": "gateway : fwd\n",
+                     "HWUT/feature-doc.txt": "[[gateway]]\nThe gateway.\n"})
     fx.test(agree, "gw/TEST/test-fwd.sh", ['features = ["fwd"]'])
     fx.call("a tree that agrees", register, [], agree)
     fx.call("a word it does not take", register, ["gw"], agree)
-    os.remove(os.path.join(agree, "hwut-feature-forest.csv"))
+    os.remove(os.path.join(agree, "HWUT/feature-forest.csv"))
     fx.call("no forest", register, [], agree)
-    fx.write(agree, "hwut-feature-forest.csv", "a : b\nb : a\n")
+    fx.write(agree, "HWUT/feature-forest.csv", "a : b\nb : a\n")
     fx.call("a forest that states a fault", register, [], agree)
 
 
@@ -108,7 +108,7 @@ def run_tree():
     fx.call("a subtree, --list", tree, ["forwarding", "--list"], root)
     fx.call("an id that stands nowhere", tree, ["forwardng"], root)
     fx.call("a word it does not take", tree, ["-b"], root)
-    fx.write(root, "hwut-feature-external-map.csv", "nobody ; X\n")
+    fx.write(root, "HWUT/feature-external-map.csv", "nobody ; X\n")
     fx.call("a map that names an id the forest does not hold", tree, [],
             root)
 
@@ -119,8 +119,8 @@ def run_bubbles():
     fx.write(root, "inner/hwut-root.conf", "hwut {\n}\n")
     fx.test(root, "inner/x/TEST/test-x.sh", ['features = ["fwdd"]'])
     fx.write(root, "own/hwut-root.conf", "hwut {\n}\n")
-    fx.write(root, "own/hwut-feature-forest.csv", "show : case\n")
-    fx.write(root, "own/hwut-feature-doc.dat", "[[show]]\nThe showcase.\n")
+    fx.write(root, "own/HWUT/feature-forest.csv", "show : case\n")
+    fx.write(root, "own/HWUT/feature-doc.txt", "[[show]]\nThe showcase.\n")
     fx.test(root, "own/y/TEST/test-y.sh", ['features = ["case", "nix"]'])
     fx.call("from the top", register, [], root)
     fx.call("inside the bubble without a forest", register, [],
@@ -133,12 +133,12 @@ def run_bubbles():
 def run_prototypes():
     """RETURN: None. Two ports aggregating one prototype."""
     root = fx.tree({
-        "hwut-feature-forest.csv":
+        "HWUT/feature-forest.csv":
             "gateway   : can-port, most-port\n"
             "can-port  : +port\nmost-port : +port\n"
             "+port     : receive, send, +errors\n"
             "+errors   : bus-off, overrun\n+spare : idle\n",
-        "hwut-feature-doc.dat":
+        "HWUT/feature-doc.txt":
             "[[gateway]]\nThe gateway forwards what reaches it.\n"
             "[[+port]]\nWhat every port does.\n"
             "[[receive]]\nA frame is received.\n"

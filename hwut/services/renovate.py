@@ -15,6 +15,18 @@ DESCRIPTION
 
        WHAT IT TRANSLATES, today:
 
+           beside 'hwut-root.conf' (CR-4, 2026-11-20):
+               hwut-root.labels              -> HWUT/labels.txt
+               hwut-feature-forest.csv       -> HWUT/feature-forest.csv
+               hwut-feature-doc.dat          -> HWUT/feature-doc.txt
+               hwut-feature-external-map.csv -> HWUT/feature-external-map.csv
+               hwut-tools.rst                -> HWUT/tools.rst
+                                             moved by 'git mv' where git
+                                             tracks the file; every other
+                                             face refuses the old place
+               no 'HWUT/directories.txt'     -> written from every book
+                                             that stands (bookkeeper B-33)
+
            hwut-info.dat, line 1          -> 'title = "..."' in hwut.conf
                                              (X-INFO-DAT)
            hwut-info.dat, '--not <glob>'  -> 'ignore = [...]' in hwut.conf
@@ -59,7 +71,8 @@ import re
 import sys
 
 from ..engine.orchestrator.exploration.tree_explorer import (RootConfMissing,
-                                                                 explore_tree)
+                                                                 explore_tree,
+                                                                 root_conf_directory)
 from ..engine.orchestrator.exploration import finder
 from ..engine.orchestrator.exploration import amend
 from   ._exit                                            import E_ExitCode
@@ -141,15 +154,22 @@ def do(request):
         raise Refused("REFUSED: the directory '%s' does not exist" % root)
     try:
         tree = explore_tree(root)
+        top  = root_conf_directory(root)
     except RootConfMissing as error:
         raise Refused("REFUSED: %s" % error) from error
     directory_list = [directory for directory, _ in tree]
-    if not directory_list:
+    #  THE ROOT'S OWN FILES FIRST (CR-4): the old places beside
+    #  'hwut-root.conf' carried into 'HWUT/'.
+    root_plan = root_plan_of(top)
+    if not directory_list and not root_plan.change_list \
+       and not root_plan.note_list:
         raise Empty("EMPTY: no TEST directory below '%s'" % root)
 
     block_list, change_n, fault_f = [], 0, False
-    for directory in directory_list:
-        plan = plan_of(os.path.join(root, directory))
+    for directory, plan in [(os.path.relpath(top, root)
+                             .replace(os.sep, "/"), root_plan)] \
+                           + [(d, None) for d in directory_list]:
+        if plan is None: plan = plan_of(os.path.join(root, directory))
         if not plan.change_list and not plan.note_list: continue
         change_list = []
         for change in plan.change_list:
@@ -230,6 +250,61 @@ class Plan:
     def __init__(self):
         self.change_list = []
         self.note_list   = []
+
+
+def root_plan_of(top):
+    """
+    RETURN: Plan, what the root 'top' needs (CR-4): every framework file
+            at its OLD place beside 'hwut-root.conf' moved into 'HWUT/'
+            under its new name -- by 'git mv' where git tracks it, so the
+            history follows; a note, and nothing done, where the new file
+            stands as well.
+    """
+    from ..auxiliary.no_entry import OLD_PLACE_DB
+    plan = Plan()
+    for old, new in sorted(OLD_PLACE_DB.items()):
+        source, target = os.path.join(top, old), os.path.join(top, new)
+        if not os.path.isfile(source): continue
+        if os.path.isfile(target):
+            plan.note_list.append("kept: '%s' -- '%s' stands already; "
+                                  "keep one of the two" % (old, new))
+            continue
+        plan.change_list.append(_Step("'%s' -> '%s'" % (old, new),
+                                      lambda s=source, t=target:
+                                          _moved(s, t)))
+    #  THE ROSTER, begun from every book that stands (bookkeeper B-33).
+    from ..engine.bookkeeper import roster
+    if not os.path.isfile(roster.path_of(top)):
+        found = roster.found_entry_set(top)
+        if found:
+            plan.change_list.append(_Step(
+                "'%s' written: %i TEST director%s holding records"
+                % (roster.ROSTER_FILE_NAME, len(found),
+                   "y" if len(found) == 1 else "ies"),
+                lambda: roster._changed(top, lambda s: s | found)))
+    return plan
+
+
+def _moved(source, target):
+    """
+    RETURN: None. 'source' moved to 'target', its directory made -- through
+            'git mv' where git tracks 'source', else a plain rename.
+            Raises OSError where neither succeeds.
+    """
+    import subprocess
+    os.makedirs(os.path.dirname(target), exist_ok=True)
+    where = os.path.dirname(source) or "."
+    try:
+        tracked = subprocess.run(["git", "ls-files", "--error-unmatch",
+                                  os.path.basename(source)], cwd=where,
+                                 capture_output=True).returncode == 0
+    except OSError:
+        tracked = False
+    if tracked:
+        done = subprocess.run(["git", "mv", source, target], cwd=where,
+                              capture_output=True, text=True)
+        if done.returncode == 0: return
+    os.replace(source, target)
 
 
 def plan_of(directory):

@@ -82,8 +82,8 @@ class CDone:
 ARITY_DB = {
     "remove": (1, 1, "<dir>/TMP/session | <dir>/TMP/lock | <dir>/OUT | "
                      "<dir>/TMP"),
-    "forget": (1, 2, "<dir>/<test> [<choice>]"),
-    "move":   (2, 2, "<dir>/<test> <new-dir>"),
+    "forget": (1, 2, "<dir>/<test> [<choice>] | <dir>/TEST"),
+    "move":   (2, 2, "<dir>/<test> <new-dir> | <old-dir> <new-dir>"),
     "book":   (1, 2, "<dir>/<test> [<choice>]"),
     "remark": (1, 2, "<dir>/<test> [<choice>]"),
     "unlink": (1, 1, "<dir>/GOOD/<case>.link"),
@@ -321,10 +321,61 @@ class CContext:
                                "judged" % len(result.fault_list))
         return result, None
 
+    def _roster_entry_of(self, word):
+        """
+        RETURN: (str, str), the tree's root and the roster entry 'word'
+                names -- where 'word' names a TEST directory the roster
+                records (CR-3)
+                None, else: the word names a case
+        """
+        from ....engine.bookkeeper import roster
+        path = self.path_of(word)
+        tree_root = roster.root_of(path if os.path.isdir(path)
+                                   else os.path.dirname(path))
+        if tree_root is None: return None
+        entry = roster.entry_of(tree_root, path)
+        if entry not in roster.entry_tuple(tree_root): return None
+        return tree_root, entry
+
+    def _do_forget_directory(self, tree_root, entry):
+        """RETURN: CDone -- a gone TEST directory's roster entry dropped,
+                   and the labels' targets below it (CR-3)."""
+        from ....engine.bookkeeper import roster
+        directory = roster.directory_of(tree_root, entry)
+        if os.path.isdir(directory):
+            return CDone(E_Done.REFUSED, "the directory stands: not gone")
+        sanitize.labels_carried(tree_root, directory, None)
+        roster.forgotten(tree_root, entry)
+        return CDone(E_Done.DONE)
+
+    def _do_move_directory(self, tree_root, entry, word):
+        """RETURN: CDone -- a gone TEST directory's roster entry replaced
+                   by the directory it stands as now, and the labels'
+                   targets carried after it (CR-3)."""
+        from ....engine.bookkeeper import roster
+        directory = roster.directory_of(tree_root, entry)
+        target    = self.path_of(word)
+        if os.path.isdir(directory):
+            return CDone(E_Done.REFUSED, "the directory stands: nothing moved")
+        if not os.path.isfile(os.path.join(target, "GOOD", "book.csv")):
+            return CDone(E_Done.REFUSED,
+                         "no book stands in the directory named")
+        if roster.root_of(target) != tree_root:
+            return CDone(E_Done.REFUSED,
+                         "the directory named is in another tree")
+        sanitize.labels_carried(tree_root, directory, target)
+        roster.moved(tree_root, entry, roster.entry_of(tree_root, target))
+        self._touch_set.add(target)
+        return CDone(E_Done.DONE)
+
     def _do_forget(self, word_tuple):
         """RETURN: CDone -- an orphan's every record gone, through
-                   'hwut.remove'."""
+                   'hwut.remove'; or, where the word names a TEST
+                   directory the roster records, its entry (CR-3)."""
         from ... import remove
+        found = self._roster_entry_of(word_tuple[0]) \
+                if len(word_tuple) == 1 else None
+        if found is not None: return self._do_forget_directory(*found)
         directory, test, choice = self.case_of(word_tuple)
         result, refusal = self._explored(directory)
         if refusal is not None: return refusal
@@ -358,6 +409,9 @@ class CContext:
                    application into the directory it stands in now,
                    through 'hwut.move' (E-131)."""
         from ... import move
+        found = self._roster_entry_of(word_tuple[0])
+        if found is not None:
+            return self._do_move_directory(*found, word_tuple[1])
         directory, test, _ = self.case_of(word_tuple[:1])
         target = self.path_of(word_tuple[1])
         result, refusal = self._explored(directory)

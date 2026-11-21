@@ -31,7 +31,7 @@ support/remote -- REMOTE EXECUTION: A TEST APPLICATION DRIVES A BOARD
     (5), 'can' (9), capture.py (7), 'visa' and VisaHub (12); the other
     prototypes. The bus (map 100 and above) is not built in the Verilog
     agent. hwut's side -- exit 77 as 'device not reachable', 'deploy',
-    'target', 'tools' and 'requires', hwut-tools.rst -- is built (the
+    'target', 'tools' and 'requires', HWUT/tools.rst -- is built (the
     book's D-87).
 
 

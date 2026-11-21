@@ -13,7 +13,7 @@
 """SPDX-License: MIT; Project HWUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 
-PURPOSE: 'hwut-feature-forest.csv', read (spec 43 section 1; intend/43 T-b,
+PURPOSE: 'HWUT/feature-forest.csv', read (spec 43 section 1; intend/43 T-b,
          T-i, T-o): '<id> : <child>, ...' per line.
 
 CHOICES: read, faults, prototypes, prototype-faults;

@@ -19,7 +19,7 @@ grows is a language nobody documents.
 
 'f/<id>' IS THE LABEL THAT TIES TO A FEATURE (intend/three-worlds,
 ruled 2026-10-31; spec 43): the runs linked to the feature whose id is
-<id>, and to every feature below it in 'hwut-feature-forest.csv'. An id is
+<id>, and to every feature below it in 'HWUT/feature-forest.csv'. An id is
 '[A-Za-z0-9_-]+' (T-i) and names ONE feature; the forest gives its place.
 An instance of a prototype is '<owner>+<id>' (intend/44 p-1). A GLOB
 ('*', '?', '[...]') may stand anywhere (intend/44 P-g): every feature it
@@ -33,7 +33,7 @@ THE ENGINE ANSWERS IT, not this module: the query hands the runs of the
 features asked into 'CLabelView.label_set_of' as 'extra'.
 
 THIS MODULE PARSES AND EVALUATES; it does not read the labels file.
-The file is 'hwut-root.labels' and its reader and writer are the label
+The file is 'HWUT/labels.txt' and its reader and writer are the label
 faces' ('services/lib/labels/_file.py'). What the engine needs of the
 file's CONTENT arrives as a 'CLabelView', built there, handed down
 here -- data flows into the engine, the engine imports nothing back.
@@ -65,7 +65,7 @@ def feature_label_f(name):
     """
     RETURN: bool, True where 'name' is a feature label 'f/<id>' --
             the runs of a feature, answered from the feature relation,
-            never assigned in 'hwut-root.labels'.
+            never assigned in 'HWUT/labels.txt'.
     """
     return name.startswith(FEATURE_PREFIX)
 
@@ -147,7 +147,7 @@ def evaluate_f(tree, label_set):
 
 @dataclass(frozen=True, slots=True)
 class CLabelView:
-    """What the engine sees of 'hwut-root.labels': WHERE the file's
+    """What the engine sees of 'HWUT/labels.txt': WHERE the file's
     ground is, WHAT it assigns, and WHICH labels stand. Built by the
     file's reader ('services/lib/labels/_file.py'), handed down, read
     only.
@@ -255,7 +255,7 @@ def literal_target_f(text):
     RETURN: bool, True where the target names a run EXACTLY -- no
             glob mark in either member.
 
-    THE LINE THE FRAMEWORK DRAWS TWICE: 'hwut-root.labels' holds
+    THE LINE THE FRAMEWORK DRAWS TWICE: 'HWUT/labels.txt' holds
     literal targets only for the same reason a literal target lifts
     the standard label's silence (disc-8). A literal names ONE run
     and is spent as certainty; a glob names a set nobody has seen
@@ -288,7 +288,7 @@ def swallowed_warning_tuple(met_set, visible_set):
 def empty_view(boundary):
     """
     RETURN: CLabelView assigning nothing -- what an ABSENT
-            'hwut-root.labels' means: no label exists, no silence
+            'HWUT/labels.txt' means: no label exists, no silence
             imposed, the tree behaves as one that labels nothing.
     """
     return CLabelView(boundary = boundary,

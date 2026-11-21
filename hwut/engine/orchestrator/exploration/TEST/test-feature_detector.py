@@ -97,7 +97,7 @@ def past():
     ft.write(root, "inner/hwut-root.conf", "hwut {\n}\n")
     ft.write(root, "inner/x/TEST/hwut-features.conf", "features { }\n")
     ft.write(root, "own/hwut-root.conf", "hwut {\n}\n")
-    ft.write(root, "own/hwut-feature-forest.csv", "a : b\n")
+    ft.write(root, "own/HWUT/feature-forest.csv", "a : b\n")
     ft.write(root, "own/hwut-root-features.conf", "features { }\n")
     ft.write(root, "gw/TMP/hwut-features.conf", "features { }\n")
     _notes(root)

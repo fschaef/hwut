@@ -229,11 +229,11 @@ def _marked_line_set(test_dir, language, replacement):
 def _demo_features_written(language, target):
     """
     RETURN: int, the number of document paths the copy's doc file names:
-            'target/hwut-feature-doc.dat' written with the block of the
+            'target/HWUT/feature-doc.txt' written with the block of the
             demonstration's one promise, 'demo-<language>' (intend/43
             T-k), and the blocks of the prototypes it aggregates and of
             their members (intend/44 p-8), taken from this installation's
-            doc file; 'target/hwut-feature-forest.csv' beside it stating
+            doc file; 'target/HWUT/feature-forest.csv' beside it stating
             'demo-<language> : +<prototype>, ...' and every prototype line
             reached from there -- each relative document, as it resolved
             from hwut's top, made to point at its copy in 'target' (the
@@ -300,6 +300,8 @@ def _demo_features_written(language, target):
         count += len(document_tuple)
         entry_list.append(CDocEntry(found.id, found.title, found.doc,
                                     document_tuple))
+    os.makedirs(os.path.dirname(os.path.join(target, FOREST_FILE_NAME)),
+                exist_ok=True)                                   # CR-1
     with open(os.path.join(target, FOREST_FILE_NAME), "w",
               encoding="utf-8") as fh:
         fh.write(forest_text(([(demo_id, aggregated)] if aggregated else [])

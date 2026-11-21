@@ -21,7 +21,7 @@
     REFUSED: 'forwarding' has children: fwd, keep-order -- a retired claim has nothing below it; retire them first
     exit 2
 >>> retire an id the map names
-    REFUSED: 'keep-order' is named in 'hwut-feature-external-map.csv': the outside was told it -- take its line out first
+    REFUSED: 'keep-order' is named in 'HWUT/feature-external-map.csv': the outside was told it -- take its line out first
     exit 2
 >>> retire an id that stands nowhere
     REFUSED: 'fwdd' stands in no forest line and no doc block -- did you mean 'fwd'?
@@ -29,15 +29,15 @@
 >>> nothing written: True
 >>> retire, then retire again
     retired  spare
-        hwut-feature-doc.dat
+        HWUT/feature-doc.txt
     exit 0
 >>> 
     REFUSED: 'spare' is retired already
     exit 2
 >>> a doc file that states a fault
-    REFUSED: FAULT: hwut-feature-doc.dat:1: 'a.b' is no feature id -- '[A-Za-z0-9_-]+', '+<prototype>' or '<owner>+<id>'
+    REFUSED: FAULT: HWUT/feature-doc.txt:1: 'a.b' is no feature id -- '[A-Za-z0-9_-]+', '+<prototype>' or '<owner>+<id>'
     exit 2
 >>> no forest
-    REFUSED: no 'hwut-feature-forest.csv' stands at '<root>' => hwut.features.init
+    REFUSED: no 'HWUT/feature-forest.csv' stands at '<root>' => hwut.features.init
     exit 2
 <hwut-end>

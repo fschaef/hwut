@@ -1150,6 +1150,12 @@ class Bookkeeper:
                 fh.write(BOOK_SEPARATOR.join(cells) + "\n")
         os.replace(temporary, path)
         os.chmod(path, stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH)
+        #  THE ROSTER FOLLOWS THE BOOK (CR-2): the tree's one record above
+        #  the directories learns of a directory's first record and of its
+        #  last one gone -- and only then is it written.
+        from .roster import registered
+        registered(str(self.directory),
+                   any(test_book.get("choices") for test_book in content.values()))
         #  ONE BOOK, NEVER TWO (B-6, B-10): a book under a retired name
         #  ('result_db.csv', 'result_db.json'), once read and written
         #  here, is removed.

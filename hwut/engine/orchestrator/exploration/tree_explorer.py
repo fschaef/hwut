@@ -255,8 +255,8 @@ def forest_top(start):
     """
     RETURN: str, the ABSOLUTE directory whose forest governs the tree
             'start' stands in: climbing bubble by bubble from the nearest
-            'hwut-root.conf', the first that holds a 'hwut-feature-
-            forest.csv'; the nearest bubble's directory where none above
+            'hwut-root.conf', the first that holds a
+            'HWUT/feature-forest.csv'; the nearest bubble's directory where none above
             holds one (its faces then say that none stands).
 
     Raises RootConfMissing where no 'hwut-root.conf' bounds 'start'.
@@ -670,7 +670,7 @@ def root_conf_directory(start):
 
     Raises RootConfMissing where no such file stands above 'start'.
     The boundary is a FACT ABOUT THE TREE and everything anchored
-    there -- 'hwut-root.labels' among it (disc-8) -- must anchor at
+    there -- 'HWUT/labels.txt' among it (disc-8) -- must anchor at
     the same place the configuration climb ends, or two climbs could
     name two trees.
     """

@@ -1,30 +1,30 @@
 >>> hwut.features.init
-    'hwut-feature-forest.csv' written
-    'hwut-feature-doc.dat' written
+    'HWUT/feature-forest.csv' written
+    'HWUT/feature-doc.txt' written
     exit 0
-    [hwut-feature-forest.csv]
-    | # hwut-feature-forest.csv -- THE FEATURE TREES (spec 43). One line per
+    [HWUT/feature-forest.csv]
+    | # HWUT/feature-forest.csv -- THE FEATURE TREES (spec 43). One line per
     | # feature that has children:
     | #
     | #     <feature-id> : <child-id>, <child-id>, ...
     | #
     | # A feature id is '[A-Za-z0-9_-]+'. An id standing as no child is a ROOT.
     | # Every id stands once as a child (one parent); no circle. What a feature
-    | # is, is said in 'hwut-feature-doc.dat'; a retired one stands in no line.
-    [hwut-feature-doc.dat]
-    | # hwut-feature-doc.dat -- WHAT THE FEATURES ARE (spec 43). One block per
+    | # is, is said in 'HWUT/feature-doc.txt'; a retired one stands in no line.
+    [HWUT/feature-doc.txt]
+    | # HWUT/feature-doc.txt -- WHAT THE FEATURES ARE (spec 43). One block per
     | # feature, headed '[[<id>]]' -- or '[[<id> to <audience>, ...]]',
     | # '[[<id> not <audience>, ...]]', '[[<id>:retired]]'; '[[CUSTOMERS]]'
     | # declares the audiences. A block: an optional 'documents:' line (paths
     | # from this file's directory, ',' between), then the prose -- its first
     | # line the title, the rest the doc.
-    [hwut-feature-external-map.csv]
+    [HWUT/feature-external-map.csv]
     (absent)
 >>> again: both stand
-    REFUSED: 'hwut-feature-forest.csv' and 'hwut-feature-doc.dat' stand already
+    REFUSED: 'HWUT/feature-forest.csv' and 'HWUT/feature-doc.txt' stand already
     exit 2
 >>> the doc file gone: only it is written
-    'hwut-feature-doc.dat' written
+    'HWUT/feature-doc.txt' written
     exit 0
 >>> a word it does not take
     REFUSED: 'hwut.features.init' takes 0 word(s): gw

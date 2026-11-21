@@ -22,9 +22,10 @@ is none, 1 else. A fault is:
 
 NOT COUNTED in the last check: the records, which keep the paths of their
 day (the numbered RATIONALE of 'engine' and 'services', 'adm/WORK',
-DISCUSSIONS), the feature files 'hwut-feature-forest.csv' and
-'hwut-feature-doc.dat', whose entries for a departing port a split
-removes, and 'GOOD/' directories: a
+DISCUSSIONS), the feature files 'HWUT/feature-forest.csv' and
+'HWUT/feature-doc.txt', whose entries for a departing port a split
+removes, the roster 'HWUT/directories.txt', whose entries for it
+'hwut.sanitize forget' drops (bookkeeper B-33), and 'GOOD/' directories: a
 nominal prints what its test does, and a test that reaches a port names it
 in its own source, which is read.
 ______________________________________________________________________________
@@ -43,7 +44,8 @@ LANGUAGE_FILE = os.path.join(SUPPORT, "LANGUAGES.conf")
 HOME_SET      = ("hwut", "support")
 SKIP_DIR_SET  = {".git", "node_modules", "__pycache__", "OUT", "TMP",
                  ".ruff_cache"}
-REGISTRY      = ("hwut-feature-forest.csv", "hwut-feature-doc.dat")
+REGISTRY      = ("HWUT/feature-forest.csv", "HWUT/feature-doc.txt",
+                 "HWUT/directories.txt")
 
 
 def language_db(hwut_dir=HWUT):

@@ -1,0 +1,8 @@
+--- moved out
+    move render/TEST/test-screen.sh world/TEST
+done: move test-screen.sh ../../world/TEST
+TOUCHED (the re-run trigger): 1 test application(s)
+--- deleted
+    forget render/TEST/test-screen.sh
+    remove.propose: render/TEST/test-screen.sh
+<hwut-end>

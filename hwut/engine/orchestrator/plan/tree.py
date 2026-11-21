@@ -110,6 +110,10 @@ class CTreePlan:
     #  THE BUBBLES HANDED TO A PLATFORM (spec/42 sections 4, 5): pairs
     #  (CBubbleDecision, the far 'hwut.run's words), each run there.
     handed_tuple:  tuple = ()
+    #  THE DIRECTORIES THE ROSTER RECORDS AND THE DISK DOES NOT HOLD
+    #  (CR-2), root-relative as the walk names its own: each one FAILING
+    #  case, 'in roster, no such directory'.
+    gone_tuple:    tuple = ()
 
     def __iter__(self):
         """YIELD: [0] CTreePlanEntry  one directory's entry, walk

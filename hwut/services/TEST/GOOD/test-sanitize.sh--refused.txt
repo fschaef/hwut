@@ -10,8 +10,9 @@ STDERR {
                                  [-l|--label <expr>] [--language=<name>]...
                                  [--faster-than=<sec>] [--output=<path>]
                                  [--target <name>]... [--session] [--lock] [--out]
-                                 [--orphans] [--books] [--constraints] [--links]
-                                 [--relations] [--transient] [-p <platform>]...
+                                 [--directories] [--orphans] [--books]
+                                 [--constraints] [--links] [--relations]
+                                 [--transient] [-p <platform>]...
                                  [--exclude-local] [--directory=<path>]
 }
 STATUS: 2
@@ -26,8 +27,9 @@ STDERR {
                                  [-l|--label <expr>] [--language=<name>]...
                                  [--faster-than=<sec>] [--output=<path>]
                                  [--target <name>]... [--session] [--lock] [--out]
-                                 [--orphans] [--books] [--constraints] [--links]
-                                 [--relations] [--transient] [-p <platform>]...
+                                 [--directories] [--orphans] [--books]
+                                 [--constraints] [--links] [--relations]
+                                 [--transient] [-p <platform>]...
                                  [--exclude-local] [--directory=<path>]
 }
 STATUS: 2
@@ -42,8 +44,9 @@ STDERR {
                                  [-l|--label <expr>] [--language=<name>]...
                                  [--faster-than=<sec>] [--output=<path>]
                                  [--target <name>]... [--session] [--lock] [--out]
-                                 [--orphans] [--books] [--constraints] [--links]
-                                 [--relations] [--transient] [-p <platform>]...
+                                 [--directories] [--orphans] [--books]
+                                 [--constraints] [--links] [--relations]
+                                 [--transient] [-p <platform>]...
                                  [--exclude-local] [--directory=<path>]
 }
 STATUS: 2

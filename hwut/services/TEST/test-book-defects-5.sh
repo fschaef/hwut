@@ -340,7 +340,7 @@ PY
         "$BIN/hwut.support" python "$WORK/demo" > /dev/null 2>&1; echo "exit $?"
         #  SINCE spec 43: the copy carries the demonstration's ONE promise,
         #  'demo-python', in a doc file of its own (T-k).
-        python3 - "$WORK/demo/hwut-feature-doc.dat" <<'EOF2'
+        python3 - "$WORK/demo/HWUT/feature-doc.txt" <<'EOF2'
 import os, re, sys
 text = open(sys.argv[1]).read()
 path_list = [p.strip() for line in re.findall(r'^documents:(.*)$', text, re.M)
@@ -583,7 +583,7 @@ EOF2
         page test-t.sh 'choices = ["x"]' 'echo "$1"'
         cd "$WORK"
         "$BIN/hwut.features.init" > /dev/null 2>&1
-        printf '[[empty]]\ne\n' >> hwut-feature-doc.dat
+        printf '[[empty]]\ne\n' >> HWUT/feature-doc.txt
         echo "== hwut.features.register";   "$BIN/hwut.features.register" 2>&1 | shown
         echo "== hwut.sanitize.propose";    "$BIN/hwut.sanitize.propose" -o f.txt 2>&1 | shown
         echo "== hwut.renovate";            "$BIN/hwut.renovate" 2>&1 | shown
@@ -605,7 +605,7 @@ EOF2
         done
         cd "$WORK"
         "$BIN/hwut.features.init" > /dev/null 2>&1
-        printf '[[same-seed]]\ns\n' >> hwut-feature-doc.dat
+        printf '[[same-seed]]\ns\n' >> HWUT/feature-doc.txt
         ( cd world/TEST && record && "$BIN/hwut.accept" --whole > /dev/null 2>&1 )
         ids() { sed -E 's/[A-Za-z0-9_-]{8}:same-seed/<id>:same-seed/g'; }
         if [ "$1" = move-one-base ]; then

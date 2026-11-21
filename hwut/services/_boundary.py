@@ -5,7 +5,7 @@ PURPOSE: THE BOUNDARY -- WHAT IS WRITTEN, AND WHERE IT MAY GO.
 
 Every face of this framework works inside a TREE, and a tree is what
 'hwut-root.conf' bounds. Without it there is no root to make a path
-relative to, no place for 'hwut-root.labels', and no answer to 'which
+relative to, no place for 'HWUT/labels.txt', and no answer to 'which
 directories are mine'. A face that proceeds without one is guessing,
 so every face refuses -- and HINTS at the way out
 ('tree_explorer.ROOT_CONF_HINT_STR').

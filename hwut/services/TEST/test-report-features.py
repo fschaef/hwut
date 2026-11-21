@@ -182,9 +182,9 @@ def fixture(root):
     nothing, the three feature files at the top, and the verdicts of
     their runs."""
     _write(root, "hwut-root.conf", "hwut {\n}\n")
-    _write(root, "hwut-feature-forest.csv", FOREST)
-    _write(root, "hwut-feature-doc.dat", DOC)
-    _write(root, "hwut-feature-external-map.csv", EXTERNAL)
+    _write(root, "HWUT/feature-forest.csv", FOREST)
+    _write(root, "HWUT/feature-doc.txt", DOC)
+    _write(root, "HWUT/feature-external-map.csv", EXTERNAL)
     _write(root, "engine/compare/core/README.txt", "Pairing.\n")
     _test(root, "engine/compare/core/TEST/test-pair.sh",
           ['title    = "Pairing"', 'features = ["line-pairing"]',
@@ -283,7 +283,7 @@ def run_matrix():
     _in_tree(fixture, body)
     def bare(root):
         _write(root, "hwut-root.conf", "hwut {\n}\n")
-        _write(root, "hwut-feature-forest.csv", "")
+        _write(root, "HWUT/feature-forest.csv", "")
         _test(root, "a/TEST/test-a.sh", ['title = "A"'])
     def unstated():
         banner("--matrix where no test run links a feature")
@@ -481,8 +481,8 @@ def run_outside():
     """RETURN: None. A tree with tests and empty feature files."""
     def build(root):
         _write(root, "hwut-root.conf", "hwut {\n}\n")
-        _write(root, "hwut-feature-forest.csv", "")
-        _write(root, "hwut-feature-doc.dat", "")
+        _write(root, "HWUT/feature-forest.csv", "")
+        _write(root, "HWUT/feature-doc.txt", "")
         _test(root, "a/TEST/test-a.sh", ['title = "A"'])
         _test(root, "a/b/TEST/test-b.sh",
               ['title = "B"', 'features = ["wanted"]'])
@@ -500,7 +500,7 @@ def run_empty():
     """RETURN: None. A tree that holds no TEST directory."""
     def build(root):
         _write(root, "hwut-root.conf", "hwut {\n}\n")
-        _write(root, "hwut-feature-forest.csv", "")
+        _write(root, "HWUT/feature-forest.csv", "")
     def body():
         banner("no TEST directory below")
         _page([])
@@ -515,12 +515,12 @@ def run_refused():
         banner("an unknown word")
         _page(["--verbose"])
         banner("no forest at the top")
-        os.remove("hwut-feature-forest.csv")
+        os.remove("HWUT/feature-forest.csv")
         status = features.main([], write=lambda text: print(
             "    %s" % text.replace(os.getcwd(), "<tree>")))
         print("status: %s" % status.name)
         banner("a forest that states a fault")
-        _write(".", "hwut-feature-forest.csv", "a : b\nc : b\n")
+        _write(".", "HWUT/feature-forest.csv", "a : b\nc : b\n")
         _page([])
     _in_tree(fixture, body)
     def rootless(root):

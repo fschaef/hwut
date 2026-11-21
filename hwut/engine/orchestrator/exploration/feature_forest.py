@@ -1,7 +1,7 @@
 """SPDX-License: MIT; Project HWUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 
-PURPOSE: THE FOREST OF THE FEATURES, 'hwut-feature-forest.csv', read
+PURPOSE: THE FOREST OF THE FEATURES, 'HWUT/feature-forest.csv', read
          (spec 43 section 1; intend/43 T-a, T-b, T-i, T-o). ONE file beside
          the 'hwut-root.conf' that begins the features of a tree:
 
@@ -51,7 +51,7 @@ import os
 import re
 from   dataclasses import dataclass, field
 
-from .finder import FOREST_FILE_NAME
+from .finder import FOREST_FILE_NAME, refuse_old_place
 
 ID_RE = re.compile(r"[A-Za-z0-9_\-]+\Z")
 
@@ -113,10 +113,11 @@ class CForest:
 
 def read_forest(top):
     """
-    RETURN: CForest, what 'top/hwut-feature-forest.csv' states
+    RETURN: CForest, what 'top/HWUT/feature-forest.csv' states
             None, no such file stands
     RAISES: ForestFault, where it cannot be read or states a fault.
     """
+    refuse_old_place(top, "hwut-feature-forest.csv", ForestFault)                # CR-4
     path = os.path.join(top, FOREST_FILE_NAME)
     if not os.path.isfile(path): return None
     try:

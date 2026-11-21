@@ -106,8 +106,8 @@ TRANSIENT_ROOT_TUPLE   = OWN_GROUND_NAME_TUPLE    # services E-24
 
 #  What a bare proposal asks about. Not the targets: running somebody's
 #  script is never implied.
-ASPECT_TUPLE = ("session", "lock", "out", "orphans", "books", "constraints",
-                "links", "relations")
+ASPECT_TUPLE = ("session", "lock", "out", "directories", "orphans", "books",
+                "constraints", "links", "relations")
 #  Asked for by name only; a bare proposal never takes the candidates.
 EXPLICIT_ASPECT_TUPLE = ("transient",)
 
@@ -124,23 +124,22 @@ class CIssueKind:
 
 #  THE KINDS, IN THE ORDER A PROPOSAL WRITES THEIR BLOCKS. One kind, one
 #  block, one comment (E-125): issues of a kind stand in adjacent lines.
+#  BY CONSEQUENCE (CR-8, 2026-11-20): what loses or keeps an acceptance
+#  first, the rubbish a run makes again after it.
 ISSUE_KIND_TUPLE = (
-    CIssueKind("session", "remove", (
-        "SESSION WRECKAGE: a 'TMP/session/' outlived its run; nothing reads",
-        "it between runs, and the next run makes its own.",
-        "'remove' deletes the directory.")),
-    CIssueKind("lock", "remove", (
-        "DEAD LOCK: a 'TMP/lock/' whose holder is gone, or which cannot",
-        "name its holder; honoured, it blocks the directory for ever.",
-        "'remove' deletes it. A holder alive by then is refused.")),
-    CIssueKind("out", "remove", (
-        "PRODUCT SPACE: 'OUT/' is the application's scratch, rewritten by",
-        "the next run that uses it.",
-        "'remove' deletes it. A directory a live run holds is refused.")),
-    CIssueKind("transient", "remove", (
-        "TRANSIENT ROOT: 'OUT/' or 'TMP/' whole, the candidates with them",
-        "-- all of it a run can make again (E-24).",
-        "'remove' deletes it. A directory a live run holds is refused.")),
+    CIssueKind("directory-moved", "move", (
+        "DIRECTORY MOVED: 'HWUT/directories.txt' records a TEST directory",
+        "that does not stand, and ONE directory holding a book stands that",
+        "the roster does not know (CR-3) -- moved, and nothing run since.",
+        "'move' replaces the roster entry and carries the labels' targets",
+        "after it; the books moved with the directory. To drop it instead,",
+        "write 'forget <dir>'.")),
+    CIssueKind("directory-gone", "forget", (
+        "DIRECTORY GONE: 'HWUT/directories.txt' records a TEST directory",
+        "that does not stand; the run fails it (CR-2).",
+        "'forget' drops the roster entry and the labels' targets below it.",
+        "WAS IT MOVED? Then 'move <old> <new>' carries the labels instead;",
+        "a likely new place is noted.")),
     CIssueKind("orphan-moved", "move", (
         "ORPHAN, APPLICATION MOVED: records name a test application that",
         "stands in ANOTHER directory now, where nothing is recorded of it.",
@@ -153,12 +152,15 @@ ISSUE_KIND_TUPLE = (
         "RECORDED there already, or stands in several places, the line",
         "says so.",
         "'forget' drops every record of the test: nominals, candidates,",
-        "book entry, register id.")),
+        "book entry, register id. WAS IT RENAMED? Then 'hwut.rename <old>",
+        "-to <new>' carries the records instead; a likely pair is noted.")),
     CIssueKind("orphan-choice", "forget", (
         "ORPHAN, CHOICE NOT OFFERED: the application stands and is",
         "understood, and does not name that choice.",
         "'forget' drops every record of the choice: nominals, candidates,",
-        "book entry, register id.")),
+        "book entry, register id. WAS IT RENAMED? Then 'hwut.rename <test>",
+        "<old> -to <new>' carries the records instead; a likely pair is",
+        "noted.")),
     CIssueKind("book-lacks", "book", (
         "BOOK BEHIND: a nominal stands in GOOD/, and the book has no entry",
         "for the case (E-41).",
@@ -185,6 +187,22 @@ ISSUE_KIND_TUPLE = (
         "TWO NOMINALS FOR ONE CASE: a '.txt' and a '.link' stand for it;",
         "the '.txt' is what is read (bookkeeper B-32).",
         "'unlink' removes the link; the case keeps its own '.txt'.")),
+    CIssueKind("session", "remove", (
+        "SESSION WRECKAGE: a 'TMP/session/' outlived its run; nothing reads",
+        "it between runs, and the next run makes its own.",
+        "'remove' deletes the directory.")),
+    CIssueKind("lock", "remove", (
+        "DEAD LOCK: a 'TMP/lock/' whose holder is gone, or which cannot",
+        "name its holder; honoured, it blocks the directory for ever.",
+        "'remove' deletes it. A holder alive by then is refused.")),
+    CIssueKind("out", "remove", (
+        "PRODUCT SPACE: 'OUT/' is the application's scratch, rewritten by",
+        "the next run that uses it.",
+        "'remove' deletes it. A directory a live run holds is refused.")),
+    CIssueKind("transient", "remove", (
+        "TRANSIENT ROOT: 'OUT/' or 'TMP/' whole, the candidates with them",
+        "-- all of it a run can make again (E-24).",
+        "'remove' deletes it. A directory a live run holds is refused.")),
     CIssueKind("target", "run", (
         "TARGET: the project's own verb, asked for by '--target' (E-7).",
         "'run' calls it through 'hwut.execute' in the directory and every",
@@ -192,7 +210,7 @@ ISSUE_KIND_TUPLE = (
     CIssueKind("root", "root", (
         "NO BOUNDARY: no 'hwut-root.conf' stands in or above this directory.",
         "A tree needs one: it is the root every path is relative to, and",
-        "the place 'hwut-root.labels' stands (E-25).",
+        "the place 'HWUT/labels.txt' stands (E-25).",
         "'root' writes the file, with its 'language-setup' table, into the",
         "directory named. ONE line stands; to place it elsewhere, comment",
         "that line and uncomment another -- or name any directory.")),
@@ -202,7 +220,11 @@ ISSUE_KIND_DB = {kind.name: kind for kind in ISSUE_KIND_TUPLE}
 #  The verbs, each once, in the order their first kind stands -- then
 #  'sub-root', which no judgement proposes: a project of its own inside
 #  a tree is a wish, never a finding (RQ-1, ruled 2026-10-24).
-VERB_TUPLE = tuple(dict.fromkeys(kind.verb for kind in ISSUE_KIND_TUPLE)) \
+#  (The verbs keep their order of before CR-8: the help names them.)
+VERB_TUPLE = ("remove",) \
+             + tuple(v for v in dict.fromkeys(kind.verb
+                                               for kind in ISSUE_KIND_TUPLE)
+                     if v != "remove") \
              + ("sub-root",)
 
 
@@ -243,8 +265,11 @@ class CIssue:
                     root    <dir>
         """
         where = shown(base, self.directory).replace(os.sep, "/")
-        if self.verb() == "root":
+        if self.verb() == "root" or self.kind == "directory-gone":
             return where
+        if self.kind == "directory-moved":
+            return "%s %s" % (where, shown(base, self.word_tuple[0])
+                                     .replace(os.sep, "/"))
         if self.verb() == "run":
             return "%s %s" % (where, self.word_tuple[0])
         if self.verb() == "move":
@@ -259,8 +284,12 @@ class CIssue:
     def line(self, base):
         """RETURN: str, the proposal's line: '<command> <entity>', and
                    '  # <note>' after it where the issue carries one."""
-        text = "%s %s" % (self.verb(), self.entity(base))
-        if self.note: text += "  # %s" % self.note
+        entity = self.entity(base)
+        text   = "%s %s" % (self.verb(), entity)
+        #  A NOTE MAY SPELL A COMMAND (CR-6): then it is made from the
+        #  entity as this line spells it, so it runs where the line does.
+        note   = self.note(entity) if callable(self.note) else self.note
+        if note: text += "  # %s" % note
         if self.commented_f: text = "# " + text
         return text
 
@@ -504,7 +533,11 @@ def orphan_issue_list(directory, app_set):
     judged.
     """
     offered = offered_key_set(app_set)
-    if not offered: return [], []       # nothing offered: judge nothing
+    #  A DIRECTORY THAT OFFERS NOTHING IS STILL JUDGED (CR-5, 2026-11-20):
+    #  its last test moved out or was deleted, and its records are the
+    #  very orphans this aspect exists for. The UNREACHABLE case -- a file
+    #  that stands and is not offered -- is spared below, record by
+    #  record, exactly as where something is offered.
     known_test_set = set(t for t, _ in offered)
 
     case_set = set()
@@ -542,7 +575,129 @@ def orphan_issue_list(directory, app_set):
         else:
             issue_db[(test, choice)] = CIssue("orphan-choice", directory,
                                               (test, choice))
+    _note_renames(issue_db, case_set, offered, directory)
     return [issue_db[k] for k in sorted(issue_db)], note_list
+
+
+def _note_renames(issue_db, case_set, offered, directory):
+    """
+    RETURN: None. Every orphan in 'issue_db' that has ONE likely new name
+            in its directory carries the note 'renamed? hwut.rename <old>
+            -to <new>' (CR-6, 2026-11-20):
+
+                orphan-test    exactly one offered application has
+                               nothing recorded and offers the very
+                               choices recorded of the orphan
+                orphan-choice  exactly one choice of that application is
+                               orphaned, and exactly one offered choice
+                               of it has nothing recorded
+
+    A RENAME FORGOTTEN IS NOT A DELETION: 'forget' drops the accepted
+    output, 'hwut.rename' carries it. The note only points; the line
+    stays 'forget', since a guess must never act.
+    """
+    recorded_test_set = set(t for t, _ in case_set)
+    offered_db = {}
+    for test, choice in offered:
+        offered_db.setdefault(test, set()).add(choice)
+    fresh_list = [t for t in sorted(offered_db)
+                  if t not in recorded_test_set
+                  and not recorded_f(directory, t)]
+    for key, issue in list(issue_db.items()):
+        if issue.kind == "orphan-test":
+            old    = key[0]
+            wanted = set(c for t, c in case_set if t == old and c is not None)
+            pair   = [t for t in fresh_list if offered_db[t] == wanted]
+            if len(pair) != 1: continue
+            note = (lambda entity, new=pair[0]:
+                        "renamed? hwut.rename %s -to %s" % (entity, new))
+        else:
+            test, old = key
+            orphan_list = [k for k in issue_db
+                           if issue_db[k].kind == "orphan-choice"
+                           and k[0] == test]
+            fresh_choice = sorted(c for c in offered_db.get(test, ())
+                                  if (test, c) not in case_set)
+            if len(orphan_list) != 1 or len(fresh_choice) != 1: continue
+            note = (lambda entity, new=fresh_choice[0]:
+                        "renamed? hwut.rename %s -to %s" % (entity, new))
+        issue_db[key] = CIssue(issue.kind, issue.directory, issue.word_tuple,
+                               payload=issue.payload, note=note)
+
+
+def directory_issue_tuple(start, exploration, wish=None):
+    """
+    RETURN: [0] list[CIssue], one per TEST directory the roster records
+                that does not stand below 'start' (CR-3):
+                    'directory-moved' (new,)  where exactly ONE such entry
+                                     is missing and exactly ONE explored
+                                     directory holds a book the roster
+                                     does not know -- it moved, and
+                                     nothing ran since
+                    'directory-gone'  ()      else, noted 'moved? ...'
+                                     where exactly one explored directory
+                                     holding a book bears the same name
+            [1] list[str], what could not be judged, with why.
+
+    'exploration' is the walk below 'start': (relative, result) pairs.
+    THE ROSTER STORES NO NAMES, by design: a directory moved and RUN since
+    is on the roster already, and nothing pairs it with the one that went
+    -- the note names a likely place, and a guess never acts.
+    """
+    from ..engine.bookkeeper import roster
+    tree_root = roster.root_of(start)
+    if tree_root is None: return [], []
+    if wish is not None and not wish.states_no_case_rule_f():
+        return [], ["directories not judged -- the wish asks of cases, and "
+                    "a directory that does not stand offers none"]
+    entry_set = set(roster.entry_tuple(tree_root))
+    gone_list = [roster.directory_of(tree_root, entry)
+                 for entry in roster.gone_tuple(tree_root, start)]
+    if not gone_list: return [], []
+    booked_list = [os.path.normpath(os.path.join(start, where))
+                   for where, _ in exploration
+                   if os.path.isfile(os.path.join(start, where, "GOOD",
+                                                  "book.csv"))]
+    fresh_list = [d for d in booked_list
+                  if roster.entry_of(tree_root, d) not in entry_set]
+    if len(gone_list) == 1 and len(fresh_list) == 1:
+        return [CIssue("directory-moved", gone_list[0], (fresh_list[0],))], []
+    issue_list = []
+    for gone in gone_list:
+        name = os.path.basename(os.path.dirname(gone))
+        pair = [d for d in booked_list
+                if os.path.basename(os.path.dirname(d)) == name]
+        note = None
+        if len(pair) == 1:
+            note = (lambda entity, new=pair[0]:
+                        "moved? hwut.sanitize move %s %s"
+                        % (entity, shown(os.getcwd(), new)
+                                   .replace(os.sep, "/")))
+        issue_list.append(CIssue("directory-gone", gone, (), note=note))
+    return issue_list, []
+
+
+def labels_carried(tree_root, old, new):
+    """
+    RETURN: int, how many label targets below the TEST directory 'old'
+            (absolute) were carried below 'new' (absolute) -- or dropped,
+            where 'new' is None (CR-3). The labels file is rewritten only
+            where a target changed.
+    """
+    from .lib.labels._file import read_entry_db, write_entry_db
+    entry_db = read_entry_db(tree_root)
+    head = os.path.relpath(old, tree_root).replace(os.sep, "/") + "/"
+    fresh = None if new is None \
+            else os.path.relpath(new, tree_root).replace(os.sep, "/") + "/"
+    result, changed = {}, 0
+    for (file, choice), label_set in entry_db.items():
+        if not file.startswith(head):
+            result[(file, choice)] = label_set; continue
+        changed += 1
+        if fresh is not None:
+            result[(fresh + file[len(head):], choice)] = label_set
+    if changed: write_entry_db(tree_root, result)
+    return changed
 
 
 def recorded_f(directory, test):

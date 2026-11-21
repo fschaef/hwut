@@ -1,7 +1,7 @@
 """SPDX-License: MIT; Project HWUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 
-PURPOSE: THE MAP TO EXTERNAL NAMES, 'hwut-feature-external-map.csv', read
+PURPOSE: THE MAP TO EXTERNAL NAMES, 'HWUT/feature-external-map.csv', read
          (spec 43 section 3; intend/43 T-e, T-f, T-r). Beside the forest:
 
     # our feature id ; the outside's name for it
@@ -22,7 +22,7 @@ import os
 
 from .suggestion import did_you_mean
 
-from .finder import EXTERNAL_FILE_NAME
+from .finder import EXTERNAL_FILE_NAME, refuse_old_place
 
 
 class ExternalFault(Exception):
@@ -43,6 +43,8 @@ def read_external(top, forest):
     RAISES: ExternalFault, for a line with no ';', an empty side, or an
             id 'forest' (a CForest; None: no forest) does not hold.
     """
+    refuse_old_place(top, "hwut-feature-external-map.csv",
+                     ExternalFault)                                # CR-4
     path = os.path.join(top, EXTERNAL_FILE_NAME)
     if not os.path.isfile(path): return None
     try:

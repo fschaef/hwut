@@ -25,6 +25,12 @@ Status:  A COMPONENT of its own since 2026-08-25 (RATIONALE B-1). It
                       divergence verdicts. (Configuration: none --
                       B-6.)
     stream_store.py   The candidate/nominal streams beneath the naming.
+    roster.py         THE ROSTER of a tree, 'HWUT/directories.txt': which
+                      TEST directories hold records (B-33). Written by
+                      the book's writer on two transitions only -- a
+                      directory's first record, its last one gone; read
+                      by the run, the report and sanitize: a recorded
+                      directory that does not stand FAILS the run.
 
 1a WHAT GOES WHERE
 ------------------------------------------------------------------------------
@@ -45,6 +51,12 @@ Beside them, not in them:
     TMP/store/<test>....stdout  the CANDIDATES (the recorded streams)
     the header, hwut.conf       the CONFIGURATION -- git's, beside the
                                 book; never copied into it (B-6)
+
+Above every directory, one file of the tree:
+
+    <root>/HWUT/directories.txt the ROSTER (B-33): the root-relative TEST
+                                directories holding records, sorted;
+                                versioned with the tests
 
 THE BOOK IS A TABLE (B-7): 'GOOD/book.csv', ONE ROW PER (TEST,
 CHOICE), separator ';', no quoting -- a name containing ';' is

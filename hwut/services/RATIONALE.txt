@@ -8837,3 +8837,72 @@ READ OUT  The run's HINTS say "EXECUTION -- application invocation error"
           law: not this change's, left for a ruling of its own.
 CHECKED   services/TEST test-book-defects-7.sh: unit-hex, unit-word,
           module-names, module-replaces, module-inherited, module-faults.
+
+E-234  TEST MANAGEMENT: 'HWUT/', THE ROSTER'S FACES, SANITIZE ON MOVES (2026-11-20)
+-------------------------------------------------------------------------------
+PROBLEM   Measured on e434b21 (Schwarm 51 stage 5) while preparing tutorial 5
+          (test management): (1) the root collects 'hwut-root.labels',
+          'hwut-feature-forest.csv', 'hwut-feature-doc.dat',
+          'hwut-feature-external-map.csv', 'hwut-tools.rst' beside
+          'hwut-root.conf'; (2) a TEST directory deleted whole stays green
+          (bookkeeper B-33); (3) a directory whose LAST test moved out or was
+          deleted was never judged for orphans -- 'the wish hides cases
+          here' ('propose.py' read zero cases as hidden; 'orphan_issue_list'
+          returned early where nothing is offered), 'remove.propose' passed
+          it in silence, 'hwut.sanitize move' said 'nothing is recorded of
+          it'; (4) a rename by hand was proposed as a bare 'forget', which
+          drops the GOOD files, though 'hwut.rename' after the fact heals it
+          perfectly; (5) after 'hwut.rename' across directories and before
+          'git mv' the old place said 'no GOOD file ... accept it'; (6)
+          'remove <dir>/OUT' led every proposal.
+DECISION  (Frank-Rene, 2026-11-20, change request CR-1 .. CR-8)
+          CR-1  'HWUT/' beside 'hwut-root.conf', visible, versioned, capitals
+                like 'TEST' and 'GOOD'; its files named without 'hwut-' and
+                with an extension an editor opens: 'labels.txt',
+                'directories.txt', 'feature-forest.csv', 'feature-doc.txt',
+                'feature-external-map.csv', 'tools.rst'. The names stand ONCE,
+                in 'auxiliary/no_entry.py'; no walk enters 'HWUT/'. Not
+                '.hwut/': a dot directory reads as a cache and is skipped by
+                'cp *', 'tar *' and many IDEs. 'hwut-root.conf' stays outside:
+                the person's file, and the marker the root search climbs to.
+          CR-2  the roster (bookkeeper B-33).
+          CR-3  sanitize's aspect 'directories': 'move <old> <new>' where
+                exactly ONE recorded directory is missing and exactly ONE
+                directory holding a book is not on the roster -- moved, and
+                nothing ran since; 'forget <old>' else, noted 'moved? ...'
+                where one directory holding a book bears the same name. The
+                CR asked for pairing by the applications a book names; the
+                roster stores no names, and a moved directory that RAN is on
+                the roster already, so nothing can pair it -- the note
+                points, a guess never acts. 'move' rewrites the roster entry
+                and carries the labels' targets; 'forget' drops both.
+          CR-4  a file at its old place is REFUSED BY NAME, '=> hwut.renovate',
+                by 'decision_tuple' (every face that runs the tree) and by
+                the readers of labels and features; both places standing is
+                refused as two copies. 'hwut.renovate' reports, and with
+                '--apply' moves, them -- 'git mv' where git tracks the file.
+                No dual reading.
+          CR-5  a directory offering nothing is judged: 'wanted_f' holds where
+                the wish states nothing, and 'orphan_issue_list' no longer
+                returns early -- the unreachable case is spared per record,
+                as before.
+          CR-6  an orphan with ONE likely new name carries the note
+                'renamed? hwut.rename <entity> -to <new>' (a test: one
+                unrecorded application offering the very choices recorded;
+                a choice: the one orphaned beside the one unrecorded); the
+                line stays 'forget'. A note may now be made from the entity
+                as its line spells it, so it runs where the line does.
+          CR-7  'NOTE: pending move? '<dir>/<test>' stands, and its records
+                stand in '<dir'>' => git mv ...' before the run, where a test
+                stands with no GOOD file and exactly one other directory's
+                book records it and it does not stand there.
+          CR-8  the blocks by consequence: directories, orphans, books,
+                constraints, links -- then session, lock, out, transient. The
+                verbs keep their order (the help names them).
+COST      Every book page and tutorial naming the old files changes; GOOD
+          files moved where they print a name or a proposal: the sanitize
+          pages ('propose', 'refused', 'transient', 'catalogue') re-recorded
+          after review -- order, the new aspect, the rename sentence.
+          Regression: 'services/TEST/test-roster.sh', nine choices.
+          OPEN (not in the CR): the wallflower design; the two rescue paths
+          ('adm/rescue_goods.py' and 'sanitize move').

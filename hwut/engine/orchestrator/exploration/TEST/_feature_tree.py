@@ -45,10 +45,10 @@ def tree(forest, doc, external=None, test_db=None, verdict_db=None):
     root = tempfile.mkdtemp(prefix="hwut-features-", dir="/tmp")
     _ROOT_LIST.append(root)
     write(root, "hwut-root.conf", "hwut {\n}\n")
-    write(root, "hwut-feature-forest.csv", forest)
-    write(root, "hwut-feature-doc.dat", doc)
+    write(root, "HWUT/feature-forest.csv", forest)
+    write(root, "HWUT/feature-doc.txt", doc)
     if external is not None:
-        write(root, "hwut-feature-external-map.csv", external)
+        write(root, "HWUT/feature-external-map.csv", external)
     for path, body in (test_db or {}).items():
         test(root, path, body)
     for (directory, name, choice), verdict in (verdict_db or {}).items():

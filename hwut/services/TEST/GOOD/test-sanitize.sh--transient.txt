@@ -10,10 +10,10 @@ STDERR {
 --- a bare proposal never takes them
 STATUS: 0
 COMMANDS {
-    remove tree/suite/TEST/TMP/session
-    remove tree/suite/TEST/OUT
     book tree/other/TEST/test-app.sh
     book tree/suite/TEST/test-app.sh
+    remove tree/suite/TEST/TMP/session
+    remove tree/suite/TEST/OUT
 }
 STDERR {
     NOTE: other/TEST: 'TMP/lock' names a live holder (pid <n>); nothing here is touched

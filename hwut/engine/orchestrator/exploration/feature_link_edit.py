@@ -27,6 +27,8 @@ def write_atomic(path, text):
     """RETURN: None. 'text' written to 'path' through a temporary file
     beside it, renamed over it; the mode of a file that stood is kept."""
     mode      = os.stat(path).st_mode if os.path.exists(path) else None
+    #  A FILE OF 'HWUT/' MAY BE THE FIRST THERE (CR-1).
+    os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
     temporary = path + ".tmp-%d" % os.getpid()
     with open(temporary, "w", encoding="utf-8") as fh:
         fh.write(text)

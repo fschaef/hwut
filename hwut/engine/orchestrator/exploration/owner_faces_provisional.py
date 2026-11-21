@@ -143,6 +143,6 @@ class ConfigFeatures:
     """OWED TO: the feature relation ('feature_relation.py').
 
     'feature_name_tuple' -- the features a test run PROVES, by their ids
-    (spec 43: 'hwut-feature-forest.csv', 'hwut-feature-doc.dat'). None:
+    (spec 43: 'HWUT/feature-forest.csv', 'HWUT/feature-doc.txt'). None:
     the run links to no feature."""
     feature_name_tuple: tuple | None = None

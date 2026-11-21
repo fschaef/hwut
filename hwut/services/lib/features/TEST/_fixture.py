@@ -121,9 +121,9 @@ EXTERNAL = "keep-order ; REQ-4711\ngateway ; GW\n"
 def gateway():
     """RETURN: str, the root of the gateway tree: the three files, a test
     linking features in its header, a conf whose application links one."""
-    root = tree({"hwut-feature-forest.csv": FOREST,
-                 "hwut-feature-doc.dat": DOC,
-                 "hwut-feature-external-map.csv": EXTERNAL,
+    root = tree({"HWUT/feature-forest.csv": FOREST,
+                 "HWUT/feature-doc.txt": DOC,
+                 "HWUT/feature-external-map.csv": EXTERNAL,
                  "gw/TEST/hwut.conf":
                      'hwut {\n    apps {\n        note.json { execute = '
                      '"cat $file"  features = ["keep-order", "fwd"] }\n'

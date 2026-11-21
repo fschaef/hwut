@@ -358,7 +358,8 @@ class CTreeScheduler:
             for directory in decision.directory_tuple]
         emit("tree-begun",
              directory_list=[entry.directory for entry in tree_plan]
-                            + far_directory_list,
+                            + far_directory_list
+                            + list(tree_plan.gone_tuple),
              node_n=sum(len(entry.plan)
                         + len(no_good_file_tuple(entry.refused_tuple))
                         + len(unstood_tuple(
@@ -366,7 +367,8 @@ class CTreeScheduler:
                                                             entry.directory)),
                               entry.app_set, entry.fault_tuple,
                               entry.conf_fault_tuple))
-                        for entry in tree_plan))
+                        for entry in tree_plan)
+                    + len(tree_plan.gone_tuple))
         for fault in tree_plan.fault_tuple:
             emit("fault", directory=".", text=str(fault))
         #  A FINDING THAT DECIDES NOTHING still belongs before the
@@ -393,9 +395,20 @@ class CTreeScheduler:
                               self._guarded(unit, emit, budget))
                          for unit in unit_list])
 
-        good_f = not tree_plan.fault_tuple \
+        #  A DIRECTORY THE ROSTER RECORDS AND THE DISK DOES NOT HOLD
+        #  FAILS (CR-2, ruled 2026-11-20): one case, terminal, after the
+        #  directories that ran -- a run must not stay green while tests
+        #  disappear.
+        for directory in tree_plan.gone_tuple:
+            emit("dir-begun", directory=directory, node_n=1)
+            emit("run-ended", directory=directory, node=GONE_NODE_NAME,
+                 node_kind="TEST", good=False, verdict="directory-gone")
+            emit("dir-done", directory=directory, good=False,
+                 fail_db={GONE_NODE_NAME: "directory-gone"})
+        good_f = not tree_plan.fault_tuple and not tree_plan.gone_tuple \
                  and all(done.good_f for done in done_list)
-        fail_n = sum(done.fail_n for done in done_list)
+        fail_n = sum(done.fail_n for done in done_list) \
+                 + len(tree_plan.gone_tuple)
         #  THE BUBBLES HANDED TO A PLATFORM run there, one after another,
         #  into the same stream; their verdicts count as local ones do.
         for decision, far_argv in tree_plan.handed_tuple:
@@ -531,6 +544,10 @@ class CTreeScheduler:
             return CDirDone(False, 0)
 
 
+#  THE ONE CASE A GONE DIRECTORY FAILS AS (CR-2): no test stands to name.
+GONE_NODE_NAME = "(directory)"
+
+
 def broken_app_tuple(app_set, fault_tuple):
     """
     RETURN: tuple[str], every source file a fault of the directory names
@@ -664,7 +681,7 @@ def orchestrate(root, wish, build_interview=None, label_view=None):
 
     The Bookkeeper of each directory is made HERE and handed down,
     and only where the wish asks the base. THE LABEL VIEW IS NOT: the
-    engine never opens 'hwut-root.labels' -- a face builds it
+    engine never opens 'HWUT/labels.txt' -- a face builds it
     ('services/lib/labels.view_at') and hands it in, and 'None' means no
     label knowledge reaches the selection (disc-8).
 
@@ -747,7 +764,8 @@ def orchestrate(root, wish, build_interview=None, label_view=None):
                                case_gate          = case_gate)
     #  A '-p' NO DIRECTORY REQUIRES (spec/42 section 2): one NOTE each,
     #  asked of every directory decided.
-    note_tuple = unrequired_platform_note_tuple(wish, candidate_list)
+    note_tuple = unrequired_platform_note_tuple(wish, candidate_list) \
+                 + pending_move_note_tuple(tree_plan)
     #  ONE FAR RUN PER PLATFORM (intend/45 R-4): the project's root, the
     #  wish as given, '--as-platform' and the near run's platform words --
     #  so the far run decides every directory as the near run did, and
@@ -792,7 +810,67 @@ def orchestrate(root, wish, build_interview=None, label_view=None):
                    warning_tuple = tree_plan.warning_tuple + note_tuple,
                    not_run_tuple = tuple(said_list),
                    not_run_n     = not_run_n,
-                   handed_tuple  = tuple(handed_list))
+                   handed_tuple  = tuple(handed_list),
+                   gone_tuple    = roster_gone_tuple(root, wish))
+
+
+def pending_move_note_tuple(tree_plan):
+    """
+    RETURN: tuple of str, one note per test that stands in one directory
+            with NO GOOD file while ANOTHER directory's book records it and
+            it does not stand there (CR-7): 'hwut.rename' carried its
+            records, and the 'git mv' of the source is still owed. Without
+            the note the run says 'accept it' -- which would make fresh
+            GOOD files at the old place.
+    """
+    root = tree_plan.root
+    vanished_db = {}                         # test -> [directory]
+    fresh_list  = []                         # (directory, test)
+    for entry in tree_plan:
+        whole = os.path.normpath(os.path.join(root, entry.directory))
+        for name, verdict in vanished_tuple(whole, entry.app_set):
+            if verdict == "test-vanished":
+                vanished_db.setdefault(name, []).append(entry.directory)
+        for name in no_good_file_tuple(entry.refused_tuple):
+            test = name.partition(" ")[0]
+            if (entry.directory, test) not in fresh_list:
+                fresh_list.append((entry.directory, test))
+    result = []
+    for directory, test in fresh_list:
+        if test in Bookkeeper(os.path.join(root, directory)).tests(): continue
+        there = [d for d in vanished_db.get(test, ()) if d != directory]
+        if len(there) != 1: continue
+        source = "%s/%s" % (directory, test)
+        target = "%s/%s" % (there[0], test)
+        result.append("NOTE: pending move? '%s' stands, and its records "
+                      "stand in '%s' => git mv %s %s"
+                      % (source, there[0], source, target))
+    return tuple(result)
+
+
+def roster_gone_tuple(root, wish):
+    """
+    RETURN: tuple of str, the TEST directories 'HWUT/directories.txt'
+            records that do not stand, below 'root' and wanted by the
+            wish's directory rules -- relative to 'root', '/'-separated,
+            sorted (CR-2). Empty where no roster stands, and where the wish
+            asks a question of cases (a glob, a label, '--fail', ...): a
+            directory that does not stand offers no case to ask it of.
+    """
+    from hwut.engine.bookkeeper import roster
+    if not wish.states_no_case_rule_f(): return ()
+    tree_root = roster.root_of(root)
+    if tree_root is None: return ()
+    root = os.path.abspath(root)
+    def relative_of(directory):
+        return os.path.relpath(directory, root).replace(os.sep, "/")
+    wanted = dir_wanted_f(wish, root)
+    wanted_f = None if wanted is None \
+               else (lambda tree_relative:
+                         wanted(relative_of(os.path.join(tree_root,
+                                                         tree_relative))))
+    return tuple(relative_of(roster.directory_of(tree_root, entry))
+                 for entry in roster.gone_tuple(tree_root, root, wanted_f))
 
 
 def orchestrator(root, wish, dispatcher_factory, worker_max_n=None,

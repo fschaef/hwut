@@ -17,6 +17,9 @@ DESCRIPTION
                                 TRANSIENT_DIRECTORY_NAME,
                                 OUT_DIRECTORY_NAME: hwut's own two
                                 grounds, standing beside 'GOOD'
+       or  it is the 'HWUT' beside 'hwut-root.conf'
+                                RECORD_DIRECTORY_NAME: the tree's own
+                                files (CR-1)
 
            no_entry_f(path)         the question every walk asks
            marked_no_entry(path)    the marker placed
@@ -68,7 +71,7 @@ def no_entry_f(path):
             False, else
     """
     return os.path.isfile(os.path.join(path, NO_ENTRY_MARKER_FILE)) \
-           or own_ground_f(path)
+           or own_ground_f(path) or record_directory_f(path)
 
 
 def marked_no_entry(path):
@@ -87,6 +90,71 @@ def marked_no_entry(path):
 
 #  WHERE A PROJECT OF ITS OWN BEGINS (RQ-1): a directory holding this file.
 ROOT_CONF_NAME = "hwut-root.conf"
+
+#  THE FRAMEWORK'S FILES OF A TREE (CR-1, 2026-11-20): one visible
+#  directory beside 'hwut-root.conf', capitals like 'TEST', 'GOOD', 'TMP'
+#  and 'OUT'; every file in it named without a 'hwut-' prefix and with an
+#  extension an editor opens. 'hwut-root.conf' stays outside: it is the
+#  person's file and the marker the root search climbs to. Every name is
+#  '/'-separated and relative to the root -- what a message prints, and
+#  what 'os.path.join(root, ...)' opens on every platform.
+RECORD_DIRECTORY_NAME = "HWUT"
+LABELS_FILE_NAME      = RECORD_DIRECTORY_NAME + "/labels.txt"
+ROSTER_FILE_NAME      = RECORD_DIRECTORY_NAME + "/directories.txt"
+FOREST_FILE_NAME      = RECORD_DIRECTORY_NAME + "/feature-forest.csv"
+DOC_FILE_NAME         = RECORD_DIRECTORY_NAME + "/feature-doc.txt"
+EXTERNAL_FILE_NAME    = RECORD_DIRECTORY_NAME + "/feature-external-map.csv"
+TOOLS_FILE_NAME       = RECORD_DIRECTORY_NAME + "/tools.rst"
+
+#  THE OLD PLACES (CR-4): beside 'hwut-root.conf', before CR-1. A face that
+#  finds one refuses by name; 'hwut.renovate' moves it.
+OLD_PLACE_DB = {
+    "hwut-root.labels":              LABELS_FILE_NAME,
+    "hwut-feature-forest.csv":       FOREST_FILE_NAME,
+    "hwut-feature-doc.dat":          DOC_FILE_NAME,
+    "hwut-feature-external-map.csv": EXTERNAL_FILE_NAME,
+    "hwut-tools.rst":                TOOLS_FILE_NAME,
+}
+
+
+def record_directory_f(path):
+    """
+    RETURN: True,  'path' is a tree's 'HWUT/' -- named so and standing
+                   beside a 'hwut-root.conf'
+            False, else
+    """
+    return os.path.basename(path) == RECORD_DIRECTORY_NAME \
+           and os.path.isfile(os.path.join(os.path.dirname(path),
+                                           ROOT_CONF_NAME))
+
+
+def made_record_directory(root):
+    """
+    RETURN: str, the absolute 'HWUT/' of the tree rooted at 'root', made
+            where it did not stand. Raises OSError where it cannot be.
+    """
+    path = os.path.join(os.path.abspath(root), RECORD_DIRECTORY_NAME)
+    os.makedirs(path, exist_ok=True)
+    return path
+
+
+def old_place_refusal_list(root):
+    """
+    RETURN: list of str, one refusal per framework file that still stands
+            at its OLD place beside 'hwut-root.conf' in 'root' (CR-4),
+            naming it and the remedy -- or two copies, where the new one
+            stands as well. Empty where none does.
+    """
+    result = []
+    for old, new in sorted(OLD_PLACE_DB.items()):
+        if not os.path.isfile(os.path.join(root, old)): continue
+        if os.path.isfile(os.path.join(root, new)):
+            result.append("'%s' and '%s' both stand -- two copies of one "
+                          "file; keep one" % (old, new))
+        else:
+            result.append("'%s' is the old place of '%s' => hwut.renovate"
+                          % (old, new))
+    return result
 
 
 def inner_root_f(path):

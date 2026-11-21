@@ -7,8 +7,8 @@ $ (no -p)
     EXPLORED linux/TEST         0
     EXPLORED linux/inner/TEST   0
     EXPLORED both/TEST          1
-    FAIL     both/TEST test-d.sh -- platform local does not provide tool iverilog (not on PATH: hwut-bubble-probe; hwut-tools.rst probe)
-    FAIL     none/deep/TEST test-e.sh -- platform local does not provide tool iverilog (not on PATH: hwut-bubble-probe; hwut-tools.rst probe)
+    FAIL     both/TEST test-d.sh -- platform local does not provide tool iverilog (not on PATH: hwut-bubble-probe; HWUT/tools.rst probe)
+    FAIL     none/deep/TEST test-e.sh -- platform local does not provide tool iverilog (not on PATH: hwut-bubble-probe; HWUT/tools.rst probe)
 --- a stand-in first on PATH
 $ (no -p)
     not-run  linux          ''         available linux/: requires ghdl, held by linux; specified local

@@ -1,14 +1,14 @@
 """SPDX-License: MIT; Project HWUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 
-PURPOSE: 'hwut-root.labels' -- reading it, writing it (disc-8).
+PURPOSE: 'HWUT/labels.txt' -- reading it, writing it (disc-8).
 
 The file stands BESIDE 'hwut-root.conf', at the tree's boundary, the
 very boundary the configuration climb ends at
 ('tree_explorer.root_conf_directory'). Absent means no label exists,
 which is not an error.
 
-    #  hwut-root.labels -- the sets of this tree.
+    #  HWUT/labels.txt -- the sets of this tree.
     ./engine/bookkeeper/TEST/test-group_table.py : concern
     :/: groups                                   : meta
     :/test-stream_store.py                       : meta
@@ -77,7 +77,7 @@ from ....engine.orchestrator.plan.wish import (ElisionError,
 from   hwut.engine.orchestrator.exploration.tree_explorer \
                                           import root_conf_directory
 
-LABELS_FILE_NAME = "hwut-root.labels"
+from hwut.auxiliary.no_entry import LABELS_FILE_NAME      # noqa: E402
 
 GLOB_MARK_TUPLE  = ("*", "?", "[")
 
@@ -155,6 +155,17 @@ def file_path(boundary):
     return os.path.join(boundary, LABELS_FILE_NAME)
 
 
+def _old_place_refusal(boundary, old):
+    """
+    RETURN: str, the refusal where the file 'old' still stands beside
+                 'hwut-root.conf' in 'boundary' (CR-4)
+            None, else
+    """
+    from hwut.auxiliary.no_entry import old_place_refusal_list
+    return next((text for text in old_place_refusal_list(boundary)
+                 if text.startswith("'%s'" % old)), None)
+
+
 def boundary_of(directory):
     """
     RETURN: str, the absolute directory holding the 'hwut-root.conf'
@@ -170,7 +181,7 @@ def boundary_of(directory):
 def read_entry_db(boundary):
     """
     RETURN: dict, '(<file>, <choice> | None)' -> frozenset[str] -- what
-            'hwut-root.labels' assigns; the file path RELATIVE to
+            'HWUT/labels.txt' assigns; the file path RELATIVE to
             'boundary', '/'-separated, no './'. Empty where the file
             is absent, which means: no label exists.
 
@@ -178,6 +189,10 @@ def read_entry_db(boundary):
     be meant (see the module purpose).
     """
     path = file_path(boundary)
+    #  THE OLD PLACE IS REFUSED BY NAME (CR-4): read silently, a labels
+    #  file left beside 'hwut-root.conf' would be a set nobody can see.
+    refusal = _old_place_refusal(boundary, "hwut-root.labels")
+    if refusal is not None: raise LabelFileError(refusal)
     kept = _Kept()
     _KEPT_DB[os.path.abspath(path)] = kept
     if not os.path.isfile(path): return {}
@@ -351,7 +366,7 @@ def derivation_tuple(boundary, entry_db):
 
 def write_entry_db(boundary, entry_db):
     """
-    RETURN: None. Rewrites 'hwut-root.labels' WHOLE: header, then the
+    RETURN: None. Rewrites 'HWUT/labels.txt' WHOLE: header, then the
             entries sorted and elided. An 'entry_db' holding nothing
             REMOVES the file -- absent and empty mean the same, 'no
             label exists', and only one of the two spellings can be
@@ -367,6 +382,8 @@ def write_entry_db(boundary, entry_db):
         return
     line_list = _elided_line_list(entry_db)
     width     = max([len(target) for target, _ in line_list] or [0])
+    #  THE FILE MAY BE THE FIRST OF 'HWUT/' (CR-1).
+    os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
     with io.open(path, "w", encoding="utf-8", newline="\n") \
          as file_handle:
         for line in (kept.preamble or HEADER):

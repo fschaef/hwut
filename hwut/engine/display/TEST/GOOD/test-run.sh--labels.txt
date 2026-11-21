@@ -16,7 +16,7 @@ STDOUT {
        '--- gamma/TEST . . . . . . . . . . . . . . . . . . . .       [OK]      1/1
     ==============================================================================
     
-    RESULTS: 3 ok, 0 fail, 3 meta, 0.23 [sec], 0.24 [sec] total
+    RESULTS: 3 ok, 0 fail, 3 meta, 0.09 [sec], 0.11 [sec] total
     |                                     ok                                     |
 }
 --- '--label meta' lifts the silence (only test-two runs)
@@ -37,7 +37,7 @@ STDOUT {
        '--- gamma/TEST . . . . . . . . . . . . . . . . . . . .       [OK]      1/1
     ==============================================================================
     
-    RESULTS: 3 ok, 0 fail, 3 skip, 0.14 [sec], 0.15 [sec] total
+    RESULTS: 3 ok, 0 fail, 3 skip, 0.07 [sec], 0.08 [sec] total
     |                  ok                  |                skip                 |
 }
 --- '--label all' is the universe
@@ -61,13 +61,13 @@ STDOUT {
        '--- gamma/TEST . . . . . . . . . . . . . . . . . . . .       [OK]      2/2
     ==============================================================================
     
-    RESULTS: 6 ok, 0 fail, 0.20 [sec], 0.20 [sec] total
+    RESULTS: 6 ok, 0 fail, 0.10 [sec], 0.12 [sec] total
     |                                     ok                                     |
 }
 --- a label that does not stand, refused by name
 STATUS: 2
 STDOUT {
-    REFUSED: no label 'cocnern' stands in 'hwut-root.labels'
+    REFUSED: no label 'cocnern' stands in 'HWUT/labels.txt'
 }
 --- a LITERAL target overrides the silence
 STATUS: 0
@@ -81,7 +81,7 @@ STDOUT {
        tree/alpha/TEST . . . . . . . . . . . . . . . . . . . .       [OK]      1/1
     ==============================================================================
     
-    RESULTS: 1 ok, 0 fail, 1 skip, 0.05 [sec], 0.05 [sec] total
+    RESULTS: 1 ok, 0 fail, 1 skip, 0.03 [sec], 0.05 [sec] total
     |                  ok                  |                skip                 |
 }
 --- a GLOB does not; wholly swallowed, it warns
@@ -97,12 +97,12 @@ STDOUT {
        tree/alpha/TEST . . . . . . . . . . . . . . . . . . . .       [OK]      0/0
     ==============================================================================
     
-    RESULTS: 0 ok, 0 fail, 1 skip, 1 meta, 0.02 [sec], 0.03 [sec] total
+    RESULTS: 0 ok, 0 fail, 1 skip, 1 meta, 0.01 [sec], 0.03 [sec] total
     |                                    skip                                    |
 }
 --- a broken labels file is a FAULT at the door
 STATUS: 1
 STDOUT {
-    FAULT: WORK/hwut-root.labels:26: a target starts './' -- the file's own ground -- and 'x' does not
+    FAULT: WORK/HWUT/labels.txt:26: a target starts './' -- the file's own ground -- and 'x' does not
 }
 <hwut-end>

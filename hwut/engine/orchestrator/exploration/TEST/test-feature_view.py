@@ -138,7 +138,7 @@ def label():
     shown("f/decod", strict_f=False)
     forget_views()
     empty = ft.tree("", "")
-    os.remove(os.path.join(empty, "hwut-feature-forest.csv"))
+    os.remove(os.path.join(empty, "HWUT/feature-forest.csv"))
     try:
         feature_label_case_set(empty, "f/fwd")
     except SelectionError as error:
@@ -148,7 +148,7 @@ def label():
 def refused():
     """RETURN: None. A view that cannot be had."""
     root = ft.tree("", "")
-    os.remove(os.path.join(root, "hwut-feature-forest.csv"))
+    os.remove(os.path.join(root, "HWUT/feature-forest.csv"))
     for label, forest, doc, external in (
             ("no forest", None, "", None),
             ("forest",  "a : b\nb : a\n", "", None),

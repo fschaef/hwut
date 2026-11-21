@@ -1,7 +1,7 @@
 """SPDX-License: MIT; Project HWUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 
-PURPOSE: THE EXPLANATION OF THE FEATURES, 'hwut-feature-doc.dat', read
+PURPOSE: THE EXPLANATION OF THE FEATURES, 'HWUT/feature-doc.txt', read
          (spec 43 section 2; intend/43 T-c, T-g, T-p, T-s). ONE file beside
          the forest (t-7 struck, 2026-11-08): blocks headed by a bracketed
          line, each running to the next heading or to the end of the file.
@@ -49,7 +49,7 @@ from   dataclasses import dataclass, field
 from .feature_forest import id_valid_f
 from .suggestion     import did_you_mean
 
-from .finder         import DOC_FILE_NAME
+from .finder         import DOC_FILE_NAME, refuse_old_place
 
 CUSTOMERS     = "CUSTOMERS"
 DOCUMENTS     = "documents:"
@@ -101,11 +101,12 @@ class CDoc:
 
 def read_doc(top, forest):
     """
-    RETURN: CDoc, what 'top/hwut-feature-doc.dat' states, the audiences
+    RETURN: CDoc, what 'top/HWUT/feature-doc.txt' states, the audiences
             folded down 'forest' (a CForest, or None: no forest)
             None, no such file stands
     RAISES: DocFault, where it cannot be read or states a fault.
     """
+    refuse_old_place(top, "hwut-feature-doc.dat", DocFault)       # CR-4
     path = os.path.join(top, DOC_FILE_NAME)
     if not os.path.isfile(path): return None
     try:

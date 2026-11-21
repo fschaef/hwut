@@ -55,8 +55,8 @@ face() {
 }
 
 the_file() {
-    if [ -f hwut-root.labels ]; then
-        echo "THE FILE {"; sed 's/^/    /' < hwut-root.labels; echo "}"
+    if [ -f HWUT/labels.txt ]; then
+        echo "THE FILE {"; sed 's/^/    /' < HWUT/labels.txt; echo "}"
     else
         echo "THE FILE: absent -- no label exists"
     fi
@@ -110,7 +110,7 @@ comments)
     $ADD    meta    --glob "tree/storage/TEST/test-a.sh one" > /dev/null
     python3 - <<'PY'
 import re
-text = open("hwut-root.labels").read().splitlines()
+text = open("HWUT/labels.txt").read().splitlines()
 out, seen = [], 0
 for line in text:
     if line.startswith("#"): out.append(line); continue
@@ -121,11 +121,11 @@ for line in text:
         out += ["# above the second entry", line]
     else:
         out.append(line)
-open("hwut-root.labels", "w").write("\n".join(out) + "\n")
+open("HWUT/labels.txt", "w").write("\n".join(out) + "\n")
 PY
     #  E-98: the PREAMBLE -- everything down to the first '#___' rule --
     #  is the person's, kept verbatim; a note added there survives.
-    sed -i '1s/^/# my own note, above the rule\n/' hwut-root.labels
+    sed -i '1s/^/# my own note, above the rule\n/' HWUT/labels.txt
     echo "--- as edited by hand"
     the_file
     echo "--- a label taken off an entry that is NOT the commented ones"

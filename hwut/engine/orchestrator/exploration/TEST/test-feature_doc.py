@@ -13,7 +13,7 @@
 """SPDX-License: MIT; Project HWUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 
-PURPOSE: 'hwut-feature-doc.dat', read (spec 43 section 2; intend/43 T-c,
+PURPOSE: 'HWUT/feature-doc.txt', read (spec 43 section 2; intend/43 T-c,
          T-g, T-p, T-s).
 
 CHOICES: read, audiences, faults, prototypes;

@@ -82,6 +82,8 @@ class E_Failure(Enum):
     TEST_CHOICE_VANISHED        = "test-choice-vanished"
     TEST_FAILED                 = "test-failed"
     TEST_VANISHED               = "test-vanished"
+    #  A DIRECTORY THE ROSTER RECORDS DOES NOT STAND (CR-2).
+    DIRECTORY_GONE              = "directory-gone"
     UNACCEPTED                  = "unaccepted"
     UNCAPPED                    = "uncapped"
     TOOL_NOT_PROVIDED           = "tool-not-provided"
@@ -101,6 +103,8 @@ class E_FailureCategory(Enum):
         DEVIATION    the subject and the nominal differ -- the ordinary
                      business of a test; no word before '[FAIL]'
         BOOK         the book disagrees with the tree, or stains a case
+        ROSTER       a TEST directory 'HWUT/directories.txt' records does
+                     not stand (CR-2)
         EXECUTION    the application ran and misbehaved: killed, cut
                      short, silent, stalled, speaking on stderr, its
                      pype failing
@@ -111,6 +115,7 @@ class E_FailureCategory(Enum):
     BUILD       = "build"
     DEVIATION   = "deviation"
     BOOK        = "book"
+    ROSTER      = "roster"
     EXECUTION   = "execution"
     ENVIRONMENT = "environment"
 
@@ -123,6 +128,7 @@ CATEGORY_HEADING_DB = {
     E_FailureCategory.BUILD:       "BUILD -- build or launch error",
     E_FailureCategory.DEVIATION:   "DEVIATION -- output differs from GOOD",
     E_FailureCategory.BOOK:        "BOOK -- book and tree disagree",
+    E_FailureCategory.ROSTER:      "ROSTER -- recorded directory gone",
     E_FailureCategory.EXECUTION:   "EXECUTION -- application invocation error",
     E_FailureCategory.ENVIRONMENT: "ENVIRONMENT -- error around the test",
 }
@@ -225,6 +231,7 @@ _brief_failure_db = {
     _F.TEST_FAILED:                 (_C.DEVIATION,  None),
     #  BOOK
     _F.TEST_VANISHED:               (_C.BOOK,       "no-app"),
+    _F.DIRECTORY_GONE:              (_C.ROSTER,     "no-dir"),
     _F.TEST_CHOICE_VANISHED:        (_C.BOOK,       "no-choice"),
     _F.UNSTABLE:                    (_C.BOOK,       "unstable"),
     #  EXECUTION
@@ -446,6 +453,17 @@ failure_db = MappingProxyType({f.failure_id: f for f in (
              "are carried after it -- and 'forget <test>' else, which "
              "drops every record of it: nominals, candidates, its row in "
              "'GOOD/book.csv', register id."),
+    _failure(_F.DIRECTORY_GONE, "in roster, no such directory",
+             "'HWUT/directories.txt' records a TEST directory that holds "
+             "records, and it does not stand: deleted, moved, or lost in a "
+             "merge -- its books went with it, and without the roster the "
+             "run would only have grown smaller (CR-2).",
+             "If it moved: 'hwut.sanitize move <old>/TEST <new>/TEST'. If "
+             "it is gone on purpose: 'hwut.sanitize forget <old>/TEST'.",
+             "'hwut.sanitize.propose' proposes 'move <old> <new>' where an "
+             "unrecorded TEST directory holds a book naming the same "
+             "applications, and 'forget <old>' else, which drops the "
+             "roster entry and the labels' targets below it."),
     _failure(_F.TEST_CHOICE_VANISHED,
              "in book, no such choice",
              "'GOOD/book.csv' records a choice the test no longer offers.",
@@ -567,7 +585,7 @@ failure_db = MappingProxyType({f.failure_id: f for f in (
              "Run the command by hand to see why."),
     _failure(_F.TOOL_NOT_PROVIDED, "platform does not provide tool; not run",
              "The platform this directory runs on declares a tool it "
-             "requires, and the tool's 'probe:' line in 'hwut-tools.rst' "
+             "requires, and the tool's 'probe:' line in 'HWUT/tools.rst' "
              "finds a program missing on that platform: the declaration "
              "is the contract, its breach a failing case (intend/45 R-5, "
              "R-7).",

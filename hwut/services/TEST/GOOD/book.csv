@@ -1,4 +1,4 @@
-# vut-register 5 generation:536 apps:62 marks:0=7,1=8,2=13,3=5,4=8,5=7,6=12,7=5,8=10,9=2,10=3,11=5,12=6,13=7,14=8,15=5,16=6,17=10,18=3,19=5,20=7,21=13,22=4,23=15,24=8,25=11,26=5,27=13,28=10,29=3,30=8,31=4,32=1,33=4,34=3,35=4,36=8,37=18,38=13,39=3,40=2,41=12,42=10,45=12,46=3,48=5,49=5,50=7,51=19,52=20,53=30,54=8,55=2,56=3,57=3,58=4,59=2,60=5,61=8
+# vut-register 5 generation:546 apps:63 marks:0=7,1=8,2=13,3=5,4=8,5=7,6=12,7=5,8=10,9=2,10=3,11=5,12=6,13=7,14=8,15=5,16=6,17=10,18=3,19=5,20=7,21=13,22=4,23=15,24=8,25=11,26=5,27=13,28=10,29=3,30=8,31=4,32=1,33=4,34=3,35=4,36=8,37=18,38=13,39=3,40=2,41=12,42=10,45=12,46=3,48=5,49=5,50=7,51=19,52=20,53=30,54=8,55=2,56=3,57=3,58=4,59=2,60=5,61=8,62=9
 test;choice;verdict;report;stain;test_id;choice_id;platform
 test-about.sh;page;true;ok;;39;0
 ;refused;true;ok;;39;1
@@ -385,6 +385,15 @@ test-report.sh;color;true;ok;;21;0
 ;tap;true;ok;;21;6
 ;traditional;true;ok;;21;7
 ;width;true;ok;;21;8
+test-roster.sh;directories;true;ok;;62;2
+;empty-dir;true;ok;;62;0
+;gone;true;ok;;62;7
+;old-place;true;ok;;62;3
+;pending-move;true;ok;;62;6
+;rename-noted;true;ok;;62;1
+;roster;true;ok;;62;5
+;rubbish-last;true;ok;;62;8
+;scope;true;ok;;62;4
 test-run-disk.sh;local;true;ok;;46;1
 ;short;true;ok;;46;2
 ;wait;true;ok;;46;0

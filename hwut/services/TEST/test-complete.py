@@ -30,7 +30,7 @@ THE COMPLETION (services E-151, adm/WORK/gathered/0s). Every choice but
     values    an option's words ('enum'), '--opt=value', directories
     apps      the short form: applications here, then the choices of
               one -- 'choices = [...]' and a 'choices { }' block
-    labels    'hwut-root.labels' at the boundary, plus 'all', 'meta'
+    labels    'HWUT/labels.txt' at the boundary, plus 'all', 'meta'
     targets   the targets the current directory's 'hwut.conf' binds
     silent    a broken line, a missing table, an unreadable file: no
               candidate, nothing on stderr, status 0
@@ -125,7 +125,7 @@ def fixture_tree():
                       "hwut.no-entry-here.marker"), "w").close()
     files = {
         "hwut-root.conf":   "hwut { }\n",
-        "hwut-root.labels": "#  hwut-root.labels\n#___\n"
+        "HWUT/labels.txt": "#  HWUT/labels.txt\n#___\n"
                             "./TEST/test-a.sh : smoke nightly\n"
                             ":/test-b.py      : nightly\n",
         "TEST/test-a.sh":   APP_A,
@@ -137,6 +137,7 @@ def fixture_tree():
                             "    }\n}\n",
     }
     for name, text in files.items():
+        os.makedirs(os.path.dirname(os.path.join(root, name)), exist_ok=True)
         with open(os.path.join(root, name), "w") as fh: fh.write(text)
     return root
 

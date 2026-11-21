@@ -1,0 +1,5 @@
+    forget input/TEST/test-keys.sh
+    remove game/TEST/OUT
+    remove input/TEST/OUT
+    remove render/TEST/OUT
+<hwut-end>

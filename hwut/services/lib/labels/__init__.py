@@ -3,7 +3,7 @@ ______________________________________________________________________________
 
 THE LABEL FACES -- 'hwut.labels.<verb>' <=> 'services/lib/labels/<verb>.py'
 (the naming law's dotted clause, disc-8): 'create', 'add', 'remove',
-'list', 'query', five acts on one file, 'hwut-root.labels'. The
+'list', 'query', five acts on one file, 'HWUT/labels.txt'. The
 underscore modules are theirs alone: '_file.py' reads and writes the
 file, '_faces.py' holds what the five share. The GRAMMAR lives with
 the engine ('plan/label.py'), because the selection evaluates it.
@@ -11,7 +11,7 @@ the engine ('plan/label.py'), because the selection evaluates it.
 'view_at(directory)' is the ONE DOOR through which any other face
 obtains the label view it hands to a selection -- 'hwut.run',
 'hwut.plan', 'hwut.report.list', 'hwut.accept', 'hwut.report' and what
-rides them. The engine never opens 'hwut-root.labels'; a face builds
+rides them. The engine never opens 'HWUT/labels.txt'; a face builds
 the view here and hands it down.
 ______________________________________________________________________________
 """
@@ -23,7 +23,7 @@ from .          import _file
 
 def view_at(directory):
     """
-    RETURN: CLabelView (plan/label.py), what 'hwut-root.labels'
+    RETURN: CLabelView (plan/label.py), what 'HWUT/labels.txt'
             assigns in the tree 'directory' stands in -- an EMPTY view
             where the file is absent, which imposes nothing: no label
             exists, no silence, and a selection behaves as one with no

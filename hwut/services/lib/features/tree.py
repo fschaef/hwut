@@ -6,9 +6,9 @@ PURPOSE: THE 'hwut.features.tree' COMMAND LINE -- the forest of features
 
     hwut.features.tree [<id>] [--list] [-e] [--directory=<path>]
 
-prints the roots of 'hwut-feature-forest.csv' first, each feature's
+prints the roots of 'HWUT/feature-forest.csv' first, each feature's
 children indented below it, every feature with its title from
-'hwut-feature-doc.dat'. The unplaced -- documented, in no forest line --
+'HWUT/feature-doc.txt'. The unplaced -- documented, in no forest line --
 follow under '(unplaced)'. Retired claims are not printed. A prototype's
 instances stand in the trees as '<owner>+<id>', each with the title that
 documents it (intend/44 p-5); the prototypes as declared, their members
@@ -19,7 +19,7 @@ below them, follow under '(prototypes)'.
                 pasted into a label expression as 'f/<id>', or given to
                 'hwut.report.features'
     -e          each feature with the outside's names for it, where
-                'hwut-feature-external-map.csv' holds some
+                'HWUT/feature-external-map.csv' holds some
 
 EXIT STATUS (E-1, services/_exit.py):
     0  OK       printed

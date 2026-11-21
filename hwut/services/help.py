@@ -403,8 +403,8 @@ def unregistered_explanation_line_list(pair_list):
     """
     paragraph_list = [
         "Each test run below links, in its '@hwut { }' block, a feature "
-        "id that stands in no line of 'hwut-feature-forest.csv' and no "
-        "block of 'hwut-feature-doc.dat' -- a misspelt id, a feature "
+        "id that stands in no line of 'HWUT/feature-forest.csv' and no "
+        "block of 'HWUT/feature-doc.txt' -- a misspelt id, a feature "
         "never written down, or one that was retired. It is NOT a "
         "failure: the test runs and is judged. But the link proves "
         "nothing anybody can find.",
@@ -438,7 +438,7 @@ def nonsense_explanation_line_list(case_list):
         "-- a test run that proves nothing anybody claimed is either a "
         "claim nobody wrote down, or a test nobody needs.",
         HEAL_OPENER_STR + "write the feature the test run proves into "
-        "'hwut-feature-doc.dat' and the forest, and name it under "
+        "'HWUT/feature-doc.txt' and the forest, and name it under "
         "'features' in the test's '@hwut { }' block; or link the test "
         "run to a feature that stands already; or remove the test "
         "('hwut.remove')."]

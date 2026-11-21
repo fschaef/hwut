@@ -691,8 +691,8 @@ records nothing. The faces that take a wish also take its SHORT FORM --
 reaches the records at the tree's boundary; the rename and removal
 faces call it last. 'labels/' is the first dotted family:
 'hwut.labels.create', '.add', '.remove', '.list' and '.query' -- five
-acts on 'hwut-root.labels', the file of the tree's SETS OF RUNS, which
-stands beside 'hwut-root.conf' at the boundary. 'good/' is the second:
+acts on 'HWUT/labels.txt', the file of the tree's SETS OF RUNS, in the
+'HWUT/' beside 'hwut-root.conf' at the boundary. 'good/' is the second:
 'hwut.good.link', '.link.show', '.isolate' and '.rebase' -- the acts on
 LINKED NOMINALS, a '.link' in GOOD/ in place of a case's '.txt'
 (bookkeeper B-32, E-209). 'remove.py' (and its choice form) faces the Bookkeeper

@@ -44,7 +44,7 @@ Four gates, in order. A file passes all four or it is no test application.
          '*.pypes', and the directory's own 'ignore' globs -- silent;
        - THE FRAMEWORK'S OWN FILES, by name, never by glob: 'hwut.conf',
          'hwut-root.conf', 'hwut-info.dat', 'hwut-traces.csv',
-         'hwut-root.labels';
+         'HWUT/labels.txt';
        - a BACKUP-SHAPED name -- '*~', '#*#', '*.bak', '*.backup', '*.orig',
          '*.old', '*.save', '*.rej', '*.copy', '*.swp', '*.tmp' -- which is
          REPORTED with its reason, not passed over.
@@ -1008,11 +1008,11 @@ THREE FILES AND ONE BLOCK say what a tree claims to do and which test runs
 prove it (spec 43; intend/43 T-a..T-u). One feature id, '[A-Za-z0-9_-]+',
 names a feature everywhere; nothing encodes a directory (t-1).
 
-    <top>/hwut-feature-forest.csv        <id> : <child>, <child>, ...
-    <top>/hwut-feature-doc.dat           [[<id>]] blocks: 'documents:',
+    <top>/HWUT/feature-forest.csv        <id> : <child>, <child>, ...
+    <top>/HWUT/feature-doc.txt           [[<id>]] blocks: 'documents:',
                                          title, doc; '[[<id>:retired]]';
                                          '[[CUSTOMERS]]' and 'to'/'not'
-    <top>/hwut-feature-external-map.csv  <our id> ; <their name>
+    <top>/HWUT/feature-external-map.csv  <our id> ; <their name>
     a test's '@hwut { }' block           features = ["<id>", ...]
 
 '<top>' is the 'hwut-root.conf' that holds the forest, found by

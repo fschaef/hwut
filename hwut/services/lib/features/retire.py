@@ -6,9 +6,9 @@ PURPOSE: THE 'hwut.features.retire' COMMAND LINE -- a claim is no longer
 
     hwut.features.retire <id> [--directory=<path>]
 
-The feature's block in 'hwut-feature-doc.dat' takes the heading
+The feature's block in 'HWUT/feature-doc.txt' takes the heading
 '[[<id>:retired]]' -- the claim kept as it was -- and the id leaves every
-line of 'hwut-feature-forest.csv'. A retired claim has no verdict, counts
+line of 'HWUT/feature-forest.csv'. A retired claim has no verdict, counts
 nowhere, and 'f/<id>' refuses it. An id with children is refused: retire
 them first, a retired claim has nothing below it.
 

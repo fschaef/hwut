@@ -317,13 +317,13 @@ def _root_directory():
 def _labels(word):
     """
     RETURN: list[str], the labels that stand in the tree's
-            'hwut-root.labels' -- and 'all', 'meta' -- that start with
+            'HWUT/labels.txt' -- and 'all', 'meta' -- that start with
             'word'.
     """
     name_set = set(STANDARD_LABEL_TUPLE)
     root = _root_directory()
     if root is not None:
-        path = os.path.join(root, "hwut-root.labels")
+        path = os.path.join(root, "HWUT/labels.txt")
         if os.path.isfile(path):
             with open(path, errors="replace") as fh:
                 for line in fh:

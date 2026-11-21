@@ -1,0 +1,17 @@
+--- run
+EXIT: 1
+    FAULT: 'hwut-root.labels' is the old place of 'HWUT/labels.txt' => hwut.renovate
+--- labels
+    FAULT: 'hwut-root.labels' is the old place of 'HWUT/labels.txt' => hwut.renovate
+--- renovate
+        'hwut-root.labels' -> 'HWUT/labels.txt'
+    1 change(s) reported, none written: '--apply' writes them.
+    gone:   hwut-root.labels
+    stands: HWUT/labels.txt
+--- run
+EXIT: 0
+    RESULTS: 5 ok, 0 fail
+--- both places: two copies
+EXIT: 1
+    FAULT: 'hwut-root.labels' and 'HWUT/labels.txt' both stand -- two copies of one file; keep one
+<hwut-end>

@@ -11,10 +11,10 @@ PURPOSE: THE 'hwut.report.features' COMMAND LINE -- print what the tree
 
 THE STATEMENTS READ, beside the 'hwut-root.conf' that begins the features:
 
-    hwut-feature-forest.csv         the place: '<id> : <child>, ...'
-    hwut-feature-doc.dat            the explanation: '[[<id>]]' blocks,
+    HWUT/feature-forest.csv         the place: '<id> : <child>, ...'
+    HWUT/feature-doc.txt            the explanation: '[[<id>]]' blocks,
                                     the retired, the audiences
-    hwut-feature-external-map.csv   the outside's names, where it stands
+    HWUT/feature-external-map.csv   the outside's names, where it stands
     a test's '@hwut { }' block      features = ["<id>", ...]
 
     Where no forest stands, nothing is reported => hwut.features.init.

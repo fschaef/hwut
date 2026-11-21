@@ -1,0 +1,6 @@
+--- renamed by hand
+    forget input/TEST/test-keys.sh  # renamed? hwut.rename input/TEST/test-keys.sh -to test-buttons.sh
+    forget render/TEST/test-screen.sh start  # renamed? hwut.rename render/TEST/test-screen.sh start -to begin
+--- deleted, and an unrelated test beside it: no note
+    forget input/TEST/test-keys.sh
+<hwut-end>

@@ -2,8 +2,8 @@
 ______________________________________________________________________________
 
 PURPOSE: THE 'hwut.features.init' COMMAND LINE -- begin the features of a
-         tree: an empty 'hwut-feature-forest.csv' and an empty
-         'hwut-feature-doc.dat' beside 'hwut-root.conf' (spec 43 section 5).
+         tree: an empty 'HWUT/feature-forest.csv' and an empty
+         'HWUT/feature-doc.txt' beside 'hwut-root.conf' (spec 43 section 5).
 
     hwut.features.init [--directory=<path>]
 

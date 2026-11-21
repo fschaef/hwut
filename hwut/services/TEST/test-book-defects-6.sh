@@ -129,7 +129,7 @@ case "$1" in
                             && "$BIN/hwut.accept" > /dev/null 2>&1 )
         cd "$WORK"
         #  THE FOREST STANDS AND KNOWS NOTHING OF 'one': the hint is due.
-        : > hwut-feature-forest.csv
+        mkdir -p HWUT; : > HWUT/feature-forest.csv
         echo "== hwut.run --plain: the hint stands on stdout"
         "$BIN/hwut.run" --plain 2>&1 | grep -E "link\(s\) to no feature" | shown \
             | sed 's/^/    /'

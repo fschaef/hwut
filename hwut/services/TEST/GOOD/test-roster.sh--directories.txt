@@ -1,0 +1,27 @@
+--- moved, nothing run
+    move render/TEST gfx/TEST
+done: move render/TEST gfx/TEST
+TOUCHED (the re-run trigger): 1 test application(s)
+ROSTER {
+    ./game/TEST
+    ./gfx/TEST
+    ./input/TEST
+}
+    ./gfx/TEST/test-screen.sh start : screens
+    :/: win                         : screens
+--- moved again, and run since
+EXIT: 1
+            (directory)   in roster, no such directory
+    RESULTS: 5 ok, 1 fail
+    forget gfx/TEST  # moved? hwut.sanitize move gfx/TEST lib/gfx/TEST
+--- forget
+done: forget gfx/TEST
+ROSTER {
+    ./game/TEST
+    ./input/TEST
+    ./lib/gfx/TEST
+}
+--- forget a directory that stands: refused
+REFUSED: forget input/TEST -- the directory stands: not gone
+STATUS: 1
+<hwut-end>

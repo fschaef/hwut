@@ -1,16 +1,16 @@
 >>> hwut.features.rename keep-order keeporder
     renamed  keep-order -> keeporder
-        hwut-feature-forest.csv
-        hwut-feature-doc.dat
-        hwut-feature-external-map.csv
+        HWUT/feature-forest.csv
+        HWUT/feature-doc.txt
+        HWUT/feature-external-map.csv
         link renamed in gw/TEST/hwut.conf
         link renamed in gw/TEST/test-fwd.sh
     exit 0
-    [hwut-feature-forest.csv]
+    [HWUT/feature-forest.csv]
     | gateway    : forwarding, buses
     | forwarding : fwd, keeporder
     | buses      : decode
-    [hwut-feature-doc.dat]
+    [HWUT/feature-doc.txt]
     | [[CUSTOMERS]]
     | manager: the one who asks
     | [[gateway to manager]]
@@ -23,22 +23,22 @@
     | Order is kept per sender.
     | [[spare]]
     | A promise with no place.
-    [hwut-feature-external-map.csv]
+    [HWUT/feature-external-map.csv]
     | keeporder ; REQ-4711
     | gateway ; GW
     [gw/TEST/test-fwd.sh] features = ["fwd", "keeporder"] | two { features = ["keeporder"] }
     [gw/TEST/hwut.conf] note.json { execute = "cat $file"  features = ["keeporder", "fwd"] }
 >>> hwut.features.rename gateway gw
     renamed  gateway -> gw
-        hwut-feature-forest.csv
-        hwut-feature-doc.dat
-        hwut-feature-external-map.csv
+        HWUT/feature-forest.csv
+        HWUT/feature-doc.txt
+        HWUT/feature-external-map.csv
     exit 0
-    [hwut-feature-forest.csv]
+    [HWUT/feature-forest.csv]
     | gw    : forwarding, buses
     | forwarding : fwd, keeporder
     | buses      : decode
-    [hwut-feature-external-map.csv]
+    [HWUT/feature-external-map.csv]
     | keeporder ; REQ-4711
     | gw ; GW
 <hwut-end>

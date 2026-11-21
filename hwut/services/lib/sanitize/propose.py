@@ -50,6 +50,15 @@ candidates.
     --out       'OUT/' directories holding files: the application's
                 scratch between runs. A directory a live run holds is
                 not proposed, and said on stderr. Healed by 'remove'.
+    --directories
+                A TEST DIRECTORY THE ROSTER RECORDS THAT DOES NOT STAND
+                ('HWUT/directories.txt', CR-3). Healed by 'move <old>
+                <new>' where exactly one is missing and exactly one
+                directory holding a book is not on the roster -- the roster
+                entry replaced, the labels' targets carried -- and by
+                'forget <old>' else: the entry and the labels' targets
+                below it dropped. A wish that asks of cases leaves it
+                unjudged, said on stderr.
     --orphans   RECORDS THAT NAME NOTHING: nominals, candidates and book
                 entries of a (test, choice) the configuration no longer
                 offers. Healed by 'forget', through 'hwut.remove' -- or,
@@ -267,7 +276,11 @@ def main(argv=None, write=None, err=None):
         try:
             query = CTestTaskListQuery(wish, Bookkeeper(whole),
                                        directory=where, root=root)
-            wanted_f = bool(query.get_test_cases(result.app_set))
+            #  A WISH THAT STATES NOTHING WANTS EVERY DIRECTORY (CR-5):
+            #  one whose last test left offers no case, and that is not
+            #  a wish hiding cases.
+            wanted_f = wish.states_nothing_f() \
+                       or bool(query.get_test_cases(result.app_set))
         except SelectionError as error:
             #  A WISH THAT NAMES WHAT THE TREE DOES NOT HOLD IS REFUSED
             #  BY NAME (E-19, R-75), here as at every face: read as
@@ -287,6 +300,14 @@ def main(argv=None, write=None, err=None):
                                    if d != whole),
                             root)
             issue_list.append(issue)
+        note_list.extend(noted)
+
+    if "directories" in aspect_set:
+        #  THE ROSTER AGAINST THE DISK (CR-3): a recorded TEST directory
+        #  that does not stand below the walk.
+        found, noted = sanitize.directory_issue_tuple(root, exploration,
+                                                      wish)
+        issue_list.extend(found)
         note_list.extend(noted)
 
     if "relations" in aspect_set:

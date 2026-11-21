@@ -1,0 +1,21 @@
+--- after the first acceptance
+ROSTER {
+    ./game/TEST
+    ./input/TEST
+    ./render/TEST
+}
+--- the last test of 'render/TEST' removed
+ROSTER {
+    ./game/TEST
+    ./input/TEST
+}
+--- accepted again
+ROSTER {
+    ./game/TEST
+    ./input/TEST
+    ./render/TEST
+}
+--- 'HWUT/' is walked by nobody: a TEST below it is no test
+EXIT: 0
+    RESULTS: 5 ok, 0 fail
+<hwut-end>

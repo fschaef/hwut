@@ -305,7 +305,7 @@ PYEOF2
             echo "== above: hwut.labels.create fast"
             "$BIN/hwut.labels.create" fast --glob 'test-*' 2>&1
             echo "== above: the outer file's entries"
-            grep -E "^[.:]" hwut-root.labels
+            grep -E "^[.:]" HWUT/labels.txt
             ran inside --label slow
             ran above  --label slow
             ran above  --label fast ;;
@@ -313,8 +313,8 @@ PYEOF2
             #  THE BUBBLE BEGINS FEATURES OF ITS OWN (spec 43; the
             #  showcase's case, ruled 2026-11-08): its forest and doc file.
             ( cd world && "$BIN/hwut.features.init" > /dev/null 2>&1 )
-            printf 'flows : flow\n' >> "$W/hwut-feature-forest.csv"
-            printf '[[flow]]\na flow\n' >> "$W/hwut-feature-doc.dat"
+            printf 'flows : flow\n' >> "$W/HWUT/feature-forest.csv"
+            printf '[[flow]]\na flow\n' >> "$W/HWUT/feature-doc.txt"
             sed -i 's/choices = \["x", "y"\]/features = ["flow"] choices = ["x", "y"]/' "$W/TEST/test-w.sh"
             ( cd world && "$BIN/hwut.run" --plain > /dev/null 2>&1 )
             #  A FEATURE IS THE LABEL 'f/<feature>' (intend/three-worlds).

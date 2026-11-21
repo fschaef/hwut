@@ -129,7 +129,7 @@ def labels_line_tuple(directory, name):
                 find the answer in the first place they look (disc-8).
                 Empty where no entry concerns what is shown -- the
                 feature unused costs no line of output.
-            [1] str | None, the fault where 'hwut-root.labels' cannot
+            [1] str | None, the fault where 'HWUT/labels.txt' cannot
                 be read; the section is then the fault's alone.
 
     NO BOUNDARY, NO SECTION: 'hwut.config.show' works on a bare directory,

@@ -7,7 +7,7 @@ PURPOSE: FOLLOWING A NAME -- the ONE PLACE where a test's rename or
 
 'hwut.rename' re-keys nominals, candidates, book entry and register
 entry; 'hwut.remove' forgets them. Those live IN the test directory.
-Records at the boundary -- today 'hwut-root.labels', tomorrow whatever
+Records at the boundary -- today 'HWUT/labels.txt', tomorrow whatever
 else anchors there -- would otherwise be forgotten BY EVERY FACE
 SEPARATELY, and the face that forgets is the one nobody notices: a
 label keyed by a name that has changed loses a member SILENTLY, and

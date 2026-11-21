@@ -1,0 +1,16 @@
+--- run
+EXIT: 1
+            (directory)   in roster, no such directory
+    RESULTS: 3 ok, 1 fail
+    ROSTER -- recorded directory gone
+        render/TEST
+            (directory)   in roster, no such directory
+    
+--- report
+            (directory)   in roster, no such directory
+    RESULTS: 3 ok, 1 fail
+--- help
+    no-dir -- in roster, no such directory  [1 case(s)]
+    CONCERNED:
+    render/TEST
+<hwut-end>

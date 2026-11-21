@@ -1,8 +1,8 @@
---- no 'hwut-feature-forest.csv': the remedy is another command
-REFUSED: no 'hwut-feature-forest.csv' stands at '<tree>' => hwut.features.init
+--- no 'HWUT/feature-forest.csv': the remedy is another command
+REFUSED: no 'HWUT/feature-forest.csv' stands at '<tree>' => hwut.features.init
 exit 2
 --- the same, asked of 'hwut.run -l f/shot'
-REFUSED: 'f/shot' asks for a feature: no 'hwut-feature-forest.csv' stands at '<tree>' => hwut.features.init
+REFUSED: 'f/shot' asks for a feature: no 'HWUT/feature-forest.csv' stands at '<tree>' => hwut.features.init
 exit 2
 --- a misspelt option: the usage names the spelling
 REFUSED: 'hwut.report.features' does not take '--matrx'

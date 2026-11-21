@@ -129,20 +129,20 @@ labels)
     #  THE BOUNDARY RECORDS FOLLOW ('services/_follow.py', disc-8
     #  section 5): a dropped test's label entries drop with it,
     #  symmetric with the book and the register (E-12) -- a run named
-    #  in 'hwut-root.labels' but no longer offered would look merely
+    #  in 'HWUT/labels.txt' but no longer offered would look merely
     #  unlabelled, which is the silent failure this forbids.
     choice_app
     python3 -m hwut.services.lib.labels.create concern \
         --glob "test-app.sh" --directory=tree > /dev/null
-    echo "THE FILE, BEFORE {"; grep -v "^#" hwut-root.labels \
+    echo "THE FILE, BEFORE {"; grep -v "^#" HWUT/labels.txt \
         | sed 's/^/    /'; echo "}"
     echo "--- one choice forgotten: its entry alone drops"
     face $REMOVE --directory=tree/suite/TEST test-app.sh one --dont-ask
-    echo "THE FILE {"; grep -v "^#" hwut-root.labels \
+    echo "THE FILE {"; grep -v "^#" HWUT/labels.txt \
         | sed 's/^/    /'; echo "}"
     echo "--- the whole test forgotten: the label empties, the file goes"
     face $REMOVE --directory=tree/suite/TEST test-app.sh --dont-ask
-    if [ -f hwut-root.labels ]; then echo "THE FILE: still stands"
+    if [ -f HWUT/labels.txt ]; then echo "THE FILE: still stands"
     else echo "THE FILE: absent -- no label exists"; fi
     ;;
 

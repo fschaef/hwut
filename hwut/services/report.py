@@ -79,7 +79,9 @@ from ..engine.bookkeeper.api import (E_TestVerdict,
 from ..engine.orchestrator.exploration.task_list import (SelectionError,
                                                           CTestTaskListAll)
 from ..engine.orchestrator.exploration import selection
-from ..engine.orchestrator.run.orchestrate import unstood_tuple
+from ..engine.orchestrator.run.orchestrate import (unstood_tuple,
+                                                    roster_gone_tuple,
+                                                    GONE_NODE_NAME)
 from ..engine.orchestrator.plan.confinement import uncapped_of
 from .lib.labels import view_at
 from .lib.labels._file import LabelFileError
@@ -534,6 +536,21 @@ def entry_stream_of(root, wish, silent_db=None, reach=None):
                                           .get_test_cases(result.app_set))
             if when)
         yield (directory, directory_title(whole), row_list)
+    #  A DIRECTORY THE ROSTER RECORDS AND THE DISK DOES NOT HOLD (CR-2):
+    #  the run fails it as one case, so the report says so -- and
+    #  'hwut.help', which reads this page, explains it.
+    for gone in roster_gone_tuple(root, wish):
+        directory = os.path.normpath(os.path.join(base, gone)) \
+                    .replace(os.sep, "/")
+        yield (directory, "", CRowList([CRow(
+            directory   = directory,
+            source_file = GONE_NODE_NAME,
+            choice      = None,
+            verdict     = E_TestVerdict.FAIL,
+            report      = "directory-gone",
+            when        = "",
+            stain       = None,
+            title       = "")]))
 
 
 class CRowList(list):

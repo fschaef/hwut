@@ -9,6 +9,7 @@ deploy-contained               build        no-deploy
 deploy-failed                  build        no-deploy
 deploy-tool-not-found          build        no-deploy
 device-unreachable             environment  no-device
+directory-gone                 roster       no-dir
 disk-short                     environment  no-disk
 display-target-unreachable     environment  no-display
 interpreter-not-found          build        no-launch

@@ -7,7 +7,7 @@ PURPOSE: Find what a TEST directory offers: 'hwut.conf', if present, and
 
 Ignored by default: '*.txt', '*.xml', '*.json', '*.pype', and THE
 FRAMEWORK'S OWN FILES -- 'hwut.conf', 'hwut-root.conf', 'hwut-info.dat',
-'hwut-traces.csv', 'hwut-root.labels' (README section 0). The directory's own 'ignore'
+'hwut-traces.csv', 'HWUT/labels.txt' (README section 0). The directory's own 'ignore'
 globs add to these. The walk is one directory deep: a TEST directory
 stands alone, and so does its file list.
 
@@ -45,9 +45,22 @@ ROOT_CONF_NAME     = "hwut-root.conf"
 #  outside's names. The files of the past -- a TEST directory's feature
 #  file, the central registry, the map of published ids -- are read by
 #  nothing; they stay framework files, never source file candidates.
-FOREST_FILE_NAME      = "hwut-feature-forest.csv"
-DOC_FILE_NAME         = "hwut-feature-doc.dat"
-EXTERNAL_FILE_NAME    = "hwut-feature-external-map.csv"
+from hwut.auxiliary.no_entry import (FOREST_FILE_NAME,      # noqa: E402,F401
+                                     DOC_FILE_NAME,
+                                     EXTERNAL_FILE_NAME)
+
+
+def refuse_old_place(top, old, fault_class):
+    """
+    RETURN: None. Raises 'fault_class' with the refusal where the file
+            'old' still stands at its OLD place beside 'hwut-root.conf' in
+            'top' (CR-4): 'hwut.renovate' moves it into 'HWUT/'.
+    """
+    from hwut.auxiliary.no_entry import old_place_refusal_list
+    for text in old_place_refusal_list(top):
+        if text.startswith("'%s'" % old): raise fault_class("REFUSED: " + text)
+
+
 PAST_FILE_TUPLE       = ("hwut-features.conf", "hwut-feature-map.conf",
                          "hwut-root-features.conf")
 

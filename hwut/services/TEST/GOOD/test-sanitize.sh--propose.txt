@@ -1,6 +1,6 @@
 STATUS: 0
 STDOUT {
-    # hwut.sanitize.propose -- in 'tree': session, lock, out, orphans, books, constraints, links, relations
+    # hwut.sanitize.propose -- in 'tree': session, lock, out, directories, orphans, books, constraints, links, relations
     #
     # One command per line, '<command> <concerned entity>', the entity
     # relative to the directory this was written in. Put '#' before a
@@ -9,6 +9,12 @@ STDOUT {
     #     hwut.sanitize.apply <this file>
     #
     # Every command judges again before it acts.
+    
+    # BOOK BEHIND: a nominal stands in GOOD/, and the book has no entry
+    # for the case (E-41).
+    # 'book' enters the standing nominal as accepted; nothing runs,
+    # nothing in GOOD/ moves.
+    book tree/suite/TEST/test-app.sh
     
     # SESSION WRECKAGE: a 'TMP/session/' outlived its run; nothing reads
     # it between runs, and the next run makes its own.
@@ -19,12 +25,6 @@ STDOUT {
     # the next run that uses it.
     # 'remove' deletes it. A directory a live run holds is refused.
     remove tree/suite/TEST/OUT
-    
-    # BOOK BEHIND: a nominal stands in GOOD/, and the book has no entry
-    # for the case (E-41).
-    # 'book' enters the standing nominal as accepted; nothing runs,
-    # nothing in GOOD/ moves.
-    book tree/suite/TEST/test-app.sh
 }
 '-o' writes what stdout carries: yes
 STANDING {

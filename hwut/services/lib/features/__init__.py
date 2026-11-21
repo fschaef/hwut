@@ -4,8 +4,8 @@ ______________________________________________________________________________
 THE FEATURE FACES -- 'hwut.features.<verb>' <=> 'services/lib/features/
 <verb>.py' (the naming law's dotted clause, as 'hwut.labels.*'): they act on
 the three files beside the 'hwut-root.conf' that begins the features of a
-tree (spec 43): 'hwut-feature-forest.csv', 'hwut-feature-doc.dat',
-'hwut-feature-external-map.csv'. '_common.py' holds what they share.
+tree (spec 43): 'HWUT/feature-forest.csv', 'HWUT/feature-doc.txt',
+'HWUT/feature-external-map.csv'. '_common.py' holds what they share.
 
     init        writes an empty forest and an empty doc file
     register    names what the files and the links disagree about

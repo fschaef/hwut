@@ -60,8 +60,8 @@ from hwut.engine.orchestrator.exploration.feature_view \
 from hwut.engine.orchestrator.exploration.task_list \
     import SelectionError                                          # noqa E402
 
-FILE_TUPLE = ("hwut-feature-forest.csv", "hwut-feature-doc.dat",
-              "hwut-feature-external-map.csv")
+FILE_TUPLE = ("HWUT/feature-forest.csv", "HWUT/feature-doc.txt",
+              "HWUT/feature-external-map.csv")
 
 
 def _files(root):
@@ -94,16 +94,16 @@ def run_rename():
     _files(root)
     fx.call("hwut.features.rename gateway gw", rename, ["gateway", "gw"],
             os.path.join(root, "gw/TEST"))
-    fx.shown(root, "hwut-feature-forest.csv")
-    fx.shown(root, "hwut-feature-external-map.csv")
+    fx.shown(root, "HWUT/feature-forest.csv")
+    fx.shown(root, "HWUT/feature-external-map.csv")
 
 
 def run_retire():
     """RETURN: None. Features retired."""
     root = fx.gateway()
-    fx.write(root, "hwut-feature-external-map.csv", "gateway ; GW\n")
+    fx.write(root, "HWUT/feature-external-map.csv", "gateway ; GW\n")
     fx.call("hwut.features.retire fwd", retire, ["fwd"], root)
-    fx.shown(root, "hwut-feature-forest.csv")
+    fx.shown(root, "HWUT/feature-forest.csv")
     fx.call("hwut.features.retire keep-order: its parent's line goes",
             retire, ["keep-order"], root)
     fx.call("hwut.features.retire decode: no block of its own", retire,
@@ -135,19 +135,19 @@ def run_refused():
     print(">>> nothing written: %s" % (_snapshot(root) == before))
     fx.call("retire, then retire again", retire, ["spare"], root)
     fx.call("", retire, ["spare"], root)
-    fx.write(root, "hwut-feature-doc.dat", "[[a.b]]\n")
+    fx.write(root, "HWUT/feature-doc.txt", "[[a.b]]\n")
     fx.call("a doc file that states a fault", rename, ["fwd", "fwd2"], root)
-    os.remove(os.path.join(root, "hwut-feature-forest.csv"))
+    os.remove(os.path.join(root, "HWUT/feature-forest.csv"))
     fx.call("no forest", retire, ["fwd"], root)
 
 
 PROTOTYPE_DB = {
-    "hwut-feature-forest.csv": "port : +show, own\n+show : greet, bye, +talk\n"
+    "HWUT/feature-forest.csv": "port : +show, own\n+show : greet, bye, +talk\n"
                                "+talk : ask\n+lone : solo\n",
-    "hwut-feature-doc.dat": "[[+show]]\nWhat every port shows.\n"
+    "HWUT/feature-doc.txt": "[[+show]]\nWhat every port shows.\n"
                             "[[greet]]\nIt says hello.\n"
                             "[[port+bye]]\nThis port says goodbye.\n",
-    "hwut-feature-external-map.csv": "port+greet ; REQ-1\n",
+    "HWUT/feature-external-map.csv": "port+greet ; REQ-1\n",
 }
 
 
@@ -180,7 +180,7 @@ def run_prototypes():
         fx.call("hwut.features.retire: " + label, retire, argv, root)
     fx.call("hwut.features.retire hello: the map names an instance",
             retire, ["hello"], root)
-    fx.write(root, "hwut-feature-external-map.csv", "own ; REQ-2\n")
+    fx.write(root, "HWUT/feature-external-map.csv", "own ; REQ-2\n")
     fx.call("hwut.features.retire hello: a member", retire, ["hello"], root)
     _prototype_files(root)
     forget_views()

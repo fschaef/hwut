@@ -77,7 +77,7 @@ allowed in both. It is sugar for '--glob' and nothing else, so the
 short form can never mean what the long form cannot say.
 
     -l, --label <expr>  the runs the label expression names, out of
-                        'hwut-root.labels' (disc-8): 'AND', 'OR',
+                        'HWUT/labels.txt' (disc-8): 'AND', 'OR',
                         'NOT', brackets, 'all' the universe, ',' sugar
                         for 'OR'; 'f/<id>' the runs of a feature
                         (plan/label). A UNION among the labels it names
@@ -412,6 +412,23 @@ class Wish:
                and self.label_spec is None and not self.language_tuple \
                and self.faster_than_ms is None
 
+    def states_no_case_rule_f(self):
+        """
+        RETURN: bool, True where the wish states nothing but DIRECTORY
+                rules ('--dir', '--exclude-dir') -- every case of every
+                directory it wants is wanted.
+
+        THE ROSTER IS JUDGED ONLY THEN (CR-2): a directory that does not
+        stand offers no case a glob, a label or a base question could be
+        asked of, so a wish asking one cannot say whether it wanted it.
+        """
+        return not (self.fail_f or self.pass_f or self.unaccepted_f
+                    or self.glob_tuple or self.wishlist_f
+                    or self.exclude_tuple) \
+               and self.since_spec is None and self.until_spec is None \
+               and self.label_spec is None and not self.language_tuple \
+               and self.faster_than_ms is None
+
     def asks_glob_f(self):
         """
         RETURN: bool, True where the TARGETS are a question -- globs
@@ -422,7 +439,7 @@ class Wish:
     def asks_label_f(self):
         """
         RETURN: bool, True where the wish names labels -- a question
-                only 'hwut-root.labels' can answer, so a CLabelView
+                only 'HWUT/labels.txt' can answer, so a CLabelView
                 must be handed down wherever it is asked.
         """
         return self.label_spec is not None

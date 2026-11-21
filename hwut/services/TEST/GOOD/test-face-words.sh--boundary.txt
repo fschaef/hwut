@@ -44,7 +44,7 @@ STATUS: 0
 STATUS: 0
     # NO BOUNDARY: no 'hwut-root.conf' stands in or above this directory.
     # A tree needs one: it is the root every path is relative to, and
-    # the place 'hwut-root.labels' stands (E-25).
+    # the place 'HWUT/labels.txt' stands (E-25).
     # 'root' writes the file, with its 'language-setup' table, into the
     # directory named. ONE line stands; to place it elsewhere, comment
     # that line and uncomment another -- or name any directory.

@@ -81,8 +81,8 @@ face() {                # <command> <args...> -- status and stdout
 }
 
 the_file() {
-    if [ -f hwut-root.labels ]; then
-        echo "THE FILE {"; grep -v "^#" hwut-root.labels \
+    if [ -f HWUT/labels.txt ]; then
+        echo "THE FILE {"; grep -v "^#" HWUT/labels.txt \
             | sed 's/^/    /'; echo "}"
     else
         echo "THE FILE: absent -- no label exists"
@@ -137,7 +137,7 @@ labels)
     grep -E "labels|REFUSED" out.txt | sed 's/^/    /'
     echo "--- a fresh name that stands only in the FILE: a fault, not a merge"
     echo "./tree/suite/TEST/test-fresh.sh stale : concern" \
-        >> hwut-root.labels
+        >> HWUT/labels.txt
     ( cd tree/suite/TEST \
       && printf 'y\n' | $RENAME test-fresh.sh first -to stale ) \
         > out.txt 2> err.txt

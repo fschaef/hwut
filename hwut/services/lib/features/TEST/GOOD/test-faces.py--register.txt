@@ -18,9 +18,9 @@
     usage: hwut.features.register [--directory=<path>]
     exit 2
 >>> no forest
-    REFUSED: no 'hwut-feature-forest.csv' stands at '<root>' => hwut.features.init
+    REFUSED: no 'HWUT/feature-forest.csv' stands at '<root>' => hwut.features.init
     exit 2
 >>> a forest that states a fault
-    FAULT: hwut-feature-forest.csv:1: the forest closes a circle: a -> b -> a
+    FAULT: HWUT/feature-forest.csv:1: the forest closes a circle: a -> b -> a
     exit 1
 <hwut-end>

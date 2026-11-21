@@ -1,7 +1,7 @@
 """SPDX-License: MIT; Project HWUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 
-PURPOSE: OPENING 'hwut-root.labels' FOR EDITING -- climb, read, build
+PURPOSE: OPENING 'HWUT/labels.txt' FOR EDITING -- climb, read, build
          the view, select what the wish states.
 
 'create', 'add' and 'remove' had the IDENTICAL nine lines apiece:

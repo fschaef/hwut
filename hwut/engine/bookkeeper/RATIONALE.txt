@@ -873,3 +873,44 @@ AMENDED   2026-11-03 (plan/42 P-8, ruled "(b)"): a link may reach INTO a
           any bubble above. 'link_tuple' walks one bubble unless told
           'inner_f'. Regression: test-good-link.sh 'inward'; 'move' (a
           linked text moved into a bubble: its links follow).
+
+B-33  THE ROSTER: ONE RECORD ABOVE THE DIRECTORIES                (2026-11-20)
+------------------------------------------------------------------------------
+PROBLEM   The books are the directory's (B-9, coverage D-14). A TEST
+          directory deleted whole -- by hand, by a merge, by a sparse
+          checkout -- takes its own evidence with it: MEASURED on e434b21,
+          Schwarm 51 stage 5, 'rm -rf render/TEST' and the run said
+          '26 ok, 0 fail', exit 0. Nothing in the tree knew that a directory
+          had been there; only feature links and coverage history would
+          point at runs that no longer exist.
+DECISION  (Frank-Rene, 2026-11-20, change request 'CR-HWUT-directory-and-
+          roster', CR-2) 'HWUT/directories.txt': the root-relative TEST
+          directories that hold records, one per line, sorted, rewritten
+          whole ('roster.py'). NO COUNTS AND NO NAMES: the file changes only
+          when a directory enters or leaves, so branches rarely conflict.
+          A central book was weighed and declined -- it would end the
+          directory's self-containment, make every accept touch one file,
+          and need a tree-wide lock; the roster gives the one fact the
+          books cannot.
+          ONE WRITER, TWO TRANSITIONS: '_write_book' asks
+          'roster.registered(directory, holds_f)' after every write; the
+          roster is written only where it disagrees -- a directory's first
+          record, a directory's last record gone. A directory below ground
+          no walk enters ('TMP', 'OUT', the marker) is never entered: a
+          scratch tree a test builds in its own TMP is no member. Changed
+          under an exclusive 'flock' of the file itself, read under a
+          shared one -- the first run of a tree writes many books at once.
+          THE READER: a recorded directory that does not stand FAILS the
+          run (ruled: "it should fail"), one case '(directory)', 'in roster,
+          no such directory', category ROSTER; 'hwut.report' shows it and
+          'hwut.help' explains it. ONLY THE WALKED SCOPE IS JUDGED
+          ('roster_gone_tuple'): below the directory asked, wanted by the
+          wish's directory rules, and only where the wish asks no question
+          of cases ('Wish.states_no_case_rule_f'). A directory holding a
+          book that is not on the roster is entered by its next book write
+          -- a heal, not an error; a tree from before the roster starts it
+          on its first run, and cannot see deletions older than that.
+COST      One more file under version control. The roster cannot pair a
+          directory that moved and RAN since with the one that went: it
+          stores no names (services E-234, CR-3). Regression:
+          'services/TEST/test-roster.sh' ('roster', 'gone', 'scope').

@@ -1,7 +1,7 @@
 --- a label that does not stand
 STATUS: 2
 STDOUT {
-    REFUSED: no label 'ghost' stands in 'hwut-root.labels'
+    REFUSED: no label 'ghost' stands in 'HWUT/labels.txt'
 }
 --- a wish that states nothing; the remedy names the label
 STATUS: 2

@@ -4,7 +4,7 @@
     NOTE  own/: a project of its own (hwut-root.conf) => run hwut inside it
     exit 0
 >>> inside the bubble without a forest
-    REFUSED: no 'hwut-feature-forest.csv' stands at '<root>/inner' => hwut.features.init
+    REFUSED: no 'HWUT/feature-forest.csv' stands at '<root>/inner' => hwut.features.init
     exit 2
 >>> inside the bubble with one
     NOTE  'nix' is linked by y/TEST/test-y.sh and stands in no forest line and no doc block

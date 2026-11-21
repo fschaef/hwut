@@ -1,0 +1,13 @@
+--- below 'game/'
+EXIT: 0
+    RESULTS: 1 ok, 0 fail
+--- --dir input/TEST
+EXIT: 0
+    RESULTS: 2 ok, 0 fail
+--- a glob
+EXIT: 0
+    RESULTS: 1 ok, 0 fail, 2 skip
+--- --exclude-dir render/TEST
+EXIT: 0
+    RESULTS: 3 ok, 0 fail
+<hwut-end>

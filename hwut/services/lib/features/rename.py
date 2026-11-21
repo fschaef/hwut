@@ -7,8 +7,8 @@ PURPOSE: THE 'hwut.features.rename' COMMAND LINE -- a feature id changes,
     hwut.features.rename <old id> <new id> [--directory=<path>]
 
 The id is written anew on both sides of every line of
-'hwut-feature-forest.csv', in the headings of 'hwut-feature-doc.dat', in
-the left column of 'hwut-feature-external-map.csv', and in every
+'HWUT/feature-forest.csv', in the headings of 'HWUT/feature-doc.txt', in
+the left column of 'HWUT/feature-external-map.csv', and in every
 'features = [...]' of the test headers and the confs below the top. The
 outside's names are untouched: that is what the map is for (T-e).
 

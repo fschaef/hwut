@@ -19,7 +19,7 @@ f/*+greet      a/TEST/test-a.sh [None] b/TEST/test-b.sh [None]
 f/port-?       a/TEST/test-a.sh [None] b/TEST/test-b.sh [None]
 f/port-a+*     a/TEST/test-a.sh [None]
 f/*            a/TEST/test-a.sh [None] b/TEST/test-b.sh [None]
-f/*+nothing    REFUSED: 'f/*+nothing' matches no feature: no id of 'hwut-feature-forest.csv' or of the doc file fits the glob => hwut.features.tree --list
+f/*+nothing    REFUSED: 'f/*+nothing' matches no feature: no id of 'HWUT/feature-forest.csv' or of the doc file fits the glob => hwut.features.tree --list
 f/greet        REFUSED: 'f/greet' names a member of a prototype, no feature -- 'f/<owner>+greet', or 'f/*+greet' for every instance
 f/+show        REFUSED: 'f/+show': a prototype names no instance -- 'f/*+show', every instance of it
 f/port-b+bye   REFUSED: 'f/port-b+bye' names a RETIRED feature: no longer claimed, no run proves it any more

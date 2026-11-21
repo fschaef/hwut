@@ -60,8 +60,8 @@ face() {                # <cmd> <args...> -- status, stdout, stderr
 }
 
 the_file() {
-    if [ -f hwut-root.labels ]; then
-        echo "THE FILE {"; sed 's/^/    /' < hwut-root.labels; echo "}"
+    if [ -f HWUT/labels.txt ]; then
+        echo "THE FILE {"; sed 's/^/    /' < HWUT/labels.txt; echo "}"
     else
         echo "THE FILE: absent -- no label exists"
     fi

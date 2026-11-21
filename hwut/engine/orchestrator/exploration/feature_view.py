@@ -10,10 +10,10 @@ PURPOSE: THE FEATURES OF A TREE, joined with the test runs that prove them
     view_kept(view, id_set)  -> CView      cut to some features' subtrees
     feature_label_case_set(root, name)     the runs of 'f/<id>'
 
-THE THREE FILES stand beside the 'hwut-root.conf' that begins the features
-of the tree ('tree_explorer.forest_top'): 'hwut-feature-forest.csv', the
-place; 'hwut-feature-doc.dat', the explanation; 'hwut-feature-external-
-map.csv', the outside's names. THE LINKS are the relation's
+THE THREE FILES stand in the 'HWUT/' beside the 'hwut-root.conf' that
+begins the features of the tree ('tree_explorer.forest_top'):
+'HWUT/feature-forest.csv', the place; 'HWUT/feature-doc.txt', the
+explanation; 'HWUT/feature-external-map.csv', the outside's names. THE LINKS are the relation's
 ('feature_relation', the test headers' 'features = [...]'), read over the
 whole tree below the top, whichever directory is asked: a feature has no
 directory (t-1), so the directory asked cuts nothing of the page; it only
@@ -371,7 +371,7 @@ def feature_label_case_set(root, name, strict_f=True):
             raises SelectionError, else: no readable forest, a RETIRED
             feature, or ('strict_f') an id that is not known. Not strict,
             an unknown feature holds no run: a derived label of
-            'hwut-root.labels' naming it must not refuse every selection
+            'HWUT/labels.txt' naming it must not refuse every selection
             that never asks for it.
     """
     from .task_list     import SelectionError

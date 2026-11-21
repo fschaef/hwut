@@ -53,7 +53,7 @@ labels     'hwut.config.show' must say why a test did not run (disc-8
            section 6): the '==[ LABELS ]' section names the entries
            that concern what is shown, THE SILENT ONES MARKED; a bare
            directory without a boundary shows no section; a broken
-           'hwut-root.labels' is a fault, said aloud.
+           'HWUT/labels.txt' is a fault, said aloud.
 ______________________________________________________________________________
 """
 import os
@@ -88,6 +88,8 @@ def build_directory(extra_db=None):
     """
     directory = tempfile.mkdtemp(prefix="hwut_show_")
     for name, content in dict(FILE_DB, **(extra_db or {})).items():
+        os.makedirs(os.path.dirname(os.path.join(directory, name)),
+                    exist_ok=True)
         with open(os.path.join(directory, name), "w") as fh:
             fh.write(content)
     return directory
@@ -189,11 +191,11 @@ def test_refused():
 
 def test_labels():
     """RETURN: None. The section, the mark, the fault, the absence."""
-    labels = ("#  hwut-root.labels\n"
+    labels = ("#  HWUT/labels.txt\n"
               "./test-a.py one : meta\n"
               "./test-b.py     : concern\n")
     directory = build_directory({"hwut-root.conf":   "hwut {\n}\n",
-                                 "hwut-root.labels": labels})
+                                 "HWUT/labels.txt": labels})
     try:
         banner("the directory: entries shown, the silent one marked")
         call(directory, ["--no-default"])
@@ -210,7 +212,7 @@ def test_labels():
         shutil.rmtree(directory, ignore_errors=True)
 
     directory = build_directory({"hwut-root.conf":   "hwut {\n}\n",
-                                 "hwut-root.labels": "x : y\n"})
+                                 "HWUT/labels.txt": "x : y\n"})
     try:
         banner("a broken labels file: the fault said aloud")
         #  The fault names the file by its REAL path -- right for a

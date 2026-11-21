@@ -1,0 +1,8 @@
+--- before 'git mv'
+EXIT: 1
+    NOTE: pending move? 'input/TEST/test-keys.sh' stands, and its records stand in 'game/TEST' => git mv input/TEST/test-keys.sh game/TEST/test-keys.sh
+    RESULTS: 3 ok, 3 fail
+--- after the move
+EXIT: 0
+    RESULTS: 5 ok, 0 fail
+<hwut-end>

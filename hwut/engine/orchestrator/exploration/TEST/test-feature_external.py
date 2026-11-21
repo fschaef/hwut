@@ -11,7 +11,7 @@
 """SPDX-License: MIT; Project HWUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 
-PURPOSE: 'hwut-feature-external-map.csv', read (spec 43 section 3;
+PURPOSE: 'HWUT/feature-external-map.csv', read (spec 43 section 3;
          intend/43 T-e, T-f, T-r): '<our feature id> ; <their name>'.
 
 CHOICES: read, faults;

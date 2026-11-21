@@ -27,17 +27,17 @@ from .finder           import (FOREST_FILE_NAME, DOC_FILE_NAME,
 from .suggestion       import did_you_mean
 
 FOREST_HEAD = (
-    "hwut-feature-forest.csv -- THE FEATURE TREES (spec 43). One line per",
+    "HWUT/feature-forest.csv -- THE FEATURE TREES (spec 43). One line per",
     "feature that has children:",
     "",
     "    <feature-id> : <child-id>, <child-id>, ...",
     "",
     "A feature id is '[A-Za-z0-9_-]+'. An id standing as no child is a ROOT.",
     "Every id stands once as a child (one parent); no circle. What a feature",
-    "is, is said in 'hwut-feature-doc.dat'; a retired one stands in no line.",
+    "is, is said in 'HWUT/feature-doc.txt'; a retired one stands in no line.",
 )
 DOC_HEAD = (
-    "hwut-feature-doc.dat -- WHAT THE FEATURES ARE (spec 43). One block per",
+    "HWUT/feature-doc.txt -- WHAT THE FEATURES ARE (spec 43). One block per",
     "feature, headed '[[<id>]]' -- or '[[<id> to <audience>, ...]]',",
     "'[[<id> not <audience>, ...]]', '[[<id>:retired]]'; '[[CUSTOMERS]]'",
     "declares the audiences. A block: an optional 'documents:' line (paths",
@@ -69,6 +69,10 @@ def init(top):
             empty doc file beside the root at 'top', each where none stands.
             Raises ActRefused where both stand already.
     """
+    from hwut.auxiliary.no_entry import old_place_refusal_list
+    old_list = [t for t in old_place_refusal_list(top)
+                if "feature" in t.split("'")[1]]
+    if old_list: raise ActRefused(old_list[0])                     # CR-4
     line_list = []
     for name, head in ((FOREST_FILE_NAME, FOREST_HEAD),
                        (DOC_FILE_NAME, DOC_HEAD)):
@@ -89,6 +93,10 @@ class _Files:
         """RETURN: None. Raises ActRefused where the forest does not
         stand, or a file states a fault."""
         self.top    = top
+        from hwut.auxiliary.no_entry import old_place_refusal_list
+        old_list = [t for t in old_place_refusal_list(top)
+                    if "feature" in t.split("'")[1]]
+        if old_list: raise ActRefused(old_list[0])                 # CR-4
         self.forest_text   = _text_of(os.path.join(top, FOREST_FILE_NAME))
         self.doc_text      = _text_of(os.path.join(top, DOC_FILE_NAME))
         self.external_text = _text_of(os.path.join(top, EXTERNAL_FILE_NAME))

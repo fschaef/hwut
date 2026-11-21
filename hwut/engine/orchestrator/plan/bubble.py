@@ -33,14 +33,14 @@ where it was decided for the platform handed to; the others are ELSEWHERE,
 passed by in silence.
 
 THE DECLARATION IS THE CONTRACT (R-5, R-7, amending E-226): a tool a
-platform declares whose 'probe:' line in 'hwut-tools.rst' finds a program
+platform declares whose 'probe:' line in 'HWUT/tools.rst' finds a program
 missing -- on 'local' near, on the platform handed to over there -- stays
 announced; the cases of a directory requiring it FAIL, not run,
 'tool-not-provided' ('tool_absent_reason'). A tool without a 'probe:' line
 is taken as declared (o-50) -- a tool is an informal name, not a program.
 
 REFUSED AT THE START (PlatformRefused): a 'platform' in any hwut.conf
-below the root (o-53), and -- where 'hwut-tools.rst' stands beside the
+below the root (o-53), and -- where 'HWUT/tools.rst' stands beside the
 root (o-52) -- a tool announced or required anywhere that it does not
 explain.
 
@@ -89,10 +89,10 @@ class CBubbleDecision:
 
 class PlatformRefused(SelectionError):
     """The confs refused at the start (intend/26 o-52, o-53): a 'platform'
-    in an inner root, or a tool 'hwut-tools.rst' does not explain."""
+    in an inner root, or a tool 'HWUT/tools.rst' does not explain."""
 
 
-TOOLS_FILE_NAME = "hwut-tools.rst"
+from hwut.auxiliary.no_entry import TOOLS_FILE_NAME       # noqa: E402
 
 
 def decision_tuple(top, wish):
@@ -104,7 +104,7 @@ def decision_tuple(top, wish):
 
     Raises PlatformRefused where a hwut.conf below the root says
     'platform' (o-53) or a tool announced or required anywhere in the
-    project is not explained by 'hwut-tools.rst' (o-52), each named;
+    project is not explained by 'HWUT/tools.rst' (o-52), each named;
     RootConfMissing where no root bounds 'top'.
     """
     top       = os.path.abspath(top)
@@ -118,7 +118,11 @@ def decision_tuple(top, wish):
     defined, absent = probed(declared, outermost,
                              wish.as_platform or LOCAL_PLATFORM)
 
-    refusal_list = []
+    #  A FILE AT ITS OLD PLACE IS REFUSED FIRST (CR-4), by name, with the
+    #  remedy: read silently or not at all, it would be a set, a feature
+    #  or a tool nobody sees.
+    from hwut.auxiliary.no_entry import old_place_refusal_list
+    refusal_list = list(old_place_refusal_list(outermost))
     read_list    = [(outermost, _name_of(outermost, top),
                      ascended_spec(outermost)[0].requires_tuple or ())]
     #  EVERY hwut.conf OF THE PROJECT IS ASKED (intend/45 R-1): 'platform'
@@ -241,7 +245,7 @@ def tool_absent_refusal_f(reason):
 def tool_absent_reason(decision, required):
     """
     RETURN: str, 'platform local does not provide tool iverilog (not on
-            PATH: iverilog, vvp; hwut-tools.rst probe)' where the platform
+            PATH: iverilog, vvp; HWUT/tools.rst probe)' where the platform
             of 'decision' declares a tool of 'required' its probe finds
             missing (intend/45 R-5, R-7); None, else.
     """
@@ -407,7 +411,7 @@ def _resolved(spec, path):
 
 def explained_tool_set(outermost):
     """
-    RETURN: frozenset of str, the tools 'hwut-tools.rst' beside the
+    RETURN: frozenset of str, the tools 'HWUT/tools.rst' beside the
             outermost root explains -- one '[[tool]]' each (intend/26
             o-52). None where the file does not stand: nothing is bound.
     """
@@ -424,7 +428,7 @@ _PROBE_RE     = re.compile(r"^\s+probe:[ \t]*(.*?)\s*$")
 def probe_db(outermost):
     """
     RETURN: dict, tool -> tuple of str: the programs a 'probe:' line under
-            its '[[tool]]' in 'hwut-tools.rst' beside the outermost root
+            its '[[tool]]' in 'HWUT/tools.rst' beside the outermost root
             names ('probe: iverilog vvp'); empty where the file does not
             stand or names none (E-226).
     """
@@ -448,7 +452,7 @@ def probed(defined, outermost, here=LOCAL_PLATFORM):
             the contract (intend/45 R-5): the same on both sides of a
             hand-over, so both decide alike -- and 'absent', a tuple of
             (tool, programs not on PATH), one pair per tool platform
-            'here' declares whose 'probe:' line in 'hwut-tools.rst' finds
+            'here' declares whose 'probe:' line in 'HWUT/tools.rst' finds
             a program missing ON THIS MACHINE. 'here' is 'local' near,
             the platform handed to over there (R-7). A tool without a
             'probe:' line is taken as declared (o-50).
@@ -466,7 +470,7 @@ def probed(defined, outermost, here=LOCAL_PLATFORM):
 def _unexplained_tuple(outermost, defined, read_list):
     """
     RETURN: tuple of str, one refusal line per tool announced in 'defined'
-            or required by a bubble of 'read_list' that 'hwut-tools.rst'
+            or required by a bubble of 'read_list' that 'HWUT/tools.rst'
             does not explain; empty where the file does not stand or
             explains them all (o-52: optional, but binding).
     """
