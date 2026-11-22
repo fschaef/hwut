@@ -2,7 +2,7 @@
 # SPDX-License: MIT; Project HWUT; (C) Frank-Rene Schaefer
 #
 # @hwut {
-#     title   = "Demo: an order law, stated as modes (a pype)"
+#     title   = "Demo: an order law, stated as scopes (a pype)"
 #     features = ["demo-bash", "demo-bash+cover-order-law-by-pype", "demo-bash+cover-pype-owns-terminal-token"]
 #     choices { clean  { }
 #               broken { features = ["demo-bash+cover-law-breach-verdict"] }

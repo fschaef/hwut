@@ -53,6 +53,8 @@ Four gates, in order. A file passes all four or it is no test application.
        An 'ignore' glob WITHOUT '/' is a name, matched in every test
        directory below its conf; one WITH '/' is anchored at its conf's
        directory, like '.gitignore' (R-103).
+       A file a test's 'pype' value reads -- script, system, import -- is
+       no wallflower, nor is a constraint module (R-104).
 
   2  A SPECIFICATION SPEAKS FOR IT, on exactly one carrier: its own HEADER,
      or an entry under 'apps' in 'hwut.conf'. Both is a directory error.

@@ -27,7 +27,7 @@
  *
  *     build.pypes       --> normalise.pype --> build.pype
  *     normalise.pype    the job tag of a parallel build goes ('flush')
- *     build.pype        the summary, sorted: modes pushed and popped over
+ *     build.pype        the summary, sorted: scopes pushed and popped over
  *                       nested directories, '<entry>'/'<exit>', a vocabulary
  *                       imported from 'compiler.pype', a repeat group,
  *                       durations read as quantities

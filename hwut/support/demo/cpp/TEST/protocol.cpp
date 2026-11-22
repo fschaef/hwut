@@ -1,5 +1,5 @@
 /* @hwut {
- *     title   = "Demo: an order law, stated as modes (a pype)"
+ *     title   = "Demo: an order law, stated as scopes (a pype)"
  *     build   { framework = "make", target = "%.exe" }
  *     features = ["demo-cpp", "demo-cpp+cover-order-law-by-pype", "demo-cpp+cover-pype-owns-terminal-token"]
  *     choices { clean  { }

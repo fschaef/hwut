@@ -58,6 +58,21 @@ def _constraint_module_set(app_db, directory):
                and parameters.tolerance.constraint_module is not None}
 
 
+def _pype_file_set(app_db, directory):
+    """
+    RETURN: set[str], the absolute path of every file the 'pype' value of
+            a choice of an application of 'app_db' reads -- its scripts,
+            systems and imports ('pype_reference.file_set').
+    """
+    from .pype_reference import file_set
+    return {path
+            for pype_value in {parameters.pype
+                               for app in app_db.values()
+                               for parameters in app.choice_db.values()
+                               if parameters.pype is not None}
+            for path in file_set(pype_value, directory)}
+
+
 def _constraint_module_refused(app, directory, spec, directory_spec):
     """
     RETURN: list[Fault], one fault per choice of 'app' whose constraint
@@ -298,12 +313,14 @@ def explore(directory, interview_runner=None, inherited=None):
         position       = directory_spec.position)
     fault_list.extend(graph_fault_list)
 
-    #  A CONSTRAINT MODULE IS NO WALLFLOWER (ruled 2026-11-18): like a
-    #  pype, it stands beside the tests that name it and is no test.
-    module_set = _constraint_module_set(app_db, directory)
+    #  A CONSTRAINT MODULE IS NO WALLFLOWER (ruled 2026-11-18), NOR IS A
+    #  FILE A 'pype' VALUE READS (ruled 2026-11-22, R-104): each stands
+    #  beside the tests that name it and is no test.
+    named_set = _constraint_module_set(app_db, directory) \
+                | _pype_file_set(app_db, directory)
     silent_list = [name for name in silent_list
                    if os.path.abspath(os.path.join(directory, name))
-                      not in module_set]
+                      not in named_set]
 
     return ExplorationResult(
         app_set    = CTestAppSet(directory      = directory,

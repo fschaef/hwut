@@ -2824,3 +2824,28 @@ COST      A tree with editor backups in test directories gets a NOTE until
           'ignore' speaks for them (hwut's own tracked tree: none). An
           existing 'ignore' glob holding '/' changes meaning: it was a name
           pattern that could only match names containing '/', i.e. none.
+
+R-104  A FILE THE 'pype' VALUE READS IS NO WALLFLOWER                   (2026-11-22)
+------------------------------------------------------------------------------
+PROBLEM   Since R-102 every '.pype' beside a test was a wallflower; the 17
+          demo ports carried 'build.pype', 'build.pypes', 'compiler.pype',
+          'door.pype', 'normalise.pype' in 'ignore' only to say what their
+          own headers already said.
+DECISION  (Frank-Rene, 2026-11-22) "ein script das in 'pype=' irgendwo
+          erwaehnt ist soll automatisch ignoriert werden." As the
+          constraint module (2026-11-18): a file a choice's 'pype' value
+          reads is not listed. READ means: every word of the value that
+          names a file (the command form names the script anywhere), the
+          scripts of a '.pypes' system, every 'import:' of a '.pype'
+          transitively -- against the importer's directory, then each
+          '--pype-dir' of the value ('pype_reference.file_set').
+          The engine may not import the services (adm/LAYERING.txt), so
+          the two grammar lines are written there again; 'test-ignore.sh
+          pype_named' holds them equal to pype's own parse.
+          A '.pype' a test page runs by itself (the demos' 'protocol.pype',
+          piped in the script) is named by no value and stays in 'ignore'.
+          ASKED WITH IT: "a 'resources' parameter, the same" -- measured,
+          hwut has no such key ('configuration_tree.KEY_TO_FIELD'); the
+          constraint module is the one other file a header names, and it is
+          no wallflower since 2026-11-18.
+COST      The 17 demo confs lose their pype entries; 'protocol.pype' stays.

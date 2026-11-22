@@ -58,10 +58,11 @@ DESCRIPTION
        A FILE THAT IS NOT SEEN is one the globs of 'ignore' in 'hwut.conf'
        name -- a name without '/' in every directory below, a glob with
        '/' anchored at that conf's directory, like '.gitignore'. Any other
-       file no test speaks for is a WALLFLOWER the run names, the
-       backup-shaped names ('*~', '#*#', '*.bak', '*.backup', '*.orig',
-       '*.old', '*.save', '*.rej', '*.copy', '*.swp', '*.tmp') too, their
-       header unread. 'admit' in 'hwut.conf' takes a glob out of both --
+       file no test speaks for -- a pype script, system or import a
+       test's 'pype' names is spoken for, so is its constraint module --
+       is a WALLFLOWER the run names, the backup-shaped names ('*~',
+       '#*#', '*.bak', '*.backup', '*.orig', '*.old', '*.save', '*.rej',
+       '*.copy', '*.swp', '*.tmp') too, their header unread. 'admit' in 'hwut.conf' takes a glob out of both --
        a backup-shaped name meant as a test is one again:
 
            hwut { admit = ["test-old-format.py.orig"] }

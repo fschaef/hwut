@@ -13,6 +13,7 @@
 #         no_default  { features = ["settle-wallflowers"] }
 #         anchored    { features = ["settle-wallflowers"] }
 #         selection   { features = ["settle-wallflowers"] }
+#         pype_named  { features = ["settle-wallflowers"] }
 #     }
 # }
 #
@@ -51,6 +52,13 @@
 #              --wallflowers -o <file>' lists them, one line each; a line
 #              deleted stays a wallflower; 'hwut.sanitize.apply <file>'
 #              ignores the rest in each directory's own 'hwut.conf'.
+# pype_named   (R-104, ruled 2026-11-22) a file the 'pype' value reads is
+#              no wallflower: the scripts its words name -- a system, the
+#              command form --, a system's scripts, every 'import:'
+#              transitively, also through '--pype-dir'. A '.pype' no value
+#              names stays one. Then pype's own parse, held equal to the
+#              exploration's reading ('pype_reference.file_set').
+#              MEASURED BEFORE: all five '.pype'/'.pypes' were wallflowers.
 # refused      a path that stands nowhere; an unknown option;
 #              '--wishlist' without a file; a list that is not there.
 # ---------------------------------------------------------------------------
@@ -65,7 +73,7 @@ unset NO_COLOR CI COLUMNS
 case "$1" in
     --hwut-info)
         echo "hwut.config.ignore: the answer to the wallflower NOTE.;"
-        echo "CHOICES: paths, wishlist, wallflowers, reported, refused, refused_too, no_default, anchored, selection;"
+        echo "CHOICES: paths, wishlist, wallflowers, reported, refused, refused_too, no_default, anchored, selection, pype_named;"
         exit 0 ;;
 esac
 
@@ -207,6 +215,44 @@ selection)
     conf b/TEST
     echo "--- what is left"
     $PROPOSE --wallflowers | grep '^ignore' | sed 's/^/    /'
+    ;;
+pype_named)
+    mkdir -p a/TEST/GOOD lib
+    printf '#!/bin/bash\n# @hwut {\n#     title = "T"\n#     choices { one { pype = "sys.pypes" }\n#               two { pype = "python3 -I pype.py --pype-dir ../../lib solo.pype" } }\n# }\necho x\n' \
+        > a/TEST/test-x.sh
+    chmod +x a/TEST/test-x.sh
+    printf -- '--> one.pype\none.pype --> two.pype   # a system of two\n' > a/TEST/sys.pypes
+    printf 'import: "lib.pype"\non: <else> => flush;\non: <eof> => ignore;\n' > a/TEST/one.pype
+    printf 'on: <else> => flush;\non: <eof> => ignore;\n' > a/TEST/two.pype
+    printf 'LIB/on: <eof> => ignore;\n' > a/TEST/lib.pype
+    printf 'import: "far.pype"\non: <else> => flush;\non: <eof> => ignore;\n' > a/TEST/solo.pype
+    printf 'FAR/on: <eof> => ignore;\n' > lib/far.pype
+    echo stray > a/TEST/stray.pype
+    $RUN --plain > run.txt 2>&1
+    echo "--- the wallflowers: the one no value names"
+    grep -v '^#' a/TEST/TMP/wallflowers.txt | sed 's/^/    /'
+    echo "--- the exploration's reading equals pype's own parse"
+    python3 - "$WORK" <<'PY'
+import os, sys
+from hwut.engine.orchestrator.exploration.pype_reference import file_set
+from hwut.services.lib.pype import pype, pype_system
+work = sys.argv[1]; d = os.path.join(work, "a", "TEST")
+def own(script, search=()):
+    source_db = {}
+    pype.parse(open(script).read(), script, search_dir_list=list(search),
+               source_db=source_db)
+    return {os.path.abspath(f) for f in source_db}
+system = pype_system.read(os.path.join(d, "sys.pypes"))
+by_pype = {os.path.abspath(system.file_name)}
+for path in system.path_db.values(): by_pype |= own(path)
+for v, expected in (("sys.pypes", by_pype),
+                    ("python3 -I pype.py --pype-dir ../../lib solo.pype",
+                     own(os.path.join(d, "solo.pype"),
+                         [os.path.join(work, "lib")]))):
+    got = file_set(v, d)
+    print("    %-50s %s  %s" % (v, "equal" if got == expected else "DIFFER",
+          " ".join(sorted(os.path.relpath(p, work) for p in got))))
+PY
     ;;
 refused)
     fixture

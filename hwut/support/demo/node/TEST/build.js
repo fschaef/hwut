@@ -30,7 +30,7 @@ between it and the comparison (hwut runs it; the application prints no
     normalise.pype    a parallel build tags each line with its job,
                       'job2: cc -c ...'; the tag goes, every other line
                       passes unchanged ('flush')
-    build.pype        the summary, sorted -- see its own comments: modes
+    build.pype        the summary, sorted -- see its own comments: scopes
                       pushed on 'Entering directory' and popped on
                       'Leaving' (nested: 'app/plugins' inside 'app'),
                       '<entry>'/'<exit>' around each, a vocabulary

@@ -27,7 +27,7 @@
 //     build.pypes       --> normalise.pype --> build.pype
 //     normalise.pype    a parallel build tags each line with its job,
 //                       'job2: cc -c ...'; the tag goes
-//     build.pype        the summary, sorted -- modes pushed and popped over
+//     build.pype        the summary, sorted -- scopes pushed and popped over
 //                       nested directories, '<entry>'/'<exit>', a vocabulary
 //                       imported from 'compiler.pype', a repeat group,
 //                       durations read as quantities

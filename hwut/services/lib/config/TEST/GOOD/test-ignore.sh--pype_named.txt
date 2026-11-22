@@ -1,0 +1,6 @@
+--- the wallflowers: the one no value names
+    ./../stray.pype
+--- the exploration's reading equals pype's own parse
+    sys.pypes                                          equal  a/TEST/lib.pype a/TEST/one.pype a/TEST/sys.pypes a/TEST/two.pype
+    python3 -I pype.py --pype-dir ../../lib solo.pype  equal  a/TEST/solo.pype lib/far.pype
+<hwut-end>
