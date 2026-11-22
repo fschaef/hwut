@@ -127,7 +127,7 @@ def test_directory():
         "test-parse.py":  '# @hwut {\n#     title = "parses"\n'
                           '#     choices = [\"one\", \"two\"]\n# }\n',
         "test-plain.sh":  '# @hwut { title = "plain" }\n',
-        "notes.txt":      "ignored by default\n",
+        "notes.txt":      "a wallflower: no test, not ignored\n",
         "data.json":      "{}\n",
         "test-gen.c":     "int main() { return 0; }\n",
         "skipme.gen":     "configured away\n",

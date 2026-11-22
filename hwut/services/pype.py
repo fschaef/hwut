@@ -14,7 +14,7 @@ PURPOSE: THE 'hwut.pype' COMMAND LINE -- the pype line-matching filter,
 (the book's RQ-7): the unit types (dimensions) with their reference
 unit, and the units -- of one type, or of one unit's type, where named.
 
-The interpreter owns the language: its parser, its modes, its trace, its
+The interpreter owns the language: its parser, its scopes, its trace, its
 usage line. This face owns the DOOR -- what the shell reads as the whole
 verdict -- and nothing else. It reads no option the interpreter reads;
 it decides only whether a script was named, and what the interpreter's

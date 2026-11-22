@@ -2752,3 +2752,75 @@ COST      Every rewrite walks the tree's test applications once. A
           is registered.
           OPEN for the builder, as the requirement left it: whether
           'hwut.features.tree' prints internal ids per leaf. Not built.
+
+R-102  NOTHING IS IGNORED BY DEFAULT                                    (2026-11-22)
+------------------------------------------------------------------------------
+PROBLEM   '*.txt', '*.xml', '*.json', '*.pype', '*.pypes' were ignored
+          silently in every test directory. MEASURED 2026-11-20 (Schwarm 51,
+          stage 5): a 'samples.txt' beside the tests never appeared
+          anywhere. The proposal of that day split the rest further -- an
+          UNDECLARED category for files that look like tests, louder than a
+          wallflower.
+DECISION  (Frank-Rene, 2026-11-22) "they must be wallflowers and not ignored
+          by default ... No reason to distinguish between ignored and
+          helper and forgotten." 'DEFAULT_IGNORE_SET' is empty: every file
+          in a test directory is a test, ignored by the author's 'ignore',
+          or a wallflower the run names (services/lib/wallflowers.py) --
+          one category, settled the one way, 'hwut.config.ignore'. No
+          UNDECLARED category. A test that WAS recorded and lost its header
+          is not a wallflower's question: the book says it, 'in book, no such
+          test', and the run fails (measured: delete the '@hwut' block of an
+          accepted test -- 'BOOK -- book and tree disagree', 1 fail).
+          A pype carries no '@hwut' block, so the header reader passes it;
+          prose that names '@hwut { }' (a README) is no header and makes no
+          test (measured: 'support/demo/*/TEST/README.txt').
+          The backup-shaped names were left open here; R-103 settles
+          them.
+COST      Every tree with data files, pypes or a README in a test directory
+          gets a wallflower NOTE until 'ignore' speaks for them. In hwut's
+          own tree: 152 such files in 20 test directories, settled by
+          'hwut.config.ignore --wallflowers', each list read.
+
+R-103  BACKUPS ARE WALLFLOWERS; 'ignore' IS LOCAL LIKE .gitignore,      (2026-11-22)
+       AND INHERITED
+------------------------------------------------------------------------------
+PROBLEM   (1) The backup-shaped names ('*~', '*.bak', ... --
+          'BACKUP_NAME_GLOB_TUPLE') were ignored silently since 2026-10-17,
+          against R-102's "one category". (2) An 'ignore' glob was matched
+          against the bare NAME only, so '"sub/TEST/special.dat"' in a
+          parent's conf could not say which directory it meant. (3) The
+          wallflower NOTE pointed at one command that ignores ALL of them.
+DECISION  (Frank-Rene, 2026-11-22) "backup files are wallflowers until they
+          are ignored." -- "'ignore' a configuration parameter has local
+          meaning like the .gitignore patterns, but is inherited." -- two
+          telegraphic hint lines: how to list them line by line, how to
+          ignore a selection.
+          (1) A backup-shaped name is a WALLFLOWER and its header is NOT
+          READ: a copy carries the header it was copied with (measured:
+          'test-x.sh~' beside 'test-x.sh' ran as a second test, 'no GOOD
+          file', before this was added). 'admit' or an 'apps' entry makes
+          one a candidate again ('finder.backup_shaped_f').
+          (2) A glob WITHOUT '/' is a NAME, matched in every test
+          directory at and below its conf; a glob WITH '/' is ANCHORED at
+          the directory of its conf (for 'HWUT_ROOT/setup.conf': the root)
+          and matched against the whole path; a leading '/' only anchors
+          ('finder.anchored_glob', 'tree_explorer.anchored_spec' at the
+          three read sites). Globs ADD UP down the tree as before (R-98).
+          Measured on a scratch tree: a root '*.log' ignored below;
+          'comp/hwut.conf: "notes.md"' ignored in comp/sub/TEST;
+          'comp/hwut.conf: "sub/TEST/special.dat"' ignored in sub/TEST,
+          not in other/TEST.
+          (3) The NOTE ends with
+              list:   hwut.sanitize.propose --wallflowers -o <file>
+              ignore: hwut.sanitize.apply <file>
+          '--wallflowers' is an explicit aspect (asked by name, like
+          '--transient'): one 'ignore <dir>/<file>' line per wallflower;
+          a line deleted or commented is not done. 'ignore' re-judges --
+          the file stands and is no test -- and writes its name into that
+          directory's own 'hwut.conf' (hwut.config.ignore).
+          Measured: 2 proposed, 1 deleted, 1 applied; the next proposal
+          holds the deleted one.
+COST      A tree with editor backups in test directories gets a NOTE until
+          'ignore' speaks for them (hwut's own tracked tree: none). An
+          existing 'ignore' glob holding '/' changes meaning: it was a name
+          pattern that could only match names containing '/', i.e. none.

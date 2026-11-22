@@ -1,0 +1,11 @@
+--- the run's NOTE
+    NOTE: 8 wallflower file(s) in TEST directories => "**/TMP/wallflowers.txt"
+          list:   hwut.sanitize.propose --wallflowers -o <file>
+--- a/TEST's list
+    ./../README.txt
+    ./../bench.log
+    ./../helper.py
+    ./../notes.json
+    ./../samples.txt
+    ./../strip.pype
+<hwut-end>

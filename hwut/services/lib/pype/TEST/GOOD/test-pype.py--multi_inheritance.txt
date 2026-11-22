@@ -63,16 +63,16 @@ RIGHT handler
 
 --- equal patterns across two bases: the first base of the list fires ---
     B1
-NOTE: mode 'SUB': '"x"' (<test>:4) never fires -- '"x"' (<test>:1) comes first and matches every line it matches
+NOTE: scope 'SUB': '"x"' (<test>:4) never fires -- '"x"' (<test>:1) comes first and matches every line it matches
 
 --- an own handler overrides both bases ---
     SUB
-NOTE: mode 'SUB': '"x"' (<test>:1) never fires -- '"x"' (<test>:8) comes first and matches every line it matches
-NOTE: mode 'SUB': '"x"' (<test>:4) never fires -- '"x"' (<test>:8) comes first and matches every line it matches
+NOTE: scope 'SUB': '"x"' (<test>:1) never fires -- '"x"' (<test>:8) comes first and matches every line it matches
+NOTE: scope 'SUB': '"x"' (<test>:4) never fires -- '"x"' (<test>:8) comes first and matches every line it matches
 
 --- across depth: the effective list's order decides (MID's ROOT before OTHER) ---
     ROOT
-NOTE: mode 'SUB': '"x"' (<test>:5) never fires -- '"x"' (<test>:1) comes first and matches every line it matches
+NOTE: scope 'SUB': '"x"' (<test>:5) never fires -- '"x"' (<test>:1) comes first and matches every line it matches
 
 --- intersecting languages: B1's int, first, also matches inside '5.5' -- no NOTE ---
     B1 int 5
@@ -119,6 +119,6 @@ two-token constant, disjoint from both globs
     class b
     class c
 
---- effect-command words in a base list: plain unknown-mode law ---
-PypeError (expected): <test>:2: 'is:' names unknown mode 'IGNORE'
+--- effect-command words in a base list: plain unknown-scope law ---
+PypeError (expected): <test>:2: 'is:' names unknown scope 'IGNORE'
 <hwut-end>

@@ -71,10 +71,10 @@ services ALPHABETICALLY:
             print("    " + name)
     }
     and: goto DONE;
-    DISCOVERY/on: if ( pype.time() > 30.0 ) => {
-        print("wait guard: discovery exceeded 30 s")
+    DISCOVERY/on: <else> => {
+        if pype.time() > 30.0:
+            print("wait guard: discovery exceeded 30 s")
     }
-    DISCOVERY/on: <else> => ignore;
 
     DONE/on: <else> => flush;
 
@@ -101,7 +101,7 @@ THE PYPE SCRIPT OWNS THE TOKEN. Two laws, both binding:
         runner through the environment word 'HWUT_NO_TERMINAL'.)
 
     2.  EVERY hwut.pype SCRIPT EMITS THE TOKEN FROM ITS '<eof>'
-        HANDLER -- of whatever mode is active at end of input:
+        HANDLER -- of whatever scope is active at end of input:
 
             SCAN/on: <eof> => {
                 print("<hwut-end>")
@@ -122,23 +122,23 @@ script ends the stream.
 2  MODEL
 ______________________________________________________________________________
 
-A pype script defines MODES. A mode carries HANDLERS. A handler pairs a
+A pype script defines SCOPES. A scope carries HANDLERS. A handler pairs a
 CAUSE with one or more EFFECTS. Input lines arrive on stdin; per line,
-the handlers of the single ACTIVE mode are tried in definition order
+the handlers of the single ACTIVE scope are tried in definition order
 and the first whose cause holds fires. All Python blocks of all
 handlers share ONE namespace.
 
     script
       |
-      +-- MODE ---------------------+     one mode ACTIVE at a time
+      +-- SCOPE ---------------------+     one scope ACTIVE at a time
       |     +-- HANDLER:  CAUSE => EFFECT { and: EFFECT }
       |     +-- HANDLER:  ...
       |     +-- is: BASE, ...             inherit handlers
       |
-      +-- MODE ...
+      +-- SCOPE ...
                                     shared Python namespace: bindings
                                     + the 'pype' object, across all
-                                    modes, all handlers, all lines
+                                    scopes, all handlers, all lines
 
 
 3  INVOCATION
@@ -164,7 +164,7 @@ Script check, reading no input:
     hwut.pype --dry-run SCRIPT
 
 parses and checks the script -- syntax, inheritance, mandatory 'else'
-and '<eof>', and the NOTE on a handler that can never fire -- and reports 'dry run ok' with mode and handler
+and '<eof>', and the NOTE on a handler that can never fire -- and reports 'dry run ok' with scope and handler
 counts, or the error.
 
 Trace mode, for developing a script:
@@ -172,7 +172,7 @@ Trace mode, for developing a script:
     producer | hwut.pype --trace SCRIPT
 
 '--trace' shows, on STDERR, every input line against the handler it
-triggered -- mode, cause, bindings -- plus mode activations, effects,
+triggered -- scope, cause, bindings -- plus scope activations, effects,
 and the EXECUTED LINES INSIDE PYTHON BLOCKS. The default format is
 gcc-style compiler diagnostics, 'file:line: message', so editors and
 IDEs can jump to the location; input lines carry '<stdin>:n':
@@ -189,9 +189,9 @@ starter and indentation instead:
     TRACE| [3] 'response from  auth-service'
     TRACE|     fire DISCOVERY/on: "response from" <name = "*">  (f:18)
 
-Mode-name arguments between the trace flag and the script restrict the
-trace to those modes ('hwut.pype --trace DISCOVERY script.pype'); the
-word 'default' names the default mode; no names means all modes.
+Scope-name arguments between the trace flag and the script restrict the
+trace to those scopes ('hwut.pype --trace DISCOVERY script.pype'); the
+word 'default' names the default scope; no names means all scopes.
 
 stdout remains the clean, deterministic filter stream in both styles,
 so tracing never disturbs the compared output.
@@ -204,9 +204,9 @@ Generated example input, to play without a real producer:
 '--example' prints an input that triggers the script's handlers: one
 sample line per pattern handler, with deterministic sample values
 (integers 1, 2, 3, ...; numbers 1.5, 2.5, ...; '*' in a glob becomes
-'sample', '?' becomes 'x'). The generator walks the modes along the
+'sample', '?' becomes 'x'). The generator walks the scopes along the
 statically visible switch actions ('goto', 'push');
-'if(...)' causes and 'pype.goto()' calls inside blocks are not followed.
+'pype.goto()' calls inside blocks are not followed.
 
 Exit status: 0 after the whole stream is processed; 1 on a script
 error. Errors go to stderr with 'file:line'. A Python exception inside
@@ -219,33 +219,31 @@ ______________________________________________________________________________
 Line-oriented. '#' at the start of a (stripped) line begins a comment.
 Blank lines are insignificant.
 
-    HANDLER  :=  [ MODE "/" ] "on:" CAUSE "=>" EFFECT { "and:" EFFECT }
-    INHERIT  :=  [ MODE ] "is:" BASE { "," BASE }
+    HANDLER  :=  [ SCOPE "/" ] "on:" CAUSE "=>" EFFECT { "and:" EFFECT }
+    INHERIT  :=  [ SCOPE ] "is:" BASE { "," BASE }
     IMPORT   :=  "import:" '"' FILE-PATH '"'
 
     CAUSE    :=  PATTERN                match handler (section 5)
-              |  "if" "(" python-condition ")"
-                                        fires when the condition is true
               |  "<else>"               fires when every match handler
-                                        of the active mode failed
-              |  "<entry>" | "<exit>"   mode is activated / deactivated
+                                        of the active scope failed
+              |  "<entry>" | "<exit>"   scope is activated / deactivated
               |  "<bof>"   | "<eof>"    once, before the first / after
                                         the last input line
     EFFECT   :=  "{" python block "}"   run the block
               |  "{" python "}" [";"]   the same, on the handler's own
                                         line: '=> { pass }' (D-46)
-              |  "goto" OTHERMODE ";"   switch mode
-              |  "push" OTHERMODE ";"   stack the active mode, switch
-              |  "pop" ";"              return to the stacked mode
+              |  "goto" OTHERSCOPE ";"  switch scope
+              |  "push" OTHERSCOPE ";"  stack the active scope, switch
+              |  "pop" ";"              return to the stacked scope
               |  "ignore" ";"           nothing (consume the line)
               |  "flush" ";"            emit the line unchanged
 
-A missing MODE before 'on:' or 'is:' addresses the DEFAULT MODE. Each
+A missing SCOPE before 'on:' or 'is:' addresses the DEFAULT SCOPE. Each
 'and:' appends one further EFFECT to the preceding handler; a handler's
 effects run in definition order.
 
-'import: "FILE-PATH"' pulls in another pype file: its modes merge into
-the same mode map, so a library file can provide base modes to inherit
+'import: "FILE-PATH"' pulls in another pype file: its scopes merge into
+the same scope map, so a library file can provide base scopes to inherit
 from. The path stands in QUOTES; environment variables inside it are
 expanded before resolution, so 'import: "$HOME/my/project/base.pype"'
 is lawful. A RELATIVE path is resolved against the importing file's
@@ -256,12 +254,12 @@ entered once; an import cycle is an error.
 A Python block EFFECT opens with '{' at the end of its line and closes
 with '}' alone on a line; the body is dedented before compilation.
 
-NO WORD IS RESERVED as a mode name. Every command EFFECT is a
-lowercase word terminated by ';', and a mode name occurs only as the
-second argument of 'goto'/'push' -- mode names and commands cannot
+NO WORD IS RESERVED as a scope name. Every command EFFECT is a
+lowercase word terminated by ';', and a scope name occurs only as the
+second argument of 'goto'/'push' -- scope names and commands cannot
 collide grammatically. The bracketed cause keywords cannot collide
 with identifiers either. Semantic traps beyond grammatical collision
--- a mode named 'IGNORE' or 'WHEN_THE_SUN_SHINES' -- are the script
+-- a scope named 'IGNORE' or 'WHEN_THE_SUN_SHINES' -- are the script
 author's business; the parser polices only the grammar.
 
 
@@ -282,7 +280,7 @@ A pattern is a whitespace-separated sequence of tokens:
 
 Between tokens any amount of whitespace (including none) is accepted.
 The pattern matches ANYWHERE in the line unless anchored; lines that
-match no handler meet the mode's 'else:'.
+match no handler meet the scope's 'else:'.
 
 'number' accepts '42', '-3.5', '.5', '1e-9', '2.5E+3'. 'int' accepts an
 optional sign and digits. GLOBS follow fnmatch syntax, restricted to
@@ -324,10 +322,9 @@ the last repetition's value.
 6  DISPATCH AND THE NAMESPACE
 ______________________________________________________________________________
 
-Per input line, the effective handlers of the active mode are tried in
-order. A pattern cause fires on a matching line; an 'if(...)' cause
-fires when its condition evaluates true in the shared namespace. The
-FIRST cause that holds fires; the rest are not consulted. If every
+Per input line, the effective handlers of the active scope are tried in
+order. A pattern cause fires on a matching line. The FIRST cause that
+holds fires; the rest are not consulted. If every
 match handler fails, the first <else> handler fires. The firing handler's
 effects run in definition order.
 
@@ -343,8 +340,8 @@ Known lines are transformed; everything else is forwarded verbatim.
 FLUSH chains like any other EFFECT: 'and: flush;' after a block prints
 the commentary first and the original line after it.
 
-All Python blocks of all handlers of all modes execute in ONE shared
-namespace, persisting across lines and mode switches. It contains:
+All Python blocks of all handlers of all scopes execute in ONE shared
+namespace, persisting across lines and scope switches. It contains:
 
     <bindings>    the pattern's named captures, converted; indexed
                   repeat bindings arrive as dictionaries, repeat
@@ -352,7 +349,7 @@ namespace, persisting across lines and mode switches. It contains:
     pype          the information and action object (below)
 
 Anything a block assigns stays: counters, lists, functions, imports.
-Initialise shared state in the start mode's '<entry>' handler.
+Initialise shared state in the start scope's '<entry>' handler.
 
 THE 'pype' OBJECT is the one place for runtime information:
 
@@ -360,30 +357,30 @@ THE 'pype' OBJECT is the one place for runtime information:
     pype.file_name()    name of the running pype script
     pype.line()         current input line, newline stripped
     pype.line_n()       current input line number, 1-based
-    pype.mode_name()    name of the active mode
-    pype.stack_depth()  depth of the push/pop mode stack
+    pype.scope_name()   name of the active scope
+    pype.stack_depth()  depth of the push/pop scope stack
     pype.bindings()     dictionary of the current line's pattern
-                        bindings; empty when an 'if' cause, an <else>
-                        handler, or no handler fired
-    pype.goto(NAME)     request a mode switch (section 7)
+                        bindings; empty when an <else> handler, or no
+                        handler fired
+    pype.goto(NAME)     request a scope switch (section 7)
     pype.push(NAME)     request a stack push (section 7)
     pype.pop()          request a stack pop (section 7)
 
-MANDATORY <else>. Every ACTIVATABLE mode -- the start mode and every mode
+MANDATORY <else>. Every ACTIVATABLE scope -- the start scope and every scope
 named as a switch or push target -- must carry an <else> handler in its
-effective list (own or inherited): a mode must state what happens to
+effective list (own or inherited): a scope must state what happens to
 unmatched lines, if only 'on: <else> => ignore;'. Violations are parse
-errors; for modes reached only through 'pype.goto()'/'pype.push()'
-calls the check fires at activation. Pure mixin modes, inherited from
+errors; for scopes reached only through 'pype.goto()'/'pype.push()'
+calls the check fires at activation. Pure mixin scopes, inherited from
 but never activated, are exempt.
 
-MANDATORY <eof> (D-39). EVERY mode -- start mode, switch target, mixin
+MANDATORY <eof> (D-39). EVERY scope -- start scope, switch target, mixin
 alike -- must carry an <eof> handler in its effective list (own or
-inherited). A mode is meant to be entered, so it must cope with the end
+inherited). A scope is meant to be entered, so it must cope with the end
 of the input, if only 'on: <eof> => ignore;'. A stream that ended in a
-mode without one ended without the token: the case could never
+scope without one ended without the token: the case could never
 COMPLETE. Violations are parse errors, on a run and on '--dry-run'
-alike, naming the mode -- every error of a script is a failure of the
+alike, naming the scope -- every error of a script is a failure of the
 test, said where the script is read.
 
 <exit> STATUS. The interpreter exits 0 after the whole stream and 1 on a
@@ -393,20 +390,20 @@ script error. A block may terminate the run itself with 'sys.exit(n)'
 failures.
 
 
-7  MODES
+7  SCOPES
 ______________________________________________________________________________
 
-Exactly one mode is active at any time.
+Exactly one scope is active at any time.
 
-WHAT MODES ARE FOR. A mode is a VOCABULARY: the set of lines the script
-currently cares about, and the meaning it gives them. Switching mode
+WHAT SCOPES ARE FOR. A scope is a VOCABULARY: the set of lines the script
+currently cares about, and the meaning it gives them. Switching scope
 switches vocabulary. Typical uses: the PHASES of a protocol, where the
 same report means different things in different phases (a build log's
 configure/compile/link); SKIPPING regions of no interest (below);
 NESTED sub-dialogues entered and left with 'push'/'pop', returning to
 whatever context was interrupted.
 
-SKIPPING LINES. To drop a region of input, give the region its own mode
+SKIPPING LINES. To drop a region of input, give the region its own scope
 whose '<else>' ignores everything, and switch on the region's markers:
 
     REPORT/on: "begin verbose dump" => goto SKIP;
@@ -416,53 +413,54 @@ whose '<else>' ignores everything, and switch on the region's markers:
     SKIP/on: <else> => ignore;
 
     lines:   a   b   begin...  x   y   z   end...   c
-    mode:    REPORT REPORT   [ SKIP SKIP SKIP SKIP ] REPORT
+    scope:    REPORT REPORT   [ SKIP SKIP SKIP SKIP ] REPORT
     output:  a   b                                   c
 
-The criterion need not be a marker pair: 'on: if ( ... )' switches on
-any Python condition, and a single mode's '<else> => ignore;' with a
+The criterion need not be a marker pair: a block may switch on any
+Python condition ('pype.goto()', section 6), and a single scope's
+'<else> => ignore;' with a
 few match handlers is itself the simplest skip -- keep what is named,
-drop the rest. When skippable regions can begin inside SEVERAL modes,
+drop the rest. When skippable regions can begin inside SEVERAL scopes,
 put the begin-marker handler into a shared base and 'push SKIP;'
-instead, so 'pop;' returns to whichever mode was interrupted.
+instead, so 'pop;' returns to whichever scope was interrupted.
 
-DEFAULT MODE. Bare 'on:'/'is:' lines address the default mode.
-When it exists it is the start mode, wherever its handlers appear in
-the file; otherwise the first-defined named mode starts. The default
-mode has no name: once left, it cannot be switched into again
+DEFAULT SCOPE. Bare 'on:'/'is:' lines address the default scope.
+When it exists it is the start scope, wherever its handlers appear in
+the file; otherwise the first-defined named scope starts. The default
+scope has no name: once left, it cannot be switched into again
 ('pop ;' can return into it).
 
-SWITCHING. '=> goto OTHERMODE;' as an effect, or
-'pype.goto("OTHERMODE")' inside a block, requests a switch. The
+SWITCHING. '=> goto OTHERSCOPE;' as an effect, or
+'pype.goto("OTHERSCOPE")' inside a block, requests a switch. The
 request is applied after the current handler's effects have completed;
 the last request wins. A switch to
-the already-active mode is a no-operation. A request raised by the
+the already-active scope is a no-operation. A request raised by the
 '<exit>' or '<entry>' handlers that a switch fires is applied in the
-same step, before the next input line: a mode whose '<entry>' says
+same step, before the next input line: a scope whose '<entry>' says
 'goto A' hands the next line to A. Requests that go in a circle
 ('A <entry> goto B', 'B <entry> goto A') are an error naming the chain.
 
-<entry> / <exit>. On a switch, '<exit>' handlers of the old mode fire, then
-'<entry>' handlers of the new mode. The start mode's '<entry>' fires before
-the first input line; at end of input the active mode's '<exit>' fires.
+<entry> / <exit>. On a switch, '<exit>' handlers of the old scope fire, then
+'<entry>' handlers of the new scope. The start scope's '<entry>' fires before
+the first input line; at end of input the active scope's '<exit>' fires.
 '<exit>' fires on EVERY deactivation; for end-of-input-only actions use
 '<eof>'.
 
-<bof> / <eof>. 'on: <bof>' fires once, after the start mode's '<entry>' and
+<bof> / <eof>. 'on: <bof>' fires once, after the start scope's '<entry>' and
 before the first input line; 'on: <eof>' fires once, after the last input
-line and before the final '<exit>'. Both belong to the mode active at the
+line and before the final '<exit>'. Both belong to the scope active at the
 respective boundary and inherit like any handler; all effective
 <bof>/<eof> handlers fire in order. The nesting over a whole run:
 
-    <entry>                    start mode activated
+    <entry>                    start scope activated
       <bof>                    once, before the first line
-        line 1 ... line N      per-line dispatch (any mode switches)
+        line 1 ... line N      per-line dispatch (any scope switches)
       <eof>                    once, after the last line
-    <exit>                     the then-active mode deactivated
+    <exit>                     the then-active scope deactivated
 
-PUSH / POP. '=> push OTHERMODE;' (or 'pype.push("OTHERMODE")')
-remembers the active mode on a stack and switches; '=> pop;' (or
-'pype.pop()') returns to the most recently stacked mode:
+PUSH / POP. '=> push OTHERSCOPE;' (or 'pype.push("OTHERSCOPE")')
+remembers the active scope on a stack and switches; '=> pop;' (or
+'pype.pop()') returns to the most recently stacked scope:
 
          push B;              push C;              pop;         pop;
     [A] --------> [B]    [B] --------> [C]    [C] -----> [B] -----> [A]
@@ -501,7 +499,7 @@ A handler that can NEVER fire -- an earlier one's tokens stand, in
 order and contiguous, among its own -- is NOTED by '--dry-run' (and on
 '--trace'), naming both handlers and their lines:
 
-    NOTE: mode '<default>': '"abc" "def"' (x.pype:4) never fires --
+    NOTE: scope '<default>': '"abc" "def"' (x.pype:4) never fires --
           '"abc"' (x.pype:1) comes first and matches every line it matches
 
 The check is SUPERFICIAL by design: two patterns whose languages merely
@@ -510,21 +508,20 @@ deciding that costs automata, and the first match firing is the law,
 not a fault. Put the more specific handler first, or anchor
 ('<bol> "abc" <eol>').
 
-'if(...)' causes are CONDITIONS, not patterns, and take their place in
-the same order. <entry>, <exit>, <bof> and <eof> handlers ALL fire.
+<entry>, <exit>, <bof> and <eof> handlers ALL fire.
 
 <else> follows the same law: every <else> triggers on the same
 condition (no match handler fired), and the FIRST <else> of the
 effective list fires -- own
 before inherited, bases in declaration order. A base's <else> serves
-the whole hierarchy beneath it; a deriving mode overrides that default
+the whole hierarchy beneath it; a deriving scope overrides that default
 by giving its own.
 
-Bases hold the SHARED vocabulary; a deriving mode's own handlers come
-first, so a line a base already handles is taken by the deriving mode's
+Bases hold the SHARED vocabulary; a deriving scope's own handlers come
+first, so a line a base already handles is taken by the deriving scope's
 handler where it gives one -- an override. A handler arriving twice over a
 diamond (two bases sharing a root) is entered once. Inheritance cycles
-and unknown bases are parse errors. The default mode may inherit
+and unknown bases are parse errors. The default scope may inherit
 ('is: BASE'); having no name, it cannot be inherited from.
 
 
@@ -541,20 +538,20 @@ pass -- no buffering, no concurrency.
 
 01-test-report      Count '[PASS]'/'[FAIL]' lines of a test-suite log;
                     running commentary per test, grand summary in the
-                    '<exit>' handler at end of input. Single default mode.
+                    '<exit>' handler at end of input. Single default scope.
 
 02-build-phases     A build log divided into CONFIGURE/COMPILE/LINK
-                    phases. Each phase is a mode inheriting the shared
+                    phases. Each phase is a scope inheriting the shared
                     ANY handlers (phase markers, warning counter). A
                     phase's '<exit>' handler prints its summary the moment
                     the phase is left.
 
-03-sensor-watch     Temperature trace with an ALERT mode above 80.0 C;
+03-sensor-watch     Temperature trace with an ALERT scope above 80.0 C;
                     excursion messages on entry and clearance; the
                     statistics print from an '<eof>' handler inherited by
-                    every mode.
+                    every scope.
 
-04-log-router       A mixed application log routed to component modes.
+04-log-router       A mixed application log routed to component scopes.
                     COMMON carries the shared vocabulary, including one
                     inherited '<exit>' section summary; ENGINE and
                     NETWORK add disjoint vocabularies of their own.
@@ -562,7 +559,7 @@ pass -- no buffering, no concurrency.
 05-service-discovery  The purpose of the language in one script
                     (section 1): non-deterministic response order in,
                     deterministic counts and an alphabetical settlement
-                    report out; an 'if' wait guard on pype.time().
+                    report out; a wait guard on pype.time() in '<else>'.
 
 
 10  COMPATIBILITY
@@ -588,35 +585,35 @@ tracing is a development aid, not a production mode.
 11  ERROR MESSAGES
 ______________________________________________________________________________
 
-    <file>:<n>: expected 'MODE/on:', 'on:', 'MODE is:' or 'and:'
+    <file>:<n>: expected 'SCOPE/on:', 'on:', 'SCOPE is:' or 'and:'
     <file>:<n>: missing '=> EFFECT'
     <file>:<n>: missing EFFECT after 'and:'
     <file>:<n>: cannot read EFFECT '...'
     <file>:<n>: block opened here is never closed by '}'
     <file>:<n>: cannot read pattern at '...'
     <file>:<n>: empty pattern
-    <file>:<n>: cannot compile 'if' condition: ...
+    <file>:<n>: 'if(...)' is no cause => test the condition in a
+            block, e.g. 'on: <else> => { if ...: ... }'
+            ('if(...)' was a cause until 2026-11-22)
     <file>:<n>: 'and:' without preceding handler
-    <file>:<n>: 'is:' names unknown mode '...'
-    <file>:<n>: mode '...' contains an 'if' cause and cannot be
-            inherited from
+    <file>:<n>: 'is:' names unknown scope '...'
     <file>:<n>: indexed binding '...' outside a repeat group
     <file>:<n>: index '...' does not name the repeat counter '...'
     <file>:<n>: repeat groups do not nest
     <file>:<n>: repeat group is never closed by ')'
     <file>: inheritance cycle: A is: B is: A
-    <file>: mode '...' has no <else> handler in its effective list; ...
-    <file>: mode '...' has no <eof> handler in its effective list; ...
+    <file>: scope '...' has no <else> handler in its effective list; ...
+    <file>: scope '...' has no <eof> handler in its effective list; ...
     <file>:<n>: cannot compile the one-line effect: ...
     <file>:<n>: cannot find import '...' (searched: ...)
     <file>:<n>: import cycle via '...'
     <file>:<n>: import path must be a quoted string: import: "PATH"
-    <file>: script defines no mode
-    mode '...' cannot be activated: no <else> handler in its
+    <file>: script defines no scope
+    scope '...' cannot be activated: no <else> handler in its
             effective list
-    pype.goto('...'): no such mode
-    pype.goto('<default>'): the default mode cannot be entered
-    pop with empty mode stack
+    pype.goto('...'): no such scope
+    pype.goto('<default>'): the default scope cannot be entered
+    pop with empty scope stack
     <file>:<n>: a tick reads: tick: <seconds> => "<format>"
     <file>:<n>: 'tick:' takes seconds above zero, not '...'
     <file>:<n>: the tick's format cannot be filled -- ...
@@ -662,7 +659,7 @@ ______________________________________________________________________________
 
 Every SECONDS since the start of reading (the clock of 'pype.time()'),
 the line FORMAT.format(time_sec=k*SECONDS) is dispatched in the ACTIVE
-mode like an input line: '<tick 1>', '<tick 2>', ... 'time_sec' is an
+scope like an input line: '<tick 1>', '<tick 2>', ... 'time_sec' is an
 int where it is whole, a float else; '{time_sec:.3f}' formats it.
 '{time_sec}' is the one placeholder -- a literal brace is written twice.
 
@@ -692,7 +689,7 @@ ______________________________________________________________________________
 
 A file with the extension '.pypes' is a SYSTEM: one edge per line, '#'
 comments, script paths relative to the file. Each script runs in its own
-interpreter -- its own namespace, its own modes.
+interpreter -- its own namespace, its own scopes.
 
     FLOW      what a script prints goes to its successors only; a SINK
               (no successor) writes to stdout.

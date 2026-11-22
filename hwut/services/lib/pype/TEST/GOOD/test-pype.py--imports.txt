@@ -1,5 +1,5 @@
 
---- import resolved via --pype-dir; inherited library mode ---
+--- import resolved via --pype-dir; inherited library scope ---
 EXIT: 0
     own handler
     shared handler from the library

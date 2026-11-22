@@ -35,7 +35,7 @@ BASE end
 
 --- the first match fires: own before inherited (D-47) ---
     SUB x
-NOTE: mode 'SUB': '"x"' (<test>:1) never fires -- '"x"' (<test>:6) comes first and matches every line it matches
+NOTE: scope 'SUB': '"x"' (<test>:1) never fires -- '"x"' (<test>:6) comes first and matches every line it matches
 
 --- the first match fires: own against own, '<int>' before '<number>' ---
     int 5
@@ -99,9 +99,9 @@ from B
 PypeError (expected): <test>: inheritance cycle: A is: B is: A
 
 --- unknown base rejected ---
-PypeError (expected): <test>:1: 'is:' names unknown mode 'GHOST'
+PypeError (expected): <test>:1: 'is:' names unknown scope 'GHOST'
 
---- IGNORE reserved as mode name ---
+--- IGNORE reserved as scope name ---
 PypeError (expected): <test>:1: cannot read EFFECT '{ }'
-PypeError (expected): <test>:1: 'is:' names unknown mode 'IGNORE'
+PypeError (expected): <test>:1: 'is:' names unknown scope 'IGNORE'
 <hwut-end>

@@ -1,0 +1,6 @@
+--- a/TEST's list: 'bench.log' ignored by name, 'data.csv' not
+    ./../data.csv
+    ./../helper.py
+--- b/TEST's list: both ignored
+    ./../helper.py
+<hwut-end>

@@ -39,9 +39,9 @@ pype triggers Python actions on input lines that match handler patterns.
                 named and unnamed; first-match dispatch; non-matching
                 lines pass silently.
     modes       <entry>/<exit> handlers; 'goto' switch (arrow form and
-                'mode()' call form); 'and:' continuation blocks.
-    default_mode  bare 'on:' handlers form the nameless default mode;
-                it is the start mode and cannot be re-entered.
+                'scope()' call form); 'and:' continuation blocks.
+    default_mode  bare 'on:' handlers form the nameless default scope;
+                it is the start scope and cannot be re-entered.
     inheritance 'LEFT is: RIGHT' hands RIGHT's handlers to LEFT
                 transitively; SHADOWING IS FORBIDDEN -- intersecting
                 patterns are an error wherever they come from;
@@ -52,8 +52,8 @@ pype triggers Python actions on input lines that match handler patterns.
                 pattern handlers of one effective list with
                 INTERSECTING languages are a hard error -- no
                 settlement, no shadowing.
-    else_flush  'MODE/on: <else>'/'else:' fires when every match handler of
-                the active mode failed; '=> flush;' emits the line
+    else_flush  'SCOPE/on: <else>'/'else:' fires when every match handler of
+                the active scope failed; '=> flush;' emits the line
                 unchanged; 'on: <else> => flush;' is the pass-through-filter
                 idiom; <else> is the one shadowable handler, own
                 before inherited, first of the effective list;
@@ -63,12 +63,12 @@ pype triggers Python actions on input lines that match handler patterns.
                 bindings and '[i +/- n]' offset expressions; the
                 mandatory-else law with its mixin exemption and
                 activation-time check.
-    boundaries_stack  <bof>/<eof> file boundary handlers; PUSH/POP mode
-                stack with return into the default mode; 'line_n' and
+    boundaries_stack  <bof>/<eof> file boundary handlers; PUSH/POP scope
+                stack with return into the default scope; 'line_n' and
                 'time_sec'; the --dry-run option.
     namespace   all blocks share one namespace; bindings and 'line'
-                are visible across handlers and modes.
-    errors      parse errors report file and line; unknown mode names
+                are visible across handlers and scopes.
+    errors      parse errors report file and line; unknown scope names
                 are rejected.
     pipe        a she-bang script run as an OS-level pipe filter.
     examples    every script in examples/ run against its matching
@@ -76,8 +76,8 @@ pype triggers Python actions on input lines that match handler patterns.
                 reference output of the manual's example section.
     generate    'hwut.pype --example SCRIPT' generates an example
                 input; the generated input is fed back into the
-                script (round trip); pure-IGNORE handlers and modes
-                reachable only via 'mode()' calls are skipped by the
+                script (round trip); pure-IGNORE handlers and scopes
+                reachable only via 'scope()' calls are skipped by the
                 static walk.
 ______________________________________________________________________________
 """
@@ -94,13 +94,13 @@ from hwut.services.lib.pype.pype import parse as _parse, Interpreter, PypeError,
 import re
 
 
-#  EVERY MODE COPES WITH THE END OF THE INPUT (pype D-39, services
+#  EVERY SCOPE COPES WITH THE END OF THE INPUT (pype D-39, services
 #  E-169). A fixture whose subject is something else states it in the
-#  least intrusive way: 'on: <eof> => ignore;' for each mode it defines
+#  least intrusive way: 'on: <eof> => ignore;' for each scope it defines
 #  without an '<eof>' of its own -- appended, so no line of the fixture
 #  moves, and 'ignore' prints nothing. A fixture about '<eof>' itself
 #  states its own and is left as it stands. What runs is what is shown.
-_MODE_RE = re.compile(r"^\s*([A-Za-z_]\w*)\s*(?:/on:|\s+is:)", re.M)
+_SCOPE_RE = re.compile(r"^\s*([A-Za-z_]\w*)\s*(?:/on:|\s+is:)", re.M)
 _BARE_RE = re.compile(r"^\s*(?:on|is):", re.M)
 _EOF_RE  = re.compile(r"^\s*(?:([A-Za-z_]\w*)/)?on:\s*<eof>", re.M)
 
@@ -108,19 +108,19 @@ _EOF_RE  = re.compile(r"^\s*(?:([A-Za-z_]\w*)/)?on:\s*<eof>", re.M)
 def lawful(script_txt):
     """
     RETURN: str, 'script_txt' with 'on: <eof> => ignore;' appended for
-            the default mode and '<M>/on: <eof> => ignore;' for every
-            mode 'M' the text defines without an '<eof>' handler of its
-            own -- the text unchanged where every mode has one.
+            the default scope and '<M>/on: <eof> => ignore;' for every
+            scope 'M' the text defines without an '<eof>' handler of its
+            own -- the text unchanged where every scope has one.
     """
-    mode_list = []
-    if _BARE_RE.search(script_txt): mode_list.append(None)
-    for name in _MODE_RE.findall(script_txt):
-        if name not in mode_list: mode_list.append(name)
+    scope_list = []
+    if _BARE_RE.search(script_txt): scope_list.append(None)
+    for name in _SCOPE_RE.findall(script_txt):
+        if name not in scope_list: scope_list.append(name)
     stated = set(_EOF_RE.findall(script_txt))
     stated = {None if name == "" else name for name in stated}
     added  = ["on: <eof> => ignore;" if name is None
               else "%s/on: <eof> => ignore;" % name
-              for name in mode_list if name not in stated]
+              for name in scope_list if name not in stated]
     if not added: return script_txt
     tail = "" if script_txt.endswith("\n") or not script_txt else "\n"
     return script_txt + tail + "\n".join(added) + \
@@ -136,16 +136,16 @@ def first_match(script_txt, input_txt):
     """RETURN: None. Runs the LAWFUL 'script_txt' over 'input_txt' and
                      prints what fired, then the check's NOTEs (D-47):
                      which handler of several matching ones triggers."""
-    mode_db, first = parse(script_txt, "<test>")
+    scope_db, first = parse(script_txt, "<test>")
     buffer = io.StringIO()
     stdout, sys.stdout = sys.stdout, buffer
     try:
-        Interpreter(mode_db, first).run(io.StringIO(input_txt))
+        Interpreter(scope_db, first).run(io.StringIO(input_txt))
     finally:
         sys.stdout = stdout
     for line in buffer.getvalue().splitlines(): print("    " + line)
-    for mode in mode_db.values():
-        for note in getattr(mode, "note_list", ()): print(note)
+    for scope in scope_db.values():
+        for note in getattr(scope, "note_list", ()): print(note)
 
 
 class CRunScript(_CRunScript):
@@ -183,8 +183,8 @@ def run_script(script_txt, input_txt):
     for line in input_txt.splitlines():  print("    " + line)
     print("}")
     print("OUTPUT: {")
-    mode_db, first = parse(script_txt, "<test>")
-    Interpreter(mode_db, first).run(io.StringIO(input_txt))
+    scope_db, first = parse(script_txt, "<test>")
+    Interpreter(scope_db, first).run(io.StringIO(input_txt))
     print("}")
 
 
@@ -267,7 +267,7 @@ def run_patterns():
         """)
 
 
-def run_modes():
+def run_scopes():
     """RETURN: None. <entry>/<exit>, arrow switch, pype.goto() call, 'and:' chain."""
     banner("arrow switch with <entry>/<exit>")
     run_script(
@@ -283,7 +283,7 @@ def run_modes():
             print("B begin")
         }
         B/on: "back" => {
-            print("returning via mode() call")
+            print("returning via scope() call")
             pype.goto("A")
         }
         B/on: <exit> => {
@@ -320,8 +320,8 @@ def run_modes():
 
 
 def run_namespace():
-    """RETURN: None. One namespace across handlers and modes."""
-    banner("counter survives handlers and mode switches")
+    """RETURN: None. One namespace across handlers and scopes."""
+    banner("counter survives handlers and scope switches")
     run_script(
         """
         A/on: <entry> => {
@@ -347,9 +347,9 @@ def run_namespace():
         """)
 
 
-def run_default_mode():
-    """RETURN: None. Bare 'on:' handlers form the nameless default mode."""
-    banner("default mode starts; leaving it is one-way")
+def run_default_scope():
+    """RETURN: None. Bare 'on:' handlers form the nameless default scope."""
+    banner("default scope starts; leaving it is one-way")
     run_script(
         """
         on: <entry> => {
@@ -374,7 +374,7 @@ def run_default_mode():
         tick
         """)
 
-    banner("default mode precedes named modes as start mode")
+    banner("default scope precedes named scopes as start scope")
     run_script(
         """
         NAMED/on: "x" => {
@@ -389,16 +389,16 @@ def run_default_mode():
         x
         """)
 
-    banner("no way back: mode('<default>') rejected")
+    banner("no way back: scope('<default>') rejected")
     try:
-        mode_db, first = parse(
+        scope_db, first = parse(
             'on: "go" => goto NAMED;\n'
             'on: <else> => ignore;\n'
             'NAMED/on: "back" => {\n'
             '    pype.goto("<default>")\n'
             '}\n'
             'NAMED/on: <else> => ignore;\n', "<test>")
-        Interpreter(mode_db, first).run(io.StringIO("go\nback\n"))
+        Interpreter(scope_db, first).run(io.StringIO("go\nback\n"))
         print("UNEXPECTED: run returned")
     except PypeError as e:
         print("PypeError (expected): %s" % e)
@@ -497,7 +497,7 @@ def run_inheritance():
     except PypeError as e:
         print("PypeError (expected): %s" % e)
 
-    banner("IGNORE reserved as mode name")
+    banner("IGNORE reserved as scope name")
     try:
         parse('IGNORE/on: "x" => { }\n', "<test>")
         print("UNEXPECTED: parse returned")
@@ -609,7 +609,7 @@ def run_multi_inheritance():
     first_match('B1/on: <"[abc]"> => {\n    print("class", pype.line())\n}\nB2/on: "b" => {\n    print("const b")\n}\nSUB is: B1, B2\nSUB/on: <else> => ignore;\non: "go" => goto SUB;\non: <else> => ignore;\n',
                 'go\nb\nc\n')
 
-    banner("effect-command words in a base list: plain unknown-mode law")
+    banner("effect-command words in a base list: plain unknown-scope law")
     try:
         parse('A/on: "x" => ignore;\n'
               'SUB is: A, IGNORE\n', "<test>")
@@ -721,8 +721,8 @@ def run_generate():
                 print("    " + line)
             print("}")
 
-    banner("walk skips pure-IGNORE handlers and mode()-only switches")
-    mode_db, first = parse(
+    banner("walk skips pure-IGNORE handlers and scope()-only switches")
+    scope_db, first = parse(
         'on: "visible" <n = int> => {\n'
         '    print(n)\n'
         '}\n'
@@ -739,7 +739,7 @@ def run_generate():
         'UNSEEN/on: "never sampled" => {\n'
         '    print("unreachable to the static walk")\n'
         '}\n', "<test>")
-    for line in generate_example_input(mode_db, first):
+    for line in generate_example_input(scope_db, first):
         print(line)
 
 
@@ -855,7 +855,7 @@ def run_else_flush():
         """)
 
     banner("first <else> of the effective list fires: MID over ROOT")
-    mode_db, first = parse('ROOT/on: <else> => flush;\n'
+    scope_db, first = parse('ROOT/on: <else> => flush;\n'
                            'MID is: ROOT\n'
                            'MID/on: <else> => ignore;\n'
                            'SUB is: MID\n'
@@ -865,17 +865,17 @@ def run_else_flush():
     print("parse succeeded: SUB's effective <else> is MID's (own before "
           "inherited); ROOT's flush is shadowed")
 
-    banner("effect-command words are lawful mode names; unknown ones err")
-    mode_db, first = parse('FLUSH/on: "x" => ignore;\n'
+    banner("effect-command words are lawful scope names; unknown ones err")
+    scope_db, first = parse('FLUSH/on: "x" => ignore;\n'
                            'FLUSH/on: <else> => ignore;\n'
                            'on: "go" => goto FLUSH;\n'
                            'on: <else> => ignore;\n', "<test>")
-    print("parse succeeded: mode 'FLUSH' defined and targeted via goto")
+    print("parse succeeded: scope 'FLUSH' defined and targeted via goto")
     try:
-        mode_db, first = parse(
+        scope_db, first = parse(
             'A/on: "y" => {\n    pype.goto("FLUSH")\n}\n'
             'A/on: <else> => ignore;\n', "<test>")
-        Interpreter(mode_db, first).run(io.StringIO("y\n"))
+        Interpreter(scope_db, first).run(io.StringIO("y\n"))
         print("UNEXPECTED: run returned")
     except PypeError as e:
         print("PypeError (expected): %s" % e)
@@ -948,21 +948,21 @@ def run_anchors_repeat():
         pair 10 11 20 21
         """)
 
-    banner("mandatory else: activatable mode without else is an error")
+    banner("mandatory else: activatable scope without else is an error")
     try:
         parse('M/on: "x" => ignore;\n', "<test>")
         print("UNEXPECTED: parse returned")
     except PypeError as e:
         print("PypeError (expected): %s" % e)
 
-    banner("mixin without else is exempt; activation via mode() is checked")
+    banner("mixin without else is exempt; activation via scope() is checked")
     try:
-        mode_db, first = parse(
+        scope_db, first = parse(
             'MIXIN/on: "m" => ignore;\n'
             'on: "go" => {\n    pype.goto("MIXIN")\n}\n'
             'on: <else> => ignore;\n', "<test>")
         print("parse succeeded (MIXIN is no static target)")
-        Interpreter(mode_db, first).run(io.StringIO("go\n"))
+        Interpreter(scope_db, first).run(io.StringIO("go\n"))
         print("UNEXPECTED: run returned")
     except PypeError as e:
         print("PypeError (expected): %s" % e)
@@ -999,7 +999,7 @@ def run_anchors_repeat():
 
 
 def run_boundaries_stack():
-    """RETURN: None. <bof>/<eof> file boundary handlers; PUSH/POP mode stack;
+    """RETURN: None. <bof>/<eof> file boundary handlers; PUSH/POP scope stack;
                      'line_n' and 'time_sec' namespace values; --dry-run.
     """
     banner("<bof> and <eof> fire once at the file boundaries")
@@ -1054,7 +1054,7 @@ def run_boundaries_stack():
         x
         """)
 
-    banner("POP may return into the nameless default mode")
+    banner("POP may return into the nameless default scope")
     run_script(
         """
         on: "call" => push SUB;
@@ -1073,19 +1073,19 @@ def run_boundaries_stack():
 
     banner("pop with an empty stack is a runtime error")
     try:
-        mode_db, first = parse('on: "x" => pop;\non: <else> => ignore;\n', "<test>")
-        Interpreter(mode_db, first).run(io.StringIO("x\n"))
+        scope_db, first = parse('on: "x" => pop;\non: <else> => ignore;\n', "<test>")
+        Interpreter(scope_db, first).run(io.StringIO("x\n"))
         print("UNEXPECTED: run returned")
     except PypeError as e:
         print("PypeError (expected): %s" % e)
 
-    banner("no reserved mode names: 'goto NAME;' cannot collide")
+    banner("no reserved scope names: 'goto NAME;' cannot collide")
     run_script(
         """
         on: "go" => goto IGNORE;
         on: <else> => ignore;
         IGNORE/on: "x" => {
-            print("a mode named IGNORE, lawfully addressed by goto")
+            print("a scope named IGNORE, lawfully addressed by goto")
         }
         IGNORE/on: <else> => ignore;
         """,
@@ -1106,7 +1106,7 @@ def run_boundaries_stack():
     except PypeError as e:
         print("PypeError (expected): %s" % e)
 
-    banner("released: cause words and anything else are lawful mode names")
+    banner("released: cause words and anything else are lawful scope names")
     run_script(
         """
         on: "go" => goto WHEN_THE_SUN_SHINES;
@@ -1117,7 +1117,7 @@ def run_boundaries_stack():
         WHEN_THE_SUN_SHINES/on: "visit" => goto ENTRY;
         WHEN_THE_SUN_SHINES/on: <else> => ignore;
         ENTRY/on: "x" => {
-            print("a mode named ENTRY, lawfully")
+            print("a scope named ENTRY, lawfully")
         }
         ENTRY/on: <else> => ignore;
         """,
@@ -1134,10 +1134,9 @@ def run_boundaries_stack():
         M/on: "p" +( i : <x[i] = int> ) => {
             print("bindings:", dict(sorted(pype.bindings().items())))
         }
-        M/on: if ( True ) => {
-            print("if fire, bindings:", pype.bindings())
+        M/on: <else> => {
+            print("else fire, bindings:", pype.bindings())
         }
-        M/on: <else> => ignore;
         """,
         """
         p 4 5
@@ -1178,7 +1177,7 @@ def run_boundaries_stack():
                                             "tmp-trace.pype"))
             print("}")
 
-    banner("--trace with mode-name filters traces only those modes")
+    banner("--trace with scope-name filters traces only those scopes")
     with CRunScript(
             file_name       = "tmp-trace-filter.pype",
             shebang         = "#!" + LAUNCHER_PATH,
@@ -1235,30 +1234,25 @@ def run_boundaries_stack():
 
 
 def run_if_cause():
-    """RETURN: None. 'if(...)' causes: fire on a true condition; ordered
-                     among match handlers; opaque to interference.
+    """RETURN: None. 'if(...)' is NO CAUSE (ruled 2026-11-22): refused at
+                     parse with the way out; the condition in a block
+                     does what the cause did. MEASURED BEFORE: the cause
+                     fired on a true condition, ordered among the match
+                     handlers.
     """
-    banner("if-cause fires on condition; dispatch order holds")
-    run_script(
-        """
-        M/on: "known" => {
-            print("pattern first")
-        }
-        M/on: if ( pype.line_n() >= 3 ) => {
-            print("late line %d: %r" % (pype.line_n(), pype.line()))
-        }
-        M/on: <else> => {
-            print("early unmatched: %r" % pype.line())
-        }
-        """,
-        """
-        stray
-        known
-        stray again
-        known
-        """)
+    banner("'if(...)' as a cause is refused at parse, the way out named")
+    for script_txt in ('M/on: if ( pype.line_n() >= 3 ) => ignore;\n'
+                       'M/on: <else> => ignore;\nM/on: <eof> => ignore;\n',
+                       'M/on: if ( 1 +++ ) => ignore;\n'
+                       'M/on: <else> => ignore;\nM/on: <eof> => ignore;\n'):
+        try:
+            parse(script_txt, "<test>")
+            print("UNEXPECTED: parse returned")
+        except PypeError as e:
+            print("PypeError (expected): %s" % str(e).splitlines()[0])
 
-    banner("condition reads the shared namespace")
+    banner("the condition in a block: '<else>' tests it on every line no "
+           "pattern takes")
     run_script(
         """
         M/on: <entry> => {
@@ -1268,10 +1262,10 @@ def run_if_cause():
             budget -= 1
             print("spent; budget", budget)
         }
-        M/on: if ( budget <= 0 ) => {
-            print("budget exhausted at %r" % pype.line())
+        M/on: <else> => {
+            if budget <= 0:
+                print("budget exhausted at %r" % pype.line())
         }
-        M/on: <else> => ignore;
         """,
         """
         spend
@@ -1279,39 +1273,6 @@ def run_if_cause():
         spend
         idle
         """)
-
-    banner("'if' causes are conditions, not patterns: exempt from "
-           "disjointness")
-    run_script(
-        """
-        M/on: "known" => {
-            print("pattern handler")
-        }
-        M/on: if ( pype.line_n() % 2 == 0 ) => {
-            print("even line condition")
-        }
-        M/on: if ( True ) => {
-            print("catch-any condition, later in order")
-        }
-        M/on: <else> => ignore;
-        """,
-        """
-        known
-        anything
-        odd again
-        """)
-
-    banner("a mode containing 'if' may be inherited from: order is the law (D-47)")
-    first_match('B/on: if ( pype.line() == "x" ) => {\n    print("B if")\n}\nB/on: <else> => ignore;\nS is: B\nS/on: <else> => ignore;\non: "go" => goto S;\non: <else> => ignore;\n',
-                'go\nx\ny\n')
-
-    banner("broken condition rejected at parse")
-    try:
-        parse('M/on: if ( 1 +++ ) => ignore;\nM/on: <else> => ignore;\n',
-              "<test>")
-        print("UNEXPECTED: parse returned")
-    except PypeError as e:
-        print("PypeError (expected): %s" % str(e).splitlines()[0])
 
 
 def run_imports():
@@ -1340,7 +1301,7 @@ def run_imports():
                      '    print("own handler")\n'
                      '}\n')
 
-        banner("import resolved via --pype-dir; inherited library mode")
+        banner("import resolved via --pype-dir; inherited library scope")
         result = spawn(
             ["python3", interpreter_path, "--pype-dir", lib_dir, main_path],
             input="own\nshared\nnoise\n", capture_output=True, text=True)
@@ -1457,7 +1418,7 @@ def run_compat():
 
 
 def run_errors():
-    """RETURN: None. Parse errors carry file:line; unknown modes rejected."""
+    """RETURN: None. Parse errors carry file:line; unknown scopes rejected."""
     banner("missing arrow")
     try:
         parse('M/on: "x"\n', "<err>")
@@ -1479,11 +1440,11 @@ def run_errors():
     except PypeError as e:
         print("PypeError (expected): %s" % e)
 
-    banner("switch to unknown mode")
+    banner("switch to unknown scope")
     try:
-        mode_db, first = parse('M/on: "x" => goto GHOST;\n'
+        scope_db, first = parse('M/on: "x" => goto GHOST;\n'
                                'M/on: <else> => ignore;\n', "<err>")
-        Interpreter(mode_db, first).run(io.StringIO("x\n"))
+        Interpreter(scope_db, first).run(io.StringIO("x\n"))
         print("UNEXPECTED: run returned")
     except PypeError as e:
         print("PypeError (expected): %s" % e)
@@ -1565,9 +1526,9 @@ HwutRunner(
     choice_map = {
         "terminal":       run_terminal,
         "patterns":  run_patterns,
-        "modes":     run_modes,
+        "modes":     run_scopes,
         "namespace": run_namespace,
-        "default_mode": run_default_mode,
+        "default_mode": run_default_scope,
         "inheritance": run_inheritance,
         "multi_inheritance": run_multi_inheritance,
         "else_flush": run_else_flush,

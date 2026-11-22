@@ -75,8 +75,10 @@ EOF
 
 run() {
     rm -f flashed.log
-    "$BIN/hwut.run" --plain > out.txt 2>&1; status=$?
-    grep -vE "^(=|-|DIR |DIRECTORIES|   TEST|\||$)" out.txt | shown
+    #  THE CAPTURE STANDS OUTSIDE THE TEST DIRECTORY: inside it would be a
+    #  wallflower (exploration R-102).
+    "$BIN/hwut.run" --plain > ../out.txt 2>&1; status=$?
+    grep -vE "^(=|-|DIR |DIRECTORIES|   TEST|\||$)" ../out.txt | shown
     echo "exit: $status"
     echo "flash calls: $(cat flashed.log 2>/dev/null | wc -l)"
 }

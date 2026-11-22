@@ -40,14 +40,19 @@ Four gates, in order. A file passes all four or it is no test application.
 
   1  IT IS A CANDIDATE.  A regular file in the TEST directory, the walk one
      directory deep. NOT a candidate:
-       - the default ignore globs '*.txt', '*.xml', '*.json', '*.pype',
-         '*.pypes', and the directory's own 'ignore' globs -- silent;
+       - the directory's own 'ignore' globs -- silent. There is NO default
+         set (R-102): a data file, a pype, a README is a WALLFLOWER the
+         run names until 'ignore' speaks for it;
        - THE FRAMEWORK'S OWN FILES, by name, never by glob: 'hwut.conf',
          'HWUT_ROOT/setup.conf', 'hwut-info.dat', 'hwut-traces.csv',
          'HWUT_ROOT/labels.txt';
        - a BACKUP-SHAPED name -- '*~', '#*#', '*.bak', '*.backup', '*.orig',
-         '*.old', '*.save', '*.rej', '*.copy', '*.swp', '*.tmp' -- which is
-         REPORTED with its reason, not passed over.
+         '*.old', '*.save', '*.rej', '*.copy', '*.swp', '*.tmp' -- is a
+         candidate whose header is NOT READ: a WALLFLOWER until 'ignore'
+         speaks for it (R-103).
+       An 'ignore' glob WITHOUT '/' is a name, matched in every test
+       directory below its conf; one WITH '/' is anchored at its conf's
+       directory, like '.gitignore' (R-103).
 
   2  A SPECIFICATION SPEAKS FOR IT, on exactly one carrier: its own HEADER,
      or an entry under 'apps' in 'hwut.conf'. Both is a directory error.
@@ -460,10 +465,11 @@ procsitter with 'script_caps { ... }', the words of 'caps { }', a minute
 of wall clock where it states none; it flows down the tree (services
 E-161).
 'admit' takes glob expressions OUT of the ignored ones -- the default set,
-the backup-shaped names ('*~', '*.orig', '*.bak', ... -- finder.py), and
-'ignore''s own; a backup-shaped name meant as a test is one again
-(services E-159). 'ignore' adds glob expressions to those omitted by default
-(section 0). Both ADD UP down the tree: a directory's own globs join its
+the backup-shaped names ('*~', '*.orig', '*.bak', ... -- finder.py, read as
+wallflowers, R-103) and 'ignore''s own; a backup-shaped name meant as a
+test is one again (services E-159). 'ignore' adds glob expressions; there
+is no default set (R-102). A glob with '/' is anchored at the directory of
+the conf that states it, one without is a name (R-103). Both ADD UP down the tree: a directory's own globs join its
 parent's, so what a parent ignores stays ignored below it unless an 'admit'
 takes it out (R-98).
 
@@ -930,15 +936,14 @@ the position at which its specification begins.
 'CTestCaseSequence' is a flat, ordered sequence of such elements. Run, diff,
 merge, and accept each act on one element and read nothing else.
 
-CANDIDACY REFUSAL (E-41). 'finder.candidate_list' answers (candidates,
-refused): a file whose name matches 'REFUSED_NAME_GLOB_TUPLE' ('*~',
-'#*#', '*.bak', '*.backup', '*.orig', '*.old', '*.save', '*.rej',
-'*.copy', '*.swp', '*.tmp') is no candidate and is named, with its
-reason, in 'ExplorationResult.refused_tuple'. An ignored file ('ignore'
-in 'hwut.conf', the default globs) is silent; a refused one is reported.
-'*.pype' and '*.pypes' are among the default globs: a pype, and a system
-of pypes, is a CANONICALISER the test names, never a candidate, and the
-nominal gate never sees it.
+BACKUP-SHAPED NAMES (E-41, R-103). A file whose name matches
+'BACKUP_NAME_GLOB_TUPLE' ('*~', '#*#', '*.bak', '*.backup', '*.orig',
+'*.old', '*.save', '*.rej', '*.copy', '*.swp', '*.tmp') is not read for a
+header ('finder.backup_shaped_f') and lands in 'silent_tuple', a
+wallflower. An ignored file ('ignore' in 'hwut.conf') is silent. A pype, or a system
+of pypes, is a CANONICALISER the test names: it carries no '@hwut' block,
+so the header reader passes it, and until 'ignore' names it the run
+lists it as a wallflower (R-102).
 
 THE TOLERANCE SCOPE (E-42) holds every lexical tolerance and there is no
 second place one may be written:

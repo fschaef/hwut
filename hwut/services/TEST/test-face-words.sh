@@ -215,21 +215,21 @@ case "$1" in
         R="--jobs=1 --deterministic --no-colour"
         for tier in "" "--plain" "--verbose" "--quiet" "--silent" \
                     "--plain --quiet" "--quiet --silent"; do
-            face hwut.run $R $tier < /dev/null > out.txt 2> err.txt
+            face hwut.run $R $tier < /dev/null > ../out.txt 2> ../err.txt
             status=$?
             printf '%-18s exit %s  stdout %2s line(s)  flow %s  roll-call %s  stderr %s\n' \
-                   "[$tier]" $status "$(grep -c . out.txt)" \
-                   "$(grep -c '^START\|^END' out.txt)" \
-                   "$(grep -c '^DIRECTORIES' out.txt)" "$(grep -c . err.txt)"
+                   "[$tier]" $status "$(grep -c . ../out.txt)" \
+                   "$(grep -c '^START\|^END' ../out.txt)" \
+                   "$(grep -c '^DIRECTORIES' ../out.txt)" "$(grep -c . ../err.txt)"
         done
-        face hwut.run $R < /dev/null 2>&1 | sed 's/[0-9.]* \[sec\]/T/g' > bare.txt
-        face hwut.run $R --plain < /dev/null 2>&1 | sed 's/[0-9.]* \[sec\]/T/g' > plain.txt
-        diff bare.txt plain.txt > /dev/null && echo "bare is '--plain'"
+        face hwut.run $R < /dev/null 2>&1 | sed 's/[0-9.]* \[sec\]/T/g' > ../bare.txt
+        face hwut.run $R --plain < /dev/null 2>&1 | sed 's/[0-9.]* \[sec\]/T/g' > ../plain.txt
+        diff ../bare.txt ../plain.txt > /dev/null && echo "bare is '--plain'"
         face hwut.run $R --plain --quiet < /dev/null 2>&1 | grep "REFUSED"
         echo "== a fault under '--silent'"
         printf 'hwut {\n    oops = 1\n}\n' > hwut.conf
-        face hwut.run $R --silent < /dev/null > out.txt 2> err.txt
-        echo "stdout $(grep -c . out.txt) line(s); stderr: $(cut -c1-60 err.txt)" ;;
+        face hwut.run $R --silent < /dev/null > ../out.txt 2> ../err.txt
+        echo "stdout $(grep -c . ../out.txt) line(s); stderr: $(cut -c1-60 ../err.txt)" ;;
     strategy)
         cd ..
         rm -rf TEST

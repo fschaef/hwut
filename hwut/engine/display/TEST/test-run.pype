@@ -182,5 +182,5 @@ on: <bol> "=====" => {
     print(masked(pype.line()))
 }
 
-#  THE END OF THE INPUT IS STATED (pype D-39): every mode copes with it.
+#  THE END OF THE INPUT IS STATED (pype D-39): every scope copes with it.
 on: <eof> => ignore;

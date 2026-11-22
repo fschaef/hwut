@@ -44,5 +44,5 @@ NETWORK/on: "drop" <n = int> "packets" => {
     print("   network dropped %d packet(s)" % n)
 }
 
-#  THE END OF THE INPUT IS STATED (pype D-39): every mode copes with it.
+#  THE END OF THE INPUT IS STATED (pype D-39): every scope copes with it.
 COMMON/on: <eof> => ignore;

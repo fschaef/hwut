@@ -43,10 +43,12 @@
 #                 leaves '3 kg' unmatched; 'quantity(ms)' reads seconds.
 # units-list      RQ-7: '--unit-types' names 'time', '--units time' names
 #                 's', 'h', 'ms', 'us', 'ns'.
-# sub-root        RQ-1, ruled: 'hwut.sanitize root' below a root REFUSES,
-#                 naming 'hwut.sanitize sub-root'; 'sub-root' writes the
-#                 inner 'HWUT_ROOT/setup.conf', and refuses where no tree stands
-#                 above. MEASURED before: 'nothing to do: a boundary stands'.
+# sub-root        RQ-1, ruled: 'hwut.sanitize root' below a root REFUSES.
+#                 D-89 (ruled 2026-11-22): the words are 'root', not
+#                 'bubble', and 'sub-root' is retired -- refused by name,
+#                 nothing written. MEASURED before: 'a bubble stands
+#                 above ... => a bubble of its own here: 'hwut.sanitize
+#                 sub-root .'', and 'sub-root a/b' wrote 'a/b/HWUT_ROOT/'.
 # tick            RQ-3: 'tick: 0.5 => "<tick {time_sec}>"' -- lines of
 #                 time, in the active mode, between the input lines; a
 #                 bad interval and a bad format refused with the script.
@@ -195,16 +197,13 @@ case "$1" in
         "$BIN/hwut.pype" --units time | grep -E "^(s|h|ms|us|ns) " ;;
     sub-root)
         mkdir -p "$WORK/a/b"; cd "$WORK"
-        for c in "root a/b" "sub-root a/b" "sub-root a/b" "root a/b"; do
+        for c in "root a/b" "sub-root a/b" "root ."; do
             echo "== hwut.sanitize $c"
             "$BIN/hwut.sanitize" $c < /dev/null 2>&1; echo "exit $?"
         done
+        echo "== a/b holds no root: $(ls -A a/b | wc -l) file(s)"
         echo "== hwut.sanitize root (in a/)"
-        ( cd a && "$BIN/hwut.sanitize" root < /dev/null 2>&1; echo "exit $?" )
-        OUT=$(mktemp -d)
-        echo "== hwut.sanitize sub-root . (no tree above)"
-        ( cd "$OUT" && "$BIN/hwut.sanitize" sub-root . < /dev/null 2>&1; echo "exit $?" )
-        rm -rf "$OUT" ;;
+        ( cd a && "$BIN/hwut.sanitize" root < /dev/null 2>&1; echo "exit $?" ) ;;
     tick)
         printf 'tick: 0.5 => "<tick {time_sec}>"\non: "<tick" <t = number> => { print("tick", t, "after line", pype.line_n()) }\non: <else> => flush;\non: <eof> => { print("<hwut-end>") }\n' > t.pype
         ( echo a; sleep 0.75; echo b; sleep 0.5 ) | "$BIN/hwut.pype" t.pype; echo "exit $?"

@@ -1,19 +1,14 @@
 == hwut.sanitize root a/b
-REFUSED: root a/b -- a bubble stands above: './HWUT_ROOT/setup.conf' => a bubble of its own here: 'hwut.sanitize sub-root a/b'
+REFUSED: root a/b -- a root stands above: './HWUT_ROOT/setup.conf' => none below it: a root below a root is a project of its own, never run from above
 exit 1
 == hwut.sanitize sub-root a/b
-done: sub-root a/b
-exit 0
-== hwut.sanitize sub-root a/b
-nothing to do: sub-root a/b -- a bubble stands: 'a/b/HWUT_ROOT/setup.conf'
-exit 0
-== hwut.sanitize root a/b
-nothing to do: root a/b -- a bubble stands: 'a/b/HWUT_ROOT/setup.conf'
-exit 0
-== hwut.sanitize root (in a/)
-REFUSED: root -- a bubble stands above: '../HWUT_ROOT/setup.conf' => a bubble of its own here: 'hwut.sanitize sub-root .'
+REFUSED: 'sub-root' is retired: a root below a root is a project of its own, never run from above => keep the tree one project, or move the directory out of it
 exit 2
-== hwut.sanitize sub-root . (no tree above)
-REFUSED: sub-root . -- no tree stands above => 'hwut.sanitize root .'
-exit 1
+== hwut.sanitize root .
+nothing to do: root . -- a root stands: './HWUT_ROOT/setup.conf'
+exit 0
+== a/b holds no root: 0 file(s)
+== hwut.sanitize root (in a/)
+REFUSED: root -- a root stands above: '../HWUT_ROOT/setup.conf' => none below it: a root below a root is a project of its own, never run from above
+exit 2
 <hwut-end>

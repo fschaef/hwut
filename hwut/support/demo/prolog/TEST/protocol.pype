@@ -10,7 +10,7 @@
 # sorted. The test application only reports what happens, as it happens.
 
 # TIME AS INPUT: every 0.25 s of reading, '<tick 0.25>', '<tick 0.5>', ...
-# is dispatched in the active mode as a line would be. No handler names
+# is dispatched in the active scope as a line would be. No handler names
 # it; it gives the wait guard below a moment to look, even while no line
 # arrives.
 tick: 0.25 => "<tick {time_sec}>"
@@ -38,10 +38,10 @@ SERVING/on: "response" <id = int> => {
         open_db[id] += 1
 }
 SERVING/on: "shutdown" => goto CLOSED;
-# A WAIT GUARD: a condition, not a pattern -- tried on every line and
-# every tick, after the patterns above. A request waiting longer than 1 s
-# is LATE: no breach of the law, a fact of the service.
-SERVING/on: if ( overdue() ) => {
+# A WAIT GUARD: on every line and every tick no pattern above takes. A
+# request waiting longer than 1 s is LATE: no breach of the law, a fact
+# of the service.
+SERVING/on: <else> => {
     late_set.update(overdue())
 }
 

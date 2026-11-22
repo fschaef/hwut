@@ -87,9 +87,9 @@ ARITY_DB = {
     "book":   (1, 2, "<dir>/<test> [<choice>]"),
     "remark": (1, 2, "<dir>/<test> [<choice>]"),
     "unlink": (1, 1, "<dir>/GOOD/<case>.link"),
+    "ignore": (1, 1, "<dir>/<file>"),
     "run":    (2, 2, "<dir> <target>"),
     "root":   (1, 1, "<dir>"),
-    "sub-root": (1, 1, "<dir>"),
 }
 assert set(ARITY_DB) == set(sanitize.VERB_TUPLE)
 
@@ -113,6 +113,8 @@ def line_of_words(word_list):
     if not word_list:
         return "no command -- one of %s" % ", ".join(sanitize.VERB_TUPLE)
     verb, entity = word_list[0], tuple(word_list[1:])
+    if verb in sanitize.RETIRED_VERB_DB:
+        return sanitize.RETIRED_VERB_DB[verb]
     if verb not in ARITY_DB:
         return "unknown command '%s'%s" \
                % (verb, did_you_mean(verb, sanitize.VERB_TUPLE))
@@ -217,38 +219,13 @@ class CContext:
             where = os.path.join(sanitize.shown(self.base, standing),
                                  _boundary.ROOT_CONF_NAME)
             if os.path.normpath(standing) == directory:
-                return CDone(E_Done.NOTHING, "a bubble stands: '%s'" % where)
-            #  BELOW A ROOT (RQ-1, ruled 2026-10-24): an inner root cuts a
-            #  project out of the tree -- done only when asked by its name.
+                return CDone(E_Done.NOTHING, "a root stands: '%s'" % where)
+            #  BELOW A ROOT (RQ-1; intend/45 R-3; D-89, 2026-11-22): an
+            #  inner root cuts a project out of the tree -- never written.
             return CDone(E_Done.REFUSED,
-                         "a bubble stands above: '%s' => a bubble of "
-                         "its own here: 'hwut.sanitize sub-root %s'"
-                         % (where, word_tuple[0]))
-        return self._root_written(directory)
-
-    def _do_sub_root(self, word_tuple):
-        """RETURN: CDone -- 'HWUT_ROOT/setup.conf' written into the directory
-                   named, a project of its own inside a tree (RQ-1): a
-                   walk from above stops there; NOTHING where the
-                   directory is a root already, REFUSED where no tree
-                   stands above it ('root' is the verb then), it is no
-                   directory, or it cannot be written in."""
-        from ... import _boundary
-        directory = self.path_of(word_tuple[0])
-        if not os.path.isdir(directory):
-            return CDone(E_Done.REFUSED, "no such directory")
-        try:
-            standing = root_conf_directory(directory)
-        except RootConfMissing:
-            standing = None
-        if standing is None:
-            return CDone(E_Done.REFUSED,
-                         "no tree stands above => 'hwut.sanitize root %s'"
-                         % word_tuple[0])
-        if os.path.normpath(standing) == directory:
-            return CDone(E_Done.NOTHING, "a bubble stands: '%s'"
-                         % os.path.join(sanitize.shown(self.base, standing),
-                                        _boundary.ROOT_CONF_NAME))
+                         "a root stands above: '%s' => none below it: a "
+                         "root below a root is a project of its own, never "
+                         "run from above" % where)
         return self._root_written(directory)
 
     def _root_written(self, directory):
@@ -466,6 +443,35 @@ class CContext:
         Bookkeeper(directory).note_accept(test, choice,
                                           aspirant_f=aspirant_f)
         self._touch_set.add(directory)
+        return CDone(E_Done.DONE)
+
+    def _do_ignore(self, word_tuple):
+        """RETURN: CDone -- the file's name written under 'ignore' in its
+                   directory's 'hwut.conf' (exploration R-102), by
+                   'hwut.config.ignore''s own writer; NOTHING where the
+                   name stands there already; REFUSED where no such file
+                   stands, or where it is a test, which is never a
+                   wallflower."""
+        from ..config import ignore as config_ignore
+        from ....engine.orchestrator.exploration.explorer import explore
+        path = self.path_of(word_tuple[0])
+        if not os.path.isfile(path):
+            return CDone(E_Done.REFUSED, "no such file stands")
+        directory, name = os.path.split(path)
+        try:
+            result = explore(directory)
+        except Exception as error:             # judged again, or not at all
+            return CDone(E_Done.REFUSED, "its directory cannot be read: %s"
+                                         % error)
+        if name in {test for test, _ in sanitize.offered_key_set(result.app_set)}:
+            return CDone(E_Done.REFUSED, "a test, not a wallflower")
+        said = []
+        status = config_ignore.do([os.path.relpath(path)], ask_f=False,
+                                  write=said.append)
+        if status != 0:
+            return CDone(E_Done.FAULT, " ".join(said) or "not written")
+        if any(line.startswith("Nothing to do") for line in said):
+            return CDone(E_Done.NOTHING)
         return CDone(E_Done.DONE)
 
     def _do_unlink(self, word_tuple):

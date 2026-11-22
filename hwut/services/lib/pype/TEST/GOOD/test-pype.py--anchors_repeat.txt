@@ -22,7 +22,7 @@ no line-start hash: 'value # trailing'
     bol #
     any #
     bol #
-NOTE: mode 'M': '"#" "x"' (<test>:7) never fires -- '"#"' (<test>:4) comes first and matches every line it matches
+NOTE: scope 'M': '"#" "x"' (<test>:7) never fires -- '"#"' (<test>:4) comes first and matches every line it matches
 
 --- eol demands the pattern reaches line end ---
 SCRIPT: {
@@ -79,12 +79,12 @@ OUTPUT: {
 i = 2 a = {2: 10, 3: 20} b = {-1: 11, 0: 21}
 }
 
---- mandatory else: activatable mode without else is an error ---
-PypeError (expected): <test>: mode 'M' has no <else> handler in its effective list; every activatable mode must state what happens to unmatched lines
+--- mandatory else: activatable scope without else is an error ---
+PypeError (expected): <test>: scope 'M' has no <else> handler in its effective list; every activatable scope must state what happens to unmatched lines
 
---- mixin without else is exempt; activation via mode() is checked ---
+--- mixin without else is exempt; activation via scope() is checked ---
 parse succeeded (MIXIN is no static target)
-PypeError (expected): mode 'MIXIN' cannot be activated: no <else> handler in its effective list
+PypeError (expected): scope 'MIXIN' cannot be activated: no <else> handler in its effective list
 
 --- indexed binding outside a repeat group rejected ---
 PypeError (expected): <test>:1: indexed binding 'x[i...]' outside a repeat group

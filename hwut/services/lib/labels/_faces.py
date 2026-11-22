@@ -134,7 +134,7 @@ def selected_key_tuple(directory, wish, view):
                     for text in found.warning_tuple]
     for bubble, run_n in sorted(bubble_db.items()):
         warning_list.append("WARNING: %d run(s) in '%s/' not labelled here "
-                            "-- a bubble of its own (HWUT_ROOT/setup.conf) => "
+                            "-- a project of its own (HWUT_ROOT/setup.conf) => "
                             "label them inside it" % (run_n, bubble))
     for glob_text in wish.glob_tuple:
         if glob_text in found.met_set: continue

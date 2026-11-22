@@ -5,6 +5,6 @@ A open 3
 A else 4
 exit 0
 == circle
-pype: mode switches requested by <entry>/<exit> handlers go in a circle: <default> -> A -> B -> A -> B
+pype: scope switches requested by <entry>/<exit> handlers go in a circle: <default> -> A -> B -> A -> B
 exit 1
 <hwut-end>

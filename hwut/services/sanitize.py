@@ -45,12 +45,11 @@ relative to '--directory' (the current directory where none is given):
                                  mercurial, svn, jujutsu, bazaar, darcs,
                                  pijul, fossil), the current directory,
                                  and 'q' to quit
-                                 BELOW A ROOT IT REFUSES, naming 'sub-root'
-    sub-root <dir>               a bubble of its own inside a tree
-                                 (RQ-1): 'HWUT_ROOT/setup.conf' is written into
-                                 <dir> though a root stands above; a walk
-                                 from above stops there with a NOTE. No
-                                 judgement proposes it
+                                 BELOW A ROOT IT REFUSES: a root below a
+                                 root is a project of its own, never run
+                                 from above (intend/45 R-3). Nothing
+                                 writes one; 'sub-root' is retired
+                                 (2026-11-22, D-89)
 
 EVERY COMMAND JUDGES AGAIN BEFORE IT ACTS. The entity says WHAT; the
 tree at this moment says WHETHER. A command whose entity sanitize would
@@ -109,7 +108,7 @@ TRANSIENT_ROOT_TUPLE   = OWN_GROUND_NAME_TUPLE    # services E-24
 ASPECT_TUPLE = ("session", "lock", "out", "directories", "orphans", "books",
                 "constraints", "links", "relations")
 #  Asked for by name only; a bare proposal never takes the candidates.
-EXPLICIT_ASPECT_TUPLE = ("transient",)
+EXPLICIT_ASPECT_TUPLE = ("transient", "wallflowers")
 
 
 @dataclass(frozen=True)
@@ -203,6 +202,12 @@ ISSUE_KIND_TUPLE = (
         "TRANSIENT ROOT: 'OUT/' or 'TMP/' whole, the candidates with them",
         "-- all of it a run can make again (E-24).",
         "'remove' deletes it. A directory a live run holds is refused.")),
+    CIssueKind("wallflower", "ignore", (
+        "WALLFLOWER: a file in a test directory no carrier speaks for -- no",
+        "test, not ignored (exploration R-102, R-103). 'ignore' writes its",
+        "name into its directory's 'hwut.conf'. A line deleted leaves it a",
+        "wallflower: give it a '@hwut' block, an 'apps' entry, or remove it.",
+        "Asked for by '--wallflowers' alone.")),
     CIssueKind("target", "run", (
         "TARGET: the project's own verb, asked for by '--target' (E-7).",
         "'run' calls it through 'hwut.execute' in the directory and every",
@@ -217,15 +222,19 @@ ISSUE_KIND_TUPLE = (
 )
 ISSUE_KIND_DB = {kind.name: kind for kind in ISSUE_KIND_TUPLE}
 
-#  The verbs, each once, in the order their first kind stands -- then
-#  'sub-root', which no judgement proposes: a project of its own inside
-#  a tree is a wish, never a finding (RQ-1, ruled 2026-10-24).
+#  The verbs, each once, in the order their first kind stands.
 #  (The verbs keep their order of before CR-8: the help names them.)
+#  'sub-root' is retired (ruled 2026-11-22, D-89): a project of its own
+#  inside a tree is not written by hwut ('RETIRED_VERB_DB').
 VERB_TUPLE = ("remove",) \
              + tuple(v for v in dict.fromkeys(kind.verb
                                                for kind in ISSUE_KIND_TUPLE)
-                     if v != "remove") \
-             + ("sub-root",)
+                     if v != "remove")
+RETIRED_VERB_DB = {
+    "sub-root": "'sub-root' is retired: a root below a root is a project of "
+                "its own, never run from above => keep the tree one project, "
+                "or move the directory out of it",
+}
 
 
 @dataclass(frozen=True)
@@ -786,7 +795,7 @@ def registry_issue_list(root):
     from ..engine.orchestrator.exploration.tree_explorer import forest_top
     top = forest_top(root)
     if os.path.normpath(top) != os.path.normpath(os.path.abspath(root)):
-        return [], ["features: the '%s' at '%s' governs this bubble "
+        return [], ["features: the '%s' at '%s' governs here "
                     "=> sanitize there"
                     % (FOREST_FILE_NAME,
                        os.path.relpath(top, os.path.abspath(root)))]
@@ -963,6 +972,11 @@ def directory_issue_list(root, directory, result, aspect_set, wanted_f):
     if "links" in aspect_set:
         issue_list.extend(link_issue_list(directory))
 
+    if "wallflowers" in aspect_set:
+        #  ONE LINE PER FILE NOBODY SPOKE FOR (R-102): the list the run
+        #  writes, line by line, for the author to cut.
+        issue_list.extend(CIssue("wallflower", directory, (name,))
+                          for name in result.app_set.silent_tuple)
     if "orphans" in aspect_set:
         if result.fault_list:
             #  A TREE THAT CANNOT BE READ CANNOT BE JUDGED. A header
@@ -1045,13 +1059,14 @@ def main(argv=None, write=None, ask=None):
             standing = None
         if standing is not None:
             if os.path.abspath(standing) == os.path.abspath(base):
-                write("nothing to do: a bubble stands: '%s'"
+                write("nothing to do: a root stands: '%s'"
                       % os.path.join(shown(base, standing), ROOT_CONF_NAME))
                 return E_ExitCode.OK
             #  BELOW A ROOT, 'root' WOULD CUT A PROJECT OUT OF A TREE
-            #  (RQ-1): refused, and the verb that does it on purpose said.
-            write("REFUSED: root -- a bubble stands above: '%s' => "
-                  "a bubble of its own here: 'hwut.sanitize sub-root .'"
+            #  (RQ-1, intend/45 R-3): refused (D-89, 2026-11-22).
+            write("REFUSED: root -- a root stands above: '%s' => none "
+                  "below it: a root below a root is a project of its own, "
+                  "never run from above"
                   % os.path.join(shown(base, standing), ROOT_CONF_NAME))
             return E_ExitCode.REFUSED
         if ask is None:

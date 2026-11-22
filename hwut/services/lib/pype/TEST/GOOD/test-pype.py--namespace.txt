@@ -1,5 +1,5 @@
 
---- counter survives handlers and mode switches ---
+--- counter survives handlers and scope switches ---
 SCRIPT: {
     A/on: <entry> => {
         n = 0

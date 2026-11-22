@@ -1,6 +1,6 @@
 # compiler.pype -- A VOCABULARY, imported by 'build.pype': what a compiler
 # says, wherever in the build it says it. Never entered on its own; the
-# modes of 'build.pype' inherit it ('is: COMPILER').
+# scopes of 'build.pype' inherit it ('is: COMPILER').
 
 # 'quantity(s)': the duration, in whatever unit the log wrote it -- '84 ms'
 # or '0.084 s' -- bound as seconds.
@@ -13,6 +13,6 @@ COMPILER/on: <where = "*.c:*:*:"> "warning:" => {
 }
 
 COMPILER/on: <else> => {
-    breach_list.append("not understood in %s: %s" % (pype.mode_name(), pype.line()))
+    breach_list.append("not understood in %s: %s" % (pype.scope_name(), pype.line()))
 }
 COMPILER/on: <eof> => ignore;

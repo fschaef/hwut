@@ -13,7 +13,8 @@ DIRECTORIES                                             2 ok, 0 fail, <t>
 NOTE  sub/TEST  on_after_test of test-a.sh y exited 1: echo after $HWUT_TEST $HWUT_CHOICE >> log.txt; test $HWUT_CHOICE != y
 
 NOTE: 2 wallflower file(s) in TEST directories => "**/TMP/wallflowers.txt"
-      see: hwut.config.ignore --wallflowers
+      list:   hwut.sanitize.propose --wallflowers -o <file>
+      ignore: hwut.sanitize.apply <file>
 ==============================================================================
 
 RESULTS: 2 ok, 0 fail, <t> [sec], <t> [sec] total

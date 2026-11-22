@@ -66,7 +66,7 @@ default <entry>
 default x
 }
 
---- POP may return into the nameless default mode ---
+--- POP may return into the nameless default scope ---
 SCRIPT: {
     on: "call" => push SUB;
     on: "x" => {
@@ -88,14 +88,14 @@ default x
 }
 
 --- pop with an empty stack is a runtime error ---
-PypeError (expected): pop with empty mode stack
+PypeError (expected): pop with empty scope stack
 
---- no reserved mode names: 'goto NAME;' cannot collide ---
+--- no reserved scope names: 'goto NAME;' cannot collide ---
 SCRIPT: {
     on: "go" => goto IGNORE;
     on: <else> => ignore;
     IGNORE/on: "x" => {
-        print("a mode named IGNORE, lawfully addressed by goto")
+        print("a scope named IGNORE, lawfully addressed by goto")
     }
     IGNORE/on: <else> => ignore;
     on: <eof> => ignore;
@@ -106,14 +106,14 @@ INPUT: {
     x
 }
 OUTPUT: {
-a mode named IGNORE, lawfully addressed by goto
+a scope named IGNORE, lawfully addressed by goto
 }
 
 --- malformed effects rejected: missing ';', missing argument ---
 PypeError (expected): <test>:1: cannot read EFFECT 'goto B'
 PypeError (expected): <test>:1: cannot read EFFECT 'push;'
 
---- released: cause words and anything else are lawful mode names ---
+--- released: cause words and anything else are lawful scope names ---
 SCRIPT: {
     on: "go" => goto WHEN_THE_SUN_SHINES;
     on: <else> => ignore;
@@ -123,7 +123,7 @@ SCRIPT: {
     WHEN_THE_SUN_SHINES/on: "visit" => goto ENTRY;
     WHEN_THE_SUN_SHINES/on: <else> => ignore;
     ENTRY/on: "x" => {
-        print("a mode named ENTRY, lawfully")
+        print("a scope named ENTRY, lawfully")
     }
     ENTRY/on: <else> => ignore;
     on: <eof> => ignore;
@@ -138,7 +138,7 @@ INPUT: {
 }
 OUTPUT: {
 shining
-a mode named ENTRY, lawfully
+a scope named ENTRY, lawfully
 }
 
 --- pype.bindings(): the current line's pattern bindings ---
@@ -146,10 +146,9 @@ SCRIPT: {
     M/on: "p" +( i : <x[i] = int> ) => {
         print("bindings:", dict(sorted(pype.bindings().items())))
     }
-    M/on: if ( True ) => {
-        print("if fire, bindings:", pype.bindings())
+    M/on: <else> => {
+        print("else fire, bindings:", pype.bindings())
     }
-    M/on: <else> => ignore;
     M/on: <eof> => ignore;
 }
 INPUT: {
@@ -158,7 +157,7 @@ INPUT: {
 }
 OUTPUT: {
 bindings: {'i': 2, 'x': {0: 4, 1: 5}}
-if fire, bindings: {}
+else fire, bindings: {}
 }
 
 --- --trace: gcc-style 'file:line:' diagnostics on stderr ---
@@ -168,7 +167,7 @@ STDOUT (the clean filter stream): {
     x 7
 }
 TRACE, gcc style (default) (stderr): {
-    tmp-trace.pype: mode active: <default>
+    tmp-trace.pype: scope active: <default>
     <stdin>:1: input: 'x 7'
     tmp-trace.pype:2: bindings: [('n', 7)]
     tmp-trace.pype:2: fire: <default>/on: "x" <n = int>
@@ -177,13 +176,13 @@ TRACE, gcc style (default) (stderr): {
     <stdin>:2: input: 'go'
     tmp-trace.pype:6: fire: <default>/on: "go"
     tmp-trace.pype:6: effect: push DEEP ;
-    tmp-trace.pype: mode active: DEEP
+    tmp-trace.pype: scope active: DEEP
     <stdin>:3: input: 'mystery'
     tmp-trace.pype:9: fire: DEEP/on: <else>
     <stdin>:4: input: 'up'
     tmp-trace.pype:8: fire: DEEP/on: "up"
     tmp-trace.pype:8: effect: pop ;
-    tmp-trace.pype: mode active: <default>
+    tmp-trace.pype: scope active: <default>
     tmp-trace.pype:10: fire: <default>/on: <eof>
 }
 EXIT: 0
@@ -192,7 +191,7 @@ STDOUT (the clean filter stream): {
     x 7
 }
 TRACE, plain style (stderr): {
-    TRACE| mode active: <default>
+    TRACE| scope active: <default>
     TRACE| [1] 'x 7'
     TRACE|     bindings: [('n', 7)]
     TRACE|     fire <default>/on: "x" <n = int>   (tmp-trace.pype:2)
@@ -201,19 +200,19 @@ TRACE, plain style (stderr): {
     TRACE| [2] 'go'
     TRACE|     fire <default>/on: "go"   (tmp-trace.pype:6)
     TRACE|         effect: push DEEP ;
-    TRACE| mode active: DEEP
+    TRACE| scope active: DEEP
     TRACE| [3] 'mystery'
     TRACE|     fire DEEP/on: <else>   (tmp-trace.pype:9)
     TRACE| [4] 'up'
     TRACE|     fire DEEP/on: "up"   (tmp-trace.pype:8)
     TRACE|         effect: pop ;
-    TRACE| mode active: <default>
+    TRACE| scope active: <default>
     TRACE|     fire <default>/on: <eof>   (tmp-trace.pype:10)
 }
 
---- --trace with mode-name filters traces only those modes ---
+--- --trace with scope-name filters traces only those scopes ---
 TRACE, filtered to DEEP (stderr): {
-    tmp-trace-filter.pype: mode active: DEEP
+    tmp-trace-filter.pype: scope active: DEEP
     <stdin>:3: input: 'mystery'
     tmp-trace-filter.pype:6: fire: DEEP/on: <else>
     <stdin>:4: input: 'up'
@@ -223,7 +222,7 @@ TRACE, filtered to DEEP (stderr): {
 
 --- --dry-run checks the script and reads no input ---
 EXIT: 0
-STDOUT: dry run ok: 1 mode(s), 3 handler(s)
+STDOUT: dry run ok: 1 scope(s), 3 handler(s)
 EXIT: 1
-STDERR: pype: tmp-dry-bad.pype: mode '<default>' has no <else> handler in its effective list; every activatable mode must state what happens to unmatched lines
+STDERR: pype: tmp-dry-bad.pype: scope '<default>' has no <else> handler in its effective list; every activatable scope must state what happens to unmatched lines
 <hwut-end>

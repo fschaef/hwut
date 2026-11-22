@@ -58,10 +58,10 @@ Done 1/1
 ./test-a.sh
 STATUS: 0
 == hwut.sanitize root . -- a boundary stands above
-REFUSED: root . -- a bubble stands above: '../../HWUT_ROOT/setup.conf' => a bubble of its own here: 'hwut.sanitize sub-root .'
+REFUSED: root . -- a root stands above: '../../HWUT_ROOT/setup.conf' => none below it: a root below a root is a project of its own, never run from above
 STATUS: 1
 == hwut.sanitize root -- asks nothing where one stands
-REFUSED: root -- a bubble stands above: '../../HWUT_ROOT/setup.conf' => a bubble of its own here: 'hwut.sanitize sub-root .'
+REFUSED: root -- a root stands above: '../../HWUT_ROOT/setup.conf' => none below it: a root below a root is a project of its own, never run from above
 STATUS: 2
 == hwut.sanitize root -- no repository above: [1] the current directory
 no 'HWUT_ROOT/setup.conf' stands in or above '.'. Where shall it go?

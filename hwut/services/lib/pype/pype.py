@@ -3,32 +3,31 @@ ______________________________________________________________________________
 
 'pype' -- a line-matching language that triggers Python actions.
 
-A pype script defines MODES. Each mode carries HANDLERS. A handler pairs a
+A pype script defines SCOPES. Each scope carries HANDLERS. A handler pairs a
 line PATTERN with one or more Python action blocks. Input lines arrive on
-stdin. For each line, the handlers of the ACTIVE mode are tried in definition
+stdin. For each line, the handlers of the ACTIVE scope are tried in definition
 order; the first whose pattern matches fires. All Python blocks share one
 single namespace.
 
 Script grammar (line-oriented):
 
-    HANDLER  :=  [ MODE "/" ] "on:" CAUSE "=>" EFFECT { "and:" EFFECT }
-    INHERIT  :=  [ MODE ] "is:" BASE { "," BASE }
+    HANDLER  :=  [ SCOPE "/" ] "on:" CAUSE "=>" EFFECT { "and:" EFFECT }
+    INHERIT  :=  [ SCOPE ] "is:" BASE { "," BASE }
     IMPORT   :=  "import:" FILE-PATH
     TICK     :=  "tick:" SECONDS "=>" '"' FORMAT '"'
 
     CAUSE    :=  PATTERN                  match handler
-              |  "if" "(" python-condition ")"
               |  "<else>"                 no match handler fired
-              |  "<entry>" | "<exit>"     mode activated / deactivated
+              |  "<entry>" | "<exit>"     scope activated / deactivated
               |  "<bof>"   | "<eof>"      file begins / ends
     EFFECT   :=  "{" python block "}"     run the block
-              |  "goto" OTHERMODE ";"     switch mode
-              |  "push" OTHERMODE ";"     stack the mode, switch
-              |  "pop" ";"                return to the stacked mode
+              |  "goto" OTHERSCOPE ";"     switch scope
+              |  "push" OTHERSCOPE ";"     stack the scope, switch
+              |  "pop" ";"                return to the stacked scope
               |  "ignore" ";"             nothing (consume the line)
               |  "flush" ";"              emit the line unchanged
 
-A missing MODE addresses the DEFAULT MODE. Each "and:" appends one
+A missing SCOPE addresses the DEFAULT SCOPE. Each "and:" appends one
 further EFFECT to the preceding handler; effects run in order.
 "import:" merges another pype file (resolved against the importer's
 directory, then the '--pype-dir' directories; idempotent; cycles are
@@ -36,7 +35,7 @@ errors).
 
 "tick:" (the book's RQ-3) makes TIME an input: every SECONDS since the
 start of reading -- the clock of 'pype.time()' -- the line
-FORMAT.format(time_sec=<k * SECONDS>) is dispatched in the ACTIVE mode
+FORMAT.format(time_sec=<k * SECONDS>) is dispatched in the ACTIVE scope
 like an input line ('tick: 1 => "<tick {time_sec}>"' gives '<tick 1>',
 '<tick 2>', ...). A line that arrives at the same instant is dispatched
 before the tick; a tick missed while a handler ran is dispatched late,
@@ -55,31 +54,31 @@ anywhere in the line -- no anchoring to line start):
     <name = "GLOB">              glob on one token     -> str
     <number> <int> <"GLOB">      unnamed variants (match, no binding)
 
-Special handlers '<entry>' and '<exit>' fire on mode activation/deactivation.
-Bare 'on:' handlers form the DEFAULT MODE. The default mode, when present,
-is active at start-up; otherwise the first mode defined in the script is.
-The start mode's '<entry>' fires before the first input line. At end of
-input the active mode's '<exit>' fires. The default mode has no name; once
+Special handlers '<entry>' and '<exit>' fire on scope activation/deactivation.
+Bare 'on:' handlers form the DEFAULT SCOPE. The default scope, when present,
+is active at start-up; otherwise the first scope defined in the script is.
+The start scope's '<entry>' fires before the first input line. At end of
+input the active scope's '<exit>' fires. The default scope has no name; once
 left, it cannot be entered again.
 
-'=> OTHERMODE' switches the active mode: '<exit>' of the old mode fires, then
+'=> OTHERSCOPE' switches the active scope: '<exit>' of the old scope fires, then
 '<entry>' of the new one. Inside Python blocks the same is available as
-'mode("OTHERMODE")'; the switch is applied after the current handler's
+'scope("OTHERSCOPE")'; the switch is applied after the current handler's
 blocks have completed -- and a switch the '<entry>' or '<exit>' handlers
 of that transition request, in the same step, before the next line.
 
-'MODE/else:' (bare 'else:' in the default mode) fires when every match
-handler of the active mode failed on the line; the first 'else' of the
+'SCOPE/else:' (bare 'else:' in the default scope) fires when every match
+handler of the active scope failed on the line; the first 'else' of the
 effective list fires.
 
 'LEFT is: BASE1, BASE2, ...' gives LEFT all handlers (<entry>, <exit>,
 match, <else>) of every named base, transitively. A handler arriving
-twice over a diamond is entered once. SHADOWING IS FORBIDDEN: any two
-distinct pattern handlers of one effective list whose languages
-intersect (some line matches both), and any second <else> handler, are
-a hard error -- pattern dispatch is therefore order-free. 'if(...)'
-causes are conditions, not patterns; they are exempt and fire in
-effective-list order. '=> ignore;' consumes the line without effect;
+twice over a diamond is entered once. LEFT's own handlers come first.
+THE FIRST MATCH FIRES (D-47): pattern handlers are tried in
+effective-list order and the first that holds
+fires; a handler that can never fire because an earlier one catches
+every line it matches is NOTED, not refused (MANUAL section 8). Only
+the first '<else>' of the effective list fires. '=> ignore;' consumes the line without effect;
 'on: <else> => flush;' turns a script into a pass-through filter.
 ______________________________________________________________________________
 """
@@ -109,6 +108,8 @@ RE_DEFAULT_HEAD = re.compile(r"^on\s*:\s*(.*)$")
 RE_AND_HEAD     = re.compile(r"^and\s*:\s*(.*)$")
 RE_IS_HEAD      = re.compile(r"^([A-Za-z_]\w*)\s+is\s*:\s*"
                              r"([A-Za-z_]\w*(?:\s*,\s*[A-Za-z_]\w*)*)\s*$")
+#  'if(...)' WAS A CAUSE until 2026-11-22 (ruled: removed). It is recognised
+#  only to be refused with the way out: the condition goes into a block.
 RE_IF_CAUSE     = re.compile(r"^if\s*\((.*)\)\s*$")
 RE_CAUSE_KEYWORD = re.compile(
     r"^<\s*(entry|exit|bof|eof|else)\s*>$")
@@ -120,15 +121,15 @@ RE_IMPORT_PATH  = re.compile(r'^"((?:[^"\\\\]|\\\\.)*)"$')
 RE_IS_DEFAULT   = re.compile(r"^is\s*:\s*"
                              r"([A-Za-z_]\w*(?:\s*,\s*[A-Za-z_]\w*)*)\s*$")
 
-# Name of the default mode. Not writable in a script ('/' and 'on:' heads
-# admit identifiers only), hence the default mode cannot be switched into
+# Name of the default scope. Not writable in a script ('/' and 'on:' heads
+# admit identifiers only), hence the default scope cannot be switched into
 # nor inherited from.
-DEFAULT_MODE = "<default>"
+DEFAULT_SCOPE = "<default>"
 
-# No word is reserved as a mode name. Effect commands are lowercase and
+# No word is reserved as a scope name. Effect commands are lowercase and
 # ';'-terminated ('goto M ;', 'push M ;', 'pop ;', 'ignore ;',
-# 'flush ;'); a mode name occurs only as the second argument of
-# 'goto'/'push', hence mode names and commands cannot collide. Cause
+# 'flush ;'); a scope name occurs only as the second argument of
+# 'goto'/'push', hence scope names and commands cannot collide. Cause
 # keywords are bracketed ('<entry>' etc., via RE_CAUSE_KEYWORD) and
 # cannot collide with identifiers either. Semantic traps beyond
 # grammatical collision are the script author's business.
@@ -166,12 +167,12 @@ REGEX_INT    = r"(?<![\d.])[-+]?\d+(?![\d.]|[eE][-+]?\d)"
 
 def parse(source_txt, file_name, search_dir_list=None, source_db=None,
           tick_list=None):
-    """RETURN: (dict, str), the mode map (name -> Mode) and the name of the
-                            start mode if success.
+    """RETURN: (dict, str), the scope map (name -> Scope) and the name of the
+                            start scope if success.
                Raises PypeError, else.
 
-    The start mode is the default mode (bare 'on:' handlers) when the
-    script has one, otherwise the first-defined named mode. 'source_txt'
+    The start scope is the default scope (bare 'on:' handlers) when the
+    script has one, otherwise the first-defined named scope. 'source_txt'
     is the complete script text; 'file_name' labels error messages and
     compiled block tracebacks.
 
@@ -187,8 +188,8 @@ def parse(source_txt, file_name, search_dir_list=None, source_db=None,
     line, in the order read (imports where they stand).
     """
     import os as _os
-    mode_db         = {}
-    first_mode_name = None
+    scope_db         = {}
+    first_scope_name = None
     seen_files      = set()
     search_dir_list = search_dir_list if search_dir_list is not None else []
     if source_db is None: source_db = {}
@@ -211,15 +212,15 @@ def parse(source_txt, file_name, search_dir_list=None, source_db=None,
                            ", ".join(candidate_list)))
 
     def _parse_one(source_txt, file_name, import_stack):
-        nonlocal first_mode_name
+        nonlocal first_scope_name
         source_db[file_name] = source_txt.splitlines()
         line_list       = source_db[file_name]
         current_handler = None
         i               = 0
 
-        def get_mode(name):
-            if name not in mode_db: mode_db[name] = Mode(name)
-            return mode_db[name]
+        def get_scope(name):
+            if name not in scope_db: scope_db[name] = Scope(name)
+            return scope_db[name]
 
         def read_block(start_i):
             """RETURN: (code, int), the compiled Python block and the index of
@@ -282,12 +283,12 @@ def parse(source_txt, file_name, search_dir_list=None, source_db=None,
                 if match_is.re is RE_IS_HEAD:
                     left_name, right_txt = match_is.group(1), match_is.group(2)
                 else:
-                    left_name, right_txt = DEFAULT_MODE, match_is.group(1)
+                    left_name, right_txt = DEFAULT_SCOPE, match_is.group(1)
                 right_name_list = [n.strip() for n in right_txt.split(",")]
                 for right_name in right_name_list:
-                    get_mode(left_name).base_name_list.append((right_name, where))
-                if left_name != DEFAULT_MODE and first_mode_name is None:
-                    first_mode_name = left_name
+                    get_scope(left_name).base_name_list.append((right_name, where))
+                if left_name != DEFAULT_SCOPE and first_scope_name is None:
+                    first_scope_name = left_name
                 current_handler = None
                 i += 1
                 continue
@@ -296,15 +297,15 @@ def parse(source_txt, file_name, search_dir_list=None, source_db=None,
                     raise PypeError("%s: 'and:' without preceding handler" % where)
                 rest = match_and.group(1)
             elif match_on:
-                mode_name, rest = match_on.group(1), match_on.group(2)
-                mode = get_mode(mode_name)
-                if first_mode_name is None: first_mode_name = mode_name
+                scope_name, rest = match_on.group(1), match_on.group(2)
+                scope = get_scope(scope_name)
+                if first_scope_name is None: first_scope_name = scope_name
             elif match_bare:
                 rest = match_bare.group(1)
-                mode = get_mode(DEFAULT_MODE)
+                scope = get_scope(DEFAULT_SCOPE)
             else:
-                raise PypeError("%s: expected 'MODE/on:', 'on:', "
-                                "'MODE is:' or 'and:'" % where)
+                raise PypeError("%s: expected 'SCOPE/on:', 'on:', "
+                                "'SCOPE is:' or 'and:'" % where)
 
             if match_and:
                 effect_txt = rest.strip()
@@ -321,7 +322,7 @@ def parse(source_txt, file_name, search_dir_list=None, source_db=None,
             if match_and:
                 pass
             else:
-                owner = mode.name
+                owner = scope.name
                 match_keyword = RE_CAUSE_KEYWORD.match(head_txt)
                 if match_keyword is not None:
                     kind = match_keyword.group(1)
@@ -329,22 +330,17 @@ def parse(source_txt, file_name, search_dir_list=None, source_db=None,
                                               where=where,
                                               cause_txt="<%s>" % kind)
                 elif RE_IF_CAUSE.match(head_txt):
-                    condition_txt = RE_IF_CAUSE.match(head_txt).group(1)
-                    try:
-                        condition = compile(condition_txt.strip(), where, "eval")
-                    except SyntaxError as error:
-                        raise PypeError("%s: cannot compile 'if' condition: %s"
-                                        % (where, error)) from None
-                    current_handler = Handler("match", owner_name=owner,
-                                              where=where, condition=condition,
-                                              cause_txt=head_txt)
+                    raise PypeError("%s: 'if(...)' is no cause => test the "
+                                    "condition in a block, e.g. "
+                                    "'on: <else> => { if ...: ... }'"
+                                    % where)
                 else:
                     matcher, token_list = compile_pattern(head_txt, where)
                     current_handler = Handler("match", matcher,
                                               owner_name=owner, where=where,
                                               token_list=token_list,
                                               cause_txt=head_txt)
-                mode.handler_list.append(current_handler)
+                scope.handler_list.append(current_handler)
 
             match_effect = RE_EFFECT.match(effect_txt)
             if match_effect is None:
@@ -370,10 +366,10 @@ def parse(source_txt, file_name, search_dir_list=None, source_db=None,
                 continue
             if   goto_name is not None:
                 current_handler.action_list.append(
-                    Action(next_mode=goto_name))
+                    Action(next_scope=goto_name))
             elif push_name is not None:
                 current_handler.action_list.append(
-                    Action(push_mode=push_name))
+                    Action(push_scope=push_name))
             elif pop_w is not None:
                 current_handler.action_list.append(Action(pop_f=True))
             elif flush_w is not None:
@@ -387,16 +383,16 @@ def parse(source_txt, file_name, search_dir_list=None, source_db=None,
                [_os.path.abspath(file_name)])
     seen_files.add(_os.path.abspath(file_name))
 
-    _resolve_inheritance(mode_db, file_name)
+    _resolve_inheritance(scope_db, file_name)
 
-    if DEFAULT_MODE in mode_db:  start_mode_name = DEFAULT_MODE
-    elif first_mode_name is None:
-        raise PypeError("%s: script defines no mode" % file_name)
-    else:                        start_mode_name = first_mode_name
+    if DEFAULT_SCOPE in scope_db:  start_scope_name = DEFAULT_SCOPE
+    elif first_scope_name is None:
+        raise PypeError("%s: script defines no scope" % file_name)
+    else:                        start_scope_name = first_scope_name
 
-    _check_else_present(mode_db, start_mode_name, file_name)
-    _check_eof_present(mode_db, file_name)
-    return mode_db, start_mode_name
+    _check_else_present(scope_db, start_scope_name, file_name)
+    _check_eof_present(scope_db, file_name)
+    return scope_db, start_scope_name
 
 
 
@@ -979,34 +975,32 @@ def compile_pattern(pattern_txt, where):
 
 class Action:
     """RETURN: --. One consequence of a handler firing: a compiled Python
-                   block, a mode switch, a stack push or pop, the flush
+                   block, a scope switch, a stack push or pop, the flush
                    effect (emit the input line unchanged on stdout), or
                    nothing (IGNORE).
     """
-    def __init__(self, code=None, next_mode=None, flush_f=False,
-                 push_mode=None, pop_f=False):
+    def __init__(self, code=None, next_scope=None, flush_f=False,
+                 push_scope=None, pop_f=False):
         self.code      = code        # compiled code object or None
-        self.next_mode = next_mode   # str or None
+        self.next_scope = next_scope   # str or None
         self.flush_f   = flush_f     # bool
-        self.push_mode = push_mode   # str or None
+        self.push_scope = push_scope   # str or None
         self.pop_f     = pop_f       # bool
 
 
 class Handler:
-    """RETURN: --. A (pattern, actions) pair inside a mode.
+    """RETURN: --. A (pattern, actions) pair inside a scope.
 
     'kind' is one of 'match', 'entry', 'exit', 'bof', 'eof', 'else'. A
-    'match' handler carries either a 'pattern' (a Matcher, with its
-    'token_list') or a 'condition' (compiled Python expression of an
-    'if(...)' cause). 'entry'/'exit' fire on mode transitions,
+    'match' handler carries a 'pattern' (a Matcher, with its
+    'token_list'). 'entry'/'exit' fire on scope transitions,
     'bof'/'eof' on the file boundaries. 'owner_name' and 'where' record
-    the defining mode and script location for interference reports.
+    the defining scope and script location for interference reports.
     """
     def __init__(self, kind, pattern=None, owner_name=None, where=None,
-                 token_list=None, condition=None, cause_txt=""):
+                 token_list=None, cause_txt=""):
         self.kind         = kind
         self.pattern      = pattern
-        self.condition    = condition
         self.action_list  = []
         self.owner_name   = owner_name
         self.where        = where
@@ -1014,11 +1008,11 @@ class Handler:
         self.token_list   = token_list if token_list is not None else []
 
 
-class Mode:
-    """RETURN: --. A named collection of handlers; one mode is active at a
+class Scope:
+    """RETURN: --. A named collection of handlers; one scope is active at a
                    time.
 
-    'base_name_list' names the modes this mode inherits handlers from
+    'base_name_list' names the scopes this scope inherits handlers from
     ('LEFT is: RIGHT'). 'resolved_list' is the effective handler list
     after inheritance resolution: own handlers first, then the bases'
     effective handlers in 'is:' declaration order.
@@ -1032,7 +1026,7 @@ class Mode:
         self.gate_id_set    = frozenset()
 
     def build_gate(self):
-        """RETURN: None, setting the mode's REJECT GATE: one alternation
+        """RETURN: None, setting the scope's REJECT GATE: one alternation
                          of the plain (backtracking) pattern sources of
                          every repeat-free pattern handler.
 
@@ -1047,7 +1041,6 @@ class Mode:
         src_list = []
         id_list  = []
         for handler in self.handlers("match"):
-            if handler.condition is not None: continue
             if handler.pattern.fast_regex is None: continue
             part_list = []
             for k, token in enumerate(handler.pattern.token_list):
@@ -1072,55 +1065,55 @@ class Mode:
         return [h for h in source if h.kind == kind]
 
 
-def _check_else_present(mode_db, start_mode_name, file_name):
-    """RETURN: None, if every ACTIVATABLE mode carries an 'else' handler
+def _check_else_present(scope_db, start_scope_name, file_name):
+    """RETURN: None, if every ACTIVATABLE scope carries an 'else' handler
                      in its effective list.
                Raises PypeError, else.
 
-    Activatable: the start mode and every mode named as a static switch
-    or push target. Pure mixin modes (inherited from, never activated)
-    are exempt. Modes reached only through 'mode()'/'push()' calls are
+    Activatable: the start scope and every scope named as a static switch
+    or push target. Pure mixin scopes (inherited from, never activated)
+    are exempt. Scopes reached only through 'scope()'/'push()' calls are
     checked at activation time by the interpreter.
     """
-    activatable = {start_mode_name}
-    for mode in mode_db.values():
-        for handler in mode.handler_list:
+    activatable = {start_scope_name}
+    for scope in scope_db.values():
+        for handler in scope.handler_list:
             for action in handler.action_list:
-                if action.next_mode is not None:
-                    activatable.add(action.next_mode)
-                if action.push_mode is not None:
-                    activatable.add(action.push_mode)
+                if action.next_scope is not None:
+                    activatable.add(action.next_scope)
+                if action.push_scope is not None:
+                    activatable.add(action.push_scope)
     for name in sorted(activatable):
-        if name not in mode_db: continue         # unknown: runtime error
-        if not mode_db[name].handlers("else"):
-            raise PypeError("%s: mode '%s' has no <else> handler in its "
-                            "effective list; every activatable mode must "
+        if name not in scope_db: continue         # unknown: runtime error
+        if not scope_db[name].handlers("else"):
+            raise PypeError("%s: scope '%s' has no <else> handler in its "
+                            "effective list; every activatable scope must "
                             "state what happens to unmatched lines"
                             % (file_name, name))
 
 
-def _check_eof_present(mode_db, file_name):
-    """RETURN: None, if EVERY mode carries an '<eof>' handler in its
+def _check_eof_present(scope_db, file_name):
+    """RETURN: None, if EVERY scope carries an '<eof>' handler in its
                      effective list (own or inherited).
-               Raises PypeError naming the first mode without one, else.
+               Raises PypeError naming the first scope without one, else.
 
-    A MODE IS MEANT TO BE ENTERED, so it must cope with the end of the
+    A SCOPE IS MEANT TO BE ENTERED, so it must cope with the end of the
     input (D-39): the '<eof>' handler is where a script emits
-    '<hwut-end>', and a stream that ends in a mode without one ends
+    '<hwut-end>', and a stream that ends in a scope without one ends
     without the token -- a failure of the test, said where the script
     is read rather than discovered as 'never COMPLETED' at the run.
     """
-    for name in sorted(mode_db, key=lambda n: (n != DEFAULT_MODE, n)):
-        if not mode_db[name].handlers("eof"):
-            shown = "<default>" if name == DEFAULT_MODE else name
-            raise PypeError("%s: mode '%s' has no <eof> handler in its "
-                            "effective list; every mode must state what "
+    for name in sorted(scope_db, key=lambda n: (n != DEFAULT_SCOPE, n)):
+        if not scope_db[name].handlers("eof"):
+            shown = "<default>" if name == DEFAULT_SCOPE else name
+            raise PypeError("%s: scope '%s' has no <eof> handler in its "
+                            "effective list; every scope must state what "
                             "happens at the end of the input"
                             % (file_name, shown))
 
 
-def _resolve_inheritance(mode_db, file_name):
-    """RETURN: None, with every mode's 'resolved_list' set if success.
+def _resolve_inheritance(scope_db, file_name):
+    """RETURN: None, with every scope's 'resolved_list' set if success.
                Raises PypeError, else.
 
     'LEFT is: RIGHT1, RIGHT2, ...' gives LEFT all handlers of every named
@@ -1131,42 +1124,42 @@ def _resolve_inheritance(mode_db, file_name):
     THE FIRST MATCH FIRES (D-47): where two pattern handlers of one
     effective list match a line, the one first in the effective list
     triggers. A handler that can never fire -- an earlier one matches
-    every line it matches -- is NOTED ('Mode.note_list', see
+    every line it matches -- is NOTED ('Scope.note_list', see
     _shadow_note_list); it is not an error.
     """
     IN_PROGRESS = "in-progress"
 
-    def resolve(mode, trail):
-        if mode.resolved_list is IN_PROGRESS:
+    def resolve(scope, trail):
+        if scope.resolved_list is IN_PROGRESS:
             raise PypeError("%s: inheritance cycle: %s"
-                            % (file_name, " is: ".join(trail + [mode.name])))
-        if mode.resolved_list is not None:
-            return mode.resolved_list
-        mode.resolved_list = IN_PROGRESS
+                            % (file_name, " is: ".join(trail + [scope.name])))
+        if scope.resolved_list is not None:
+            return scope.resolved_list
+        scope.resolved_list = IN_PROGRESS
         result  = []
         seen_id = set()
-        for handler in mode.handler_list:
+        for handler in scope.handler_list:
             result.append(handler)
             seen_id.add(id(handler))
-        for base_name, where in mode.base_name_list:
-            if base_name not in mode_db:
-                raise PypeError("%s: 'is:' names unknown mode '%s'"
+        for base_name, where in scope.base_name_list:
+            if base_name not in scope_db:
+                raise PypeError("%s: 'is:' names unknown scope '%s'"
                                 % (where, base_name))
-            base = mode_db[base_name]
-            for handler in resolve(base, trail + [mode.name]):
+            base = scope_db[base_name]
+            for handler in resolve(base, trail + [scope.name]):
                 if id(handler) in seen_id: continue      # diamond duplicate
                 result.append(handler)
                 seen_id.add(id(handler))
-        mode.note_list     = _shadow_note_list(mode, result)
-        mode.resolved_list = result
-        mode.build_gate()
+        scope.note_list     = _shadow_note_list(scope, result)
+        scope.resolved_list = result
+        scope.build_gate()
         return result
 
-    for mode in mode_db.values():
-        resolve(mode, [])
+    for scope in scope_db.values():
+        resolve(scope, [])
 
 
-def _shadow_note_list(mode, resolved_list):
+def _shadow_note_list(scope, resolved_list):
     """RETURN: list[str], one NOTE per pattern handler of the effective
                      list that can NEVER fire because an earlier handler
                      matches every line it matches; empty where none.
@@ -1179,7 +1172,7 @@ def _shadow_note_list(mode, resolved_list):
     first match firing is the law, not a fault.
     """
     pattern_list = [h for h in resolved_list
-                    if h.kind == "match" and h.condition is None]
+                    if h.kind == "match"]
     note_list = []
     for k, later in enumerate(pattern_list):
         later_key = [_token_shape(t) for t in later.token_list]
@@ -1189,9 +1182,9 @@ def _shadow_note_list(mode, resolved_list):
             if any(later_key[j:j + n] == earlier_key
                    for j in range(len(later_key) - n + 1)):
                 note_list.append(
-                    "NOTE: mode '%s': '%s' (%s) never fires -- '%s' (%s) "
+                    "NOTE: scope '%s': '%s' (%s) never fires -- '%s' (%s) "
                     "comes first and matches every line it matches"
-                    % ("<default>" if mode.name == DEFAULT_MODE else mode.name,
+                    % ("<default>" if scope.name == DEFAULT_SCOPE else scope.name,
                        later.cause_txt, later.where,
                        earlier.cause_txt, earlier.where))
                 break
@@ -1220,11 +1213,11 @@ class PypeInfo:
     pype.file_name()    name of the running pype script
     pype.line()         current input line, trailing newline stripped
     pype.line_n()       current input line number, 1-based
-    pype.mode_name()    name of the active mode
-    pype.stack_depth()  depth of the PUSH/POP mode stack
+    pype.scope_name()   name of the active scope
+    pype.stack_depth()  depth of the PUSH/POP scope stack
     pype.bindings()     dictionary of the current line's pattern
-                        bindings (empty for 'if'/ELSE/lifecycle fires)
-    pype.goto(NAME)     request a mode switch
+                        bindings (empty for ELSE/lifecycle fires)
+    pype.goto(NAME)     request a scope switch
     pype.push(NAME)     request a stack push
     pype.pop()          request a stack pop
     """
@@ -1249,35 +1242,35 @@ class PypeInfo:
         """
         return self._itp.current_line_n
 
-    def mode_name(self):
-        """RETURN: str, the name of the active mode."""
+    def scope_name(self):
+        """RETURN: str, the name of the active scope."""
         return self._itp.active.name
 
     def stack_depth(self):
-        """RETURN: int, the depth of the PUSH/POP mode stack."""
+        """RETURN: int, the depth of the PUSH/POP scope stack."""
         return len(self._itp.stack)
 
     def bindings(self):
         """RETURN: dict, the bindings established by the pattern match of
                           the current line: named captures, indexed
                           repeat dictionaries, repeat counters.
-                          Empty if the current line fired an 'if' cause,
-                          an ELSE handler, or no handler, and inside
+                          Empty if the current line fired an ELSE
+                          handler, or no handler, and inside
                           ENTRY/EXIT/BOF/EOF handlers.
         """
         return dict(self._itp.current_bindings)
 
-    def goto(self, mode_name):
-        """RETURN: None. Requests a mode switch; applied after the
+    def goto(self, scope_name):
+        """RETURN: None. Requests a scope switch; applied after the
                          current handler's effects have completed.
         """
-        self._itp.request_switch(mode_name)
+        self._itp.request_switch(scope_name)
 
-    def push(self, mode_name):
+    def push(self, scope_name):
         """RETURN: None. Requests a stack push; applied after the
                          current handler's effects have completed.
         """
-        self._itp.request_push(mode_name)
+        self._itp.request_push(scope_name)
 
     def pop(self):
         """RETURN: None. Requests a stack pop; applied after the
@@ -1290,15 +1283,15 @@ class Interpreter:
     """RETURN: --. Executes a parsed pype script against a line stream.
 
     All Python blocks run in the single shared namespace
-    'self.namespace', which provides the pattern bindings, 'mode(name)',
+    'self.namespace', which provides the pattern bindings, 'scope(name)',
     'push(name)', 'pop()' and the 'pype' information object (PypeInfo).
     """
-    def __init__(self, mode_db, start_mode_name, file_name="<stream>",
+    def __init__(self, scope_db, start_scope_name, file_name="<stream>",
                  trace_style=None, source_db=None, trace_filter=None,
                  tick_list=None):
-        self.mode_db         = mode_db
+        self.scope_db         = scope_db
         self.active          = None
-        self.start_mode_name = start_mode_name
+        self.start_scope_name = start_scope_name
         self.file_name       = file_name
         self.trace_style     = trace_style   # None | "gcc" | "plain"
         self.source_db       = source_db if source_db is not None else {}
@@ -1355,38 +1348,38 @@ class Interpreter:
                        "        py %d: %s" % (frame.f_lineno, source))
         return self._python_tracer
 
-    def _check_mode_name(self, mode_name, verb):
-        """RETURN: None, if 'mode_name' names an enterable mode.
+    def _check_scope_name(self, scope_name, verb):
+        """RETURN: None, if 'scope_name' names an enterable scope.
                    Raises PypeError, else.
         """
-        if mode_name == DEFAULT_MODE:
-            raise PypeError("%s('%s'): the default mode cannot be entered"
-                            % (verb, mode_name))
-        if mode_name not in self.mode_db:
-            raise PypeError("%s('%s'): no such mode" % (verb, mode_name))
+        if scope_name == DEFAULT_SCOPE:
+            raise PypeError("%s('%s'): the default scope cannot be entered"
+                            % (verb, scope_name))
+        if scope_name not in self.scope_db:
+            raise PypeError("%s('%s'): no such scope" % (verb, scope_name))
 
-    def request_switch(self, mode_name):
-        """RETURN: None. Records a mode switch; applied after the current
+    def request_switch(self, scope_name):
+        """RETURN: None. Records a scope switch; applied after the current
                          handler's blocks have completed. The last
                          request wins.
 
-        The default mode has no name; once left it cannot be entered
+        The default scope has no name; once left it cannot be entered
         again (a stacked return via 'pop' can).
         """
-        self._check_mode_name(mode_name, "pype.goto")
-        self.request = ("switch", mode_name)
+        self._check_scope_name(scope_name, "pype.goto")
+        self.request = ("switch", scope_name)
 
-    def request_push(self, mode_name):
-        """RETURN: None. Records a stack push: the active mode is
-                         remembered, 'mode_name' is activated; applied
+    def request_push(self, scope_name):
+        """RETURN: None. Records a stack push: the active scope is
+                         remembered, 'scope_name' is activated; applied
                          after the current handler's blocks.
         """
-        self._check_mode_name(mode_name, "pype.push")
-        self.request = ("push", mode_name)
+        self._check_scope_name(scope_name, "pype.push")
+        self.request = ("push", scope_name)
 
     def request_pop(self):
         """RETURN: None. Records a stack pop: the most recently pushed-
-                         from mode is re-activated; applied after the
+                         from scope is re-activated; applied after the
                          current handler's blocks.
         """
         self.request = ("pop",)
@@ -1426,8 +1419,8 @@ class Interpreter:
     def fire(self, handler):
         """RETURN: None. Runs the handler's actions in definition order.
 
-        '=> MODE', '=> PUSH MODE' and '=> POP' record requests exactly
-        like 'mode()', 'push()' and 'pop()'; the last request wins and
+        '=> SCOPE', '=> PUSH SCOPE' and '=> POP' record requests exactly
+        like 'scope()', 'push()' and 'pop()'; the last request wins and
         is applied by the caller. '=> FLUSH' emits the current input
         line unchanged on stdout.
         """
@@ -1438,25 +1431,25 @@ class Interpreter:
                 self.trace(handler.where, "effect: flush ;",
                            "        effect: flush ;")
                 print(self.current_line)
-            if action.next_mode is not None:
+            if action.next_scope is not None:
                 self.trace(handler.where,
-                           "effect: goto %s ;" % action.next_mode,
-                           "        effect: goto %s ;" % action.next_mode)
-                self.request_switch(action.next_mode)
-            if action.push_mode is not None:
+                           "effect: goto %s ;" % action.next_scope,
+                           "        effect: goto %s ;" % action.next_scope)
+                self.request_switch(action.next_scope)
+            if action.push_scope is not None:
                 self.trace(handler.where,
-                           "effect: push %s ;" % action.push_mode,
-                           "        effect: push %s ;" % action.push_mode)
-                self.request_push(action.push_mode)
+                           "effect: push %s ;" % action.push_scope,
+                           "        effect: push %s ;" % action.push_scope)
+                self.request_push(action.push_scope)
             if action.pop_f:
                 self.trace(handler.where, "effect: pop ;",
                            "        effect: pop ;")
                 self.request_pop()
 
-    def transition(self, new_mode_name):
-        """RETURN: None. Deactivates the active mode (its 'EXIT' handlers
-                         fire) and activates 'new_mode_name' (its 'ENTRY'
-                         handlers fire). Activating a mode without an
+    def transition(self, new_scope_name):
+        """RETURN: None. Deactivates the active scope (its 'EXIT' handlers
+                         fire) and activates 'new_scope_name' (its 'ENTRY'
+                         handlers fire). Activating a scope without an
                          'else' handler in its effective list is an
                          error.
         """
@@ -1467,12 +1460,12 @@ class Interpreter:
                            "    fire %s/on: <exit>   (%s)"
                            % (self.active.name, handler.where))
                 self.fire(handler)
-        self.active = self.mode_db.get(new_mode_name)
+        self.active = self.scope_db.get(new_scope_name)
         if self.active is not None:
-            self.trace(None, "mode active: %s" % self.active.name,
-                       "mode active: %s" % self.active.name)
+            self.trace(None, "scope active: %s" % self.active.name,
+                       "scope active: %s" % self.active.name)
             if not self.active.handlers("else"):
-                raise PypeError("mode '%s' cannot be activated: no <else> "
+                raise PypeError("scope '%s' cannot be activated: no <else> "
                                 "handler in its effective list"
                                 % self.active.name)
             for handler in self.active.handlers("entry"):
@@ -1487,16 +1480,16 @@ class Interpreter:
                          any -- and every request the '<exit>' and
                          '<entry>' handlers of that transition raise,
                          in turn, before the next input line (D-38). A
-                         switch to the already-active mode is a
+                         switch to the already-active scope is a
                          no-operation; 'pop' with an empty stack is an
                          error.
 
-        A chain longer than the modes and the stack can hold without
+        A chain longer than the scopes and the stack can hold without
         repeating itself is a CIRCLE ('A <entry> goto B', 'B <entry>
         goto A'): an error naming the chain, never a hang.
         """
         chain     = [self.active.name] if self.active is not None else []
-        step_max  = len(self.mode_db) + len(self.stack) + 1
+        step_max  = len(self.scope_db) + len(self.stack) + 1
         while self.request is not None:
             request, self.request = self.request, None
             if request[0] == "switch":
@@ -1507,20 +1500,19 @@ class Interpreter:
                 self.transition(request[1])
             else:                                        # pop
                 if not self.stack:
-                    raise PypeError("pop with empty mode stack")
+                    raise PypeError("pop with empty scope stack")
                 self.transition(self.stack.pop())
             chain.append(self.active.name)
             if len(chain) > step_max:
-                raise PypeError("mode switches requested by <entry>/<exit> "
+                raise PypeError("scope switches requested by <entry>/<exit> "
                                 "handlers go in a circle: %s"
                                 % " -> ".join(str(n) for n in chain))
 
     def feed(self, line):
         """RETURN: None. Dispatches one input line (without newline) to
-                         the first matching handler of the active mode.
+                         the first matching handler of the active scope.
 
-        A pattern cause fires on a matching line; an 'if(...)' cause
-        fires when its condition evaluates true. If every match handler
+        A pattern cause fires on a matching line. If every match handler
         fails, the first 'else' handler of the effective list fires.
         """
         self.current_line     = line
@@ -1531,23 +1523,20 @@ class Interpreter:
         gate_verdict = None            # None: not evaluated; else bool
         gate_id_set  = self.active.gate_id_set
         for handler in self.active.handlers("match"):
-            if handler.condition is not None:
-                if not eval(handler.condition, self.namespace): continue
-            else:
-                if id(handler) in gate_id_set:
-                    if gate_verdict is None:
-                        gate_verdict = \
-                            self.active.gate_regex.search(line) is not None
-                    if not gate_verdict: continue
-                binding_db = handler.pattern.search(line)
-                if binding_db is None: continue
-                self.current_bindings = binding_db
-                self.namespace.update(binding_db)
-                if binding_db:
-                    self.trace(handler.where,
-                               "bindings: %s" % sorted(binding_db.items()),
-                               "    bindings: %s"
-                               % sorted(binding_db.items()))
+            if id(handler) in gate_id_set:
+                if gate_verdict is None:
+                    gate_verdict = \
+                        self.active.gate_regex.search(line) is not None
+                if not gate_verdict: continue
+            binding_db = handler.pattern.search(line)
+            if binding_db is None: continue
+            self.current_bindings = binding_db
+            self.namespace.update(binding_db)
+            if binding_db:
+                self.trace(handler.where,
+                           "bindings: %s" % sorted(binding_db.items()),
+                           "    bindings: %s"
+                           % sorted(binding_db.items()))
             self.trace(handler.where,
                        "fire: %s/on: %s"
                        % (self.active.name, handler.cause_txt),
@@ -1569,9 +1558,9 @@ class Interpreter:
                    "(no handler fired)", "    (no handler fired)")
 
     def run(self, line_iterable):
-        """RETURN: None. Runs the whole stream: activates the start mode,
-                         fires 'BOF' of the active mode, feeds every
-                         line, fires 'EOF' of the active mode, and
+        """RETURN: None. Runs the whole stream: activates the start scope,
+                         fires 'BOF' of the active scope, feeds every
+                         line, fires 'EOF' of the active scope, and
                          deactivates.
 
         Runtime information is available through the 'pype' object:
@@ -1586,11 +1575,11 @@ class Interpreter:
         self.finish()
 
     def start(self):
-        """RETURN: None. Starts the clock, activates the start mode (its
+        """RETURN: None. Starts the clock, activates the start scope (its
                          '<entry>' fires) and fires '<bof>'.
         """
         self.start_time = _monotonic()
-        self.transition(self.start_mode_name)
+        self.transition(self.start_scope_name)
         self.apply_pending_request()
         for handler in self.active.handlers("bof"):
             self.trace(handler.where, "fire: %s/on: <bof>" % self.active.name,
@@ -1608,14 +1597,14 @@ class Interpreter:
 
     def tick(self, text):
         """RETURN: None. Dispatches the line of a tick (RQ-3) in the
-                         active mode like an input line -- not counted
+                         active scope like an input line -- not counted
                          as one: 'pype.line_n()' stays.
         """
         self.trace(None, "tick: %r" % text, "[tick] %r" % text)
         self.feed(text)
 
     def finish(self):
-        """RETURN: None. Fires '<eof>' of the active mode, then
+        """RETURN: None. Fires '<eof>' of the active scope, then
                          deactivates it (its '<exit>' fires).
         """
         for handler in self.active.handlers("eof"):
@@ -1671,24 +1660,24 @@ def _sample_of_token_list(token_list, counter_db):
     return " ".join(p for p in part_list if p)
 
 
-def generate_example_input(mode_db, start_mode_name):
+def generate_example_input(scope_db, start_scope_name):
     """RETURN: list, input lines that trigger the script's handlers when
                      fed on stdin.
 
-    Walks the modes along statically visible switch actions ('=> MODE',
-    'and: MODE'), starting at the start mode. Per mode it emits one
+    Walks the scopes along statically visible switch actions ('=> SCOPE',
+    'and: SCOPE'), starting at the start scope. Per scope it emits one
     sample line for every not-yet-sampled non-switching match handler,
-    then one line for a switching handler leading to an unvisited mode,
+    then one line for a switching handler leading to an unvisited scope,
     and continues there. Handlers whose only action is IGNORE produce no
-    line. Switches requested by 'mode()' calls inside Python blocks are
-    invisible to this walk; modes reachable only that way are not
+    line. Switches requested by 'scope()' calls inside Python blocks are
+    invisible to this walk; scopes reachable only that way are not
     visited.
     """
     line_list  = []
     sampled_id = set()
     visited    = set()
     counter_db = {"int": 0, "number": 0}
-    current    = start_mode_name
+    current    = start_scope_name
 
     def static_target(handler):
         """RETURN: str, the last statically visible switch or push target
@@ -1697,14 +1686,14 @@ def generate_example_input(mode_db, start_mode_name):
         """
         target = None
         for action in handler.action_list:
-            if action.next_mode is not None: target = action.next_mode
-            if action.push_mode is not None: target = action.push_mode
+            if action.next_scope is not None: target = action.next_scope
+            if action.push_scope is not None: target = action.push_scope
         return target
 
     while current is not None:
         visited.add(current)
         switch_handler = None
-        for handler in mode_db[current].handlers("match"):
+        for handler in scope_db[current].handlers("match"):
             target = static_target(handler)
             if target is not None:
                 if switch_handler is None and target not in visited:
@@ -1713,8 +1702,6 @@ def generate_example_input(mode_db, start_mode_name):
             if id(handler) in sampled_id:
                 continue                       # inherited, already sampled
             sampled_id.add(id(handler))
-            if handler.condition is not None:
-                continue                       # 'if' cause: no pattern
             if all(a.code is None for a in handler.action_list):
                 continue                       # pure IGNORE: nothing to see
             line_list.append(_sample_of_token_list(handler.token_list,
@@ -1765,7 +1752,7 @@ def main(argv=None, stream=None):
     parses and checks the script (syntax, inheritance, interference,
     mandatory ELSE) without reading any input. '--pype-dir DIR' (may
     appear multiple times) adds import search directories. Bare
-    arguments before the final SCRIPT argument are trace mode-name
+    arguments before the final SCRIPT argument are trace scope-name
     filters for '--trace'/'--trace-plain'. 'sys.exit(n)' inside a
     Python block terminates immediately with exit status n.
     """
@@ -1801,10 +1788,10 @@ def main(argv=None, stream=None):
     elif flag_db["--trace"]:       trace_style = "gcc"
     else:                          trace_style = None
     if trace_filter and trace_style is None:
-        print("pype: mode-name filters require --trace or --trace-plain",
+        print("pype: scope-name filters require --trace or --trace-plain",
               file=sys.stderr)
         return 1
-    trace_filter = [DEFAULT_MODE if name == "default" else name
+    trace_filter = [DEFAULT_SCOPE if name == "default" else name
                     for name in trace_filter]
     if len(argv) < 2 or argv[1] in ("-h", "--help"):
         print(USAGE, file=sys.stderr)
@@ -1832,25 +1819,25 @@ def main(argv=None, stream=None):
             source_txt = fh.read()
         source_db = {}
         tick_list = []
-        mode_db, start_mode_name = parse(source_txt, file_name,
+        scope_db, start_scope_name = parse(source_txt, file_name,
                                          search_dir_list=search_dir_list,
                                          source_db=source_db,
                                          tick_list=tick_list)
         if dry_run_f or trace_style is not None:
             #  THE CHECK'S NOTES (D-47) go where the script is CHECKED --
             #  never into a run's stderr, which a test may compare.
-            for mode in mode_db.values():
-                for note in getattr(mode, "note_list", ()):
+            for scope in scope_db.values():
+                for note in getattr(scope, "note_list", ()):
                     print(note, file=sys.stderr)
         if dry_run_f:
-            handler_n = sum(len(m.handler_list) for m in mode_db.values())
-            print("dry run ok: %d mode(s), %d handler(s)"
-                  % (len(mode_db), handler_n))
+            handler_n = sum(len(m.handler_list) for m in scope_db.values())
+            print("dry run ok: %d scope(s), %d handler(s)"
+                  % (len(scope_db), handler_n))
         elif example_f:
-            for line in generate_example_input(mode_db, start_mode_name):
+            for line in generate_example_input(scope_db, start_scope_name):
                 print(line)
         else:
-            interpreter = Interpreter(mode_db, start_mode_name, file_name,
+            interpreter = Interpreter(scope_db, start_scope_name, file_name,
                                       trace_style=trace_style,
                                       source_db=source_db,
                                       trace_filter=trace_filter,

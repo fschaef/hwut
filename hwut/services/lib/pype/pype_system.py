@@ -291,11 +291,11 @@ def built(system, search_dir_list=None, trace_style=None, out=None):
                             % (system.where_db[name], name, error))
         source_db = {}
         tick_list = []
-        mode_db, start_mode_name = _core.parse(source_txt, path,
+        scope_db, start_scope_name = _core.parse(source_txt, path,
                                          search_dir_list=search_dir_list,
                                          source_db=source_db,
                                          tick_list=tick_list)
-        interpreter = _core.Interpreter(mode_db, start_mode_name, path,
+        interpreter = _core.Interpreter(scope_db, start_scope_name, path,
                                   trace_style=trace_style,
                                   source_db=source_db, tick_list=tick_list)
         interpreter.input_name = name

@@ -135,8 +135,8 @@ mixed() {           # one standing, one differing
 
 flipping() {
     fixture '# @hwut { title = "The flip" }' \
-            'n=0' '[ -f count.txt ] && n=$(cat count.txt)' \
-            'echo $((n + 1)) > count.txt' \
+            'n=0' '[ -f ../count.txt ] && n=$(cat ../count.txt)' \
+            'echo $((n + 1)) > ../count.txt' \
             'if [ $((n % 2)) -eq 0 ]; then echo "steady line";' \
             'else echo "other"; fi' 'echo "<hwut-end>"'
     printf 'steady line\n<hwut-end>\n' > tree/suite/TEST/GOOD/test-app.sh.txt

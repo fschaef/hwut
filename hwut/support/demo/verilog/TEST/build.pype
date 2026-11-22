@@ -9,8 +9,8 @@
 #                 'Leaving' POPS back to where it was entered from
 #     DONE        after the top directory's 'make: Leaving'
 #
-# Every mode but CONFIGURE inherits the compiler's vocabulary, imported
-# below. The first mode defined is the start: CONFIGURE.
+# Every scope but CONFIGURE inherits the compiler's vocabulary, imported
+# below. The first scope defined is the start: CONFIGURE.
 
 CONFIGURE/on: <bof> => {
     record_db, stack = {}, []          # directory -> what it did
@@ -33,7 +33,7 @@ CONFIGURE/on: <eof> => {
     breach_list.append("the build never started")
 }
 and: goto DONE;
-# '<exit>' fires when the mode is left -- here once, for good.
+# '<exit>' fires when the scope is left -- here once, for good.
 CONFIGURE/on: <exit> => {
     print("configure: %d checks" % check_n)
 }

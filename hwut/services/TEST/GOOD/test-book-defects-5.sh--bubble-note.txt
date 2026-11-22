@@ -8,5 +8,5 @@ NOTE  editor/: a project of its own (HWUT_ROOT/setup.conf) => run hwut inside it
 nothing to renovate below '.'
 NOTE  editor/: a project of its own (HWUT_ROOT/setup.conf) => run hwut inside it
 == hwut.sanitize root editor
-nothing to do: root editor -- a bubble stands: 'editor/HWUT_ROOT/setup.conf'
+nothing to do: root editor -- a root stands: 'editor/HWUT_ROOT/setup.conf'
 <hwut-end>

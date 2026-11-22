@@ -145,7 +145,7 @@ B1 else fires
 --- first <else> of the effective list fires: MID over ROOT ---
 parse succeeded: SUB's effective <else> is MID's (own before inherited); ROOT's flush is shadowed
 
---- effect-command words are lawful mode names; unknown ones err ---
-parse succeeded: mode 'FLUSH' defined and targeted via goto
-PypeError (expected): pype.goto('FLUSH'): no such mode
+--- effect-command words are lawful scope names; unknown ones err ---
+parse succeeded: scope 'FLUSH' defined and targeted via goto
+PypeError (expected): pype.goto('FLUSH'): no such scope
 <hwut-end>

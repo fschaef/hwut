@@ -1,0 +1,27 @@
+--- the run's NOTE
+    NOTE: 4 wallflower file(s) in TEST directories => "**/TMP/wallflowers.txt"
+          list:   hwut.sanitize.propose --wallflowers -o <file>
+          ignore: hwut.sanitize.apply <file>
+    ==============================================================================
+--- listed, one line each
+STATUS: 0
+    ignore a/TEST/bench.log
+    ignore a/TEST/helper.py
+    ignore b/TEST/bench.log
+    ignore b/TEST/helper.py
+--- the a/TEST lines deleted, the rest applied
+STATUS: 0
+     ignore b/TEST/bench.log ... [DONE]
+     ignore b/TEST/helper.py ... [DONE]
+a/TEST/hwut.conf {
+    (none)
+}
+b/TEST/hwut.conf {
+    hwut {
+        ignore = ["bench.log", "helper.py"]
+    }
+}
+--- what is left
+    ignore a/TEST/bench.log
+    ignore a/TEST/helper.py
+<hwut-end>

@@ -1,5 +1,5 @@
 
---- default mode starts; leaving it is one-way ---
+--- default scope starts; leaving it is one-way ---
 SCRIPT: {
     on: <entry> => {
         print("default begin")
@@ -31,7 +31,7 @@ default end
 NAMED tick
 }
 
---- default mode precedes named modes as start mode ---
+--- default scope precedes named scopes as start scope ---
 SCRIPT: {
     NAMED/on: "x" => {
         print("NAMED (not active at start)")
@@ -50,6 +50,6 @@ OUTPUT: {
 default handles it
 }
 
---- no way back: mode('<default>') rejected ---
-PypeError (expected): pype.goto('<default>'): the default mode cannot be entered
+--- no way back: scope('<default>') rejected ---
+PypeError (expected): pype.goto('<default>'): the default scope cannot be entered
 <hwut-end>

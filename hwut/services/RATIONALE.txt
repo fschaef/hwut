@@ -8947,3 +8947,30 @@ COST      Every page writing a fixture root makes 'HWUT_ROOT/' first (the
           'setup.conf', the anchor line of 'test-bundle.sh'. E-234's and
           bookkeeper B-33's 'HWUT/' read 'HWUT_ROOT/' from here on; their
           text stays as written.
+
+E-236  'sub-root' RETIRED; 'root' SPEAKS OF ROOTS, NOT BUBBLES         (2026-11-22)
+------------------------------------------------------------------------------
+PROBLEM   The book writers' D-89: 'hwut.sanitize root' below a root said
+          "a bubble stands above ... => a bubble of its own here:
+          'hwut.sanitize sub-root .'". Bubbles were retired on 2026-11-15
+          (intend/45 R-3, R-4): a root below a root is a project of its
+          own, never walked from above. The word was stale, and the verb
+          it offered wrote exactly such a root.
+DECISION  (Frank-Rene, 2026-11-22) option A: 'sub-root' is struck. hwut
+          writes no root below a root. 'hwut.sanitize sub-root ...' is
+          REFUSED BY NAME ('RETIRED_VERB_DB'): "'sub-root' is retired: a
+          root below a root is a project of its own, never run from above
+          => keep the tree one project, or move the directory out of it".
+          'root' below a root: "REFUSED: root -- a root stands above:
+          '../HWUT_ROOT/setup.conf' => none below it: a root below a root
+          is a project of its own, never run from above"; at a root:
+          "nothing to do: a root stands: '...'". The user-facing 'bubble'
+          of the label faces ("a project of its own"), 'hwut.play' ("the
+          directory is not run here") and the feature sanitize ("governs
+          here") goes with it. Internal names ('plan/bubble.py') stay.
+          A project brought in from elsewhere carries its own
+          'HWUT_ROOT/'; nobody needs hwut to write one.
+COST      Re-recorded, each diff read: the pages that showed the old
+          words or the verb list ('test-book-defects-4.sh sub-root',
+          'test-face-words.sh boundary', 'test-book-defects-5.sh
+          bubble-note', 'test-sanitize.sh').

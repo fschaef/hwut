@@ -25,14 +25,14 @@ DISCOVERY/on: "registration finished" => {
         print("    " + name)
 }
 and: goto DONE;
-DISCOVERY/on: if ( pype.time() > 30.0 ) => {
-    print("wait guard: discovery exceeded 30 s at line %d" % pype.line_n())
+DISCOVERY/on: <else> => {
+    if pype.time() > 30.0:
+        print("wait guard: discovery exceeded 30 s at line %d" % pype.line_n())
 }
-DISCOVERY/on: <else> => ignore;
 
 DONE/on: <else> => flush;
 
-#  THE END OF THE INPUT IS STATED (pype D-39): every mode copes with it.
+#  THE END OF THE INPUT IS STATED (pype D-39): every scope copes with it.
 on: <eof> => ignore;
 DISCOVERY/on: <eof> => ignore;
 DONE/on: <eof> => ignore;

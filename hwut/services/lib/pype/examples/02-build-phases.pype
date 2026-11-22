@@ -1,5 +1,5 @@
 #! /usr/bin/env hwut.pype
-# A build log is divided into phases. Each phase is a mode inheriting the
+# A build log is divided into phases. Each phase is a scope inheriting the
 # shared handlers of ANY (phase markers, warning counter). A phase's 'end'
 # handler prints its summary the moment the phase is left -- strictly in
 # input order.
@@ -55,5 +55,5 @@ LINK/on: <exit> => {
     print("build total: %d warning(s)" % warning_n)
 }
 
-#  THE END OF THE INPUT IS STATED (pype D-39): every mode copes with it.
+#  THE END OF THE INPUT IS STATED (pype D-39): every scope copes with it.
 ANY/on: <eof> => ignore;

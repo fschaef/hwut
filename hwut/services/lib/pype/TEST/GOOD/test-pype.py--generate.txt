@@ -74,7 +74,7 @@ ROUND TRIP (exit 0): {
         sample
 }
 
---- walk skips pure-IGNORE handlers and mode()-only switches ---
+--- walk skips pure-IGNORE handlers and scope()-only switches ---
 visible 1
 go
 deep sample.log

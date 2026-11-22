@@ -55,12 +55,14 @@ DESCRIPTION
        installed, and the 'HWUT_ROOT/setup.conf' entry that acknowledges.
        Judged now, by the gate the run asks; no book holds the case.
 
-       A FILE THAT IS NOT SEEN is ignored: the default set ('*.txt',
-       '*.xml', '*.json', '*.pype', '*.pypes'), the backup-shaped names
-       ('*~', '#*#', '*.bak', '*.backup', '*.orig', '*.old', '*.save',
-       '*.rej', '*.copy', '*.swp', '*.tmp'), and the globs of 'ignore' in
-       'hwut.conf'. 'admit' in 'hwut.conf' takes a glob out of all of
-       them -- a backup-shaped name meant as a test is one again:
+       A FILE THAT IS NOT SEEN is one the globs of 'ignore' in 'hwut.conf'
+       name -- a name without '/' in every directory below, a glob with
+       '/' anchored at that conf's directory, like '.gitignore'. Any other
+       file no test speaks for is a WALLFLOWER the run names, the
+       backup-shaped names ('*~', '#*#', '*.bak', '*.backup', '*.orig',
+       '*.old', '*.save', '*.rej', '*.copy', '*.swp', '*.tmp') too, their
+       header unread. 'admit' in 'hwut.conf' takes a glob out of both --
+       a backup-shaped name meant as a test is one again:
 
            hwut { admit = ["test-old-format.py.orig"] }
 

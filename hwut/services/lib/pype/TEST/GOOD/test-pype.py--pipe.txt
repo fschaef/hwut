@@ -5,7 +5,7 @@ EXIT: 0
     l3 x
 
 --- trace positions name the input file, per-file line count ---
-    filter.pype: mode active: <default>
+    filter.pype: scope active: <default>
     in-a.txt:1: input: 'l1 x'
     filter.pype:1: fire: <default>/on: "x"
     filter.pype:1: effect: flush ;

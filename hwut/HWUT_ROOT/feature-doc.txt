@@ -4761,17 +4761,17 @@ README PATTERN TOKENS; MANUAL 5 REPEAT GROUPS.
 
 [[one-handler-per-line]]
 documents: services/lib/pype/README.txt, services/lib/pype/MANUAL.txt
-Per input line the handlers of the active mode are tried in definition order, the first whose cause holds fires alone, and its effects, 'and:' continuations included, run in definition order.
+Per input line the handlers of the active scope are tried in definition order, the first whose cause holds fires alone, and its effects, 'and:' continuations included, run in definition order.
 README DISPATCH; MANUAL 2, 4, 6.
 
 [[else-handler]]
 documents: services/lib/pype/README.txt, services/lib/pype/MANUAL.txt
-The '<else>' handler fires when every match handler of the active mode failed.
+The '<else>' handler fires when every match handler of the active scope failed.
 README SCRIPT GRAMMAR, DISPATCH; MANUAL 6.
 
 [[mandatory-else]]
 documents: services/lib/pype/README.txt, services/lib/pype/MANUAL.txt
-A mode that can be activated without an '<else>' in its effective list is refused -- at parse time, or at activation where only 'pype.goto()'/'pype.push()' reaches it; a pure mixin is exempt.
+A scope that can be activated without an '<else>' in its effective list is refused -- at parse time, or at activation where only 'pype.goto()'/'pype.push()' reaches it; a pure mixin is exempt.
 README DISPATCH; MANUAL 6 MANDATORY <else>.
 
 [[flush-and-ignore]]
@@ -4781,12 +4781,12 @@ README KEYWORDS; MANUAL 6.
 
 [[if-cause]]
 documents: services/lib/pype/README.txt, services/lib/pype/MANUAL.txt
-A handler may fire on a Python condition over the shared namespace instead of a pattern, in definition order and exempt from the disjointness law; a mode holding one cannot be inherited from.
+'if(...)' is no cause (removed 2026-11-22): the parser refuses it and names the way out, the condition tested in a block (e.g. in '<else>').
 README DISPATCH, INHERITANCE; MANUAL 6, 8.
 
 [[shared-namespace]]
 documents: services/lib/pype/README.txt, services/lib/pype/MANUAL.txt
-All Python blocks of all handlers and modes run in one namespace: bindings and assignments persist across lines and mode switches.
+All Python blocks of all handlers and scopes run in one namespace: bindings and assignments persist across lines and scope switches.
 README NAMESPACE; MANUAL 6.
 
 [[pype-line-information]]
@@ -4796,33 +4796,33 @@ README DISPATCH; MANUAL 6 THE 'pype' OBJECT (line, line_n, time, bindings).
 
 [[pype-mode-information]]
 documents: services/lib/pype/README.txt, services/lib/pype/MANUAL.txt
-The 'pype' object tells a block the script's file name, the name of the active mode and the depth of the mode stack.
-MANUAL 6 THE 'pype' OBJECT (file_name, mode_name, stack_depth).
+The 'pype' object tells a block the script's file name, the name of the active scope and the depth of the scope stack.
+MANUAL 6 THE 'pype' OBJECT (file_name, scope_name, stack_depth).
 
 [[mode-switch]]
 documents: services/lib/pype/README.txt, services/lib/pype/MANUAL.txt
-'goto' as effect or 'pype.goto()' in a block switches the active mode; the old mode's '<exit>' handlers fire, then the new mode's '<entry>' handlers.
-README MODES; MANUAL 7 SWITCHING, <entry> / <exit>.
+'goto' as effect or 'pype.goto()' in a block switches the active scope; the old scope's '<exit>' handlers fire, then the new scope's '<entry>' handlers.
+README SCOPES; MANUAL 7 SWITCHING, <entry> / <exit>.
 
 [[switch-request-order]]
 documents: services/lib/pype/README.txt, services/lib/pype/MANUAL.txt
-A switch request is applied after the handler's effects have completed, the last request wins, and a switch to the active mode does nothing.
-README MODES; MANUAL 7 SWITCHING.
+A switch request is applied after the handler's effects have completed, the last request wins, and a switch to the active scope does nothing.
+README SCOPES; MANUAL 7 SWITCHING.
 
 [[default-mode]]
 documents: services/lib/pype/README.txt, services/lib/pype/MANUAL.txt
-Bare handlers form the nameless default mode, which is the start mode wherever it stands in the file and cannot be switched into once left; without it the first-defined mode starts.
-README MODES; MANUAL 7 DEFAULT MODE.
+Bare handlers form the nameless default scope, which is the start scope wherever it stands in the file and cannot be switched into once left; without it the first-defined scope starts.
+README SCOPES; MANUAL 7 DEFAULT SCOPE.
 
 [[push-pop]]
 documents: services/lib/pype/README.txt, services/lib/pype/MANUAL.txt
-'push' stacks the active mode and switches, 'pop' returns to it -- also into the default mode -- with '<exit>' and '<entry>' firing as on a plain switch; 'pop' on an empty stack is an error.
-README MODES; MANUAL 7 PUSH / POP.
+'push' stacks the active scope and switches, 'pop' returns to it -- also into the default scope -- with '<exit>' and '<entry>' firing as on a plain switch; 'pop' on an empty stack is an error.
+README SCOPES; MANUAL 7 PUSH / POP.
 
 [[file-boundaries]]
 documents: services/lib/pype/README.txt, services/lib/pype/MANUAL.txt
-'<bof>' and '<eof>' handlers of the then-active mode fire once each; a run nests as '<entry>', '<bof>', the lines, '<eof>', '<exit>'.
-README MODES; MANUAL 7 <bof> / <eof>.
+'<bof>' and '<eof>' handlers of the then-active scope fire once each; a run nests as '<entry>', '<bof>', the lines, '<eof>', '<exit>'.
+README SCOPES; MANUAL 7 <bof> / <eof>.
 
 [[terminal-token]]
 documents: services/lib/pype/MANUAL.txt
@@ -4831,18 +4831,18 @@ MANUAL 1b.
 
 [[no-reserved-mode-names]]
 documents: services/lib/pype/README.txt, services/lib/pype/MANUAL.txt
-No word is reserved as a mode name: effect and cause words are lawful mode names, and an effect lacking its ';' or its argument is refused.
+No word is reserved as a scope name: effect and cause words are lawful scope names, and an effect lacking its ';' or its argument is refused.
 README KEYWORDS; MANUAL 4.
 
 [[inheritance]]
 documents: services/lib/pype/README.txt, services/lib/pype/MANUAL.txt
-'is:' gives a mode every handler of its bases, transitively and from several bases; a handler arriving twice over a diamond is entered once, and the default mode may inherit.
+'is:' gives a scope every handler of its bases, transitively and from several bases; a handler arriving twice over a diamond is entered once, and the default scope may inherit.
 README INHERITANCE; MANUAL 8.
 
 [[shadowing-forbidden]]
 documents: services/lib/pype/README.txt, services/lib/pype/MANUAL.txt, ../README.md
-Two pattern handlers of one effective list whose languages intersect are refused at parse time wherever they come from, decided exactly on the patterns; the error names the mode, both defining modes and both locations.
-README INHERITANCE; MANUAL 8 SHADOWING IS FORBIDDEN; top README, pype section.
+Where two handlers of one effective list match a line, the first fires (D-47; the id keeps the name of the earlier law); a handler that can never fire is NOTED with the scope and both locations.
+README INHERITANCE; MANUAL 8 THE FIRST MATCH FIRES; top README, pype section.
 
 [[else-precedence]]
 documents: services/lib/pype/README.txt, services/lib/pype/MANUAL.txt
@@ -4866,7 +4866,7 @@ README SCRIPT GRAMMAR ('idempotent'); MANUAL 4.
 
 [[script-faults-located]]
 documents: services/lib/pype/README.txt, services/lib/pype/MANUAL.txt
-A faulty script is refused with 'file:line' and the reason on stderr; an unknown mode name is an error.
+A faulty script is refused with 'file:line' and the reason on stderr; an unknown scope name is an error.
 README ERRORS; MANUAL 3, 11.
 
 [[pype-exit-status]]
@@ -4886,17 +4886,17 @@ README ERRORS; MANUAL 3.
 
 [[dry-run]]
 documents: services/lib/pype/README.txt, services/lib/pype/MANUAL.txt, ../README.md
-'--dry-run' parses and checks the script, reads no input, and reports 'dry run ok' with mode and handler counts, or the error.
+'--dry-run' parses and checks the script, reads no input, and reports 'dry run ok' with scope and handler counts, or the error.
 README INVOCATION; MANUAL 3.
 
 [[trace]]
 documents: services/lib/pype/README.txt, services/lib/pype/MANUAL.txt, ../README.md
-'--trace' writes to stderr each input line against the handler it fired, the effects and the executed block lines as 'file:line:' -- '--trace-plain' with a plain starter, mode names restricting it -- while stdout stays the filter stream.
+'--trace' writes to stderr each input line against the handler it fired, the effects and the executed block lines as 'file:line:' -- '--trace-plain' with a plain starter, scope names restricting it -- while stdout stays the filter stream.
 README INVOCATION; MANUAL 3.
 
 [[example-input]]
 documents: services/lib/pype/README.txt, services/lib/pype/MANUAL.txt, ../README.md
-'--example' prints an input with one sample line per pattern handler, walking the modes along static 'goto'/'push' effects; fed back, it drives the script.
+'--example' prints an input with one sample line per pattern handler, walking the scopes along static 'goto'/'push' effects; fed back, it drives the script.
 README INVOCATION; MANUAL 3.
 
 [[shipped-examples]]

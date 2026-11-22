@@ -1844,19 +1844,19 @@ def wallflower_note_list(path_list, where):
     """
     RETURN: list[str], the NOTE on the files no carrier speaks for
             (X-SILENT): one line with their count and 'where' the lists
-            stand, then the one command that ignores every one of them
-            ('see: hwut.config.ignore --wallflowers') -- or, where 'where' is
-            None (no list could be written), the count followed by every
-            path of 'path_list' and the command that ignores those.
+            stand -- or, where 'where' is None (no list could be written),
+            the count followed by every path of 'path_list' -- then TWO
+            TELEGRAPHIC LINES (ruled 2026-11-22, R-103): how to list them
+            line by line, how to ignore a selection of them.
             Spoken alike by every face that finds them.
     """
     head = "NOTE: %d wallflower file(s) in TEST directories" % len(path_list)
+    hint = ["      list:   hwut.sanitize.propose --wallflowers -o <file>",
+            "      ignore: hwut.sanitize.apply <file>"]
     if where is not None:
-        return ['%s => "%s"' % (head, where),
-                "      see: hwut.config.ignore --wallflowers"]
+        return ['%s => "%s"' % (head, where)] + hint
     return [head + ":"] \
-           + ["          %s" % path for path in path_list] \
-           + ["      see: hwut.config.ignore %s" % " ".join(path_list)]
+           + ["          %s" % path for path in path_list] + hint
 
 
 def render(event_iterable, write, write_error=None, width=78,

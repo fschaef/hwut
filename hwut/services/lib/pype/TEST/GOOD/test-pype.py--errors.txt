@@ -8,6 +8,6 @@ PypeError (expected): <err>:1: block opened here is never closed by '}'
 --- 'and:' without handler ---
 PypeError (expected): <err>:1: 'and:' without preceding handler
 
---- switch to unknown mode ---
-PypeError (expected): pype.goto('GHOST'): no such mode
+--- switch to unknown scope ---
+PypeError (expected): pype.goto('GHOST'): no such scope
 <hwut-end>

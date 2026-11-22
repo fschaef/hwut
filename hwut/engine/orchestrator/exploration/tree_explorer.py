@@ -582,6 +582,21 @@ def _entry_refused(entry_gate, directory, effective, own):
     return entry_gate(os.path.abspath(directory), required)
 
 
+def anchored_spec(spec, base):
+    """
+    RETURN: DirectorySpec, 'spec' with its 'ignore' and 'admit' globs
+            anchored at 'base', the directory its configuration speaks
+            for (R-103): a name stays a name, a path becomes a path below
+            'base' -- so a glob means what it says where it is written,
+            however far down it is inherited. 'spec' itself where it is
+            None.
+    """
+    if spec is None: return spec
+    return replace(spec,
+        ignore=tuple(finder.anchored_glob(g, base) for g in spec.ignore or ()),
+        admit=tuple(finder.anchored_glob(g, base) for g in spec.admit or ()))
+
+
 def inherited_spec(parent, child):
     """
     RETURN: DirectorySpec, the spec that GOVERNS where 'child' stands:
@@ -799,6 +814,10 @@ def ascended_spec(start, root_shown=ROOT_CONF_NAME):
             continue
         spec, app_db, conf_fault_list = reader.read_conf(text, shown)
         fault_list.extend(conf_fault_list)
+        #  A GLOB MEANS WHAT IT SAYS WHERE IT IS WRITTEN (R-103): beside a
+        #  'hwut.conf', or at the root that 'HWUT_ROOT/setup.conf' marks.
+        base = os.path.dirname(path)
+        spec = anchored_spec(spec, os.path.dirname(base) if root_f else base)
         #  'apps' NAMES THE FILES OF ONE DIRECTORY, and a conf met on the
         #  climb is no test directory's own: nothing would ever read the
         #  entries. Refused, not dropped.
@@ -843,6 +862,7 @@ def _folded(directory, relative, effective, fault_list):
     spec, _app_db, conf_fault_list = reader.read_conf(text, conf_name)
     fault_list.extend(conf_fault_list)
     if spec is None: return effective
+    spec = anchored_spec(spec, directory)                          # R-103
 
     for name in LOCAL_FIELD_TUPLE:
         if getattr(spec, name):

@@ -200,6 +200,8 @@ def explore(directory, interview_runner=None, inherited=None):
         directory_spec, conf_app_db, conf_fault_list = \
                                       reader.read_conf(text, finder.CONF_NAME)
         fault_list.extend(conf_fault_list)
+        from .tree_explorer import anchored_spec
+        directory_spec = anchored_spec(directory_spec, directory)  # R-103
         #  A VARIANT GROUP IS THE ROOT'S ALONE (tree_explorer). A test
         #  directory's own conf is read HERE and not by the walk, so
         #  the refusal has to stand here too, or the one place the key
@@ -225,6 +227,12 @@ def explore(directory, interview_runner=None, inherited=None):
                                            directory_spec.admit)
     refused_list   = []
     for name in candidate_list:
+        #  A BACKUP-SHAPED NAME IS A WALLFLOWER, its header unread (R-103)
+        #  -- unless the directory names it under 'apps'.
+        if name not in conf_app_db \
+           and finder.backup_shaped_f(directory, name, directory_spec.admit):
+            silent_list.append(name)
+            continue
         with open(os.path.join(directory, name), "r",
                   encoding="utf-8", errors="replace") as fh:
             content = fh.read()

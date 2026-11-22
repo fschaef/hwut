@@ -1,7 +1,7 @@
 #! /usr/bin/env hwut.pype
 # Watch a temperature trace. Above 80.0 the script enters ALERT and
 # reports the excursion when the value drops back to normal. The
-# statistics print once, from an 'EOF' handler inherited by every mode.
+# statistics print once, from an 'EOF' handler inherited by every scope.
 
 STATS/on: <else> => ignore;
 STATS/on: <eof> => {

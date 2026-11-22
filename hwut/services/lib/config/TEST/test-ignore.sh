@@ -10,6 +10,9 @@
 #         reported    { features = ["report-feeds-ignore"] }
 #         refused     { features = ["ignore-refusals"] }
 #         refused_too { features = ["refused-file-is-wallflower"] }
+#         no_default  { features = ["settle-wallflowers"] }
+#         anchored    { features = ["settle-wallflowers"] }
+#         selection   { features = ["settle-wallflowers"] }
 #     }
 # }
 #
@@ -30,8 +33,24 @@
 #              removes each list, and the next run finds nothing.
 # reported     'hwut.report.wallflowers' prints them, one path per line,
 #              and its output IS this face's input; then it finds none.
-# refused_too  a backup-shaped file is IGNORED (services E-159): no
-#              wallflower, not in the list, nothing to settle.
+# refused_too  (exploration R-103, 2026-11-22) a backup-shaped file is a
+#              WALLFLOWER, its header unread -- the '.bak' copy of a test
+#              is no second test. MEASURED BEFORE: it was ignored, silent
+#              (services E-159); without the unread header it ran as a
+#              test, 'no GOOD file'.
+# no_default   (exploration R-102, 2026-11-22) nothing is ignored by
+#              default: a '.txt', a '.json', a '.pype', a README are
+#              wallflowers like any helper. MEASURED BEFORE: the four were
+#              silent, the list named only 'helper.py' and 'bench.log'.
+# anchored     (R-103) 'ignore' is local like '.gitignore' and inherited:
+#              a name in the root conf holds in every directory below; a
+#              glob with '/' is anchored at its conf's directory.
+#              MEASURED BEFORE: 'b/TEST/data.csv' in the root conf matched
+#              nothing -- names were matched bare.
+# selection    (R-103) the NOTE's two lines: 'hwut.sanitize.propose
+#              --wallflowers -o <file>' lists them, one line each; a line
+#              deleted stays a wallflower; 'hwut.sanitize.apply <file>'
+#              ignores the rest in each directory's own 'hwut.conf'.
 # refused      a path that stands nowhere; an unknown option;
 #              '--wishlist' without a file; a list that is not there.
 # ---------------------------------------------------------------------------
@@ -46,7 +65,7 @@ unset NO_COLOR CI COLUMNS
 case "$1" in
     --hwut-info)
         echo "hwut.config.ignore: the answer to the wallflower NOTE.;"
-        echo "CHOICES: paths, wishlist, wallflowers, reported, refused;"
+        echo "CHOICES: paths, wishlist, wallflowers, reported, refused, refused_too, no_default, anchored, selection;"
         exit 0 ;;
 esac
 
@@ -147,6 +166,47 @@ reported)
     $REPORT > found.txt; echo "STATUS: $?"; sed 's/^/    /' < found.txt
     echo "--- a wish word is not its business"
     $REPORT --fail; echo "STATUS: $?"
+    ;;
+no_default)
+    fixture
+    for name in samples.txt notes.json strip.pype README.txt; do
+        echo data > "a/TEST/$name"
+    done
+    $RUN --plain > run.txt 2>&1
+    echo "--- the run's NOTE"
+    grep "wallflower" run.txt | sed 's/^/    /'
+    echo "--- a/TEST's list"
+    grep -v '^#' a/TEST/TMP/wallflowers.txt | sed 's/^/    /'
+    ;;
+anchored)
+    fixture
+    for where in a b; do echo d > "$where/TEST/data.csv"; done
+    printf 'hwut {\n    ignore = ["*.log", "b/TEST/data.csv"]\n}\n' \
+        > HWUT_ROOT/setup.conf
+    $RUN --plain > run.txt 2>&1
+    echo "--- a/TEST's list: 'bench.log' ignored by name, 'data.csv' not"
+    grep -v '^#' a/TEST/TMP/wallflowers.txt | sed 's/^/    /'
+    echo "--- b/TEST's list: both ignored"
+    grep -v '^#' b/TEST/TMP/wallflowers.txt | sed 's/^/    /'
+    ;;
+selection)
+    fixture
+    PROPOSE="python3 -m hwut.services.lib.sanitize.propose"
+    APPLY="python3 -m hwut.services.lib.sanitize.apply"
+    $RUN --plain > run.txt 2>&1
+    echo "--- the run's NOTE"
+    grep -A2 "wallflower" run.txt | sed 's/^/    /'
+    echo "--- listed, one line each"
+    $PROPOSE --wallflowers -o w.txt; echo "STATUS: $?"
+    grep '^ignore' w.txt | sed 's/^/    /'
+    echo "--- the a/TEST lines deleted, the rest applied"
+    sed -i '/ignore a\/TEST/d' w.txt
+    $APPLY w.txt > out.txt 2>&1; echo "STATUS: $?"
+    grep "ignore" out.txt | sed 's/ *\.\.\.*/ .../; s/^/    /'
+    conf a/TEST
+    conf b/TEST
+    echo "--- what is left"
+    $PROPOSE --wallflowers | grep '^ignore' | sed 's/^/    /'
     ;;
 refused)
     fixture

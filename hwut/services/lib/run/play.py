@@ -311,7 +311,7 @@ def _decided_elsewhere(directory, wish, arguments, word_list, write):
     if not ready_f:
         write("NOTE  %s/: platform '%s' not reachable: %s"
               % (decision.name, name, why))
-        write("nothing played: the bubble is not run here")
+        write("nothing played: the directory is not run here")
         return E_ExitCode.EMPTY
     far_argv = ["hwut.play", "--as-platform=%s" % name] + list(word_list)
     for flag in ("raw", "pyped", "stderr", "plain", "all"):

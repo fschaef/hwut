@@ -12,7 +12,7 @@ SCRIPT: {
         print("B begin")
     }
     B/on: "back" => {
-        print("returning via mode() call")
+        print("returning via scope() call")
         pype.goto("A")
     }
     B/on: <exit> => {
@@ -32,7 +32,7 @@ OUTPUT: {
 A begin
 A end
 B begin
-returning via mode() call
+returning via scope() call
 B end
 A begin
 A end

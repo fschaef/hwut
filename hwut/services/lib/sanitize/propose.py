@@ -37,7 +37,7 @@ does what is left. Every line is also a command line of its own:
 
 -------------------------------------------------------------------
 WHAT IT LOOKS FOR -- each aspect by its own flag; NONE STATED MEANS ALL
-OF THEM but '--transient', because a wish that states nothing wants
+OF THEM but '--transient' and '--wallflowers', because a wish that states nothing wants
 everything, and a bare call asks about rubbish, not about the
 candidates.
 -------------------------------------------------------------------
@@ -105,6 +105,11 @@ candidates.
                 stands uncommented, the current directory as a
                 commented alternative. Healed by 'root', which writes
                 the file; 'hwut.sanitize root' alone asks instead.
+    --wallflowers
+                THE WALLFLOWERS (R-103): one 'ignore <dir>/<file>' line
+                per file no test speaks for, backups included. Asked for
+                by name only. Delete the lines to keep; 'apply' writes
+                the rest into each directory's own 'hwut.conf'.
     --transient THE TWO TRANSIENT ROOTS WHOLE, 'OUT/' and 'TMP/' (E-24),
                 candidates included. Asked for by name only; it takes
                 '--session', '--lock' and '--out' with it. A directory
