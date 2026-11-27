@@ -2,10 +2,8 @@
 # SPDX-License: MIT; Project HWUT; (C) Frank-Rene Schaefer
 # The flow digest, and the most work ever standing at once -- the
 # '--jobs' budget made visible.
-import: "test-run.pype"
+import: "digest.pype"
+is: DIGEST
 on: <bof> => {
     peak_f = True
 }
-
-#  THE END OF THE INPUT IS STATED (pype D-39): every scope copes with it.
-on: <eof> => ignore;

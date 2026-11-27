@@ -104,4 +104,29 @@ PypeError (expected): <test>:1: 'is:' names unknown scope 'GHOST'
 --- IGNORE reserved as scope name ---
 PypeError (expected): <test>:1: cannot read EFFECT '{ }'
 PypeError (expected): <test>:1: 'is:' names unknown scope 'IGNORE'
+
+--- an 'is:' line ending in a comment; anything else after it refused ---
+SCRIPT: {
+    BASE/on: "common" => {
+        print("BASE handles 'common'")
+    }
+    BASE/on: <else> => ignore;
+    SUB is: BASE      # SUB takes BASE's handlers
+    is: BASE, SUB     # the default scope, too
+    SUB/on: <else> => ignore;
+    on: "go" => goto SUB;
+    on: <eof> => ignore;
+    BASE/on: <eof> => ignore;
+    SUB/on: <eof> => ignore;
+}
+INPUT: {
+    common
+    go
+    common
+}
+OUTPUT: {
+BASE handles 'common'
+BASE handles 'common'
+}
+PypeError (expected): <test>:2: expected 'SCOPE/on:', 'on:', 'SCOPE is:' or 'and:'
 <hwut-end>

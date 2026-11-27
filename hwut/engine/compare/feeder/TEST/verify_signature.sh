@@ -1,10 +1,16 @@
 #!/bin/bash
-
-# --- HWUT Info Section ---
-if [ "$1" == "--hwut-info" ]; then
-    echo "Cross-checks Protocol signatures across ui.py execution, source files, and global protocol definitions."
-    exit 0
-fi
+#
+# @hwut {
+#     title = "UI protocol signature: produced, announced, used, recorded"
+# }
+#
+# The four places the UI protocol's signature stands must agree: what
+# 'python ui.py' produces, the 'SIGNATURE:' of ui.py's header, the
+# 'SIGNATURE =' of test-html_feeder.py, adm/SIGNATURE_UI_PROTOCOL.txt.
+# A changed protocol changes the first; 'python ui.py -w' writes the
+# last, the other two are edited by hand. Revived 2026-11-26: an hwut 1.x
+# page without a header, a wallflower since R-102 -- found the four
+# disagreeing (7qRU... produced, mmiF... announced everywhere else).
 
 # File paths
 UI_FILE="../ui.py"
@@ -37,7 +43,8 @@ echo "currently produced signature:                     (($CURRENT_PROD_HASH))"
 echo "## --> produced by 'python ui.py'" 
 echo "signature announced in ui.py:                     (($UI_FILE_SIG))"
 echo "## --> see file header 'SIGNATURE: ..." 
-echo "signature used in test-ui_feeder.py:              (($FEEDER_SIG))"
+echo "signature used in test-html_feeder.py:            (($FEEDER_SIG))"
 echo "## --> see SIGNATURE = ..." 
 echo "signature announced in adm/SIGNATURE_UI_PROTOCOL.txt: (($GLOBAL_SIG))"
 echo "## --> call 'python ui.py -w'" 
+echo "<hwut-end>"

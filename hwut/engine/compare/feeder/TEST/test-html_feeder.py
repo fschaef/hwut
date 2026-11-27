@@ -17,7 +17,7 @@ import hwut.engine.compare.feeder.html_feeder as html_feeder
 from hwut.engine.compare.configuration import Configuration
 
 
-SIGNATURE = 'mmiFiE-j4bsvTLp0iGNZEAJF9GErpfkXjVZc9Xw0yi8'
+SIGNATURE = '7qRUQmI7HIsQJfI1k-LB-SvAyei6EZAbGX_oynsCdkM'
 
 nominal = """
 There once was a ((Object)) made of ((Material)),

@@ -131,7 +131,9 @@ SCOPES:
     (<entry>/<exit> fire as on a plain switch; POP may re-enter the default
     scope; POP on an empty stack is an error).
     The default scope, when present, is the start scope; otherwise the first
-    scope defined in the script is. '<entry>' handlers fire on activation,
+    scope the script itself defines is (never an imported one). An imported
+    file holds named scopes only; 'is:' takes them; a ticking import is
+    written 'import<ticks>:' (2026-11-26). '<entry>' handlers fire on activation,
     '<exit>' handlers on deactivation. At end of input the active scope's
     '<exit>' fires. A switch to the already-active scope is a no-operation.
     The default scope has no name; once left, it cannot be entered again.

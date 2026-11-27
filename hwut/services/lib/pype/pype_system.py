@@ -295,6 +295,7 @@ def built(system, search_dir_list=None, trace_style=None, out=None):
                                          search_dir_list=search_dir_list,
                                          source_db=source_db,
                                          tick_list=tick_list)
+        _core.put_script_directories_on_path(source_db)
         interpreter = _core.Interpreter(scope_db, start_scope_name, path,
                                   trace_style=trace_style,
                                   source_db=source_db, tick_list=tick_list)

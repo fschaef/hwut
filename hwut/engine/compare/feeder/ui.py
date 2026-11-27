@@ -1,7 +1,7 @@
 """
 PURPOSE:   Implementation of feeds for UIs in terms of DisplayInst objects.
 
-SIGNATURE: mmiFiE-j4bsvTLp0iGNZEAJF9GErpfkXjVZc9Xw0yi8
+SIGNATURE: 7qRUQmI7HIsQJfI1k-LB-SvAyei6EZAbGX_oynsCdkM
 
    This signature identifies the structure of the protocol. A receiver
    may check the ProtocolHeader for this signature in order to be safe

@@ -509,6 +509,31 @@ def run_inheritance():
     except PypeError as e:
         print("PypeError (expected): %s" % e)
 
+    #  Ruled 2026-11-26: an 'is:' line may end in a comment. MEASURED
+    #  BEFORE: "expected 'SCOPE/on:', 'on:', 'SCOPE is:' or 'and:'".
+    banner("an 'is:' line ending in a comment; anything else after it refused")
+    run_script(
+        """
+        BASE/on: "common" => {
+            print("BASE handles 'common'")
+        }
+        BASE/on: <else> => ignore;
+        SUB is: BASE      # SUB takes BASE's handlers
+        is: BASE, SUB     # the default scope, too
+        SUB/on: <else> => ignore;
+        on: "go" => goto SUB;
+        """,
+        """
+        common
+        go
+        common
+        """)
+    try:
+        parse('B/on: <eof> => ignore;\nA is: B extra\n', "<test>")
+        print("UNEXPECTED: parse returned")
+    except PypeError as e:
+        print("PypeError (expected): %s" % e)
+
 
 def run_multi_inheritance():
     """RETURN: None. Comma-separated base lists; diamond deduplication;
@@ -1359,6 +1384,73 @@ def run_imports():
         except PypeError as e:
             print("PypeError (expected): %s"
                   % str(e).replace(work_dir, "WORK"))
+
+        #  RULED 2026-11-26: an imported file gives named scopes only;
+        #  the start scope is the script's own; ticks from an import only
+        #  by 'import<ticks>:', at every step; a Python module beside the
+        #  script imports from anywhere. MEASURED BEFORE: the script
+        #  started in the imported LAWS; a bare 'on:' of an import joined
+        #  the importer's default scope; an imported 'tick:' ticked
+        #  unseen; 'No module named helper' when called from elsewhere.
+        def refused(script_txt, name):
+            path = os.path.join(work_dir, name)
+            try:
+                parse(script_txt, path)
+                print("UNEXPECTED: parse returned")
+            except PypeError as e:
+                print("PypeError (expected): %s"
+                      % str(e).replace(work_dir, "WORK"))
+
+        def lib(name, txt):
+            with open(os.path.join(work_dir, name), "w") as fh: fh.write(txt)
+
+        banner("the start scope is the script's own, not the imported one")
+        lib("laws.pype", 'LAWS/on: "bad" => {\n    print("BREACH", pype.line())\n}\n'
+                         'LAWS/on: <else> => ignore;\nLAWS/on: <eof> => ignore;\n')
+        start_path = os.path.join(work_dir, "start.pype")
+        lib("start.pype", 'import: "laws.pype"\nMAIN is: LAWS\n'
+                          'MAIN/on: "hi" => {\n    print("MAIN", pype.scope_name())\n}\n')
+        result = spawn(["python3", interpreter_path, start_path],
+                       input="hi\nbad\n", capture_output=True, text=True)
+        exit_shown(result)
+        for line in result.stdout.splitlines(): print("    " + line)
+
+        banner("an imported file gives named scopes only: bare 'on:', 'is:' refused")
+        lib("bare-on.pype", 'on: "x" => ignore;\non: <eof> => ignore;\n')
+        lib("bare-is.pype", 'X/on: <eof> => ignore;\nis: X\n')
+        for name in ("bare-on.pype", "bare-is.pype"):
+            refused('import: "%s"\nM/on: <else> => ignore;\nM/on: <eof> => ignore;\n'
+                    % name, "imports-" + name)
+        refused('import: "laws.pype"\n', "only-imports.pype")
+
+        banner("ticks from an import: 'import<ticks>:', at every step of the chain")
+        lib("clock.pype", 'tick: 1 => "<t>"\nCLK/on: <eof> => ignore;\n')
+        lib("mid.pype", 'import<ticks>: "clock.pype"\nMID/on: <eof> => ignore;\n')
+        tail = 'on: <else> => ignore;\non: <eof> => ignore;\n'
+        refused('import: "clock.pype"\n' + tail, "t1.pype")
+        refused('import: "mid.pype"\n' + tail, "t2.pype")
+        for txt in ('import<ticks>: "clock.pype"\n' + tail,
+                    'import<ticks>: "mid.pype"\n' + tail):
+            tick_list = []
+            parse(txt, os.path.join(work_dir, "t3.pype"), tick_list=tick_list)
+            print("accepted: %r -- %d tick(s)"
+                  % (txt.splitlines()[0], len(tick_list)))
+
+        banner("a Python module beside the script imports from anywhere")
+        sub_dir = os.path.join(work_dir, "sub")
+        os.makedirs(sub_dir, exist_ok=True)
+        with open(os.path.join(sub_dir, "helper.py"), "w") as fh:
+            fh.write('def law(x):\n    return "law: " + x\n')
+        with open(os.path.join(sub_dir, "m.pype"), "w") as fh:
+            fh.write('on: <bof> => {\n    from helper import law\n}\n'
+                     'on: <else> => {\n    print(law(pype.line()))\n}\n'
+                     'on: <eof> => ignore;\n')
+        result = spawn(["python3", interpreter_path, os.path.join("sub", "m.pype")],
+                       input="q\n", capture_output=True, text=True,
+                       cwd=work_dir)
+        exit_shown(result)
+        for line in result.stdout.splitlines(): print("    " + line)
+        if result.stderr: print("STDERR:", result.stderr.strip())
 
         banner("sys.exit(n) inside a block gates the exit status")
         gate_path = os.path.join(work_dir, "gate.pype")

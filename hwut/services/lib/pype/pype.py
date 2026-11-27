@@ -106,20 +106,23 @@ class PypeError(Exception):
 RE_HANDLER_HEAD = re.compile(r"^([A-Za-z_]\w*)\s*/\s*on\s*:\s*(.*)$")
 RE_DEFAULT_HEAD = re.compile(r"^on\s*:\s*(.*)$")
 RE_AND_HEAD     = re.compile(r"^and\s*:\s*(.*)$")
+#  An 'is:' line may end in a comment (ruled 2026-11-26): '# ...'.
 RE_IS_HEAD      = re.compile(r"^([A-Za-z_]\w*)\s+is\s*:\s*"
-                             r"([A-Za-z_]\w*(?:\s*,\s*[A-Za-z_]\w*)*)\s*$")
+                             r"([A-Za-z_]\w*(?:\s*,\s*[A-Za-z_]\w*)*)\s*(?:#.*)?$")
 #  'if(...)' WAS A CAUSE until 2026-11-22 (ruled: removed). It is recognised
 #  only to be refused with the way out: the condition goes into a block.
 RE_IF_CAUSE     = re.compile(r"^if\s*\((.*)\)\s*$")
 RE_CAUSE_KEYWORD = re.compile(
     r"^<\s*(entry|exit|bof|eof|else)\s*>$")
-RE_IMPORT_HEAD  = re.compile(r"^import\s*:\s*(.*)$")
+#  'import<ticks>:' (ruled 2026-11-26): the importer says that the file
+#  it pulls in ticks -- itself or through its own imports.
+RE_IMPORT_HEAD  = re.compile(r"^import\s*(<ticks>)?\s*:\s*(.*)$")
 RE_TICK_HEAD    = re.compile(r"^tick\s*:")
 RE_TICK         = re.compile(r'^tick\s*:\s*(\S+)\s*=>\s*'
                              r'"((?:[^"\\]|\\.)*)"\s*;?\s*$')
 RE_IMPORT_PATH  = re.compile(r'^"((?:[^"\\\\]|\\\\.)*)"$')
 RE_IS_DEFAULT   = re.compile(r"^is\s*:\s*"
-                             r"([A-Za-z_]\w*(?:\s*,\s*[A-Za-z_]\w*)*)\s*$")
+                             r"([A-Za-z_]\w*(?:\s*,\s*[A-Za-z_]\w*)*)\s*(?:#.*)?$")
 
 # Name of the default scope. Not writable in a script ('/' and 'on:' heads
 # admit identifiers only), hence the default scope cannot be switched into
@@ -165,6 +168,27 @@ RE_RANGE        = re.compile(r"^(\d+)?\s*(\.\.)?\s*(\d+)?$")
 REGEX_NUMBER = r"(?<![\d.])[-+]?(?:\d+\.\d*|\.\d+|\d+)(?:[eE][-+]?\d+)?"
 REGEX_INT    = r"(?<![\d.])[-+]?\d+(?![\d.]|[eE][-+]?\d)"
 
+IMPORTED_BARE_TXT = ("%s: an imported file gives named scopes only, not a "
+                     "bare '%s' => '%s' here; the importer takes the "
+                     "scope by 'is: SCOPE'")
+
+
+def put_script_directories_on_path(source_db):
+    """RETURN: None. The directory of every file in 'source_db' (the script
+                     first, then its imports, in the order read) stands at
+                     the front of 'sys.path', once -- so that a Python
+                     'import' in a block finds a module beside its pype
+                     file wherever pype is called from (ruled 2026-11-26).
+    """
+    directory_list = []
+    for name in source_db:
+        directory = os.path.dirname(os.path.abspath(name))
+        if directory not in directory_list: directory_list.append(directory)
+    for directory in reversed(directory_list):
+        if directory in sys.path: sys.path.remove(directory)
+        sys.path.insert(0, directory)
+
+
 def parse(source_txt, file_name, search_dir_list=None, source_db=None,
           tick_list=None):
     """RETURN: (dict, str), the scope map (name -> Scope) and the name of the
@@ -172,9 +196,17 @@ def parse(source_txt, file_name, search_dir_list=None, source_db=None,
                Raises PypeError, else.
 
     The start scope is the default scope (bare 'on:' handlers) when the
-    script has one, otherwise the first-defined named scope. 'source_txt'
-    is the complete script text; 'file_name' labels error messages and
-    compiled block tracebacks.
+    script has one, otherwise the first named scope THE SCRIPT ITSELF
+    defines -- an imported scope never starts a script (ruled 2026-11-26).
+    'source_txt' is the complete script text; 'file_name' labels error
+    messages and compiled block tracebacks.
+
+    AN IMPORTED FILE GIVES BUILDING BLOCKS ONLY (ruled 2026-11-26): its
+    handlers stand in named scopes ('SCOPE/on:'), its 'is:' lines name
+    their left side; a bare 'on:' or 'is:' there is refused. The importer
+    takes a scope by 'is:' ('is: LAWS' for its default scope). A 'tick:'
+    of an imported file -- or of one it imports, at any depth -- needs
+    'import<ticks>: "FILE"' at every step of the chain; else refused.
 
     'import: "FILE-PATH"' lines pull in further pype files. The quoted
     path may contain environment variables ('$HOME/...'), expanded
@@ -211,8 +243,17 @@ def parse(source_txt, file_name, search_dir_list=None, source_db=None,
                         % (where, path_txt,
                            ", ".join(candidate_list)))
 
+    tick_where_db = {}        # absolute path -> where its first tick stands
+
     def _parse_one(source_txt, file_name, import_stack):
+        """RETURN: str, where the first 'tick:' of the file -- or of a file
+                        it imports -- stands, if it ticks.
+                   None, else.
+                   Raises PypeError on a refusal.
+        """
         nonlocal first_scope_name
+        imported_f = len(import_stack) > 1
+        tick_where = None
         source_db[file_name] = source_txt.splitlines()
         line_list       = source_db[file_name]
         current_handler = None
@@ -249,8 +290,9 @@ def parse(source_txt, file_name, search_dir_list=None, source_db=None,
 
             match_import = RE_IMPORT_HEAD.match(text)
             if match_import is not None:
+                ticks_f    = match_import.group(1) is not None
                 match_path = RE_IMPORT_PATH.match(
-                    match_import.group(1).strip())
+                    match_import.group(2).strip())
                 if match_path is None:
                     raise PypeError('%s: import path must be a quoted '
                                     'string: import: "PATH"' % where)
@@ -263,14 +305,23 @@ def parse(source_txt, file_name, search_dir_list=None, source_db=None,
                 if key not in seen_files:
                     seen_files.add(key)
                     with open(imported, "r") as fh:
-                        _parse_one(fh.read(), imported,
-                                   import_stack + [key])
+                        tick_where_db[key] = _parse_one(fh.read(), imported,
+                                                        import_stack + [key])
+                child_tick_where = tick_where_db.get(key)
+                if child_tick_where is not None and not ticks_f:
+                    raise PypeError("%s: '%s' ticks (%s) => import it as "
+                                    "'import<ticks>: \"%s\"'"
+                                    % (where, path_txt, child_tick_where,
+                                       match_path.group(1)))
+                if child_tick_where is not None and tick_where is None:
+                    tick_where = child_tick_where
                 current_handler = None
                 i += 1
                 continue
 
             if RE_TICK_HEAD.match(text):
                 tick_list.append(_tick_of(text, where))
+                if tick_where is None: tick_where = where
                 current_handler = None
                 i += 1
                 continue
@@ -282,12 +333,15 @@ def parse(source_txt, file_name, search_dir_list=None, source_db=None,
             if match_is:
                 if match_is.re is RE_IS_HEAD:
                     left_name, right_txt = match_is.group(1), match_is.group(2)
+                elif imported_f:
+                    raise PypeError(IMPORTED_BARE_TXT % (where, "is:", "SCOPE is:"))
                 else:
                     left_name, right_txt = DEFAULT_SCOPE, match_is.group(1)
                 right_name_list = [n.strip() for n in right_txt.split(",")]
                 for right_name in right_name_list:
                     get_scope(left_name).base_name_list.append((right_name, where))
-                if left_name != DEFAULT_SCOPE and first_scope_name is None:
+                if left_name != DEFAULT_SCOPE and first_scope_name is None \
+                   and not imported_f:
                     first_scope_name = left_name
                 current_handler = None
                 i += 1
@@ -299,8 +353,11 @@ def parse(source_txt, file_name, search_dir_list=None, source_db=None,
             elif match_on:
                 scope_name, rest = match_on.group(1), match_on.group(2)
                 scope = get_scope(scope_name)
-                if first_scope_name is None: first_scope_name = scope_name
+                if first_scope_name is None and not imported_f:
+                    first_scope_name = scope_name
             elif match_bare:
+                if imported_f:
+                    raise PypeError(IMPORTED_BARE_TXT % (where, "on:", "SCOPE/on:"))
                 rest = match_bare.group(1)
                 scope = get_scope(DEFAULT_SCOPE)
             else:
@@ -377,6 +434,7 @@ def parse(source_txt, file_name, search_dir_list=None, source_db=None,
             else:                                        # ignore
                 current_handler.action_list.append(Action())
             i += 1
+        return tick_where
 
 
     _parse_one(source_txt, file_name,
@@ -387,7 +445,8 @@ def parse(source_txt, file_name, search_dir_list=None, source_db=None,
 
     if DEFAULT_SCOPE in scope_db:  start_scope_name = DEFAULT_SCOPE
     elif first_scope_name is None:
-        raise PypeError("%s: script defines no scope" % file_name)
+        raise PypeError("%s: script defines no scope of its own => "
+                        "'is: SCOPE' takes an imported one" % file_name)
     else:                        start_scope_name = first_scope_name
 
     _check_else_present(scope_db, start_scope_name, file_name)
@@ -1837,6 +1896,7 @@ def main(argv=None, stream=None):
             for line in generate_example_input(scope_db, start_scope_name):
                 print(line)
         else:
+            put_script_directories_on_path(source_db)
             interpreter = Interpreter(scope_db, start_scope_name, file_name,
                                       trace_style=trace_style,
                                       source_db=source_db,

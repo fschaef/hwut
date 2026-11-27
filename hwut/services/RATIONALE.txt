@@ -8974,3 +8974,37 @@ COST      Re-recorded, each diff read: the pages that showed the old
           words or the verb list ('test-book-defects-4.sh sub-root',
           'test-face-words.sh boundary', 'test-book-defects-5.sh
           bubble-note', 'test-sanitize.sh').
+
+E-237  pype: AN IMPORT DOES NOTHING BY ITSELF; MODULES BESIDE THE SCRIPT  (2026-11-26)
+------------------------------------------------------------------------------
+PROBLEM   Measured (Tutorial 4 notes, B2.3, B2.6): (1) without a default
+          scope a script started in the first-defined named scope, and
+          'import:' lines come first, so 'import: "laws.pype"' followed by
+          'MAIN is: LAWS' started in LAWS. (2) An imported file's bare
+          'on:' joined the importer's default scope, unseen; its 'tick:'
+          ticked unseen. (3) A Python 'import helper' in a block found
+          'helper.py' beside the script only when pype was called from
+          the script's directory.
+DECISION  (Frank-Rene, 2026-11-26)
+          (a) "in importierten Scopes nur modeabhaengige Handler": an
+              imported file holds NAMED scopes only; a bare 'on:'/'is:'
+              there is refused, naming the remedy. The importer takes a
+              scope by 'is:' ('is: LAWS' for its default scope).
+          (b) The start scope is the default scope, else the first named
+              scope THE SCRIPT ITSELF defines -- never an imported one.
+          (c) "das Ding faengt an zu ticken und keiner weiss, wo es
+              herkommt": a ticking file is imported as 'import<ticks>:'
+              -- at every step of the chain ("ganz genau richtig");
+              else refused, naming where the tick stands.
+          (d) "die Directory des pype-Scripts muss der Ursprung der Suche
+              sein": the directories of the script and its imports stand
+              at the front of 'sys.path' before the first block runs
+              ('put_script_directories_on_path', both for a script and
+              for each script of a '.pypes' system).
+          hwut's own one importer of bare handlers, engine/display's
+          flow digest, became the scope DIGEST in 'digest.pype', taken by
+          'is: DIGEST' in 'test-run.pype' and 'test-run--jobs-budget.pype'.
+          'engine/orchestrator/exploration/pype_reference.py' reads
+          'import<ticks>:' too.
+COST      A library with bare handlers must name its scope. Pinned:
+          'services/lib/pype/TEST/test-pype.py imports'.

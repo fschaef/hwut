@@ -1,8 +1,9 @@
-currently produced signature:                     ((mmiFiE-j4bsvTLp0iGNZEAJF9GErpfkXjVZc9Xw0yi8))
+currently produced signature:                     ((7qRUQmI7HIsQJfI1k-LB-SvAyei6EZAbGX_oynsCdkM))
 ## --> produced by 'python ui.py'
-signature announced in ui.py:                     ((mmiFiE-j4bsvTLp0iGNZEAJF9GErpfkXjVZc9Xw0yi8))
+signature announced in ui.py:                     ((7qRUQmI7HIsQJfI1k-LB-SvAyei6EZAbGX_oynsCdkM))
 ## --> see file header 'SIGNATURE: ...
-signature used in test-ui_feeder.py:              ((mmiFiE-j4bsvTLp0iGNZEAJF9GErpfkXjVZc9Xw0yi8))
+signature used in test-html_feeder.py:            ((7qRUQmI7HIsQJfI1k-LB-SvAyei6EZAbGX_oynsCdkM))
 ## --> see SIGNATURE = ...
-signature announced in adm/SIGNATURE_UI_PROTOCOL.txt: ((mmiFiE-j4bsvTLp0iGNZEAJF9GErpfkXjVZc9Xw0yi8))
+signature announced in adm/SIGNATURE_UI_PROTOCOL.txt: ((7qRUQmI7HIsQJfI1k-LB-SvAyei6EZAbGX_oynsCdkM))
 ## --> call 'python ui.py -w'
+<hwut-end>

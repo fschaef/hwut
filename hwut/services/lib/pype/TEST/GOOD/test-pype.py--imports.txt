@@ -18,6 +18,26 @@ PypeError (expected): WORK/broken.pype:1: cannot find import 'no-such-file.pype'
 --- import cycle rejected ---
 PypeError (expected): WORK/b.pype:1: import cycle via 'WORK/a.pype'
 
+--- the start scope is the script's own, not the imported one ---
+EXIT: 0
+    MAIN MAIN
+    BREACH bad
+
+--- an imported file gives named scopes only: bare 'on:', 'is:' refused ---
+PypeError (expected): WORK/bare-on.pype:1: an imported file gives named scopes only, not a bare 'on:' => 'SCOPE/on:' here; the importer takes the scope by 'is: SCOPE'
+PypeError (expected): WORK/bare-is.pype:2: an imported file gives named scopes only, not a bare 'is:' => 'SCOPE is:' here; the importer takes the scope by 'is: SCOPE'
+PypeError (expected): WORK/only-imports.pype: script defines no scope of its own => 'is: SCOPE' takes an imported one
+
+--- ticks from an import: 'import<ticks>:', at every step of the chain ---
+PypeError (expected): WORK/t1.pype:1: 'clock.pype' ticks (WORK/clock.pype:1) => import it as 'import<ticks>: "clock.pype"'
+PypeError (expected): WORK/t2.pype:1: 'mid.pype' ticks (WORK/clock.pype:1) => import it as 'import<ticks>: "mid.pype"'
+accepted: 'import<ticks>: "clock.pype"' -- 1 tick(s)
+accepted: 'import<ticks>: "mid.pype"' -- 1 tick(s)
+
+--- a Python module beside the script imports from anywhere ---
+EXIT: 0
+    law: q
+
 --- sys.exit(n) inside a block gates the exit status ---
 with a failure: exit 3, stdout 'gating: 1 failure(s)\n'
 clean: exit 0, stdout ''

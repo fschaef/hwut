@@ -21,11 +21,13 @@ set -u
 
 # Default subtree and whitelist location
 SUBTREE="${1:-.}"
-WHITELIST="detect-unused-code-whitelist.py"
+#  Moved from engine/compare/TEST to adm/ (2026-11-26): a tool, no test.
+#  The whitelist (names of engine/compare) stands beside the script.
+WHITELIST="$(dirname "$0")/detect-unused-code-whitelist.py"
 
 # Print standard HWUT header
 # Build file list deterministically, excluding ON-HOLD-*.py
-PY_FILES=$(find "$SUBTREE" -type f -name "*.py" ! -name "ON-HOLD-*.py" | sort)
+PY_FILES=$(find "$SUBTREE" -type f -name "*.py" ! -name "ON-HOLD-*.py" ! -name "ON_HOLD-*.py" | sort)
 
 # Run vulture, capture output
 pushd >& /dev/null

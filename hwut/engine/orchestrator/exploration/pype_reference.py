@@ -26,7 +26,7 @@ import os
 import re
 import shlex
 
-RE_IMPORT_HEAD = re.compile(r"^import\s*:\s*(.*)$")
+RE_IMPORT_HEAD = re.compile(r"^import\s*(<ticks>)?\s*:\s*(.*)$")
 RE_IMPORT_PATH = re.compile(r'^"((?:[^"\\]|\\.)*)"$')
 RE_EDGE        = re.compile(r"^(\S*)\s*-->\s*(\S+)\s*$")
 
@@ -99,7 +99,7 @@ def _import_list(path, search_dir_list):
     for text in _lines(path):
         head = RE_IMPORT_HEAD.match(text)
         if head is None: continue
-        quoted = RE_IMPORT_PATH.match(head.group(1).strip())
+        quoted = RE_IMPORT_PATH.match(head.group(2).strip())
         if quoted is None: continue
         path_txt = os.path.expandvars(quoted.group(1))
         if os.path.isabs(path_txt):

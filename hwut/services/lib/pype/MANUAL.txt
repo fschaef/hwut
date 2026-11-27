@@ -216,12 +216,13 @@ a block terminates with a traceback pointing into the pype script.
 4  GRAMMAR
 ______________________________________________________________________________
 
-Line-oriented. '#' at the start of a (stripped) line begins a comment.
-Blank lines are insignificant.
+Line-oriented. '#' at the start of a (stripped) line begins a comment;
+an 'is:' line may also end in one ('SUB is: BASE   # why'). Blank lines
+are insignificant.
 
     HANDLER  :=  [ SCOPE "/" ] "on:" CAUSE "=>" EFFECT { "and:" EFFECT }
     INHERIT  :=  [ SCOPE ] "is:" BASE { "," BASE }
-    IMPORT   :=  "import:" '"' FILE-PATH '"'
+    IMPORT   :=  "import" [ "<ticks>" ] ":" '"' FILE-PATH '"'
 
     CAUSE    :=  PATTERN                match handler (section 5)
               |  "<else>"               fires when every match handler
@@ -250,6 +251,26 @@ is lawful. A RELATIVE path is resolved against the importing file's
 directory, then against each '--pype-dir' directory in command-line
 order; an absolute path stands alone. A file already imported is
 entered once; an import cycle is an error.
+
+AN IMPORT GIVES BUILDING BLOCKS, IT DOES NOTHING BY ITSELF (2026-11-26):
+
+    -- an imported file holds NAMED scopes only: 'LAWS/on:', 'X is: Y';
+       a bare 'on:' or 'is:' there is refused;
+    -- the importer TAKES a scope by 'is:': 'is: LAWS' for its default
+       scope, 'MAIN is: LAWS' for a named one;
+    -- an imported scope never starts the script (section 7);
+    -- a file that ticks ('tick:', section 13), itself or through its
+       own imports, is imported as 'import<ticks>: "FILE"' -- at every
+       step of the chain. Else refused, naming where the tick stands:
+       nothing ticks that the importer has not written down.
+
+    import: "laws.pype"
+    is: LAWS                       # the default scope takes LAWS
+    on: "hello" => { print("hi") }
+
+A Python 'import' in a block finds a module BESIDE THE PYPE FILE, from
+wherever pype is called: the directories of the script and of its
+imports stand at the front of 'sys.path' before the first block runs.
 
 A Python block EFFECT opens with '{' at the end of its line and closes
 with '}' alone on a line; the body is dedented before compilation.
@@ -426,7 +447,8 @@ instead, so 'pop;' returns to whichever scope was interrupted.
 
 DEFAULT SCOPE. Bare 'on:'/'is:' lines address the default scope.
 When it exists it is the start scope, wherever its handlers appear in
-the file; otherwise the first-defined named scope starts. The default
+the file; otherwise the first named scope the script ITSELF defines
+starts -- an imported scope never does. The default
 scope has no name: once left, it cannot be switched into again
 ('pop ;' can return into it).
 
@@ -608,6 +630,13 @@ ______________________________________________________________________________
     <file>:<n>: cannot find import '...' (searched: ...)
     <file>:<n>: import cycle via '...'
     <file>:<n>: import path must be a quoted string: import: "PATH"
+    <file>:<n>: an imported file gives named scopes only, not a bare
+            'on:' => 'SCOPE/on:' here; the importer takes the scope by
+            'is: SCOPE'                         (the same for 'is:')
+    <file>:<n>: 'F' ticks (<where>) => import it as
+            'import<ticks>: "F"'
+    <file>: script defines no scope of its own => 'is: SCOPE' takes an
+            imported one
     <file>: script defines no scope
     scope '...' cannot be activated: no <else> handler in its
             effective list
@@ -668,6 +697,9 @@ int where it is whole, a float else; '{time_sec:.3f}' formats it.
     -- ticks stop at the end of input;
     -- a tick is no input line: 'pype.line_n()' stays, 'pype.line()'
        is the tick's text.
+
+A 'tick:' in an imported file ticks only where every import on the way
+to it says 'import<ticks>:' (section 4).
 
 WHERE a tick falls between two input lines depends on the clock. A test
 that compares its output makes that timing its own business: margins
