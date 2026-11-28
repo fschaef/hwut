@@ -87,6 +87,7 @@ def _json_path(work_dir):
 class PythonCoverageFormat(CCoverageFormat):
     """coverage.py's json report."""
     name = "coverage.py-json"
+    measure_tuple = ('branch',)          # D-49
 
     def read(self, work_dir, source_root, config=None):
         """
@@ -148,6 +149,10 @@ class PythonCoverageFramework(CCoverageFramework):
     json' after it; reads PythonCoverageFormat."""
     name   = "coverage"
     format = PythonCoverageFormat()
+
+    #  ONE FORMAT OFFERED (D-49): 'coverage xml' and 'coverage lcov'
+    #  write formats a reader reads, but neither call is witnessed here.
+    offered_format_tuple = (format.name,)
 
     #  THE TOOL RUNS THE SCRIPT ITSELF: 'coverage run' takes a program
     #  file, not a command, so no interpreter stands before '{test}'.

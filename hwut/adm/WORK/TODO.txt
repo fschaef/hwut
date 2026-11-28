@@ -998,7 +998,8 @@ BAND B -- WHAT IS ACTUALLY OWED
           'collision_list' in 'explorer.py' and 'satisfiability.py'
           names the singular group's members, not several groups.
     B-5   the 'special' key and 'hwut.special'   no launcher, no key
-    B-6   'services/affected.py'                 absent
+    B-6   'services/affected.py'  BUILT since; reads the output
+          directory -- measured 2026-11-24 on demo/python and demo/c
     B-7   'hwut.renovate'     no service, no launcher
     B-9   '--global-conf'     no occurrence anywhere
     B-11  command-line completion                absent

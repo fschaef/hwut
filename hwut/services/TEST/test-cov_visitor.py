@@ -3,7 +3,7 @@
 # @hwut {
 #     title      = "The converters are visitors: every measure accounted for, no name outside the vocabulary"
 #     features   = ["cov-measures-accounted"]
-#     choices    = ["accounted", "vocabulary", "walk"]
+#     choices    = ["accounted", "vocabulary", "walk", "markers"]
 #     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
 # }
@@ -15,7 +15,7 @@ THE VISITOR OVER THE OUTPUT DIRECTORY (coverage D-44, under D-29's law),
 checked from the two sides 'database/TEST/test-presenter-visitor.py'
 checks the record's visitor from.
 
-CHOICES: accounted, vocabulary, walk;
+CHOICES: accounted, vocabulary, walk, markers;
 
 accounted   a summary carrying EVERY REGISTERED MEASURE -- the registry
             is asked, nothing is spelled here -- is walked by every
@@ -30,6 +30,13 @@ vocabulary  every public method a visitor defines is one the base
 walk        the traversal: the order of visits, measures in registered
             order, a measure with no point not visited, sources in the
             order given.
+markers     what a source's formats CANNOT report is marked at the
+            source, as on a menu, with a legend below (coverage D-50,
+            ruled 2026-11-24/26): the measure's tag, only for a column
+            of the page, only where no format of the source reports it;
+            '0/0' where the format can and the source has none; nothing
+            where a format is unknown. Where the format allows: html,
+            tex, json. MEASURED before: all three read '-'.
 ______________________________________________________________________________
 """
 import inspect
@@ -203,6 +210,66 @@ def test_walk():
                 "has no point.")
 
 
+def test_markers():
+    """The menu markers and their legend (coverage D-50)."""
+    from hwut.services.lib.cov.summary import reportable_of
+    branch = ((3, 1, 2),)
+    span   = ((1, 4),)
+
+    def source(path, format_text, measure_db):
+        """RETURN: SourceSummary of 'path', written by 'format_text'."""
+        return SourceSummary(path, span, span, (), measure_db,
+                             ((("t0",), span),), format_text,
+                             reportable_of(format_text))
+
+    summary_list = [
+        source("door.py",   "coverage.py-json", {"branch": branch}),
+        source("flat.py",   "coverage.py-json", {}),
+        source("table.lua", "luacov-report",     {}),
+        source("mixed.c",   "gcov-annotated,lcov-tracefile", {}),
+        source("odd.x",     "nosuch",           {})]
+    html = walk(None, summary_list, HtmlVisitor())["index.html"]
+    tex  = walk(None, summary_list, TexVisitor())
+    js   = walk(None, summary_list, JsonVisitor())
+    lcov = walk(None, summary_list, LcovVisitor())
+    row  = {line.split("</a>")[0].split(">")[-1]: line
+            for line in html.split("\n") if line.startswith("<tr><td><a")}
+    print("  html index (source, marker, lines, branch):")
+    for path in ("door.py", "flat.py", "table.lua", "mixed.c", "odd.x"):
+        cell = [c.split(">")[-1] for c in row[path].split("</td>")[:-1]]
+        sup  = row[path].split("<sup>")[1].split("</sup>")[0] \
+               if "<sup>" in row[path] else ""
+        print("    %-10s %-3s %s" % (path, sup, "  ".join(cell[1:])))
+    print("  html legend: %s" % [l for l in html.split("\n")
+                                 if "not reportable" in l])
+    print("  tex legend:  %s" % [l for l in tex.split("\n")
+                                 if "not reportable" in l])
+    import json as _json
+    print("  json unreportable: %s"
+          % {s["source"]: s.get("unreportable")
+             for s in _json.loads(js)["sources"]})
+    ok = check([
+        ("<sup>BR</sup>" in row["table.lua"],
+         "'table.lua' (luacov-report, lines only) carries the branch tag"),
+        (all("<sup>" not in row[p] for p in ("door.py", "flat.py",
+                                             "mixed.c", "odd.x")),
+         "no marker where a format reports branches, or is unknown"),
+        ("0/0" in row["flat.py"],
+         "'flat.py' can report branches and has none: 0/0"),
+        (sum("not reportable" in l for l in html.split("\n")) == 1
+         and "luacov-report" in html,
+         "the html legend names the marker once, with its format"),
+        ("\\textsuperscript{BR}" in tex
+         and "not reportable by luacov-report" in tex,
+         "tex marks and explains alike"),
+        (_json.loads(js)["sources"][2].get("unreportable") == ["branch"],
+         "json carries it as data, the field only where it applies"),
+        ("not reportable" not in str(lcov),
+         "lcov has no place for it and says nothing"),
+    ])
+    verdict(ok, "what a file's tool cannot report is marked at the file.")
+
+
 if __name__ == "__main__":
     HwutRunner(
         argv       = sys.argv,
@@ -211,6 +278,7 @@ if __name__ == "__main__":
             "accounted":  test_accounted,
             "vocabulary": test_vocabulary,
             "walk":       test_walk,
+            "markers":    test_markers,
         },
         happy      = "SUCCESS.*",
     ).run()

@@ -543,26 +543,31 @@ EOF2
             "$BIN/hwut.play" test-k.sh --plain 2>&1 | grep -o "REFUSED: .*"
         done ;;
     cov-remedy)
-        #  Book D-73 (services E-201): the no-tool refusal names what this
-        #  build READS; a reader-less candidate stays listed (it refuses by
-        #  name where a machine has it -- registry D-2) but is never the
-        #  remedy. MEASURED before: "looked for 'coverage', 'slipcover',
-        #  'trace'" and nothing more.
+        #  Book D-73 (services E-201), moved by coverage D-46: the
+        #  language names ONE tool, and every refusal names it. A tool
+        #  the machine lacks: 'install it', no other tried; a list, or a
+        #  tool hwut does not drive: refused when the conf is read. Per
+        #  case since D-47: the case is not measurable, its reason a NOTE.
+        #  MEASURED before D-46: "looked for 'coverage', 'slipcover',
+        #  'trace' -- read by this build: 'coverage' => install it".
         mkdir -p "$WORK/nocov"
         for p in python3 sh dirname readlink env bash; do    # E-197: wrappers
             printf '#!/bin/sh\nexec %s "$@"\n' "$(command -v $p)" > "$WORK/nocov/$p"
             chmod +x "$WORK/nocov/$p"
         done
         mkdir -p "$WORK/HWUT_ROOT"
-        printf 'hwut {\n    language-setup { python { extensions = [".py"] interpreter = "python3"\n        coverage = ["coverage", "slipcover", "trace"] } }\n}\n' > "$WORK/HWUT_ROOT/setup.conf"
         printf '#! /usr/bin/env python3\n# @hwut { choices = ["x"] }\nprint("hi")\nprint("<hwut-end>")\n' > test-a.py
         chmod +x test-a.py
-        echo "== no tool on PATH"
-        PATH="$WORK/nocov" "$BIN/hwut.cov.run" --plain --dont-ask 2>&1 | grep -E "^ERROR" | shown
-        echo "== only 'slipcover' on PATH"
-        printf '#!/bin/sh\nexit 0\n' > "$WORK/nocov/slipcover"; chmod +x "$WORK/nocov/slipcover"
-        PATH="$WORK/nocov" "$BIN/hwut.cov.run" --plain --dont-ask 2>&1 | grep -E "^ERROR" \
-            | sed -E "s/this build knows .*/this build knows .../" | shown ;;
+        printf 'hwut {\n}\n' > "$WORK/HWUT_ROOT/setup.conf"
+        "$BIN/hwut.play" test-a.py x --plain > /dev/null 2>&1   # a nominal:
+        "$BIN/hwut.accept" test-a.py x > /dev/null 2>&1        # the case runs
+        for tool in '"coverage"' '["coverage", "slipcover"]' '"gcovr"' '"nosuch"'; do
+            printf 'hwut {\n    language-setup { python { extensions = [".py"] interpreter = "python3"\n        coverage = %s } }\n}\n' "$tool" > "$WORK/HWUT_ROOT/setup.conf"
+            echo "== coverage = $tool, no tool on PATH"
+            PATH="$WORK/nocov" "$BIN/hwut.cov.run" --plain --dont-ask 2>&1 \
+                | grep -E "^ERROR|NOT MEASURABLE|not measurable \[" \
+                | sed -E "s/this build knows .*/this build knows .../" | shown
+        done ;;
     pype-effect-fault)
         #  services E-201: an effect that raises is one line -- the
         #  script's line, the exception, the input line -- not hwut's

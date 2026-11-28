@@ -4,31 +4,47 @@ INSPECT: 'test-parse.py'  -> python
          'engine.cpp'     -> c++
          stated wins      -> lua
 
---- the shipped root conf: candidates per language, in preference order ---
-INSPECT: read with 0 fault(s); 57 language(s)
-         python  -> ('coverage', 'slipcover', 'trace')
-         c++     -> ('gcov', 'llvm-cov', 'kcov')
-         pascal  -> ()
+--- the shipped root conf: one tool per language, or none ---
+INSPECT: read with 0 fault(s); 57 language(s), 16 naming a tool
+         python  -> coverage
+         c++     -> gcov
+         vhdl    -> gcov
+         bash    -> kcov
+         zsh     -> None
+         pascal  -> None
 
---- the FIRST available candidate is elected ---
-INSPECT: python on this stated machine -> coverage
-         c      on this stated machine -> gcov
+--- the named tool serves, with its default format ---
+INSPECT: python -> coverage / coverage.py-json
+         c      -> gcov / gcov-annotated
 
---- the three refusals ---
+--- refused at the run, by name; no other tool is tried ---
          no derivation   -> CoverageRefused
-         empty list      -> CoverageRefused
-         none available  -> CoverageRefused
+         REFUSED: language 'zsh' names no coverage tool in 'language-setup'; tools hwut drives: 'coverage', 'gcov', 'kcov'
+         REFUSED: coverage tool 'kcov' of language 'bash' is not on this machine => install it; no other tool is tried
+         REFUSED: coverage tool 'coverage' of language 'python' is not on this machine => install it; no other tool is tried
+
+--- refused when the conf is read, by name ---
+  coverage = ["coverage", "slipcover"]
+         'coverage' of language 'python' names ONE tool, not a list (coverage D-46)
+  coverage = "gcovr"
+         coverage tool 'gcovr' of language 'python' is read only; tools hwut drives: 'coverage', 'gcov', 'kcov'
+  coverage = "nosuch"
+         coverage tool 'nosuch' of language 'python' is unknown; tools hwut drives: 'coverage', 'gcov', 'kcov'
+  coverage = "coverage" format = "lcov-tracefile"
+         coverage tool 'coverage' offers no format 'lcov-tracefile'; it offers 'coverage.py-json'
+  format = "coverage.py-json"
+         language 'python' names a coverage 'format' and no 'coverage' tool
   OK  : '.py' derives python
   OK  : '.cpp' derives c++
   OK  : a stated language wins over the derivation
   OK  : the shipped root conf reads without a fault
-  OK  : python's list puts the readable tool first
-  OK  : vhdl reaches gcov, because GHDL's gcc backend writes it -- a language served by a table entry and no code
-  OK  : and a language this build vouches for no tool on has an EMPTY list: saying so beats inventing a default
-  OK  : the first available candidate is elected
-  OK  : and the preference order decides which
+  OK  : python names coverage.py; vhdl gcov, because GHDL's gcc backend writes it -- a table entry and no code
+  OK  : bash names kcov, driven since 2026-11-26
+  OK  : a language hwut drives no tool for names none
+  OK  : the named tool serves with its default format
+  OK  : a tool the machine lacks is refused by name, nothing elected
   OK  : an underivable language is refused, never guessed
-  OK  : an empty candidate list is refused, by name
-  OK  : a machine with no candidate is refused, not silently skipped
-SUCCESS: election is stated at every step, and refuses rather than guesses.
+  OK  : a list, a read-only or unknown tool, a format not offered and a format without a tool are each one fault
+  OK  : and a tool with a format it offers reads clean
+SUCCESS: the tool is named, never elected, and every refusal names it.
 <hwut-end>

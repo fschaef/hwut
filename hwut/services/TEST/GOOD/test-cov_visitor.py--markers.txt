@@ -1,0 +1,18 @@
+  html index (source, marker, lines, branch):
+    door.py        3/3  100.0%  1/2  50.0%
+    flat.py        3/3  100.0%  0/0  n/a
+    table.lua  BR  3/3  100.0%  -  -
+    mixed.c        3/3  100.0%  0/0  n/a
+    odd.x          3/3  100.0%  -  -
+  html legend: ['<p class="note"><sup>BR</sup> branch -- not reportable by luacov-report</p>']
+  tex legend:  ['\\covnote{\\textsuperscript{BR} branch -- not reportable by luacov-report}']
+  json unreportable: {'door.py': None, 'flat.py': None, 'table.lua': ['branch'], 'mixed.c': None, 'odd.x': None}
+  OK  : 'table.lua' (luacov-report, lines only) carries the branch tag
+  OK  : no marker where a format reports branches, or is unknown
+  OK  : 'flat.py' can report branches and has none: 0/0
+  OK  : the html legend names the marker once, with its format
+  OK  : tex marks and explains alike
+  OK  : json carries it as data, the field only where it applies
+  OK  : lcov has no place for it and says nothing
+SUCCESS: what a file's tool cannot report is marked at the file.
+<hwut-end>

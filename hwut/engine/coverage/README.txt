@@ -2,7 +2,7 @@
 coverage -- THE MEASUREMENT OF WHAT A TEST REACHED
 ==============================================================================
 
-Status:  The record and its algebra, the election, the index, the
+Status:  The record and its algebra, the named tool, the index, the
          two internings, 'hwut.affected', ELEVEN READERS over eleven
          artifact formats, and the MEASURE registration (branch, mc/dc,
          toggle, cover) are BUILT and green. For the current table of
@@ -15,6 +15,59 @@ Bounds:  ONE test's measurement. Aggregating many is a HIGHER layer.
 
 This file states MECHANICS. Why any of it is so lives in RATIONALE.txt;
 what is still open lives in DISCUSSIONS.txt.
+
+
+------------------------------------------------------------------------------
+0  HOW A MEASUREMENT WORKS
+------------------------------------------------------------------------------
+
+Four blocks, in this order. Two facts of the conf decide the first two:
+the TOOL ('language-setup.<lang>.coverage') decides how the application
+is invoked, the FORMAT ('... .format', else the tool's default) decides
+which reader parses what the tool wrote.
+
+  (1) INVOCATION -- per case, a child process; the tool leaves its
+      artefact in TEST/OUT/COVERAGE/
+      +----------------------------------------------------------------+
+      | INTERPRETER-BASED (python: coverage.py)                        |
+      |   the TOOL calls the app:  <call scheme, filled> test-x.py <c> |
+      |   second call: the tool turns its data into the format         |
+      |----------------------------------------------------------------|
+      | COMPILATION-BASED (c, c++, fortran, vhdl ...: gcov)            |
+      |   the BUILD carries the coverage options: make <coverage       |
+      |   target>; the app runs BARE: ./test-x.cov.exe <c>; at exit it |
+      |   writes its counters; second call over them: gcov ...         |
+      +----------------------------------------------------------------+
+                                     |  artefact, in the FORMAT
+                                     v
+  (2) PARSE -- the format's reader -> one CoverageRecord per case
+      (lines, and every measure the format carries), seated with the
+      run id of the register -> TMP/store/<test>--<choice>.cover
+                                     |  every case of the run
+                                     v
+  (3) MERGE / FOLD / INDEX -- hwut's own part, at the end of the run
+      the records folded by WHO EXECUTED WHAT into the output directory
+      ('-o <dir>', default hwut.coverage/):
+          <source path>.cover        per source: ranges -> run or group
+          test_run_id_db.csv         run id -> directory, test, choice
+          test_run_group_id_db.csv   group id -> its set of run ids
+      read back by 'hwut.affected' and 'hwut.report.details'
+                                     |
+                                     v
+  (4) OUTPUT -- the converters, each a visitor over the fold:
+      hwut.cov.conv.to_html, to_lcov, to_cobertura, to_jacoco, to_json,
+      to_tex, to_pdf ('to_humans' re-spells one '.cover' as text)
+      A MEASURE A SOURCE'S FORMATS CANNOT REPORT is marked at the source
+      by its tag, superscript, with a legend below the index (D-50):
+          table.lua^BR   3/3  100.0%   -    -
+          flat.py        3/3  100.0%   0/0  n/a   (can, has none)
+          BR  branch -- not reportable by luacov-report
+      html, tex and pdf mark; json says it in the field 'unreportable';
+      lcov, cobertura and jacoco have no place for it.
+
+Block (1) is the tool's; blocks (2) to (4) are identical for every tool
+once the reader has spoken. Sections 3 and 5b draw (1) and (2) in
+detail; section 4 is the record.
 
 
 ------------------------------------------------------------------------------
@@ -44,7 +97,7 @@ about whether coverage was wanted.
                       'Gathered', a run id qualified by the directory
                       its record was found in
     affected.py       'hwut.affected': a change in, the runs out
-    registry.py       language -> candidate tools -> the elected one
+    registry.py       language -> the ONE tool it names, and its format
     reader.py         the two ROLES -- CCoverageFramework (the tool:
                       invocation) over CCoverageFormat (the artefact:
                       reading) -- and the tool -> framework registry
@@ -68,8 +121,8 @@ about whether coverage was wanted.
     CoverageConfig          language stated, or DERIVED from the
         |                   source file's extension
         v
-    registry.elect()        the candidate list of that language, by
-        |                   GLOB; the FIRST one this machine has
+    serving_framework()     the ONE tool the language names and its
+        |                   format (D-46); absent here -> refused
         v
     framework_of(tool)      one framework per tool, its format inside
         |
@@ -243,15 +296,18 @@ place that changes.
 
 THE DEMAND SHAPES THE RUN (RATIONALE D-19). 'hwut.cov.run <wishlist>'
 generates the chain; nothing is discovered. IT IS NOT A TEST RUN
-(D-38): nothing is compared with 'GOOD/', no verdict is determined,
-'GOOD/book.csv' is not written. 'hwut.run' measures no coverage.
+(D-38): 'GOOD/book.csv' is not written, and the exit status is the
+records' word. Its output IS compared with 'GOOD/' for one purpose
+only: each case's LABEL says whether the run under the tool deviates
+from the book's last verdict (D-48) -- '[ ]' it does not, or the book
+has no word; '[DEV]' it does. 'hwut.run' measures no coverage.
 
     build    'build { coverage_target = "cov-parse.exe" }' is built IN
              PLACE OF the executable and run in its place. The name is
              the whole communication with the author's build system.
              REQUIRED under coverage for a compiled test; absent, the
              case is answered 'no-coverage-target' and not run.
-    run      the elected tool's 'specify_command_line' gives the call
+    run      the named tool's 'specify_command_line' gives the call
              by which the TOOL runs the application (D-39); an
              instrumented binary measures itself and is called as it
              stands.
@@ -335,9 +391,9 @@ THE COMMON FRAME -- one coverage run of (test, choice):
     hwut.cov.run --> plan --> per test directory, ONE CASE AT A TIME (D-22)
                                        |
              +-------------------------+------------------------------+
-             | elect     language-setup.<lang>.coverage = [...] -> the |
-             |           first framework standing on PATH; none ->    |
-             |           refused BY NAME                               |
+             | tool      language-setup.<lang>.coverage = "<tool>"     |
+             |           ('format', else its default); not on PATH     |
+             |           -> refused BY NAME, no other tried (D-46)     |
              | prepare   rm -rf TEST/OUT/COVERAGE/                     |
              | run       the provision executes THE CALL         [P]  |
              | testify   ended by itself AND stdout ends in            |
@@ -348,7 +404,8 @@ THE COMMON FRAME -- one coverage run of (test, choice):
              +-------------------------+------------------------------+
                                        v
     gather, at the end of the run: every TMP/store/*.cover folded into
-    '-o <dir>', then removed. Nothing is compared, nothing is booked.
+    '-o <dir>', then removed. Nothing is booked; the label (D-48) is
+    said in the flow and nowhere else.
 
 INTERPRETED (python: coverage.py; lua: luacov likewise). THE TOOL RUNS
 THE SCRIPT: the call is the framework's 'call_scheme' with its fields
@@ -453,9 +510,10 @@ WHAT DIFFERS, one line each:
 ------------------------------------------------------------------------------
 
     no language stated and none derivable from the extension
-    no tool configured for the language
-    no configured candidate available on this machine
-    the elected tool has no reader in this build
+    no tool named for the language
+    the named tool is absent from this machine (no other is tried)
+    the named tool is not one hwut drives      (conf, by validation)
+    a format the named tool does not offer     (conf, by validation)
     a record that cannot be read whole            (RecordFault)
     a record line under a tag no measure claims   (RecordFault)
     a merge of records carrying hit counts        (CountsNotMergeable)
@@ -508,10 +566,13 @@ answer: every tool names a format; several tools share one; a tool
 either names a second call or honestly names none.
 
     coverage            coverage.py json       coverage run  coverage json
-    gcov                gcov annotated source  --            gcov -b -p ...
+    gcov                gcov annotated source  --            gcov -b -c -p ...
+    kcov                cobertura xml          kcov ...      --
     lcov &c.            lcov tracefile         --            --
 
-Those three are the only shapes there are.
+Those are the only shapes there are: the tool before the call with a
+second call, the build carrying it with a second call, the tool before
+the call with none, and a format read only.
 
 WHAT THAT REACHES. 'gcov' serves every gcc front end -- C, C++,
 Objective-C, FORTRAN, Ada, Modula-2, COBOL, Vala, and VHDL through GHDL.
@@ -521,7 +582,8 @@ need registry entries and no code at all.
 
 AN ALIAS CLAIMS THE FORMAT, NOT THE TOOL: it says 'this leaves a
 tracefile in OUT/COVERAGE', not 'this component knows how to drive it'.
-A tool needing its own call scheme deserves a module.
+An alias is read only: no language may name it as its 'coverage'
+(D-46). A tool hwut drives has a module with its own call.
 
 A FORMAT, NOT A TOOL, IS WHAT A READER KNOWS: four tools speak the
 tracefile, so one reader serves all four -- and each record still names
@@ -630,17 +692,18 @@ see DISCUSSIONS disc-9 and its amendment.
 
     (1) an entry in 'registry.EXTENSION_DB' if the extension is new
         (it serves 'hwut.cov.conv.to_humans' and the record's header)
-    (2) the language's 'coverage' list in the SHIPPED ROOT CONF
-        ('services/_boundary.ROOT_CONF_TEXT', D-26): the candidate
-        tools, in PREFERENCE order. A tree already placed carries its
-        own copy in 'HWUT_ROOT/setup.conf' and edits that.
-    (3) a module under 'readers/' with 'call_scheme', 'report_argv' and
-        'harvest', passed to 'reader.register', and imported by
-        'readers/__init__.py'
+    (2) the language's 'coverage' tool in the SHIPPED ROOT CONF
+        ('services/_boundary.ROOT_CONF_TEXT', D-26): ONE tool hwut
+        drives (D-46). A tree already placed carries its own copy in
+        'HWUT_ROOT/setup.conf' and edits that.
+    (3) for a tool hwut does not drive yet: a module under 'readers/'
+        with 'call_scheme' or 'report_argv', 'offered_format_tuple'
+        (D-49) and 'harvest', passed to 'reader.register', and imported
+        by 'readers/__init__.py'
 
-A TOOL THAT SPEAKS A FORMAT ALREADY READ needs only (2) and one line in
-'readers.ALIAS_DB'. Nothing else changes, and a configuration never
-names a reader.
+A TOOL THAT ONLY WRITES A FORMAT ALREADY READ is one line in
+'readers.ALIAS_DB': read only, never named in (2). A configuration
+never names a reader.
 
 WRITE THE READER AGAINST A REAL ARTIFACT. Every fixture in
 'TEST/test-readers.py' was emitted by the actual tool and pasted in

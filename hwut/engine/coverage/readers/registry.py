@@ -5,24 +5,13 @@ PURPOSE: WHICH TOOL SERVES THIS LANGUAGE -- and which reader serves that
          tool.
 
 DESCRIPTION
-       THE TABLE'S ORDER IS PART OF THE TABLE. 'elect' takes the first
-       candidate the machine HAS, so a shipped list puts the tools whose
-       FORMAT this build reads in front. A candidate with no reader is
-       still worth listing: it is how a machine refuses BY NAME rather
-       than reporting no coverage at all.
-
-       AN EMPTY CANDIDATE LIST IS AN ANSWER. Where this author can vouch
-       for no tool -- Pascal, Tcl -- the list is empty and the language
-       refuses by name. Inventing a candidate would be worse: a tool that
-       is wrong about what it measures reports a green nobody earned.
-
-       THE CONFIGURATION NAMES A TOOL; THE COMPONENT RESOLVES THE READER
-       (RATIONALE D-2). THE TABLE IS NOT HERE (D-26): the candidate
-       tools of a language stand in 'language-setup.<lang>.coverage' of
-       'HWUT_ROOT/setup.conf', and the boundary face writes the shipped table
-       into a new root conf. 'elect' takes the candidate tuple it is
-       handed; this module ships no table of its own.
-
+       ONE TOOL PER LANGUAGE, NAMED (RATIONALE D-46). 'language-setup.
+       <lang>.coverage' names the tool, '.format' optionally the format;
+       'serving_framework' resolves both or refuses BY NAME. Nothing is
+       elected: a tool absent from the machine is a refusal, and no
+       second tool is tried. THE TABLE IS NOT HERE (D-26): it stands in
+       'HWUT_ROOT/setup.conf', and the boundary face writes the shipped
+       table into a new root conf.
        THE LANGUAGE IS THE KEY, not the interpreter: it is the one thing
        all three source kinds have. An EXECUTABLE and a COMPILED test
        have no interpreter to match on, and 'python3' and 'pypy3' are one
@@ -32,9 +21,9 @@ DESCRIPTION
        file's extension -- stated, never silent: the language that served
        appears in the record's header and in every refusal.
 
-       NO CANDIDATE AVAILABLE IS A REFUSAL, naming what was looked for. A
-       skipped measurement reads as an absent one, and absence and
-       emptiness do not collapse.
+       A REFUSAL NAMES the language and the tool. A skipped measurement
+       reads as an absent one, and absence and emptiness do not
+       collapse.
 ______________________________________________________________________________
 """
 import shutil
@@ -139,48 +128,43 @@ def is_available(tool):
     return shutil.which(tool) is not None
 
 
-def elect(language, candidate_tuple, available=is_available):
+def serving_framework(language, tool, format_name=None,
+                      available=is_available):
     """
-    RETURN: str, the FIRST of 'candidate_tuple' that this machine
-            actually has -- the tool that serves 'language'.
+    RETURN: (CCoverageFramework, str), the framework of the ONE tool
+            the language names and the format it is asked to write --
+            'format_name', else the tool's default (D-46).
 
-    Raises CoverageRefused where the tuple is EMPTY (the language's
-    entry vouches for no tool: an answer, D-2) or where every candidate
-    is absent, NAMING each one -- so the reader of the refusal knows
-    what to install rather than what went wrong.
+    Raises CoverageRefused, naming the language and the tool, where the
+    language names no tool, where the tool is one hwut does not drive,
+    where it offers no such format, or where this machine lacks it.
+    No other tool is tried: the configuration says which tool measures,
+    never the machine.
 
     'available' is a parameter so that a test may state the machine.
     """
-    if not candidate_tuple:
+    from .reader import callable_tuple, framework_of
+    if tool is None:
         raise CoverageRefused(
-            "the 'coverage' list of language '%s' is EMPTY in "
-            "'language-setup': it vouches for no coverage tool. Name "
-            "one there -- inventing a default would be worse than "
-            "saying so." % language)
-    for tool in candidate_tuple:
-        if available(tool): return tool
-    raise CoverageRefused(
-        "no coverage tool for language '%s' is available here; looked "
-        "for %s%s" % (language, ", ".join("'%s'" % t
-                                           for t in candidate_tuple),
-                      _remedy(candidate_tuple)))
-
-
-def _remedy(candidate_tuple):
-    """
-    RETURN: str, what to install, appended to the no-tool refusal: the
-            candidates this build READS -- ' -- read by this build:
-            'coverage' => install one'; or that it reads none of them.
-
-    A candidate without a reader stays listed (it refuses by name where
-    a machine has it), but it is never offered as the remedy. MEASURED
-    before (book D-73): "looked for 'coverage', 'slipcover', 'trace'"
-    -- installing 'slipcover' then met "no framework is registered".
-    """
-    from .reader import registered_tuple
-    readable = [t for t in candidate_tuple if t in registered_tuple()]
-    if not readable:
-        return " -- read by this build: none of them => hwut.cov.formats"
-    return " -- read by this build: %s => install %s" \
-           % (", ".join("'%s'" % t for t in readable),
-              "it" if len(readable) == 1 else "one")
+            "language '%s' names no coverage tool in 'language-setup'; "
+            "tools hwut drives: %s"
+            % (language, ", ".join("'%s'" % t for t in callable_tuple())))
+    framework = framework_of(tool)
+    if not framework.offered_format_tuple:
+        raise CoverageRefused(
+            "coverage tool '%s' of language '%s' is read only: hwut does "
+            "not drive it; tools hwut drives: %s"
+            % (tool, language,
+               ", ".join("'%s'" % t for t in callable_tuple())))
+    if format_name is None:
+        format_name = framework.offered_format_tuple[0]
+    elif format_name not in framework.offered_format_tuple:
+        raise CoverageRefused(
+            "coverage tool '%s' offers no format '%s'; it offers %s"
+            % (tool, format_name,
+               ", ".join("'%s'" % f for f in framework.offered_format_tuple)))
+    if not available(tool):
+        raise CoverageRefused(
+            "coverage tool '%s' of language '%s' is not on this machine "
+            "=> install it; no other tool is tried" % (tool, language))
+    return framework, format_name

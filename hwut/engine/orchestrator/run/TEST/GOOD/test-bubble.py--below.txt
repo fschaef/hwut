@@ -1,4 +1,4 @@
-$ (no -p)
+$ --exclude-platform linux
     not-run  linux          ''         available linux/: requires ghdl, held by linux; specified local
     not-run  none/deep      ''         available none/deep/: requires ghdl, held by linux; specified local
     PLANNED: TEST, both/TEST, none/TEST, none/shallow/TEST

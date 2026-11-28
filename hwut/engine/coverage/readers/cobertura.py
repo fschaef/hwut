@@ -44,8 +44,10 @@ DESCRIPTION
        everything else is LEFT ALONE rather than half-understood.
 
        PATHS. 'filename' is usually relative to a '<sources><source>'
-       root, and usually already the form a record wants. An absolute one
-       is made relative to the test directory here.
+       root, and usually already the form a record wants. Where it
+       stands under a '<source>' on this machine it is joined to it
+       ('_rooted'); an absolute one is made relative to the test
+       directory here.
 
        NO SECOND CALL. Whoever produced the xml did so as part of their
        own build or test run -- coverlet, gradle, 'coverage xml'. This
@@ -112,9 +114,12 @@ def _absorb(entry_db, root):
     A file named in two documents -- or twice in one -- is UNIONED: hits
     add.
     """
+    source_list = [node.text.strip() for node in root.iter("source")
+                   if node.text and node.text.strip()]
     for class_node in root.iter("class"):
         path = class_node.get("filename")
         if not path: continue
+        path = _rooted(path, source_list)
         standing = entry_db.setdefault(path, {})
         for line_node in class_node.iter("line"):
             try:    number = int(line_node.get("number", ""))
@@ -126,6 +131,27 @@ def _absorb(entry_db, root):
             if was is None: was = [0]
             was[0] += hits
             standing[number] = was
+
+
+def _rooted(path, source_list):
+    """
+    RETURN: str, 'path' joined to the first '<source>' under which it
+            STANDS on this machine, else 'path' as written.
+
+    A relative 'filename' is relative to a '<source>' root, which is not
+    always the test directory: kcov names the COMMON ROOT of what it
+    measured, so a script beside a library one level up is written
+    'demo/bash/TEST/support.sh' under '<source>/tmp/.../support/'
+    (measured 2026-11-26). Joined only where the file is there -- at
+    harvest it is; an archived artefact from another machine keeps its
+    path as written.
+    """
+    import os
+    if os.path.isabs(path): return path
+    for source in source_list:
+        joined = os.path.join(source, path)
+        if os.path.isfile(joined): return joined
+    return path
 
 
 def _record_of(fmt, entry_db, source_root, config, counts_f):

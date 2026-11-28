@@ -1,12 +1,12 @@
 
 --- a face that runs: -p linux ---
     wish : -p linux
-    S    : linux, local
+    S    : linux
     rest : -
 
 --- several, each once, in order: -p linux -p=win11 -p linux --fail ---
     wish : --fail -p linux -p win11
-    S    : linux, local, win11
+    S    : linux, win11
     rest : -
 
 --- '--exclude-local' with '-p': --exclude-local -p linux ---
@@ -14,19 +14,19 @@
     S    : linux
     rest : -
 
---- '-p local': what no '-p' says: -p local ---
+--- '-p local': only this machine: -p local ---
     wish : -p local
     S    : local
     rest : -
 
 --- a face taking the platform words alone (hwut.play): -p linux --fail test-a.py one ---
     wish : -p linux
-    S    : linux, local
+    S    : linux
     rest : --fail, test-a.py, one
 
 --- a face taking some wish words, not these (hwut.execute): -p linux --dir a ---
     wish : --dir "a"
-    S    : local
+    S    : linux, local, win11
     rest : -p, linux
 
 --- a face that does not run: -p linux ---
@@ -36,7 +36,30 @@
     REFUSED: '--exclude-local' is for the faces that run: hwut.run, hwut.play
 
 --- '--exclude-local' alone: --exclude-local ---
-    REFUSED: '--exclude-local' leaves no platform -- add '-p <name>'
+    wish : --exclude-local
+    S    : linux, win11
+    rest : -
+
+--- no platform word: every defined one: --fail ---
+    wish : --fail
+    S    : linux, local, win11
+    rest : -
+
+--- '--exclude-platform' takes one out: --exclude-platform linux --exclude-platform=win11 ---
+    wish : --exclude-platform linux --exclude-platform win11
+    S    : local
+    rest : -
+
+--- '--exclude-platform' beside '-p': -p linux -p win11 --exclude-platform win11 ---
+    wish : --exclude-platform win11 -p linux -p win11
+    S    : linux
+    rest : -
+
+--- '-p' all excluded: -p local --exclude-local ---
+    REFUSED: the platform words leave no platform: '-p local' is excluded
+
+--- '--exclude-platform' without a name: --exclude-platform ---
+    REFUSED: '--exclude-platform' stands without a platform
 
 --- '-p' without a name: -p ---
     REFUSED: '-p' stands without a platform

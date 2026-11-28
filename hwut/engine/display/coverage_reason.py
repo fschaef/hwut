@@ -92,6 +92,18 @@ no_record_db = {
         "Run the case once with 'hwut.run', which enters it into "
         "'GOOD/book.csv', or record it with 'hwut.play' and accept it "
         "with 'hwut.accept'."),
+    "not-measurable": NoRecord(
+        "not measurable",
+        "no coverage tool serves the test",
+        E_NoRecordCategory.SETUP,
+        "No coverage tool serves the test: it has no language, its "
+        "language in 'HWUT_ROOT/setup.conf' names no 'coverage' tool, "
+        "or the tool named is not on this machine. The case was not "
+        "run under coverage; the rest of the directory was. The "
+        "directory's 'NOT MEASURABLE' line names which.",
+        "State the test's 'language', name a tool hwut drives in its "
+        "'language-setup' entry ('hwut.cov.formats' lists them), or "
+        "install the tool named."),
     "run-incomplete": NoRecord(
         "incomplete",
         "the run under the tool did not complete; nothing read",
@@ -105,6 +117,20 @@ no_record_db = {
         "Run the case with 'hwut.play' to see what it prints "
         "without the tool, then make the tool's call by hand in the "
         "test directory and read what it says."),
+    "unsupported": NoRecord(
+        "not measurable",
+        "a stage before it failed",
+        E_NoRecordCategory.SETUP,
+        "A stage the case needs before it can run under coverage -- "
+        "its build, deploy or session -- failed, so the case was not "
+        "measured (ruled 2026-11-26: as a failed stage fails a test "
+        "run's case, it leaves a coverage run's case not measurable). "
+        "The failed stage stands after '<-', and BUILD names what it "
+        "could not make and why.",
+        "Mend that stage; for a compiled test, give the build the "
+        "coverage target its language's 'coverage_target' asks for "
+        "in 'HWUT_ROOT/setup.conf' -- e.g. a make rule for "
+        "'door.cov.exe' -- and this case follows."),
     "no-data-provided": NoRecord(
         "no data",
         "tool left nothing in OUT/COVERAGE",

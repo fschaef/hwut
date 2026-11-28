@@ -294,6 +294,7 @@ class CPlainFlow(CRunReportReceiver):
         self.here_name   = here_name
         self.width       = width
         self.ink         = ink if ink is not None else CInk(False)
+        self.label       = (None, None)   # the case's label, one line
         self.tier        = tier
         self.timing_f    = timing_f
         self.jobs_f      = jobs_f
@@ -496,6 +497,7 @@ class CPlainFlow(CRunReportReceiver):
         rest announce something and are never a run.
         """
         own_badge = badge
+        right, right_ink = self._labelled(right, right_ink)
         if badge in FLOW_BADGE_TUPLE:
             if badge == self.last_badge:
                 badge, badge_ink = BADGE_REPEAT, self.ink.dim(BADGE_REPEAT)
@@ -809,7 +811,8 @@ class CPlainFlow(CRunReportReceiver):
         self.progress_shown_f = True
 
     def on_run_ended(self, when, directory, node, node_kind, good,
-                     verdict, cause=None, report=None, detail=None):
+                     verdict, cause=None, report=None, detail=None,
+                     book=None, deviates=None):
         """
         RETURN: None. ONE LINE, and its badge is decided by ONE
                 QUESTION -- is a 'START' owed a closing?
@@ -839,9 +842,11 @@ class CPlainFlow(CRunReportReceiver):
         if good: self.progress_ok_n   += 1
         else:    self.progress_fail_n += 1
         try:
+            self.label = (book, deviates)
             self._run_ended_line(when, directory, node, node_kind,
                                  good, verdict, cause, report, detail,
                                  began_f, key)
+            self.label = (None, None)
         finally:
             if began_f:
                 self.began_set.discard(key)
@@ -932,6 +937,27 @@ class CPlainFlow(CRunReportReceiver):
             right, right_ink = self._fail_right(report or verdict)
             self._line(when, badge, badge, body, body_ink,
                        right, right_ink)
+
+    def _labelled(self, right, right_ink):
+        """
+        RETURN: (str, str), the right part with the coverage run's LABEL
+                slot after it, in one column (coverage D-48), where the
+                line closes a case that carries one: '[ ]' no deviation, '[DEV]' the
+                run under the tool contradicts the book. Colour only
+                paints: green brackets where the book says ok, red where
+                it says fail, '[DEV]' on red. Unchanged else.
+        """
+        book, deviates = self.label
+        self.label = (None, None)
+        if not right or deviates is None: return right, right_ink
+        if deviates:
+            slot, slot_ink = "[DEV]", self.ink.tag_fail("[DEV]")
+        else:
+            slot = "[ ]  "
+            if   book == "true":  slot_ink = self.ink.ok("[ ]") + "  "
+            elif book == "false": slot_ink = self.ink.fail("[ ]") + "  "
+            else:                 slot_ink = slot
+        return "%s %s" % (right, slot), "%s %s" % (right_ink, slot_ink)
 
     def _fail_right(self, token):
         """

@@ -45,6 +45,8 @@ run-ended
     cause            str    (optional) the node whose breaking failed this one; absent else
     report           str    (optional) the operation's own word for WHY (open list, e.g. 'pype-failed', 'test-app-stalled'); absent where nothing finer than the verdict is known
     detail           str    (optional) the report's numbers, where it has them: which cap, the cap, the peak (O-19); absent else
+    book             str    (optional) coverage run: the book's last verdict of the case, 'true', 'false', '' where it has none
+    deviates         bool   (optional) coverage run: its verdict contradicts the book (coverage D-48); never booked
     platform         str    (optional) the platform that measured it (spec/42); absent for 'local'; on 'not-run': the platform both specified and required, '' where none is
 
 fault

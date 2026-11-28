@@ -2,9 +2,9 @@ $ run --plain
     STATUS: 0
     RESULTS: 1 ok, 0 fail
 $ run -p linux --plain
-    STATUS: 0
+    STATUS: 3
     NOTE  -p linux: no directory below requires it
-    RESULTS: 1 ok, 0 fail
+    RESULTS: 0 ok, 0 fail, 1 directory not run
 $ run -p local --plain
     STATUS: 0
     RESULTS: 1 ok, 0 fail
@@ -14,11 +14,13 @@ $ run --exclude-local -p linux --plain
     RESULTS: 0 ok, 0 fail, 1 directory not run
 $ run --exclude-local --plain
     STATUS: 2
-    REFUSED: '--exclude-local' leaves no platform -- add '-p <name>'
-$ lib.run.play -p linux test-a.sh
+    REFUSED: the platform words leave no platform: defined local; excluded local
+$ run --exclude-platform linux --plain
     STATUS: 0
-    NOTE  -p linux: no directory below requires it
-    RECORDED: test-a.sh.txt (digest)
+    RESULTS: 1 ok, 0 fail
+$ lib.run.play -p linux test-a.sh
+    STATUS: 3
+    nothing played: the directory is not run here
 $ lib.sanitize.propose -p linux -p local -o proposal.txt
     STATUS: 0
 SUCCESS: the faces that run take them.

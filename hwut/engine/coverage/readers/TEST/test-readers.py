@@ -6,6 +6,7 @@
 #         absent    { features = ["absent-is-not-empty"] }
 #         agreement { features = ["readers-agree"] }
 #         aliases   { features = ["tool-aliases"] }
+#         kcov      { features = ["framework-calls"] }
 #         branches  { features = ["arms-read-and-merged"] }
 #         calls     { features = ["framework-calls", "gcov-late-second-call"] }
 #         cobertura { features = ["cobertura-read"] }
@@ -36,7 +37,7 @@ PURPOSE: THE READERS -- three artifact FORMATS, one homogeneous record.
 
 CHOICES: roles, python, lcov, gcov, cobertura, go, luacov, jacoco, witnessed,
          verilator, native, ghdl, psl, resultset, ucis, agreement,
-         aliases, calls, absent, gather, branches;
+         aliases, kcov, calls, absent, gather, branches;
 
 DESCRIPTION:
 
@@ -566,6 +567,10 @@ def work_dir_with(name_text_pair_list, root_pair_list=()):
     directory = os.path.join(root, "OUT", "COVERAGE")
     os.makedirs(directory)
     for name, text in name_text_pair_list:
+        #  A NAME MAY NAME A SUBDIRECTORY: kcov leaves its artefact one
+        #  level down ('<program>.<hash>/cobertura.xml').
+        os.makedirs(os.path.dirname(os.path.join(directory, name)),
+                    exist_ok=True)
         with io.open(os.path.join(directory, name), "w",
                      encoding="utf-8") as handle:
             handle.write(text)
@@ -1364,6 +1369,7 @@ def test_agreement():
 
 def test_aliases():
     """One reader, four tool names."""
+    from hwut.engine.coverage.readers import ALIAS_DB
     banner("what this build reads")
     print("         %s" % (registered_tuple(),))
 
@@ -1377,10 +1383,8 @@ def test_aliases():
         print("         %-18s tool=%-18s format=%s"
               % (tool, record.tool, record.source))
 
-    banner("kcov, witnessed out of this list")
-    from_kcov = harvested("kcov", [("cov.xml", COBERTURA_XML)])
-    print("         kcov               tool=%-18s format=%s"
-          % (from_kcov.tool, from_kcov.source))
+    banner("kcov is no alias: hwut drives it (choice 'kcov')")
+    print("         'kcov' in ALIAS_DB: %s" % ("kcov" in ALIAS_DB))
 
     ok = check([
         (registered_tuple() == ("c8", "cargo-llvm-cov", "cobertura",
@@ -1394,10 +1398,9 @@ def test_aliases():
          "EIGHT of them share ONE reader -- 'verilator_coverage' among "
          "them (VERILOG with no code at all), and 'node', whose own "
          "test runner writes the tracefile with no package installed"),
-        (from_kcov.tool == "kcov"
-         and from_kcov.source == "cobertura-xml",
-         "and 'kcov' now reads through COBERTURA: witnessed writing no "
-         "tracefile at all, its alias moved -- one line, nothing else"),
+        ("kcov" not in ALIAS_DB,
+         "and 'kcov' is no alias since 2026-11-26: a framework with its "
+         "own call (coverage D-46)"),
         (all(r.tool == tool for tool, r in record_db.items()),
          "and each record names the TOOL THAT RAN, not the reader that "
          "read it -- two different facts, both wanted"),
@@ -1408,6 +1411,62 @@ def test_aliases():
     ])
     verdict(ok, "a format is what a reader knows; a tool is what the "
                 "header names.")
+
+
+def test_kcov():
+    """kcov, driven: its call, where it leaves its artefact, its paths."""
+    framework = framework_of("kcov")
+    banner("the call: kcov before the script, its output in OUT/COVERAGE")
+    argv = framework.specify_command_line(["/src"], [], "greet.sh", "a")
+    print("         %s" % " ".join(argv))
+    bare = framework.specify_command_line([], [], "greet.sh", None)
+    print("         %s" % " ".join(bare))
+
+    banner("the artefact is one level down, in the run's own directory")
+    record = harvested("kcov", [("greet.sh.0123abcd/cobertura.xml",
+                                 COBERTURA_XML),
+                                ("kcov-merged/cobertura.xml",
+                                 COBERTURA_XML)])
+    show(record)
+    absent = harvested("kcov", [("index.html", "<html/>")])
+    print("         nothing kcov left -> %s" % absent)
+
+    banner("a filename relative to a '<source>' that is not the test "
+           "directory")
+    root = tempfile.mkdtemp(prefix="hwut_readers_")
+    try:
+        os.makedirs(os.path.join(root, "lib"))
+        with open(os.path.join(root, "lib", "util.sh"), "w") as fh:
+            fh.write("echo\n")
+        from hwut.engine.coverage.readers.cobertura import _rooted
+        joined  = _rooted("lib/util.sh", [root + "/"])
+        foreign = _rooted("lib/gone.sh", [root + "/"])
+        print("         standing here -> joined: %s"
+              % (joined == os.path.join(root, "lib", "util.sh")))
+        print("         not here      -> as written: %s" % foreign)
+    finally:
+        shutil.rmtree(root, ignore_errors=True)
+    ok = check([
+        (argv[:2] == ["kcov", "--bash-dont-parse-binary-dir"]
+         and "./greet.sh" in argv and argv[-1] == "a"
+         and "OUT/COVERAGE" in argv,
+         "kcov stands before './greet.sh' (a bare name it would seek on "
+         "PATH), its output is 'OUT/COVERAGE', the choice last"),
+        ("--include-path=/src" in argv
+         and not any(w.startswith("--include-path") for w in bare),
+         "an empty gather set leaves no '--include-path=' behind"),
+        (record is not None and record.tool == "kcov"
+         and record.source == "cobertura-xml",
+         "the run's 'cobertura.xml' is read, stamped kcov, format "
+         "cobertura"),
+        (absent is None, "no document: ABSENT, not an empty record"),
+        (joined == os.path.join(root, "lib", "util.sh")
+         and foreign == "lib/gone.sh",
+         "a relative filename is joined to its '<source>' where it stands "
+         "here, else kept as written"),
+    ])
+    verdict(ok, "kcov is driven, and what it leaves is read where it "
+                "leaves it.")
 
 
 def test_roles():
@@ -1633,6 +1692,7 @@ if __name__ == "__main__":
             "gcov":      test_gcov,
             "agreement": test_agreement,
             "aliases":   test_aliases,
+            "kcov":      test_kcov,
             "calls":     test_calls,
             "branches":  test_branches,
             "absent":    test_absent,

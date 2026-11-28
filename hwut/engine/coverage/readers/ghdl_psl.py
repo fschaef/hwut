@@ -53,6 +53,7 @@ JSON_SUFFIX = (".json",)
 class GhdlPslFormat(CCoverageFormat):
     """GHDL's '--psl-report' json."""
     name = "ghdl-psl-json"
+    measure_tuple = ('cover',)          # D-49
 
     suffix = JSON_SUFFIX
 

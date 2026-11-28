@@ -228,6 +228,43 @@ class CLabelView:
         return derived_label_set(self.derived, found)
 
 
+def selects_below_f(view, tree, directory, run_tuple=None):
+    """
+    RETURN: bool, True where the label expression 'tree' may select a
+            run below the absolute 'directory' under 'view': one of
+            'run_tuple' -- '(absolute file, choice)', the runs known to
+            stand there -- or a run the labels file names below it
+            answers it. Where 'run_tuple' is None and the file names no
+            run below, the runs are not known, and an expression a run
+            with no label answers ('NOT <label>') selects; where the file
+            names runs below, they are the runs known. True too where
+            'tree' names a
+            feature label: what such a label holds is not read here,
+            and a platform is never let off on a guess.
+            False, else.
+    """
+    if any(feature_label_f(name) for name in label_name_tuple(tree)):
+        return True
+    directory = os.path.abspath(directory)
+    candidate_set = set()
+    view_list = [view]
+    while view_list:
+        here = view_list.pop()
+        view_list.extend(here.inner_tuple)
+        for file_name, choice in here.entry_db:
+            path = os.path.join(here.boundary, file_name)
+            if path.startswith(directory + os.sep):
+                candidate_set.add((path, choice))
+    if run_tuple is None and not candidate_set \
+       and evaluate_f(tree, derived_label_set(
+                                view.view_of_path(directory).derived,
+                                frozenset())):
+        return True
+    candidate_set.update(run_tuple or ())
+    return any(evaluate_f(tree, view.label_set_of(path, choice))
+               for path, choice in candidate_set)
+
+
 def derived_label_set(derived, label_set):
     """
     RETURN: frozenset[str], 'label_set' together with every derived

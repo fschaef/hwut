@@ -287,8 +287,15 @@ TIER 3  BLOCKS REAL USE, OR DECIDED AND UNBUILT
          only). A real quex checkout.
          SEE: TODO B-7, C-6, G-7; services E-99; gathered/0r.
 
-[ ] B-25 THE COVERAGE TOOL AND ITS FORMAT, ONE EACH, IN THE CONF
-         RULED 2026-10-05 in chat; no entry yet.
+[~] B-25 THE COVERAGE TOOL AND ITS FORMAT, ONE EACH, IN THE CONF
+         RULED 2026-10-05 in chat; entry coverage D-46 (2026-11-24).
+         DONE 2026-11-24 (bundle of that day): (1)-(4), and the rulings
+         of the 2026-11-24 voice session -- per-case 'not measurable'
+         (D-47), the deviation label (D-48), the format offered per tool
+         and the measures column (D-49).
+         kcov driven for bash 2026-11-26 (coverage D-51).
+         OPEN: further tools only where installable and tested against a
+         real result (D-51).
            (1) 'language-setup.<lang> { coverage = "<tool>"
                 format = "<format>" }', format optional (the tool's own
                 reporting format by default); a tool absent from the
@@ -583,7 +590,8 @@ TIER 5  WAITING ON A RULING
 [ ] display  the wallflower NOTE printed inside the DIRECTORIES block,
          before its closing rule -- a formatting cut, if wanted; moves
          every page with wallflowers.
-[ ] r-10a  B-25's entry and README: now, or in the building session?
+[x] r-10a  B-25's entry and README: written in the building session,
+         2026-11-24 (coverage D-46, README section 0).
 [x] r-11  G-12: WHO PLACES 'hwut-root.conf' -- RULED 2026-10-08: the
          sanitize command 'root [<dir>]' -- alone, a menu of the
          repository's root, the current directory and 'q' -- and a

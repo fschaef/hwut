@@ -6,6 +6,7 @@
 #         every_format   { features = ["real-artefact-per-format"] }
 #         every_artefact { features = ["real-artefact-per-format"] }
 #         no_orphan      { features = ["real-artefact-per-format"] }
+#         self_description { features = ["real-artefact-per-format"] }
 #     }
 #     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
@@ -34,15 +35,28 @@ two questions deliberately:
                     the file stood there for weeks, and could not be
                     read by the reader it claimed to witness.
 
+    self_description
+                    Each format STATES the measures its reader seats
+                    ('measure_tuple', coverage D-49), and the menu
+                    markers of the converters rest on that statement
+                    (D-50). Here it is held against the reader: one
+                    REFERENCE artefact per format must yield EXACTLY
+                    the stated measures -- a stated measure that does
+                    not arrive would print '0/0' where nothing was
+                    measured -- and every other artefact no more than
+                    them. A test of hwut's own claim, not a feature
+                    (ruled 2026-11-26): from a user's result an absent
+                    measure and code without one cannot be told apart.
+
 WHAT IS AN ARTEFACT, and what is the SOURCE beside it: a directory
 holds both, so a reader author can see what produced what. Only files
 the format's own 'suffix' names are asked to parse; the '.v', '.rb',
 '.adb' beside them are provenance and are not.
 
-FORMATS THAT ARE NOT DIRECTORIES HERE: 'python_coverage', 'go' and
-'luacov' witness against fixtures constructed in 'test-readers.py'
-(their tools were not at hand). They are named below as GAPS, not
-hidden, so the count of formats with a real artefact is honest.
+EVERY FORMAT HAS A DIRECTORY HERE since 2026-11-26, when 'go' and
+'luacov' were witnessed with the real tools (go 1.24.7, luacov 0.17.0
+on lua 5.4). A format without one would stand in 'KNOWN_GAP_SET' and be
+named below as a GAP, never hidden.
 ______________________________________________________________________________
 """
 import os
@@ -73,7 +87,7 @@ def _verdict(ok, sentence):
 #  FORMATS WITHOUT A REAL ARTEFACT, BY NAME. Stated here so the gap is
 #  a fact the test knows and prints, not a silence. Closing one means
 #  witnessing an artefact and deleting the name.
-KNOWN_GAP_SET = frozenset(("go", "luacov"))
+KNOWN_GAP_SET = frozenset()
 
 
 def _artefacts_of(directory, suffix_tuple):
@@ -201,6 +215,13 @@ def _absorbs(fmt, name, path):
             shutil.rmtree(work_dir, ignore_errors=True)
         return (record is not None and bool(record.file_db),
                 "read %d file(s)" % (len(record.file_db) if record else 0))
+    if name in ("go", "luacov"):
+        #  ONE ARTEFACT PER RUN: these formats keep their own 'read'
+        #  over the artefact where the tool leaves it.
+        measure_set = _measures_read(fmt, name, path, record_only=True)
+        return (bool(measure_set),
+                "read %d file(s)" % len(measure_set) if measure_set
+                else "READ NOTHING")
     accumulator = fmt.empty() if hasattr(fmt, "empty") else {}
     fmt.absorb(accumulator, path)
     return bool(accumulator), ("absorbed" if accumulator
@@ -233,7 +254,8 @@ def test_no_orphan():
     #  for by EITHER category.
     provenance_suffix_tuple = (
         ".v", ".vhdl", ".rb", ".cjs", ".mjs", ".ts", ".cpp", ".c",
-        ".cob", ".d", ".f90", ".m", ".adb", ".vala", ".sh", ".py")
+        ".cob", ".d", ".f90", ".m", ".adb", ".vala", ".sh", ".py",
+        ".go", ".lua", "go.mod")
     pair_list = []
     for name, (fmt, suffix_tuple, _tools) in sorted(_format_db().items()):
         if name in KNOWN_GAP_SET: continue
@@ -269,6 +291,83 @@ def test_every_artefact():
              "every real artefact is read by the format it is filed under.")
 
 
+#  THE REFERENCE ARTEFACT per format directory: one real artefact that
+#  carries every measure the format states (self_description).
+REFERENCE_DB = {
+    "cobertura":       "kcov-shell.xml",
+    "gcov":            "c-classify.c.gcov",
+    "ghdl_psl":        "psl.json",
+    "jacoco":          "jacoco.xml",
+    "go":              "cover.out",
+    "lcov":            "llvm.info",
+    "luacov":          "luacov.report.out",
+    "python_coverage": "branches-a1.json",
+    "simplecov":       ".resultset.json",
+    "ucis":            "coverage.ucis.xml",
+    "verilator":       "coverage.dat",
+}
+
+
+def _measures_read(fmt, name, path, record_only=False):
+    """
+    RETURN: tuple[str], sorted, the measures beside the lines that the
+            format's own 'read' seats from the one artefact 'path' --
+            placed where the tool leaves it, under 'OUT/COVERAGE';
+            with 'record_only', the source files the record names
+            instead.
+    """
+    import shutil
+    import tempfile
+    from hwut.engine.coverage.readers.reader import artifact_directory_of
+    work_dir = tempfile.mkdtemp()
+    try:
+        if name == "python_coverage":
+            from hwut.engine.coverage.readers.python_coverage import \
+                _json_path
+            target = _json_path(work_dir)
+        else:
+            target = os.path.join(artifact_directory_of(work_dir),
+                                  os.path.basename(path))
+        os.makedirs(os.path.dirname(target), exist_ok=True)
+        shutil.copy(path, target)
+        record = fmt.read(work_dir, work_dir)
+    finally:
+        shutil.rmtree(work_dir, ignore_errors=True)
+    if record is None: return ()
+    if record_only: return tuple(sorted(record.file_db))
+    return tuple(sorted({measure for entry in record.file_db.values()
+                         for measure in (entry.measure_db or {})}))
+
+
+def test_self_description():
+    """The stated measures of each format against its real artefacts."""
+    pair_list = []
+    for name, (fmt, suffix_tuple, _) in sorted(_format_db().items()):
+        stated = tuple(sorted(fmt.measure_tuple))
+        if name in KNOWN_GAP_SET:
+            print("  gap : %-15s states %s -- no real artefact, UNCHECKED"
+                  % (name, list(stated) or "lines only"))
+            continue
+        reference = REFERENCE_DB.get(name)
+        found     = _artefacts_of(os.path.join(REAL, name), suffix_tuple)
+        pair_list.append((reference in found,
+                          "%-15s reference '%s' stands" % (name, reference)))
+        for artefact in found:
+            got = _measures_read(fmt, name,
+                                 os.path.join(REAL, name, artefact))
+            if artefact == reference:
+                pair_list.append((got == stated,
+                                  "%-15s %-22s = stated %s"
+                                  % (name, artefact, list(stated))))
+            else:
+                pair_list.append((set(got) <= set(stated),
+                                  "%-15s %-22s within the stated"
+                                  % (name, artefact)))
+    _verdict(_check(pair_list),
+             "every format reads what it says it can, from a real "
+             "artefact.")
+
+
 if __name__ == "__main__":
     HwutRunner(
         argv       = sys.argv,
@@ -277,4 +376,5 @@ if __name__ == "__main__":
             "every_format":   test_every_format,
             "every_artefact": test_every_artefact,
             "no_orphan":      test_no_orphan,
+            "self_description": test_self_description,
         }).run()

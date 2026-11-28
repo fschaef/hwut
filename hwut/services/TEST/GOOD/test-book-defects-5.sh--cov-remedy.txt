@@ -1,5 +1,10 @@
-== no tool on PATH
-ERROR CoverageRefused: no coverage tool for language 'python' is available here; looked for 'coverage', 'slipcover', 'trace' -- read by this build: 'coverage' => install it
-== only 'slipcover' on PATH
-ERROR CoverageRefused: no framework is registered for coverage tool 'slipcover'; this build knows ...
+== coverage = "coverage", no tool on PATH
+END   :          x ........................ not measurable [NO REC] [ ]
+NOTE  NOT MEASURABLE test-a.py: coverage tool 'coverage' of language 'python' is not on this machine => install it; no other tool is tried
+== coverage = ["coverage", "slipcover"], no tool on PATH
+ERROR HWUT_ROOT/setup.conf:3:9: TYPE: 'coverage' of language 'python' names ONE tool, not a list (coverage D-46)
+== coverage = "gcovr", no tool on PATH
+ERROR HWUT_ROOT/setup.conf:2:22: VOCABULARY: coverage tool 'gcovr' of language 'python' is read only; tools hwut drives: 'coverage', 'gcov', 'kcov'
+== coverage = "nosuch", no tool on PATH
+ERROR HWUT_ROOT/setup.conf:2:22: VOCABULARY: coverage tool 'nosuch' of language 'python' is unknown; tools hwut drives: 'coverage', 'gcov', 'kcov'
 <hwut-end>

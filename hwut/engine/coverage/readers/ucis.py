@@ -107,6 +107,7 @@ XML_SUFFIX = (".xml",)
 class UcisFormat(CCoverageFormat):
     """UCIS XML, Accellera's interchange format."""
     name = "ucis-xml"
+    measure_tuple = ('branch', 'toggle')          # D-49
 
     suffix = XML_SUFFIX
 

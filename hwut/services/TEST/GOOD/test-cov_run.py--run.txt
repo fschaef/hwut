@@ -1,13 +1,13 @@
 $ hwut.cov.run -o <out>
     | DIR  suite/TEST
     | START test-hang.py  x                                                      ||1
-    | END   :             x ............................... incomplete [NO REC]  ||0
+    | END   :             x ......................... incomplete [NO REC] [DEV]  ||0
     | START test-new.py                                                          ||1
-    | END   test-new.py .................................. not in book [NO REC]  ||0
+    | END   test-new.py ............................ not in book [NO REC] [ ]    ||0
     | START test-py.py  a                                                        ||1
-    | END   :           a ............................................... [REC]  ||0
+    | END   :           a ......................................... [REC] [ ]    ||0
     | START :           b                                                        ||1
-    | END   :           b .................................... no data [NO REC]  ||0
+    | END   :           b .............................. no data [NO REC] [ ]    ||0
     | 
     | ==============================================================================
     | DIRECTORIES                                          1 rec, 3 no rec, <h:m:s>

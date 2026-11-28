@@ -1213,8 +1213,17 @@ def _language_setup(entry, file, fault_list):
                 value = _string(inner, file, fault_list)
                 if value is not None: field_db[inner.key] = value
             elif inner.key == "coverage":
-                value = _string_list_or_empty(inner, file, fault_list)
+                if isinstance(inner.node, ListNode):
+                    fault_list.append(Fault(
+                        E_FaultKind.TYPE, file, inner.key_position,
+                        "'coverage' of language '%s' names ONE tool, "
+                        "not a list (coverage D-46)" % language.key))
+                    continue
+                value = _string(inner, file, fault_list)
                 if value is not None: field_db["coverage"] = value
+            elif inner.key == "format":
+                value = _string(inner, file, fault_list)
+                if value is not None: field_db["coverage_format"] = value
             elif inner.key == "extensions":
                 value = _string_list(inner, file, fault_list)
                 if value is None: continue
@@ -1239,8 +1248,51 @@ def _language_setup(entry, file, fault_list):
                     E_FaultKind.VOCABULARY, file, inner.key_position,
                     "unknown key '%s' in language '%s'"
                     % (inner.key, language.key)))
+        _coverage_faults(language, field_db, file, fault_list)
         result[language.key] = LanguageSetup(**field_db)
     return result
+
+
+def _coverage_faults(language, field_db, file, fault_list):
+    """
+    RETURN: None. Appends a fault where the language's 'coverage' names
+            a tool hwut does not drive, or its 'format' one that tool
+            does not offer, or a 'format' stands without a tool
+            (coverage D-46, D-49). Whether the machine HAS the tool is
+            the run's question, not the conf's.
+    """
+    from ...coverage.api import CoverageRefused, framework_of, callable_tuple
+    tool        = field_db.get("coverage")
+    format_name = field_db.get("coverage_format")
+    position    = language.key_position
+    if tool is None:
+        if format_name is not None:
+            fault_list.append(Fault(
+                E_FaultKind.VOCABULARY, file, position,
+                "language '%s' names a coverage 'format' and no "
+                "'coverage' tool" % language.key))
+        return
+    try:
+        framework = framework_of(tool)
+    except CoverageRefused:
+        framework = None
+    if framework is None or not framework.offered_format_tuple:
+        fault_list.append(Fault(
+            E_FaultKind.VOCABULARY, file, position,
+            "coverage tool '%s' of language '%s' is %s; tools hwut "
+            "drives: %s"
+            % (tool, language.key,
+               "unknown" if framework is None else "read only",
+               ", ".join("'%s'" % name for name in callable_tuple()))))
+        return
+    if format_name is not None \
+       and format_name not in framework.offered_format_tuple:
+        fault_list.append(Fault(
+            E_FaultKind.VOCABULARY, file, position,
+            "coverage tool '%s' offers no format '%s'; it offers %s"
+            % (tool, format_name,
+               ", ".join("'%s'" % name
+                         for name in framework.offered_format_tuple))))
 
 
 def _string_list_or_empty(entry, file, fault_list):

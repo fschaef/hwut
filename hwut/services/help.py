@@ -55,6 +55,14 @@ DESCRIPTION
        installed, and the 'HWUT_ROOT/setup.conf' entry that acknowledges.
        Judged now, by the gate the run asks; no book holds the case.
 
+       A PLATFORM NOT READY, AFTER THAT (platforms PL-3, ruled
+       2026-11-26/27): every platform a directory below needs that the
+       next 'hwut.run' cannot run on now -- missing, or its image still
+       to be built --, why, the test directories that need it, and the
+       three ways past the refusal: '--exclude-platform', a label for
+       the rest, or an anti-label of those directories with
+       '--label "NOT <label>"'. Judged now; nothing is built.
+
        A FILE THAT IS NOT SEEN is one the globs of 'ignore' in 'hwut.conf'
        name -- a name without '/' in every directory below, a glob with
        '/' anchored at that conf's directory, like '.gitignore'. Any other
@@ -73,7 +81,7 @@ EXIT STATUS (E-1, services/_exit.py):
        to install it, before anything else (adm/requirement-list.txt)
     3  nothing to explain: no selected case failed for a subtle reason,
        none was left without a coverage record, none fails for want of
-       an enforceable cap
+       an enforceable cap, no platform needed is not ready
     2  the command line cannot be read
 ______________________________________________________________________________
 """
@@ -351,6 +359,7 @@ def uncapped_explanation_line_list(uncapped, case_list, platform):
 
 UNCAPPED_HEADING_STR = "CONFINEMENT -- cap not enforceable"
 NONSENSE_HEADING_STR = "FEATURES -- test run without a feature"
+PLATFORM_HEADING_STR = "PLATFORM -- not ready: the next 'hwut.run' refuses"
 NONSENSE_WORD_STR    = "NONSENSE?"
 
 
@@ -503,6 +512,49 @@ def introduction_line_list(case_n, failure_n):
         width=WRAP_WIDTH + 8, break_on_hyphens=False)
 
 
+def platform_line_list(directory, wish):
+    """
+    RETURN: list of str, the platform part -- per platform the next
+            'hwut.run' in 'directory' needs and cannot run on now
+            ('orchestrate.missing_platform_tuple'): its name and why, the
+            test directories needing it, and the ways past the refusal;
+            the anti-label's command in full, one '--dir' per line, so
+            that it is copied as it stands.
+            Empty where every platform needed is ready, or where the
+            tree's confs, the labels file or the platform words refuse
+            (the run says that itself).
+    """
+    from ..engine.orchestrator.run.orchestrate import missing_platform_tuple
+    from ..engine.orchestrator.exploration.task_list import SelectionError
+    from ..engine.orchestrator.exploration.tree_explorer \
+         import RootConfMissing
+    from .lib.labels._file import LabelFileError
+    try:
+        found_tuple = missing_platform_tuple(directory, wish,
+                                             view_at(directory))
+    except (SelectionError, RootConfMissing, LabelFileError):
+        return []
+    line_list = []
+    for name, why, directory_tuple in found_tuple:
+        why = why.replace(os.path.abspath(directory) + os.sep, "")
+        label = "on_%s" % name
+        line_list += ["", "%s -- %s" % (name, why),
+                      "    needed by %i test director%s"
+                      % (len(directory_tuple),
+                         "y" if len(directory_tuple) == 1 else "ies"),
+                      "    => once, without them:",
+                      "           hwut.run --exclude-platform %s" % name,
+                      "    => an anti-label of them, run what it leaves:",
+                      "           hwut.labels.create %s \\" % label]
+        line_list += ["               --dir %s \\" % d
+                      for d in directory_tuple]
+        line_list[-1] = line_list[-1][:-2]
+        line_list += ["           hwut.run --label 'NOT %s'" % label,
+                      "    => a label of the rest: the same with "
+                      "'--exclude-dir', then '--label <it>'"]
+    return line_list
+
+
 def installed_line(directory):
     """
     RETURN: str, 'INSTALLED: hwut <version> -- no 'HWUT_ROOT/setup.conf' in or
@@ -578,8 +630,10 @@ def main(argv=None, write=None):
                         directory, with_targets(wish, word_list))
     nonsense_list = nonsense_case_list_of(directory)
     unregistered  = unregistered_of(directory)
+    platform_list = platform_line_list(directory,
+                                       with_targets(wish, word_list))
     if not occurrence_db and not coverage_db and not uncapped_db \
-       and not nonsense_list and not unregistered:
+       and not nonsense_list and not unregistered and not platform_list:
         write("nothing to explain: no case below '%s' failed for a "
               "reason other than a plain difference from GOOD" % directory)
         return E_ExitCode.EMPTY
@@ -661,6 +715,15 @@ def main(argv=None, write=None):
         write("")
         for line in unregistered_explanation_line_list(unregistered):
             write("    " + line)
+    #  A PLATFORM NOT READY, last (platforms PL-3): what the NEXT run
+    #  refuses, judged now.
+    if platform_list:
+        if occurrence_db or coverage_db or uncapped_db or nonsense_list \
+           or unregistered:
+            write("")
+        write(PLATFORM_HEADING_STR)
+        for line in platform_list:
+            write(("    " + line) if line else "")
     return E_ExitCode.OK
 
 

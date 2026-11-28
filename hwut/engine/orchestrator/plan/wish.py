@@ -207,18 +207,25 @@ def usage_token_tuple(take_tuple=None):
 #  'PLATFORM_HELP'.
 LOCAL_PLATFORM            = "local"
 PLATFORM_FACE_TEXT        = "hwut.run, hwut.play"
-PLATFORM_WORD_TUPLE       = ("-p", "--exclude-local")
-PLATFORM_USAGE_TOKEN_TUPLE = ("[-p <platform>]...", "[--exclude-local]")
+PLATFORM_WORD_TUPLE       = ("-p", "--exclude-platform", "--exclude-local")
+PLATFORM_USAGE_TOKEN_TUPLE = ("[-p <platform>]...",
+                              "[--exclude-platform <platform>]...",
+                              "[--exclude-local]")
 PLATFORM_HELP = """PLATFORM -- where the selected runs run
-    -p <platform>       ADDS the platform to those specified; 'local',
-                        this machine, is specified without it. A bubble
-                        whose 'HWUT_ROOT/setup.conf' says 'platform = [...]'
-                        requires those platforms; one with none requires
-                        'local'. A bubble runs where the two meet; where
-                        they do not, it is not run. May stand several
-                        times; a platform no bubble requires is a NOTE
-    --exclude-local     takes 'local' out of those specified: only the
-                        bubbles requiring a '-p' platform run"""
+    EVERY PLATFORM DEFINED is specified: 'local', this machine, and each
+    one 'HWUT_ROOT/setup.conf' names in 'platform = [...]'. A directory
+    runs on the first defined platform, among those specified, that
+    announces every tool it requires. A platform a directory of the run
+    needs and that cannot be made ready stops the run BEFORE IT BEGINS:
+    'PLATFORM missing: <name>', with the reason -- nothing is run.
+    -p <platform>       ONLY the platforms named are specified. May
+                        stand several times; one no directory requires
+                        is a NOTE
+    --exclude-platform <platform>
+                        takes the platform out of those specified: the
+                        directories needing it are not run. May stand
+                        several times
+    --exclude-local     '--exclude-platform local'"""
 
 HELP = """SELECTION -- the wish; an absent keyword asks nothing
     --fail              the last recorded run's verdict was negative
@@ -326,11 +333,14 @@ class Wish:
     #  '(<literal target>, <tag>)', the target as the list's line
     #  expanded. Read by 'hwut.accept' alone; every other face refuses.
     digest_tuple:      tuple = ()
-    #  WHERE THE RUNS RUN (spec/42 section 2): the '-p' names in order,
-    #  each once, and '--exclude-local'. Words about WHERE: they state
-    #  nothing of what is wanted, as '--no-bubbles' states nothing.
+    #  WHERE THE RUNS RUN (spec/42 section 2; ruled 2026-11-26): the '-p'
+    #  names in order, each once -- they NARROW --, the names
+    #  '--exclude-platform' takes out, and '--exclude-local'. Words about
+    #  WHERE: they state nothing of what is wanted, as '--no-bubbles'
+    #  states nothing.
     platform_tuple:    tuple = ()
     exclude_local_f:   bool  = False
+    excluded_platform_tuple: tuple = ()
     #  THE PLATFORM THIS RUN IS (spec/42, THE RULE: "over there, a far
     #  run's own 'local' IS the platform it was handed to"): written by the
     #  near hand-over alone ('far_argv'), never by a person.
@@ -381,15 +391,42 @@ class Wish:
             argv.append("--faster-than=%g" % (self.faster_than_ms / 1000.0))
         return argv
 
-    def specified_platform_set(self):
+    def specified_platform_set(self, defined_name_tuple=()):
         """
-        RETURN: frozenset of str, S of spec/42 section 2 -- 'local',
-                unless '--exclude-local' took it out, and every '-p'
-                name.
+        RETURN: frozenset of str, S of spec/42 section 2 (ruled
+                2026-11-26) -- the '-p' names where any stands, else
+                'local' and every name of 'defined_name_tuple' (the
+                platforms the root defines); without each name
+                '--exclude-platform' took out, and 'local' where
+                '--exclude-local' did.
         """
-        local = frozenset() if self.exclude_local_f \
-                else frozenset((LOCAL_PLATFORM,))
-        return local | frozenset(self.platform_tuple)
+        base = frozenset(self.platform_tuple) if self.platform_tuple \
+               else frozenset((LOCAL_PLATFORM,) + tuple(defined_name_tuple))
+        return base - frozenset(self.excluded_name_tuple())
+
+    def excluded_name_tuple(self):
+        """
+        RETURN: tuple of str, the platforms taken out -- every
+                '--exclude-platform' name, 'local' where '--exclude-local'
+                stands; each once.
+        """
+        name_list = list(self.excluded_platform_tuple)
+        if self.exclude_local_f and LOCAL_PLATFORM not in name_list:
+            name_list.append(LOCAL_PLATFORM)
+        return tuple(name_list)
+
+    def platform_word_list(self):
+        """
+        RETURN: list of str, the platform words as the command line gave
+                them -- what a far run takes to specify as the near run
+                did.
+        """
+        word_list = ["--exclude-local"] if self.exclude_local_f else []
+        for name in self.excluded_platform_tuple:
+            word_list += ["--exclude-platform", name]
+        for name in self.platform_tuple:
+            word_list += ["-p", name]
+        return word_list
 
     def states_nothing_f(self):
         """
@@ -462,7 +499,9 @@ class Wish:
                 where it states nothing.
         """
         if self.states_nothing_f() and not self.platform_tuple \
-           and not self.exclude_local_f and self.as_platform is None:
+           and not self.exclude_local_f \
+           and not self.excluded_platform_tuple \
+           and self.as_platform is None:
             return "(all)"
         part_list = []
         if self.fail_f:                 part_list.append("--fail")
@@ -491,6 +530,8 @@ class Wish:
         if self.as_platform is not None:
             part_list.append("--as-platform=%s" % self.as_platform)
         if self.exclude_local_f:        part_list.append("--exclude-local")
+        part_list.extend("--exclude-platform %s" % name
+                         for name in self.excluded_platform_tuple)
         part_list.extend("-p %s" % name for name in self.platform_tuple)
         return " ".join(part_list)
 
@@ -547,6 +588,7 @@ def parse_wish(argv, digest_f=False, take_tuple=None,
     language_list    = []
     faster_than_ms   = None
     platform_list    = []
+    excluded_list    = []
     exclude_local_f  = False
     as_platform      = None
     rest_list        = []
@@ -582,13 +624,29 @@ def parse_wish(argv, digest_f=False, take_tuple=None,
                 raise WishError("'--as-platform' is for the faces that run: "
                                 "%s" % PLATFORM_FACE_TEXT)
             as_platform = argument[len("--as-platform="):].strip() or None
-        elif argument in PLATFORM_WORD_TUPLE or argument.startswith("-p="):
+        elif argument in PLATFORM_WORD_TUPLE or argument.startswith("-p=") \
+             or argument.startswith("--exclude-platform="):
             word = argument.split("=", 1)[0]
             if not platform_f:
                 raise WishError("'%s' is for the faces that run: %s"
                                 % (word, PLATFORM_FACE_TEXT))
             if argument == "--exclude-local":
                 exclude_local_f = True
+                continue
+            if word == "--exclude-platform":
+                if argument == word:
+                    if index >= len(argv):
+                        raise WishError("'--exclude-platform' stands "
+                                        "without a platform")
+                    name   = argv[index]
+                    index += 1
+                else:
+                    name = argument[len(word) + 1:]
+                if not name.strip():
+                    raise WishError("'--exclude-platform' names no "
+                                    "platform")
+                if name.strip() not in excluded_list:
+                    excluded_list.append(name.strip())
                 continue
             if argument == "-p":
                 if index >= len(argv):
@@ -727,9 +785,14 @@ def parse_wish(argv, digest_f=False, take_tuple=None,
         else:
             rest_list.append(argument)
 
-    if exclude_local_f and not platform_list:
-        raise WishError("'--exclude-local' leaves no platform -- add "
-                        "'-p <name>'")
+    #  WHAT '-p' NAMES AND THE EXCLUSIONS TAKE OUT AGAIN leaves nothing:
+    #  refused here; S of the defined platforms is judged where they are
+    #  read ('plan/bubble.py').
+    gone_set = set(excluded_list) | ({LOCAL_PLATFORM} if exclude_local_f
+                                     else set())
+    if platform_list and set(platform_list) <= gone_set:
+        raise WishError("the platform words leave no platform: '-p %s' "
+                        "is excluded" % " -p ".join(platform_list))
     if label_spec is not None and family_word is not None:
         raise WishError(label_mix_text(label_spec, family_word))
     if fail_f and pass_f:
@@ -752,6 +815,7 @@ def parse_wish(argv, digest_f=False, take_tuple=None,
                  no_bubbles_f=no_bubbles_f,
                  platform_tuple=tuple(platform_list),
                  exclude_local_f=exclude_local_f,
+                 excluded_platform_tuple=tuple(excluded_list),
                  as_platform=as_platform),
             rest_list)
 

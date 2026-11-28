@@ -50,8 +50,9 @@ import shutil
 import sys
 
 from ._face import help_of, one_file_main
-from ..summary import (line_count, measure_summary,
-                                               percent)
+from ..summary import (legend_of, line_count, measure_summary,
+                       percent, unreportable_of)
+from .....engine.coverage.api import measure_of
 from ..visitor import I_OutputVisitor, walk
 
 NAME  = "hwut.cov.conv.to_tex"
@@ -104,6 +105,7 @@ class TexVisitor(I_OutputVisitor):
         self.run_db      = {}
         self.covered_set = self.executable_set = frozenset()
         self.note_list   = []
+        self.legend      = ()          # (tag, measure, formats) (D-50)
 
     def header(self, root, summary_list):
         """RETURN: None. The root and the index's measure columns."""
@@ -111,6 +113,7 @@ class TexVisitor(I_OutputVisitor):
         self.name_list = sorted({name for summary in summary_list
                                  for name in summary.measure_db})
         self.total_db  = {name: [0, 0] for name in ["lines"] + self.name_list}
+        self.legend    = legend_of(summary_list, self.name_list)
 
     def source_open(self, summary):
         """RETURN: None. A source begins."""
@@ -151,13 +154,20 @@ class TexVisitor(I_OutputVisitor):
         total_n   = line_count(summary.executable)
         self.total_db["lines"][0] += covered_n
         self.total_db["lines"][1] += total_n
-        cell_list = ["\\texttt{%s}" % escaped(summary.source),
+        marker    = ",".join(measure_of(name).tag for name in
+                             unreportable_of(summary, self.name_list))
+        cell_list = ["\\texttt{%s}%s" % (escaped(summary.source),
+                                         "\\textsuperscript{%s}" % marker
+                                         if marker else ""),
                      "%i/%i" % (covered_n, total_n),
                      escaped(percent(covered_n, total_n))]
         head = "lines %i/%i (%s)" % (covered_n, total_n,
                                      escaped(percent(covered_n, total_n)))
         for name in self.name_list:
             pair = self.cell_db.get(name)
+            if pair is None and summary.reportable is not None \
+               and name in summary.reportable:
+                pair = (0, 0)               # could, has none (D-50)
             if pair is None:
                 cell_list += ["--", "--"]
                 continue
@@ -218,6 +228,10 @@ class TexVisitor(I_OutputVisitor):
             foot += ["%i/%i" % tuple(pair), escaped(percent(*pair))]
         out.append("  \\covindextotal{%s}" % " & ".join(foot))
         out.append("\\end{covindex}")
+        for tag, name, formats in self.legend:          # D-50
+            out.append("\\covnote{\\textsuperscript{%s} %s -- not "
+                       "reportable by %s}" % (escaped(tag), escaped(name),
+                                              escaped(formats)))
         out += self.section_list
         return "\n".join(out) + "\n"
 

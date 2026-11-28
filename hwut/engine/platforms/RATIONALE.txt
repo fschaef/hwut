@@ -33,3 +33,97 @@ DECISION  Each kind answers 'check(name, spec)': (key, text) per fault
           of its own keys. The conf's reader asks it after 'name' and
           'kind' read, and places each fault at its key. A later kind
           (HIL) brings its own 'check'; the reader is not touched.
+
+PL-3  EVERY PLATFORM IS TAKEN TO STAND; ONE MISSING STOPS THE RUN BEFORE
+      IT BEGINS (ruled 2026-11-26; amends spec/42 section 2, ruling 21)
+
+PROBLEM   S was {local} without a platform word, '-p' ADDED to it. A
+          tree whose directories need 'linux' ran its local part and
+          said at the END, per directory, '[PLATFORM not reachable]' or
+          '[PLATFORM not available] ... specified local': a run that
+          looked whole and was not, its gap a line among the results.
+          MEASURED on this tree (2026-11-26): 30 directories not run;
+          with '-p linux' and no container engine, the image build
+          tried after every local case, then 'not reachable'.
+
+DECISION  The author's words: "by default, dass alle Plattformen da
+          sind. Falls eine oder mehrere fehlen kurze Nachricht:
+          Plattform(en) fehlen. Dann Hinweis auf ignore command line
+          options oder help." -- 'hwut.run' stops upfront and says
+          nothing about the tests it does not run; 'hwut.report' reads
+          the book as ever. The words (fork answered "a"):
+
+              no platform word         S = {local} + D
+              -p <name> ...            S = the names, ONLY those
+              --exclude-platform <n>   takes <n> out of S
+              --exclude-local          '--exclude-platform local'
+
+          A platform a directory the wish wants needs is made ready
+          (its image built where it does not stand) BEFORE anything is
+          interviewed or run; one that is not -- 'is_available' false,
+          or 'start' failing -- REFUSES the run:
+
+              REFUSED: PLATFORM missing: linux -- <reason>
+                       <what a failed build said>
+                       => --exclude-platform linux  ('hwut.run --help': PLATFORM)
+
+          'hwut.play' decides alike: REFUSED, the same lines. Words that
+          leave S empty are refused ('the platform words leave no
+          platform'). Built: 'Wish.specified_platform_set(defined)',
+          'excluded_name_tuple', 'platform_word_list' (the far run's
+          words), 'bubble.PlatformMissing', 'bubble.missing_text'.
+
+COST      'hwut.run' at a project's top on a machine without the
+          platform's engine refuses until '--exclude-platform' is said --
+          a '--glob' selecting only local cases included: the check is
+          per wanted DIRECTORY, a label or glob is not consulted. The
+          census of this sandbox needs '--exclude-platform linux'. The
+          '[PLATFORM not reachable]' marker remains for a start failing
+          between the check and the far run.
+
+OPEN      'hwut.help' proposing a label for the platforms standing, or
+          an anti-label (the author's words: "Help kann dann auch
+          vorschlagen ein Label zu erzeugen für die Plattformen die
+          gerade vorhanden sind, oder ein anti Label") -- put to the
+          author: a label does not keep a directory from the check.
+
+PL-4  THE WAYS PAST A PLATFORM MISSING: '--exclude-platform', A LABEL,
+      AN ANTI-LABEL (ruled 2026-11-27; closes PL-3's OPEN)
+
+PROBLEM   PL-3 left one way past the refusal, '--exclude-platform'. A
+          label could not help: the check asked the wanted DIRECTORY,
+          not the label, so '--label "NOT on_linux"' was refused like
+          the bare run.
+
+DECISION  The author's words, to the fork (a) help names
+          '--exclude-platform' only / (b) help proposes a label and the
+          check asks the label: "(a) and (b)".
+
+          THE CHECK ASKS THE LABEL. Where the wish asks one, a directory
+          needs its platform only where the label may select a run of
+          it ('label.selects_below_f'): a run its book records
+          (GOOD/book.csv) or the labels file names below it answers the
+          expression. No book and no named run: the runs are not known,
+          and an expression a bare run answers ('NOT <label>') selects --
+          never let off on a guess; a feature label likewise. A
+          directory the label selects nothing of is not handed, not
+          started, and its not-run is neither said nor counted.
+
+          THE REFUSAL POINTS TO 'hwut.help':
+
+              => --exclude-platform linux, or a label: 'hwut.help'
+
+          'hwut.help' carries a last part, PLATFORM: per platform the
+          next run needs and that is not ready ('platforms.is_ready':
+          missing, or its image still to be built), why, how many test
+          directories need it, and the ways past -- the
+          '--exclude-platform' line, the anti-label's command in full
+          (one '--dir' per directory, copied as it stands), then
+          '--label "NOT on_<platform>"', and the label of the rest as
+          the same with '--exclude-dir'. Built:
+          'orchestrate.missing_platform_tuple', 'help.platform_line_list'.
+
+COST      'hwut.help' walks the tree's confs (20 s on this tree). A
+          labelled directory whose book lacks a run the label would
+          take still counts it as not selected: the book is the
+          knowledge, an application never interviewed.

@@ -24,8 +24,8 @@ DIRECTORY.
 menu; 'hwut.sanitize.propose' writes them as commands.
 
 WHAT IS WRITTEN IS NOT AN EMPTY BLOCK (E-25). The file carries the
-whole 'language-setup' table: every language with its coverage
-candidates in preference order, its 'extensions' -- every one owned
+whole 'language-setup' table: every language with the coverage tool
+hwut drives for it, if any (coverage D-46), its 'extensions' -- every one owned
 by a single entry -- its 'interpreter' where a launcher takes a source
 file, and 'coverage_target = "%.cov.exe"' for the gcc family.
 'hwut.config.show --root-conf-template' prints the same text.
@@ -86,17 +86,16 @@ ROOT_CONF_TEXT = """\
 #      extensions       the file extensions that select this entry
 #      interpreter      the call for an interpreted test; the entry's
 #                       own name where unstated
-#      coverage         the candidate coverage tools, PREFERENCE ORDER;
-#                       the first one this machine has serves, and an
-#                       EMPTY LIST IS AN ANSWER: nobody vouches for a tool
+#      coverage         the ONE coverage tool, one hwut drives; absent
+#                       where hwut drives none for the language
+#      format           what that tool writes, one it offers; absent for
+#                       its default
 #      coverage_target  the coverage-capable build target of a compiled
 #                       test; '%' is the source file's stem (R-74)
 #
-#  THE ORDER OF A 'coverage' LIST IS PART OF THE TABLE: a tool whose
-#  format this build reads stands first, since election takes the first
-#  candidate the machine HAS. A candidate with no reader is still worth
-#  listing -- it is how a machine refuses BY NAME. 'hwut.cov.formats'
-#  prints what this build reads.
+#  NO TOOL IS ELECTED (coverage D-46): a tool this machine lacks is a
+#  refusal naming it, and no other is tried. 'hwut.cov.formats' prints
+#  the tools hwut drives and the formats each offers.
 #
 #  WHAT IS LEFT OUT IS LEFT OUT ON PURPOSE. No 'interpreter' where a
 #  language is compiled, or where no launcher takes a source file as
@@ -110,165 +109,126 @@ ROOT_CONF_TEXT = """\
 hwut {
     language-setup {
         c             { extensions      = [".c"]
-                        coverage        = ["gcov", "llvm-cov", "kcov"]
+                        coverage        = "gcov"
                         coverage_target = "%.cov.exe" }
         c++           { extensions      = [".cpp", ".cc", ".cxx"]
-                        coverage        = ["gcov", "llvm-cov", "kcov"]
+                        coverage        = "gcov"
                         coverage_target = "%.cov.exe" }
         objective-c   { extensions      = [".m"]
-                        coverage        = ["gcov", "llvm-cov"]
+                        coverage        = "gcov"
                         coverage_target = "%.cov.exe" }
         objective-c++ { extensions      = [".mm"]
-                        coverage        = ["gcov", "llvm-cov"]
+                        coverage        = "gcov"
                         coverage_target = "%.cov.exe" }
         fortran       { extensions      = [".f", ".for", ".f77", ".f90", ".f95", ".f03", ".f08"]
-                        coverage        = ["gcov", "kcov"]
+                        coverage        = "gcov"
                         coverage_target = "%.cov.exe" }
         ada           { extensions      = [".adb", ".ads"]
-                        coverage        = ["gcov", "gnatcoverage"]
+                        coverage        = "gcov"
                         coverage_target = "%.cov.exe" }
         modula-2      { extensions      = [".mod", ".def"]
-                        coverage        = ["gcov"]
+                        coverage        = "gcov"
                         coverage_target = "%.cov.exe" }
         cobol         { extensions      = [".cob", ".cbl"]
-                        coverage        = ["gcov"]
+                        coverage        = "gcov"
                         coverage_target = "%.cov.exe" }
         vala          { extensions      = [".vala"]
-                        coverage        = ["gcov"]
+                        coverage        = "gcov"
                         coverage_target = "%.cov.exe" }
         nim           { extensions      = [".nim"]
                         interpreter     = "nim r"
-                        coverage        = ["gcov", "lcov"] }
+                        coverage        = "gcov" }
         assembly      { extensions      = [".s", ".asm"]
-                        coverage        = ["kcov", "gcov"]
+                        coverage        = "gcov"
                         coverage_target = "%.cov.exe" }
         python        { extensions      = [".py", ".pyw"]
                         interpreter     = "python3"
-                        coverage        = ["coverage", "slipcover", "trace"] }
+                        coverage        = "coverage" }
         cython        { extensions      = [".pyx"]
-                        coverage        = ["coverage"] }
+                        coverage        = "coverage" }
         lua           { extensions      = [".lua"]
-                        interpreter     = "luau"
-                        coverage        = ["luacov"] }
+                        interpreter     = "luau" }
         #  'go run' COMPILES AT EVERY CALL, under the RUN'S caps: on a cold
         #  cache Go writes its runtime archive, above the default 10 MB per
         #  file, and the application ends before it answers ('no-session').
         #  State 'caps { file_size_mb = 256 }', or build by make with the cap
         #  in 'build { caps }' (services E-212).
         go            { extensions      = [".go"]
-                        interpreter     = "go run"
-                        coverage        = ["go", "gcov"] }
-        rust          { extensions      = [".rs"]
-                        coverage        = ["cargo-llvm-cov", "grcov", "llvm-cov", "kcov", "tarpaulin"] }
+                        interpreter     = "go run" }
+        rust          { extensions      = [".rs"] }
         swift         { extensions      = [".swift"]
-                        interpreter     = "swift"
-                        coverage        = ["llvm-cov", "xccov"] }
+                        interpreter     = "swift" }
         d             { extensions      = [".d", ".di"]
                         interpreter     = "rdmd"
-                        coverage        = ["dmd", "gcov", "llvm-cov"] }
+                        coverage        = "gcov" }
         zig           { extensions      = [".zig"]
-                        interpreter     = "zig run"
-                        coverage        = ["kcov", "llvm-cov"] }
+                        interpreter     = "zig run" }
         crystal       { extensions      = [".cr"]
-                        interpreter     = "crystal run"
-                        coverage        = ["kcov"] }
+                        interpreter     = "crystal run" }
         julia         { extensions      = [".jl"]
-                        interpreter     = "julia"
-                        coverage        = ["lcov", "julia"] }
+                        interpreter     = "julia" }
         r             { extensions      = [".r", ".R"]
-                        interpreter     = "Rscript"
-                        coverage        = ["covr"] }
+                        interpreter     = "Rscript" }
         haskell       { extensions      = [".hs", ".lhs"]
-                        interpreter     = "runghc"
-                        coverage        = ["hpc"] }
+                        interpreter     = "runghc" }
         erlang        { extensions      = [".erl", ".hrl"]
-                        interpreter     = "escript"
-                        coverage        = ["cover"] }
+                        interpreter     = "escript" }
         elixir        { extensions      = [".ex", ".exs"]
-                        interpreter     = "elixir"
-                        coverage        = ["excoveralls", "cover"] }
+                        interpreter     = "elixir" }
         ocaml         { extensions      = [".ml", ".mli"]
-                        interpreter     = "ocaml"
-                        coverage        = ["bisect-ppx"] }
+                        interpreter     = "ocaml" }
         clojure       { extensions      = [".clj", ".cljs", ".cljc"]
-                        interpreter     = "clojure"
-                        coverage        = ["cloverage"] }
+                        interpreter     = "clojure" }
         scheme        { extensions      = [".scm", ".ss"]
-                        interpreter     = "guile --no-auto-compile"
-                        coverage        = [] }
+                        interpreter     = "guile --no-auto-compile" }
         common-lisp   { extensions      = [".lisp", ".lsp"]
-                        interpreter     = "sbcl --script"
-                        coverage        = ["sb-cover"] }
+                        interpreter     = "sbcl --script" }
         prolog        { extensions      = [".pro"]
-                        interpreter     = "swipl"
-                        coverage        = ["swipl"] }
-        solidity      { extensions      = [".sol"]
-                        coverage        = ["solidity-coverage"] }
+                        interpreter     = "swipl" }
+        solidity      { extensions      = [".sol"] }
         dart          { extensions      = [".dart"]
-                        interpreter     = "dart"
-                        coverage        = ["lcov", "dart"] }
-        flutter       { coverage        = ["lcov", "flutter"] }
+                        interpreter     = "dart" }
+        flutter       { }
         java          { extensions      = [".java"]
-                        interpreter     = "java"
-                        coverage        = ["jacoco", "cobertura", "clover", "jcov"] }
+                        interpreter     = "java" }
         kotlin        { extensions      = [".kt", ".kts"]
-                        interpreter     = "kotlinc -script"
-                        coverage        = ["jacoco", "cobertura", "kover"] }
+                        interpreter     = "kotlinc -script" }
         scala         { extensions      = [".scala", ".sc"]
-                        interpreter     = "scala"
-                        coverage        = ["scoverage", "jacoco", "cobertura"] }
+                        interpreter     = "scala" }
         groovy        { extensions      = [".groovy"]
-                        interpreter     = "groovy"
-                        coverage        = ["jacoco", "cobertura"] }
+                        interpreter     = "groovy" }
         javascript    { extensions      = [".js", ".mjs", ".cjs", ".jsx"]
-                        interpreter     = "node"
-                        coverage        = ["node", "c8", "lcov", "cobertura", "nyc", "istanbul"] }
+                        interpreter     = "node" }
         typescript    { extensions      = [".ts", ".tsx"]
-                        interpreter     = "ts-node"
-                        coverage        = ["node", "c8", "lcov", "cobertura", "nyc", "istanbul"] }
+                        interpreter     = "ts-node" }
         ruby          { extensions      = [".rb"]
-                        interpreter     = "ruby"
-                        coverage        = ["cobertura", "simplecov"] }
+                        interpreter     = "ruby" }
         php           { extensions      = [".php"]
-                        interpreter     = "php"
-                        coverage        = ["cobertura", "phpunit", "xdebug", "pcov", "phpdbg"] }
+                        interpreter     = "php" }
         perl          { extensions      = [".pl", ".pm", ".t"]
-                        interpreter     = "perl"
-                        coverage        = ["cover", "Devel::Cover"] }
-        shell         { interpreter     = "sh"
-                        coverage        = ["kcov", "bashcov"] }
+                        interpreter     = "perl" }
+        shell         { interpreter     = "sh" }
         bash          { extensions      = [".sh", ".bash"]
                         interpreter     = "bash"
-                        coverage        = ["kcov", "bashcov"] }
+                        coverage        = "kcov" }
         zsh           { extensions      = [".zsh"]
-                        interpreter     = "zsh"
-                        coverage        = [] }
+                        interpreter     = "zsh" }
         powershell    { extensions      = [".ps1"]
-                        interpreter     = "pwsh"
-                        coverage        = ["pester"] }
+                        interpreter     = "pwsh" }
         tcl           { extensions      = [".tcl"]
-                        interpreter     = "tclsh"
-                        coverage        = [] }
-        csharp        { extensions      = [".cs", ".csx"]
-                        coverage        = ["coverlet", "cobertura", "dotcover", "opencover", "altcover"] }
+                        interpreter     = "tclsh" }
+        csharp        { extensions      = [".cs", ".csx"] }
         fsharp        { extensions      = [".fs", ".fsx"]
-                        interpreter     = "dotnet fsi"
-                        coverage        = ["coverlet", "cobertura", "altcover"] }
-        vbdotnet      { extensions      = [".vb"]
-                        coverage        = ["coverlet", "cobertura", "opencover"] }
-        matlab        { coverage        = ["matlab"] }
-        octave        { interpreter     = "octave"
-                        coverage        = ["octave"] }
-        verilog       { extensions      = [".v", ".vh"]
-                        coverage        = ["verilator", "verilator_coverage", "vcover", "urg", "imc"] }
-        systemverilog { extensions      = [".sv", ".svh"]
-                        coverage        = ["verilator", "verilator_coverage", "vcover", "urg", "imc"] }
+                        interpreter     = "dotnet fsi" }
+        vbdotnet      { extensions      = [".vb"] }
+        matlab        { }
+        octave        { interpreter     = "octave" }
+        verilog       { extensions      = [".v", ".vh"] }
+        systemverilog { extensions      = [".sv", ".svh"] }
         vhdl          { extensions      = [".vhd", ".vhdl"]
-                        coverage        = ["gcov", "ghdl", "vcover", "urg", "imc"] }
-        pascal        { extensions      = [".pas", ".pp"]
-                        coverage        = [] }
-        delphi        { extensions      = [".dpr"]
-                        coverage        = [] }
+                        coverage        = "gcov" }
+        pascal        { extensions      = [".pas", ".pp"] }
+        delphi        { extensions      = [".dpr"] }
     }
 
     #  HOW DIFFERENCES ARE ALIGNED FOR DISPLAY (compare C-16). These shape

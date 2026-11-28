@@ -1,0 +1,70 @@
+$ hwut.cov.run -o <out>
+    | DIR  suite/TEST
+    | START test-hang.py  x                                                      ||1
+    | END   :             x ......................... incomplete [NO REC] [DEV]  ||0
+    | START test-k.ksh  k                                                        ||1
+    | END   :           k ....................... not measurable [NO REC] [ ]    ||0
+    | START test-new.py                                                          ||1
+    | END   test-new.py ............................ not in book [NO REC] [ ]    ||0
+    | START test-py.py  a                                                        ||1
+    | END   :           a ......................................... [REC] [ ]    ||0
+    | START :           b                                                        ||1
+    | END   :           b .............................. no data [NO REC] [ ]    ||0
+    | START test-sh.sh  s                                                        ||1
+    | END   :           s ....................... not measurable [NO REC] [ ]    ||0
+    | NOTE  NOT MEASURABLE test-k.ksh: 'test-k.ksh' has no language: coverage needs one to know its tool. State 'language' in its header, or claim its extension in 'language-setup' of 'HWUT_ROOT/setup.conf'.
+    | NOTE  NOT MEASURABLE test-sh.sh: language 'bash' names no coverage tool in 'language-setup'; tools hwut drives: 'coverage', 'gcov', 'kcov', 'witness'
+    | 
+    | ==============================================================================
+    | DIRECTORIES                                          1 rec, 5 no rec, <h:m:s>
+    | ------------------------------------------------------------------------------
+    |    suite/TEST . . . . . . . . . . . . . . . . . . . . . .   [PARTIAL]      1/6
+    | 
+    | ==============================================================================
+    | HINTS
+    | ------------------------------------------------------------------------------
+    | SETUP -- no coverage run possible
+    |     suite/TEST
+    |         test-k.ksh  k     no coverage tool serves the test
+    |         test-new.py       no run id in GOOD/book.csv; accept first
+    |         test-sh.sh  s     no coverage tool serves the test
+    | 
+    | RUN -- application did not testify
+    |     suite/TEST
+    |         test-hang.py  x   the run under the tool did not complete; nothing read
+    | 
+    | TOOL -- no usable data from tool
+    |     suite/TEST
+    |         test-py.py  b     tool left nothing in OUT/COVERAGE
+    | 
+    | HINT: use 'hwut.help' for explanation of subtle issues.
+    | ==============================================================================
+    | 
+    | RESULTS: 1 rec, 5 no rec, <s> [sec], <s> [sec] total
+    | |    rec     |                            no rec                             |
+    | COVERAGE DATA: <root>/out -- 1 test run(s), 1 source file(s)
+    [status 1]
+    <out> { hwut-coverage.marker, hwut.no-entry-here.marker, suite/TEST/py.py.cover, test_run_group_id_db.csv, test_run_id_db.csv }
+      -- suite/TEST/py.py.cover
+      | ##VUT-COVERAGE 3
+      | ##source:   suite/TEST/py.py
+      | ##language: python
+      | ##tool:     witness
+      | ##format:   witness-json
+      | ##id-width: 2
+      | EX:1+8
+      | CV@00:1+3
+      -- test_run_group_id_db.csv
+      | # This file defines groups of test run ids: a group is a set of
+      | # test runs that executed some range of source together.
+      | # A group id and a test run id ('test_run_id_db.csv') never
+      | # overlap: an identifier stands in exactly one of the two files.
+      | test_run_group_id;test_run_ids
+      -- test_run_id_db.csv
+      | directory;test;choice;test_run_id
+      | suite/TEST;test-py.py;a;00
+  OK  : the served test is measured beside the unserved ones
+  OK  : and its source has its coverage file
+  OK  : the exit status says cases are without a record
+SUCCESS: a test no tool serves costs no measurement beside it.
+<hwut-end>

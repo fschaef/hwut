@@ -79,6 +79,11 @@ MEASURED:   on 08217f1 + bundles 31..35 (the dev tree w33), 2026-11-02.
 2  THE COMMAND (rulings 9, 12)
 ==============================================================================
 
+    [VERSION 4, ruled 2026-11-26 -- engine/platforms/RATIONALE PL-3,
+    which supersedes what follows where they differ: no word specifies
+    every defined platform, '-p' NARROWS, '--exclude-platform <name>'
+    takes one out, a platform missing refuses the run before it begins.]
+
     -p <name>          repeatable; ADDS <name> to S
     --exclude-local    takes 'local' out of S
 

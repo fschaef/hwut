@@ -132,6 +132,20 @@ def is_available(name, spec):
     return (True, "")
 
 
+def is_ready(name, spec):
+    """
+    RETURN: (True, ""), the engine stands on PATH and the image stands.
+            (False, why), else -- 'why' names what is missing, or the
+            recipe the next run builds the image from.
+    """
+    available_f, why = is_available(name, spec)
+    if not available_f: return (False, why)
+    if image_stands(engine(spec.get("engine")), spec["image"]):
+        return (True, "")
+    return (False, "image '%s' not built -- the next run builds it from "
+                   "'%s'" % (spec["image"], spec.get("recipe")))
+
+
 def start(name, spec, write, log=None):
     """
     RETURN: (True, ""), the image stands -- it stood, or it was built

@@ -1,0 +1,27 @@
+
+--- the call: kcov before the script, its output in OUT/COVERAGE ---
+         kcov --bash-dont-parse-binary-dir --include-path=/src --exclude-pattern=/OUT/COVERAGE/ OUT/COVERAGE ./greet.sh a
+         kcov --bash-dont-parse-binary-dir --exclude-pattern=/OUT/COVERAGE/ OUT/COVERAGE ./greet.sh
+
+--- the artefact is one level down, in the run's own directory ---
+         | ##VUT-COVERAGE 4
+         | ##run:      -
+         | ##language: python
+         | ##tool:     kcov
+         | ##format:   cobertura-xml
+         | ##counts:   no
+         | SF:app.py
+         | EX:1+3,1,1+2,1
+         | CV:1+3,3,2
+         nothing kcov left -> None
+
+--- a filename relative to a '<source>' that is not the test directory ---
+         standing here -> joined: True
+         not here      -> as written: lib/gone.sh
+  OK  : kcov stands before './greet.sh' (a bare name it would seek on PATH), its output is 'OUT/COVERAGE', the choice last
+  OK  : an empty gather set leaves no '--include-path=' behind
+  OK  : the run's 'cobertura.xml' is read, stamped kcov, format cobertura
+  OK  : no document: ABSENT, not an empty record
+  OK  : a relative filename is joined to its '<source>' where it stands here, else kept as written
+SUCCESS: kcov is driven, and what it leaves is read where it leaves it.
+<hwut-end>

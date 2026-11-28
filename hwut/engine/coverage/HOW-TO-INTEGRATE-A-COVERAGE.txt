@@ -78,15 +78,14 @@ ALIAS
 ------------------------------------------------------------------------------
 
 The artifact turned out to be a format already read: one line in
-'readers/__init__.py', one candidate in the registry, done.
+'readers/__init__.py', done.
 
     ALIAS_DB:          "gcovr": "lcov"
-    ROOT_CONF_TEXT:    c { coverage = [..., "gcovr", ...] }
-                       (services/_boundary.py -- the shipped table, D-26)
 
-An alias is a FRAMEWORK over a shared format: it is invoked as the
-framework it reads through, and stamps its own name. A tool that needs
-its own call form or its own second call deserves a framework class.
+An alias is READ ONLY (D-46): a framework over a shared format that
+stamps its own name, is never called and offers no format, so no
+language may name it as its 'coverage'. A tool hwut is to DRIVE
+deserves a framework class with its own call.
 
 
 FRAMEWORK
@@ -225,20 +224,18 @@ RATIONALE D-12).
 REGISTER
 ------------------------------------------------------------------------------
 
-Make the tool electable:
+Make the tool nameable -- only a framework hwut drives, with its
+'offered_format_tuple' (D-46, D-49):
 
-    ROOT_CONF_TEXT     the language's 'coverage' list in the shipped
-                       root conf ('services/_boundary.py'), in
-                       preference order -- readable formats first. THE
+    ROOT_CONF_TEXT     the language's 'coverage' tool in the shipped
+                       root conf ('services/_boundary.py'), ONE tool. THE
                        TABLE IS NOT IN THIS COMPONENT (D-26): an author's
                        tree carries its own copy in 'HWUT_ROOT/setup.conf'.
     EXTENSION_DB       only where the source extension is new; it
                        serves 'hwut.cov.conv.to_humans' and the record header
 
-A candidate with no reader is still listed: the machine then refuses
-BY NAME instead of reporting no coverage. An empty candidate list is
-itself an answer ('this build vouches for no tool here') -- never
-invent one.
+A language hwut drives no tool for names none, and its tests are
+refused BY NAME -- never invent a tool.
 
 
 PROVE

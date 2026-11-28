@@ -1,12 +1,12 @@
 $ --exclude-local -p linux
-    not-run  .              ''         available ./: requires no tool -- runs on local; specified linux
-    not-run  both           linux      reachable both/: platform 'linux' not reachable: image 'hwut-dev' absent and recipe '<root>/Containerfile' not found
-    not-run  linux          linux      reachable linux/: platform 'linux' not reachable: image 'hwut-dev' absent and recipe '<root>/Containerfile' not found
-    PLANNED: 
-    EXPLORED TEST               0
-    EXPLORED none/TEST          0
-    EXPLORED linux/TEST         0
-    EXPLORED linux/inner/TEST   0
-    EXPLORED both/TEST          0
-SUCCESS: not available, not reachable; nothing explored.
+    REFUSED: PLATFORM missing: linux -- image 'hwut-dev' absent and recipe '<root>/Containerfile' not found
+         => --exclude-platform linux, or a label: 'hwut.help'
+    EXPLORED: nothing
+$ --exclude-local -p linux
+    REFUSED: PLATFORM missing: linux -- image build failed
+         BUILDING: image 'hwut-dev' from <root>/Containerfile
+         ERROR: image 'hwut-dev' not built from <root>/Containerfile
+         => --exclude-platform linux, or a label: 'hwut.help'
+    EXPLORED: nothing
+SUCCESS: a platform missing refused before the run; nothing explored of it.
 <hwut-end>

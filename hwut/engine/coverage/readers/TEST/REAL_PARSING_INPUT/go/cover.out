@@ -1,0 +1,7 @@
+mode: set
+demo/calc.go:4.22,5.11 1 1
+demo/calc.go:5.11,7.3 1 1
+demo/calc.go:7.8,7.19 1 1
+demo/calc.go:7.19,9.3 1 0
+demo/calc.go:10.2,10.10 1 1
+demo/calc.go:14.24,16.2 1 0

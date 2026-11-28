@@ -3,11 +3,14 @@ ______________________________________________________________________________
 
 PURPOSE: THE DOOR into 'engine/coverage/readers'. The rest of the
          coverage component -- 'core.py' and the outer 'api.py' --
-         reaches election and the reader roles through this module and
+         reaches the registry and the reader roles through this module and
          through no other.
 
-    language_of, elect     the registry: language stated or derived,
-                            the first candidate tool this machine has
+    language_of, serving_framework
+                            the registry: language stated or derived,
+                            the ONE tool a language names (D-46)
+    callable_tuple         the tools hwut drives
+    format_named           a registered format by its name (D-50)
     CCoverageFormat, CCoverageFramework
                             the two roles a new tool implements: the
                             artefact (reading) and the tool
@@ -21,7 +24,7 @@ PURPOSE: THE DOOR into 'engine/coverage/readers'. The rest of the
                             seam for a new reader
 
 IMPORTING 'readers' (the package, via '__init__.py') REGISTERS EVERY
-READER; THIS DOOR DOES NOT. A caller that only elects, without ever
+READER; THIS DOOR DOES NOT. A caller that only resolves a tool, without ever
 reading an artefact, imports this module and pays for no format's
 tooling.
 
@@ -40,10 +43,12 @@ ______________________________________________________________________________
 """
 from .reader   import (ARTIFACT_DIRECTORY, CCoverageFormat,
                        CCoverageFramework, artifact_directory_of,
-                       framework_of, record_of, register,
-                       registered_tuple)
-from .registry import elect, language_of
+                       callable_tuple, format_named, framework_of,
+                       record_of, register, registered_tuple)
+from .registry import language_of, serving_framework
 
 __all__ = ("ARTIFACT_DIRECTORY", "CCoverageFormat", "CCoverageFramework",
-           "artifact_directory_of", "elect", "framework_of",
-           "language_of", "record_of", "register", "registered_tuple")
+           "artifact_directory_of", "callable_tuple", "format_named",
+           "framework_of",
+           "language_of", "record_of", "register", "registered_tuple",
+           "serving_framework")

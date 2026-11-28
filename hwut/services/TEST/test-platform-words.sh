@@ -12,20 +12,24 @@
 # ---------------------------------------------------------------------------
 #
 # THE PLATFORM WORDS OF THE WISH (adm/WORK/spec/42-platforms.txt section 2;
-# plan/42 P-3): '-p <platform>' adds a platform to those specified,
-# '--exclude-local' takes this machine out. Which bubble then runs where
+# plan/42 P-3; ruled 2026-11-26): every defined platform is specified;
+# '-p <platform>' NARROWS to those named, '--exclude-platform <platform>'
+# takes one out, '--exclude-local' this machine. Which bubble then runs where
 # is P-4's decision (engine/orchestrator/run/TEST test-bubble.py); this
 # page is about who takes the words.
 #
 # takes     the faces that run a test, and 'hwut.sanitize.propose', which
 #           names every platform and runs nothing (intend/42 ruling 12):
-#           'hwut.run -p linux' on a tree whose bubble requires none --
-#           a NOTE, and the same RESULTS as without '-p'; '-p local' says
-#           what no '-p' says, no NOTE; '--exclude-local -p linux' -- the
-#           NOTE, and nothing runs: the one bubble requires 'local' (exit
-#           3, EMPTY); 'hwut.play -p linux' -- the NOTE, the case
-#           recorded; '--exclude-local' alone -- refused, it leaves no
-#           platform.
+#           'hwut.run -p linux' on a tree whose bubble requires none
+#           and that defines no linux -- a NOTE, and nothing runs: the
+#           one bubble requires 'local' (exit 3, EMPTY); '-p local' says
+#           what no '-p' says here, no NOTE; '--exclude-local -p linux'
+#           -- as '-p linux'; '--exclude-local' alone -- refused, it
+#           leaves no platform of those defined; '--exclude-platform
+#           linux' -- nothing of the defined taken out, the same RESULTS
+#           as without; 'hwut.play -p linux' -- the NOTE, nothing played.
+#           MEASURED before: '-p linux' ADDED, '1 ok' and the case
+#           recorded.
 # refused   every other face that reads the whole wish, by name and with
 #           the faces that take them; a face that takes only some wish
 #           words ('hwut.execute') does not know '-p' at all.
@@ -61,7 +65,7 @@ face() {                # <module> <args...> -- status, the lines that matter
     python3 -m "hwut.services.$module" "$@" > out.txt 2>&1
     echo "    STATUS: $?"
     #  THE MACHINE'S WORDS LEAVE THE PAGE: the seconds of RESULTS.
-    grep -E "^(NOTE  -p|REFUSED|RESULTS|RECORDED|NOT RECORDED)" out.txt \
+    grep -E "^(NOTE  -p|REFUSED|RESULTS|RECORDED|NOT RECORDED|nothing played)" out.txt \
         | sed -e 's/, [0-9.]* \[sec\].*//' -e 's/(digest: [^)]*)/(digest)/' \
         | sed 's/^/    /'
 }
@@ -73,6 +77,7 @@ case "$1" in
         face run -p local --plain
         face run --exclude-local -p linux --plain
         face run --exclude-local --plain
+        face run --exclude-platform linux --plain
         (cd TEST && face lib.run.play -p linux test-a.sh)
         face lib.sanitize.propose -p linux -p local -o proposal.txt
         echo "SUCCESS: the faces that run take them."

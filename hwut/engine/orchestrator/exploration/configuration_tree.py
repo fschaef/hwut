@@ -270,8 +270,11 @@ class LanguageSetup:
                        a header states no 'language'; each with its dot
     'interpreter'      the call for an INTERPRETED test, argv prefix;
                        the language's own name where unstated (R-10)
-    'coverage'         the candidate coverage tools, PREFERENCE ORDER;
-                       the empty tuple is an answer (coverage D-2)
+    'coverage'         the ONE coverage tool, one hwut drives; None
+                       where the language names none (coverage D-46)
+    'coverage_format'  the conf's 'format': what that tool is asked to
+                       write, one it offers (coverage D-49); None for
+                       the tool's default
     'coverage_target'  the COVERAGE-CAPABLE build target, '%' the source
                        file's stem (R-74); under 'hwut.cov.run' it is built
                        and run in place of 'build.target'. Unstated
@@ -281,7 +284,8 @@ class LanguageSetup:
     'profiler'         declared, not yet consumed"""
     extensions:      tuple      = ()
     interpreter:     str | None = None
-    coverage:        tuple      = ()
+    coverage:        str | None = None
+    coverage_format: str | None = None
     coverage_target: str | None = None
     profiler:        str | None = None
 

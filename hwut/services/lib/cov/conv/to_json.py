@@ -42,6 +42,7 @@ import json
 import sys
 
 from ._face import help_of, one_file_main
+from ..summary import unreportable_of
 from ..visitor import I_OutputVisitor, walk
 
 NAME  = "hwut.cov.conv.to_json"
@@ -57,10 +58,14 @@ class JsonVisitor(I_OutputVisitor):
         self.document    = {"format": "hwut-coverage-json", "version": 1,
                             "root": None, "sources": []}
         self.entry       = None
+        self.name_list   = []
 
     def header(self, root, summary_list):
-        """RETURN: None. The root."""
+        """RETURN: None. The root, and the measures any source carries
+        -- what 'unreportable' is said against (coverage D-50)."""
         self.document["root"] = root
+        self.name_list = sorted({name for summary in summary_list
+                                 for name in summary.measure_db})
 
     def source_open(self, summary):
         """RETURN: None. A source's object begins."""
@@ -85,7 +90,11 @@ class JsonVisitor(I_OutputVisitor):
                                  for name_tuple, span_tuple in by_reference]
 
     def source_close(self, summary):
-        """RETURN: None. The object joins the list."""
+        """RETURN: None. The object joins the list -- with
+        'unreportable', the measures its formats cannot report, where
+        there are any (coverage D-50)."""
+        missing = unreportable_of(summary, self.name_list)
+        if missing: self.entry["unreportable"] = list(missing)
         self.document["sources"].append(self.entry)
 
     def done(self):

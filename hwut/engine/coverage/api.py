@@ -8,9 +8,12 @@ PURPOSE: THE ONE DOOR into 'engine/coverage'. Everything outside the
                         ('include', 'omit', 'counts'). WHICH TOOL and
                         WHICH LANGUAGE are not here -- they are the
                         root conf's word (D-26)
-    CoverageRefused     the run cannot be made: no tool, an empty
-                        candidate list, a language nobody can derive
-    elect               the first candidate tool this machine has
+    CoverageRefused     the run cannot be made: no tool named, a tool
+                        hwut does not drive or the machine lacks, a
+                        language nobody can derive
+    serving_framework   the ONE tool a language names, and its format
+    callable_tuple      the tools hwut drives (D-46)
+    format_named        a registered format by its name (D-50)
     framework_of        the reader that speaks a tool's format
     registered_tuple    every tool this build can read
     artifact_directory_of
@@ -58,8 +61,9 @@ from .database.api  import (GatheredFile, RecordFault, binary_version,
                             seated, subtract, unpack_gathered, union,
                             unpack_record)
 from .readers.api   import (CCoverageFormat, CCoverageFramework,
-                            artifact_directory_of, elect, framework_of,
-                            record_of, register, registered_tuple)
+                            artifact_directory_of, callable_tuple,
+                            format_named, framework_of, record_of, register,
+                            registered_tuple, serving_framework)
 from .trace         import OUTCOME_OK, CoverageTraceDb
 from .affected      import main as affected_main
 from .output        import (DEFAULT_DIRECTORY_NAME, MARKER_FILE, Output,
@@ -74,7 +78,9 @@ __all__ = ("affected_main", "DEFAULT_DIRECTORY_NAME", "GatheredFile",
            "gather", "prepared", "root_of",
            "CCoverageFormat", "CCoverageFramework", "CoverageConfig",
            "CoverageRefused", "CoverageTraceDb", "OUTCOME_OK",
-           "RecordFault", "artifact_directory_of", "elect",
+           "RecordFault", "artifact_directory_of", "callable_tuple",
+           "format_named",
            "format_record", "framework_of", "pack_record",
            "parse_record", "record_of", "register",
-           "registered_tuple", "seated", "unpack_record")
+           "registered_tuple", "seated", "serving_framework",
+           "unpack_record")

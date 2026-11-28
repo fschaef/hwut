@@ -33,7 +33,8 @@ STDOUT {
                     [--deterministic] [-v|--verbose|--plain|--quiet|--silent]
                     [--colour|--no-colour] [--show-timing] [--show-jobs]
                     [--show-details] [--no-failure-summary] [--brief]
-                    [--log <file>] [-p <platform>]... [--exclude-local]
+                    [--log <file>] [-p <platform>]...
+                    [--exclude-platform <platform>]... [--exclude-local]
                     [--directory=<path>]
 }
 <hwut-end>

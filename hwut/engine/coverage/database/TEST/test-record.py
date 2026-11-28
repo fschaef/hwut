@@ -55,9 +55,11 @@ faults     what a record must never be read as: an unstated version, a
            coverage report that lies.
 
 election   the language derived from an extension where none is stated,
-           the candidate list matched by glob, the FIRST available
-           candidate elected, and the three refusals: no derivation, no
-           configured tool, no available candidate.
+           the ONE tool a language names and its format (coverage D-46,
+           D-49), and the refusals by name: no derivation, no tool
+           named, a tool the machine lacks -- no other tried -- and, when
+           the conf is read, a list, a read-only or unknown tool, a
+           format the tool does not offer, a format without a tool.
 ______________________________________________________________________________
 """
 import sys
@@ -72,7 +74,8 @@ from hwut.engine.coverage.database.record import (ranges_of, union, subtract,
                                               CountsNotMergeable)
 from hwut.engine.bookkeeper.api import TestRunId
 from hwut.engine.coverage.configuration import CoverageConfig, CoverageRefused
-from hwut.engine.coverage.readers.registry import language_of, elect
+from hwut.engine.coverage.readers.registry import (language_of,
+                                                   serving_framework)
 
 
 def banner(label):
@@ -438,19 +441,33 @@ def test_faults():
 
 
 def test_election():
-    """Language, candidates, and the three refusals. THE CANDIDATES
-    ARE THE ROOT CONF'S (D-26): this test hands 'elect' the tuples an
-    author's 'language-setup' would, and the shipped root conf is read
-    to show the table left the code without losing a word."""
+    """Language, the one named tool, and the refusals (coverage D-46,
+    D-49). THE TOOL IS THE ROOT CONF'S (D-26): the shipped root conf is
+    read, and small confs show what validation refuses."""
+    from hwut.services._boundary import ROOT_CONF_TEXT
+    from hwut.engine.orchestrator.exploration.reader import read_conf
     machine = {"coverage", "gcov"}
 
     def available(tool):
         """RETURN: True, the stated machine has 'tool'."""
         return tool in machine
 
-    #  THE SHIPPED TABLE, as the boundary face writes it.
-    from hwut.services._boundary import ROOT_CONF_TEXT
-    from hwut.engine.orchestrator.exploration.reader import read_conf
+    def served(language, tool, format_name=None, on=available):
+        """RETURN: str, 'tool / format' served, or the refusal's text."""
+        try:
+            framework, name = serving_framework(language, tool, format_name,
+                                                available=on)
+        except CoverageRefused as error:
+            return "REFUSED: %s" % error
+        return "%s / %s" % (framework.name, name)
+
+    def faults_of(value):
+        """RETURN: list[str], the faults of a root conf whose python entry
+        carries 'value'."""
+        text = ('hwut { language-setup { python { extensions = [".py"] %s '
+                '} } }\n' % value)
+        return [f.message for f in read_conf(text, "setup.conf")[2]]
+
     spec, _apps, fault_list = read_conf(ROOT_CONF_TEXT, "HWUT_ROOT/setup.conf")
     table = {name: entry.coverage
              for name, entry in spec.language_setup.items()}
@@ -461,29 +478,33 @@ def test_election():
     print("         stated wins      -> %s"
           % language_of("test-parse.py", "lua"))
 
-    banner("the shipped root conf: candidates per language, in "
-           "preference order")
-    print("INSPECT: read with %d fault(s); %d language(s)"
-          % (len(fault_list), len(table)))
-    print("         python  -> %s" % (table["python"],))
-    print("         c++     -> %s" % (table["c++"],))
-    print("         pascal  -> %s" % (table["pascal"],))
+    banner("the shipped root conf: one tool per language, or none")
+    print("INSPECT: read with %d fault(s); %d language(s), %d naming a tool"
+          % (len(fault_list), len(table),
+             sum(1 for tool in table.values() if tool is not None)))
+    for language in ("python", "c++", "vhdl", "bash", "zsh", "pascal"):
+        print("         %-7s -> %s" % (language, table[language]))
 
-    banner("the FIRST available candidate is elected")
-    print("INSPECT: python on this stated machine -> %s"
-          % elect("python", table["python"], available=available))
-    print("         c      on this stated machine -> %s"
-          % elect("c", table["c"], available=available))
+    banner("the named tool serves, with its default format")
+    print("INSPECT: python -> %s" % served("python", table["python"]))
+    print("         c      -> %s" % served("c", table["c"]))
 
-    banner("the three refusals")
+    banner("refused at the run, by name; no other tool is tried")
     print("         no derivation   -> %s"
           % raised(lambda: language_of("mystery")))
-    print("         empty list      -> %s"
-          % raised(lambda: elect("pascal", table["pascal"],
-                                 available=available)))
-    print("         none available  -> %s"
-          % raised(lambda: elect("lua", table["lua"],
-                                 available=available)))
+    print("         %s" % served("zsh", table["zsh"]))
+    print("         %s" % served("bash", table["bash"]))
+    print("         %s" % served("python", "coverage",
+                                 on=lambda tool: False))
+
+    banner("refused when the conf is read, by name")
+    for value in ('coverage = ["coverage", "slipcover"]',
+                  'coverage = "gcovr"', 'coverage = "nosuch"',
+                  'coverage = "coverage" format = "lcov-tracefile"',
+                  'format = "coverage.py-json"'):
+        print("  %s" % value)
+        for message in faults_of(value):
+            print("         %s" % message)
 
     ok = check([
         (language_of("test-parse.py") == "python",
@@ -494,30 +515,32 @@ def test_election():
          "a stated language wins over the derivation"),
         (not fault_list,
          "the shipped root conf reads without a fault"),
-        (table["python"][0] == "coverage",
-         "python's list puts the readable tool first"),
-        (table["vhdl"][0] == "gcov",
-         "vhdl reaches gcov, because GHDL's gcc backend writes it -- a "
-         "language served by a table entry and no code"),
-        (table["pascal"] == (),
-         "and a language this build vouches for no tool on has an EMPTY "
-         "list: saying so beats inventing a default"),
-        (elect("python", table["python"], available=available)
-         == "coverage",
-         "the first available candidate is elected"),
-        (elect("c", table["c"], available=available) == "gcov",
-         "and the preference order decides which"),
+        (table["python"] == "coverage" and table["vhdl"] == "gcov",
+         "python names coverage.py; vhdl gcov, because GHDL's gcc "
+         "backend writes it -- a table entry and no code"),
+        (table["bash"] == "kcov",
+         "bash names kcov, driven since 2026-11-26"),
+        (table["zsh"] is None and table["pascal"] is None,
+         "a language hwut drives no tool for names none"),
+        (served("python", "coverage") == "coverage / coverage.py-json",
+         "the named tool serves with its default format"),
+        (served("python", "coverage", on=lambda tool: False)
+         .startswith("REFUSED: coverage tool 'coverage'"),
+         "a tool the machine lacks is refused by name, nothing elected"),
         (raised(lambda: language_of("mystery")) == "CoverageRefused",
          "an underivable language is refused, never guessed"),
-        (raised(lambda: elect("pascal", table["pascal"],
-                              available=available)) == "CoverageRefused",
-         "an empty candidate list is refused, by name"),
-        (raised(lambda: elect("lua", table["lua"],
-                              available=available)) == "CoverageRefused",
-         "a machine with no candidate is refused, not silently skipped"),
+        (all(len(faults_of(v)) == 1
+             for v in ('coverage = ["coverage"]', 'coverage = "gcovr"',
+                       'coverage = "nosuch"',
+                       'coverage = "coverage" format = "lcov-tracefile"',
+                       'format = "coverage.py-json"')),
+         "a list, a read-only or unknown tool, a format not offered and "
+         "a format without a tool are each one fault"),
+        (not faults_of('coverage = "coverage" format = "coverage.py-json"'),
+         "and a tool with a format it offers reads clean"),
     ])
-    verdict(ok, "election is stated at every step, and refuses rather "
-                "than guesses.")
+    verdict(ok, "the tool is named, never elected, and every refusal "
+                "names it.")
 
 
 # ---------------------------------------------------------------------------

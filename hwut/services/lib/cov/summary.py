@@ -26,6 +26,11 @@ DESCRIPTION
                            reference with lines, WHO it stands for --
                            the run names sorted -- and the ranges it
                            executed; in reference order
+             format        the formats that wrote its records, ','-
+                           joined, as the coverage file names them
+             reportable    the measures those formats can report
+                           (coverage D-49, D-50); None where a format
+                           is one this build does not know by name
 
        A RUN NAME is 'directory/test choice' ('directory/test' without
        a choice), from the output's run table.
@@ -37,8 +42,9 @@ ______________________________________________________________________________
 """
 from   dataclasses import dataclass
 
-from ....engine.coverage.api import (Output, id_text, measure_db_of,
-                                       measure_of, root_of, subtract, union)
+from ....engine.coverage.api import (Output, format_named, id_text,
+                                       measure_db_of, measure_of, root_of,
+                                       subtract, union)
 
 
 @dataclass(frozen=True)
@@ -51,6 +57,8 @@ class SourceSummary:
     uncovered:    tuple
     measure_db:   dict
     by_reference: tuple
+    format:       str          = ""
+    reportable:   tuple | None = None
 
 
 def run_name(output, run_id):
@@ -86,7 +94,55 @@ def summarise(output):
         yield SourceSummary(gathered.source, gathered.executable, covered,
                             subtract(gathered.executable, covered),
                             measure_db_of(gathered, reference_set),
-                            tuple(by_reference))
+                            tuple(by_reference), gathered.format,
+                            reportable_of(gathered.format))
+
+
+def reportable_of(format_text):
+    """
+    RETURN: tuple[str], sorted, the measures the formats named in
+            'format_text' (','-joined) can report between them, beside
+            the lines (coverage D-49)
+            None, where any of them is unknown to this build by name, or
+            none is named -- no information (coverage D-50).
+    """
+    name_list = [name for name in (format_text or "").split(",") if name]
+    if not name_list: return None
+    reportable = set()
+    for name in name_list:
+        fmt = format_named(name)
+        if fmt is None: return None
+        reportable.update(fmt.measure_tuple)
+    return tuple(sorted(reportable))
+
+
+def unreportable_of(summary, name_list):
+    """
+    RETURN: tuple[str], the measures of 'name_list' -- the page's columns
+            -- that the source's formats cannot report: its MARKERS
+            (coverage D-50); empty where it has none or where nothing is
+            known of its formats.
+    """
+    if summary.reportable is None: return ()
+    return tuple(name for name in name_list
+                 if name not in summary.reportable)
+
+
+def legend_of(summary_list, name_list):
+    """
+    RETURN: tuple of (str, str, str), per marker that occurs among
+            'summary_list' against the page's columns 'name_list': the
+            measure's tag, its name, and the formats that cannot report
+            it, ','-joined -- in the columns' order (coverage D-50).
+    """
+    format_db = {}
+    for summary in summary_list:
+        for name in unreportable_of(summary, name_list):
+            format_db.setdefault(name, set()).update(
+                f for f in summary.format.split(",") if f)
+    return tuple((measure_of(name).tag, name,
+                  ",".join(sorted(format_db[name])))
+                 for name in name_list if name in format_db)
 
 
 def measure_summary(name, entry):

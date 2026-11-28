@@ -166,10 +166,13 @@ def _place(setup, body=APPLICATION):
 
 
 def _run(setup, configuration, bookkeeper, run_id):
-    """RETURN: E_CoverageResult of the one coverage run."""
-    return asyncio.run(measured(setup, configuration,
-                                store_of(configuration, bookkeeper),
-                                None, run_id))
+    """RETURN: E_CoverageResult of the one coverage run (its verdict,
+    the second of what 'measured' returns, is the label's: coverage
+    D-48)."""
+    token, _ = asyncio.run(measured(setup, configuration,
+                                    store_of(configuration, bookkeeper),
+                                    None, run_id))
+    return token
 
 
 def _show(token, bookkeeper, directory):

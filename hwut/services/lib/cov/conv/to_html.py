@@ -55,8 +55,9 @@ import sys
 
 from .....auxiliary.no_entry import marked_no_entry
 from ._face import help_of, many_files_main
-from ..summary import (line_count, measure_summary,
-                                               percent)
+from ..summary import (legend_of, line_count, measure_summary,
+                       percent, unreportable_of)
+from .....engine.coverage.api import measure_of
 from ..visitor import I_OutputVisitor, walk
 
 NAME  = "hwut.cov.conv.to_html"
@@ -125,6 +126,7 @@ class HtmlVisitor(I_OutputVisitor):
         self.total_db   = {}           # measure name -> [covered, total]
         self.page_db    = {}           # relative path -> text
         self.summary    = None
+        self.legend     = ()           # (tag, measure, formats) (D-50)
         self.cell_db    = {}           # measure name -> (c, t) of the source
         self.point_db   = {}           # line -> [text]
         self.run_db     = {}           # line -> run names
@@ -137,6 +139,7 @@ class HtmlVisitor(I_OutputVisitor):
         self.name_list = sorted({name for summary in summary_list
                                  for name in summary.measure_db})
         self.total_db  = {name: [0, 0] for name in ["lines"] + self.name_list}
+        self.legend    = legend_of(summary_list, self.name_list)
 
     def source_open(self, summary):
         """RETURN: None. A source begins; its page collects."""
@@ -181,12 +184,20 @@ class HtmlVisitor(I_OutputVisitor):
         total_n   = line_count(summary.executable)
         self.total_db["lines"][0] += covered_n
         self.total_db["lines"][1] += total_n
-        cell_list = ["<td><a href=\"%s\">%s</a></td>"
-                     % (_e(page_path(summary.source)), _e(summary.source)),
+        #  THE MARKERS (coverage D-50): what this source's formats
+        #  cannot report, superscript, explained by the legend.
+        marker    = ",".join(measure_of(name).tag for name in
+                             unreportable_of(summary, self.name_list))
+        cell_list = ["<td><a href=\"%s\">%s</a>%s</td>"
+                     % (_e(page_path(summary.source)), _e(summary.source),
+                        "<sup>%s</sup>" % marker if marker else ""),
                      "<td class=\"n\">%i/%i</td>" % (covered_n, total_n),
                      "<td class=\"n\">%s</td>" % percent(covered_n, total_n)]
         for name in self.name_list:
             pair = self.cell_db.get(name)
+            if pair is None and summary.reportable is not None \
+               and name in summary.reportable:
+                pair = (0, 0)               # could, has none (D-50)
             if pair is None:
                 cell_list += ["<td class=\"n\">-</td>", "<td class=\"n\">-</td>"]
                 continue
@@ -263,6 +274,10 @@ class HtmlVisitor(I_OutputVisitor):
                      "<th class=\"n\">%s</th>" % percent(*pair)]
         line_list.append("<tr>%s</tr>" % "".join(foot))
         line_list.append("</table>")
+        for tag, name, formats in self.legend:
+            line_list.append("<p class=\"note\"><sup>%s</sup> %s -- not "
+                             "reportable by %s</p>"
+                             % (_e(tag), _e(name), _e(formats)))
         self.page_db["index.html"] = _page("Coverage", "\n".join(line_list) + "\n")
         return self.page_db
 

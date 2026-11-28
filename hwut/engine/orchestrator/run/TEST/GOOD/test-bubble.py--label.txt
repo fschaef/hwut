@@ -1,0 +1,36 @@
+--- 'HWUT_ROOT/labels.txt' names linux/TEST/test-b.sh only
+$ -l on_linux
+    REFUSED: PLATFORM missing: linux -- image 'hwut-dev' absent and recipe '<root>/Containerfile' not found
+         => --exclude-platform linux, or a label: 'hwut.help'
+    EXPLORED: ['TEST', 'both/TEST', 'none/TEST']
+$ -l NOT on_linux
+    REFUSED: PLATFORM missing: linux -- image 'hwut-dev' absent and recipe '<root>/Containerfile' not found
+         => --exclude-platform linux, or a label: 'hwut.help'
+    EXPLORED: ['TEST', 'both/TEST', 'none/TEST']
+--- ... and linux/inner/TEST/test-c.sh
+$ -l NOT on_linux
+    PLANNED: TEST, both/TEST, none/TEST
+    EXPLORED TEST               1
+    EXPLORED none/TEST          1
+    EXPLORED linux/TEST         0
+    EXPLORED linux/inner/TEST   0
+    EXPLORED both/TEST          1
+$ -l on_linux
+    REFUSED: PLATFORM missing: linux -- image 'hwut-dev' absent and recipe '<root>/Containerfile' not found
+         => --exclude-platform linux, or a label: 'hwut.help'
+    EXPLORED: ['TEST', 'both/TEST', 'none/TEST']
+$ hwut.help   [exit 0]
+    PLATFORM -- not ready: the next 'hwut.run' refuses
+    
+        linux -- image 'hwut-dev' absent and recipe 'Containerfile' not found
+            needed by 2 test directories
+            => once, without them:
+                   hwut.run --exclude-platform linux
+            => an anti-label of them, run what it leaves:
+                   hwut.labels.create on_linux \
+                       --dir linux/TEST \
+                       --dir linux/inner/TEST
+                   hwut.run --label 'NOT on_linux'
+            => a label of the rest: the same with '--exclude-dir', then '--label <it>'
+SUCCESS: what the label selects decides what is needed.
+<hwut-end>

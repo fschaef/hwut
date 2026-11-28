@@ -63,6 +63,7 @@ _PAGE_LINE, _PAGE_BRANCH, _PAGE_TOGGLE, _PAGE_USER = (
 class VerilatorFormat(CCoverageFormat):
     """Verilator's native coverage data file."""
     name = "verilator-dat"
+    measure_tuple = ('branch', 'cover', 'toggle')          # D-49
 
     suffix = DAT_SUFFIX
 

@@ -4,8 +4,8 @@ on_entry 'setup.sh'  on_exit 'teardown.sh'  ignore ('*.gen.c', 'tmp-*')
 collision ['test-a.py', 'test-b.py two']
 dependency test-b.py        <- ['test-a.py']
 dependency test-c.py two    <- ['test-a.py', 'test-b.py one']
-language 'heartfun': interpreter 'heartfun' coverage () profiler None
-language 'python': interpreter 'python3.12 -u' coverage ('coverage run',) profiler None
+language 'heartfun': interpreter 'heartfun' coverage None profiler None
+language 'python': interpreter 'python3.12 -u' coverage 'coverage' profiler None
 app 'test-gen.c':
 title    'generated parser'  language None  origin CONF  at 18:21
 root:

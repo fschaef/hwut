@@ -31,6 +31,16 @@
 #                            probed against the tool itself here
 #     ghdl                   the PSL coverage road
 #     lua5.4, luarocks, luacov
+#                            luacov installed FOR lua 5.4: noble's
+#                            luarocks defaults to another Lua, and
+#                            'lua5.4 -lluacov' then finds no module
+#                            (measured 2026-11-26)
+#     kcov                   bash coverage, driven (coverage D-51); no
+#                            Ubuntu 24.04 package, so built from its
+#                            source at the commit measured 2026-11-26
+#     gcc-14                 '-fcondition-coverage': MC/DC through gcov,
+#                            which gcc 13 has not (the reason R4 gives
+#                            for a format choice, coverage D-49)
 #     git, mercurial, subversion, breezy, fossil
 #                            'adm/bundle.sh', 'hwut.affected'; and the
 #                            repositories 'hwut.sanitize root' offers as
@@ -91,7 +101,9 @@ RUN apt-get update \
  && apt-get update \
  && apt-get install -y --no-install-recommends \
         python3.13 python3.13-venv python3.13-dev \
-        gcc g++ libc6-dev make lcov gcovr \
+        gcc g++ gcc-14 libc6-dev make lcov gcovr \
+        cmake binutils-dev libdw-dev libelf-dev libcurl4-openssl-dev \
+        zlib1g-dev libssl-dev libiberty-dev \
         verilator ghdl iverilog \
         lua5.4 luarocks \
         git mercurial subversion brz fossil zsh \
@@ -109,7 +121,15 @@ RUN apt-get update \
         util-linux \
  && rm -rf /var/lib/apt/lists/*
 
-RUN luarocks install luacov
+RUN luarocks --lua-version=5.4 install luacov
+
+#  kcov from its source (coverage D-51): the commit measured 2026-11-26.
+RUN git clone https://github.com/SimonKagstrom/kcov.git /tmp/kcov \
+ && git -C /tmp/kcov checkout bbaa197 \
+ && cmake -S /tmp/kcov -B /tmp/kcov/build -DCMAKE_BUILD_TYPE=Release \
+ && make -C /tmp/kcov/build -j"$(nproc)" \
+ && install -m 755 /tmp/kcov/build/src/kcov /usr/local/bin/kcov \
+ && rm -rf /tmp/kcov
 
 #  Go, node, Rust and PowerShell: their own releases, at the measured
 #  versions (the list's 'support:' rows say why each).

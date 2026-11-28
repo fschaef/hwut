@@ -60,7 +60,7 @@ DESCRIPTION
 
        IMPORTING THIS MODULE REGISTERS NOTHING. The implementations live
        in 'readers/'; 'framework_of' imports that package on its first
-       miss, so a caller that never elects a tool never pays for any of
+       miss, so a caller that never resolves a tool never pays for any of
        them.
 ______________________________________________________________________________
 """
@@ -101,6 +101,11 @@ class CCoverageFormat(ABC):
     itself and says why ('lcov' merges text after the walk;
     'python_coverage' reaches the directory twice).
     """
+    #  THE MEASURES BESIDE THE LINES that this format's reader seats in
+    #  a record ('measure.py' names them): what a record of this format
+    #  can carry, stated by its reader (D-49). Lines alone: ().
+    measure_tuple = ()
+
     name   = None
     suffix = None                 # tuple[str] | str, the artefact's
 
@@ -133,9 +138,9 @@ class CCoverageFormat(ABC):
                      format is written by several tools (c8 and
                      cargo-llvm-cov both write LCOV).
             'tool'   IS LEFT EMPTY. The FRAMEWORK stamps it in
-                     'harvest', because with a candidate list which
-                     tool served is decided at run time (D-7). A format
-                     that stamped it would be guessing.
+                     'harvest', because one format is written by
+                     several tools (D-7). A format that stamped it
+                     would be guessing.
             'run'    IS LEFT EMPTY, its default. A reader knows the
                      ARTEFACT, not the run; whoever holds the id calls
                      'record.seated' (D-8, D-18).
@@ -233,8 +238,8 @@ class CCoverageFramework(ABC):
     both write LCOV), which is why the two are two classes.
 
     Every framework is derived from this and registered; admitting a
-    tool is one subclass and one line in the registry's candidate
-    table.
+    tool hwut drives is one subclass with its 'call_scheme' or
+    'report_argv' and its 'offered_format_tuple' (D-46, D-49).
     """
     name   = None
     format = None                 # a CCoverageFormat instance
@@ -244,8 +249,14 @@ class CCoverageFramework(ABC):
     #  application is called as it stands.
     call_scheme = None
 
+    #  THE FORMATS THIS TOOL CAN BE ASKED FOR (D-46, D-49): names of
+    #  formats a reader reads, the DEFAULT first. Empty: hwut does not
+    #  drive this tool -- it is read only, and no language may name it
+    #  as its 'coverage'.
+    offered_format_tuple = ()
+
     def specify_command_line(self, included_paths, omitted_paths,
-                             test_app, choice):
+                             test_app, choice, format_name=None):
         """
         RETURN: list[str], the command line by which the TOOL runs the
                 test application: 'call_scheme' with its fields filled
@@ -266,6 +277,9 @@ class CCoverageFramework(ABC):
                     coverage target of a compiled one.
         'choice'    the choice of this run; None where the application
                     has none.
+        'format_name' the format the tool is asked to write (D-46); None
+                    for its default. A tool offering one format has one
+                    call and ignores it.
         """
         if self.call_scheme is None: return None
         return scheme_argv(self.call_scheme, included_paths,
@@ -514,6 +528,30 @@ def _load():
     optimisation is named at the one place it happened, not silently
     absorbed."""
     _LOADED_F[0] = True
+
+
+def callable_tuple():
+    """
+    RETURN: tuple[str], sorted, the tools hwut DRIVES -- those offering
+            a format (D-46). Only these may stand as a language's
+            'coverage'.
+    """
+    _load()
+    return tuple(sorted(name for name, framework in _FRAMEWORK_DB.items()
+                        if framework.offered_format_tuple))
+
+
+def format_named(name):
+    """
+    RETURN: CCoverageFormat, the registered format called 'name', if
+            this build reads one by that name
+            None, else -- an unknown name gives no information (D-50).
+    """
+    _load()
+    for framework in _FRAMEWORK_DB.values():
+        if framework.format is not None and framework.format.name == name:
+            return framework.format
+    return None
 
 
 def framework_of(tool):

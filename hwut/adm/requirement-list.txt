@@ -81,6 +81,9 @@ program  verilator       road    verilator              coverage of Verilog mode
 program  ghdl            road    ghdl                   the PSL coverage road
 program  go              road    golang-go              'go test -coverprofile'
 program  lua5.4          road    lua5.4                 luacov
+program  luacov          road    luarocks:luacov        'readers/TEST' real artefact (lua 5.4)
+program  kcov            road    source:kcov            bash coverage: 'hwut.cov.run' (coverage D-51)
+program  gcc-14          road    gcc-14                 '-fcondition-coverage': MC/DC through gcov
 program  java            road    default-jdk-headless   JaCoCo
 program  lcov            road    lcov                   the lcov tracefile road
 program  gcovr           road    gcovr                  the same

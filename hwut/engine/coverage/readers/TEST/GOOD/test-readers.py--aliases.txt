@@ -12,11 +12,11 @@
          node               tool=node               format=lcov-tracefile
          verilator_coverage tool=verilator_coverage format=lcov-tracefile
 
---- kcov, witnessed out of this list ---
-         kcov               tool=kcov               format=cobertura-xml
+--- kcov is no alias: hwut drives it (choice 'kcov') ---
+         'kcov' in ALIAS_DB: False
   OK  : twenty-one tools, eleven formats
   OK  : EIGHT of them share ONE reader -- 'verilator_coverage' among them (VERILOG with no code at all), and 'node', whose own test runner writes the tracefile with no package installed
-  OK  : and 'kcov' now reads through COBERTURA: witnessed writing no tracefile at all, its alias moved -- one line, nothing else
+  OK  : and 'kcov' is no alias since 2026-11-26: a framework with its own call (coverage D-46)
   OK  : and each record names the TOOL THAT RAN, not the reader that read it -- two different facts, both wanted
   OK  : the coverage itself is identical, as it must be
 SUCCESS: a format is what a reader knows; a tool is what the header names.

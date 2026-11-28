@@ -20,6 +20,11 @@ def is_available(name, spec):
     return (True, "")
 
 
+def is_ready(name, spec):
+    """RETURN: (True, ""), always: the local machine is where we are."""
+    return (True, "")
+
+
 def start(name, spec, write, log=None):
     """RETURN: (True, ""), always: nothing to make ready."""
     return (True, "")

@@ -1,4 +1,4 @@
-# vut-register 5 generation:546 apps:63 marks:0=7,1=8,2=13,3=5,4=8,5=7,6=12,7=5,8=10,9=2,10=3,11=5,12=6,13=7,14=8,15=5,16=6,17=10,18=3,19=5,20=7,21=13,22=4,23=15,24=8,25=11,26=5,27=13,28=10,29=3,30=8,31=4,32=1,33=4,34=3,35=4,36=8,37=18,38=13,39=3,40=2,41=12,42=10,45=12,46=3,48=5,49=5,50=7,51=19,52=20,53=30,54=8,55=2,56=3,57=3,58=4,59=2,60=5,61=8,62=9
+# vut-register 5 generation:550 apps:63 marks:0=7,1=8,2=13,3=5,4=8,5=7,6=12,7=8,8=10,9=2,10=3,11=5,12=6,13=7,14=8,15=5,16=6,17=10,18=3,19=5,20=7,21=13,22=4,23=15,24=8,25=11,26=5,27=13,28=10,29=3,30=8,31=4,32=1,33=4,34=4,35=4,36=8,37=18,38=13,39=3,40=2,41=12,42=10,45=12,46=3,48=5,49=5,50=7,51=19,52=20,53=30,54=8,55=2,56=3,57=3,58=4,59=2,60=5,61=8,62=9
 test;choice;verdict;report;stain;test_id;choice_id;platform
 test-about.sh;page;true;ok;;39;0
 ;refused;true;ok;;39;1
@@ -179,12 +179,16 @@ test-cov.py;cobertura;true;ok;;6;4
 ;refused;true;ok;;6;3
 ;tex;true;ok;;6;9
 ;to_humans;true;ok;;6;10
-test-cov_run.py;door;true;ok;;7;0
+test-cov_run.py;deviation;true;ok;;7;6
+;door;true;ok;;7;0
 ;output;true;ok;;7;3
 ;real;true;ok;;7;2
 ;run;true;ok;;7;1
+;stage;true;ok;;7;7
 ;trace;true;ok;;7;4
+;unmeasurable;true;ok;;7;5
 test-cov_visitor.py;accounted;true;ok;;34;0
+;markers;true;ok;;34;3
 ;vocabulary;true;ok;;34;1
 ;walk;true;ok;;34;2
 test-deploy.sh;absent;true;ok;;58;3
@@ -277,11 +281,11 @@ test-header-words.sh;budget_spent;true;ok;;37;15
 ;tolerance;true;ok;;37;12
 ;values;true;ok;;37;13
 test-help-pages.sh;examples;true;ok;;40;0
-;shape;true;ok;;40;1
-test-help.sh;empty;true;ok;;33;1
-;explain;true;ok;;33;0
-;nonsense;true;ok;;33;3
-;refused;true;ok;;33;2
+;shape;false;not-equivalent-with-nominal;;40;1
+test-help.sh;empty;false;not-equivalent-with-nominal;;33;1
+;explain;false;not-equivalent-with-nominal;;33;0
+;nonsense;false;not-equivalent-with-nominal;;33;3
+;refused;false;not-equivalent-with-nominal;;33;2
 test-keep.py;cancel;true;ok;;28;0
 ;enter-add;true;ok;;28;1
 ;enter-oneline;true;ok;;28;2

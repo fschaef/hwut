@@ -60,11 +60,16 @@ one-reader
          a face that builds its own wish again moves this list. Standing
          2026-11-03: one, the comparison of 'hwut.report.features'.
 
-platform '-p <platform>' and '--exclude-local' (spec/42 section 2): read
-         where the face runs ('platform_f'), spelt back, each name once,
-         in order; S, the platforms specified; refused by name on a face
-         that does not run, '--exclude-local' with no '-p', '-p' without
-         a name; a face taking only the platform words ('hwut.play');
+platform '-p <platform>', '--exclude-platform <platform>' and
+         '--exclude-local' (spec/42 section 2): read where the face runs
+         ('platform_f'), spelt back, each name once, in order; S, the
+         platforms specified, over the defined 'local, linux, win11'
+         (ruled 2026-11-26: every defined platform without '-p', '-p'
+         NARROWS, '--exclude-platform' takes out; MEASURED before: '-p
+         linux' gave 'linux, local', '--exclude-local' alone was
+         refused); refused by name on a face that does not run, '-p'
+         without a name, '-p' names all excluded; a face taking only
+         the platform words ('hwut.play');
          the NOTE for a '-p' no bubble requires -- 'local' required
          where a bubble says no 'platform'.
 
@@ -387,7 +392,7 @@ def test_platform():
          {"platform_f": True}),
         ("'--exclude-local' with '-p'",
          ["--exclude-local", "-p", "linux"], {"platform_f": True}),
-        ("'-p local': what no '-p' says", ["-p", "local"],
+        ("'-p local': only this machine", ["-p", "local"],
          {"platform_f": True}),
         ("a face taking the platform words alone (hwut.play)",
          ["-p", "linux", "--fail", "test-a.py", "one"],
@@ -399,6 +404,18 @@ def test_platform():
         ("a face that does not run", ["--exclude-local"], {}),
         ("'--exclude-local' alone", ["--exclude-local"],
          {"platform_f": True}),
+        ("no platform word: every defined one", ["--fail"],
+         {"platform_f": True}),
+        ("'--exclude-platform' takes one out",
+         ["--exclude-platform", "linux", "--exclude-platform=win11"],
+         {"platform_f": True}),
+        ("'--exclude-platform' beside '-p'",
+         ["-p", "linux", "-p", "win11", "--exclude-platform", "win11"],
+         {"platform_f": True}),
+        ("'-p' all excluded", ["-p", "local", "--exclude-local"],
+         {"platform_f": True}),
+        ("'--exclude-platform' without a name", ["--exclude-platform"],
+         {"platform_f": True}),
         ("'-p' without a name", ["-p"], {"platform_f": True}),
         ("'-p=' naming nothing", ["-p="], {"platform_f": True})):
         banner("%s: %s" % (title, " ".join(argv)))
@@ -408,7 +425,9 @@ def test_platform():
             print("    REFUSED: %s" % error)
             continue
         print("    wish : %s" % wish)
-        print("    S    : %s" % ", ".join(sorted(wish.specified_platform_set())))
+        print("    S    : %s" % ", ".join(sorted(
+                                     wish.specified_platform_set(
+                                         ("local", "linux", "win11")))))
         print("    rest : %s" % (", ".join(rest) or "-"))
 
     banner("the NOTE: a '-p' no bubble can use")

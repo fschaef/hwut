@@ -88,6 +88,7 @@ NEVER_EXECUTED = ("#####", "=====", "$$$$$")
 class GcovFormat(CCoverageFormat):
     """gcc's '.gcov' annotated source."""
     name = "gcov-annotated"
+    measure_tuple = ('branch',)          # D-49
 
     def read(self, work_dir, source_root, config=None):
         """
@@ -142,6 +143,7 @@ class GcovFramework(CCoverageFramework):
     instrumented, before anything runs."""
     name   = "gcov"
     format = GcovFormat()
+    offered_format_tuple = (format.name,)          # D-49
 
     def instrumented_f(self, target, work_dir):
         """

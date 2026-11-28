@@ -644,12 +644,11 @@ everything HWUT does with the file follows from that entry:
         language-setup {
             python   { extensions  = [".py", ".pyw"]
                        interpreter = "python3"
-                       coverage    = ["coverage", "slipcover", "trace"] }
+                       coverage    = "coverage" }
             c        { extensions  = [".c"]
-                       coverage    = ["gcov", "llvm-cov", "kcov"]
+                       coverage    = "gcov"
                        coverage_target = "%.cov.exe" }
-            dep4711_c { interpreter = "dep4711-run"
-                        coverage    = [] }
+            dep4711_c { interpreter = "dep4711-run" }
         }
     }
 
@@ -658,9 +657,10 @@ everything HWUT does with the file follows from that entry:
                      extension two entries claim is refused at the root.
     interpreter      the call for an INTERPRETED test, an argv prefix;
                      the entry's own name where unstated
-    coverage         the candidate coverage tools, PREFERENCE ORDER: the
-                     first this machine has serves. '[]' is an ANSWER --
-                     nobody vouches for a tool (coverage D-2)
+    coverage         the ONE coverage tool, one hwut drives (coverage
+                     D-46); absent where it drives none for the language
+    format           what that tool writes, one it offers (coverage D-49);
+                     absent for the tool's default
     coverage_target  the coverage-capable build target of a COMPILED
                      test, built and run in place of 'build.target'
                      under 'hwut.cov.run'; '%' the source file's stem (4.1)

@@ -21,8 +21,10 @@ DESCRIPTION
                      seated with the run id and stored as '.cover' in
                      its BINARY spelling (D-20)
 
-       IT JUDGES NOTHING AND BOOKS NOTHING. What the run came to is
-       one token, 'E_CoverageResult', handed back to the caller. A run
+       IT BOOKS NOTHING. What the run came to is one token,
+       'E_CoverageResult', handed back to the caller, beside its
+       verdict against 'GOOD/' -- whose one use is the label that says
+       whether the run under the tool deviates from the book (D-48). A run
        whose tree bore nothing yields NO record and 'NO_DATA_PROVIDED';
        an empty record is never written for it.
 
@@ -100,6 +102,9 @@ class E_CoverageResult(Enum):
     NOT_REGISTERED     = "not-registered"       # the register names no
                                                 # such run: no id to seat
                                                 # a record with (D-18)
+    NOT_MEASURABLE     = "not-measurable"       # no tool serves the test:
+                                                # no language, none named,
+                                                # or absent here (D-47)
 
     def __str__(self):
         """RETURN: str, the token, as the book holds it."""
@@ -111,15 +116,20 @@ class CoverageSetup:
     """The coverage step's OWN struct, one per test application of a
     coverage run.
 
-    'reader' is the elected tool's framework (coverage
-    'CCoverageFramework');
+    'reader' is the framework of the tool the language names (coverage
+    'CCoverageFramework', D-46); 'format_name' the format it is asked
+    to write;
     'config' its 'CoverageConfig'; 'note' is what was already
     concluded before any run -- 'NO_COVERAGE_TARGET' where a compiled
-    test declares none -- or None where nothing stands against it.
+    test declares none, 'NOT_MEASURABLE' where no tool serves it (D-47)
+    -- or None where nothing stands against it; 'refusal' the sentence
+    naming why a test is not measurable.
     """
-    reader: object
-    config: object
-    note:   E_CoverageResult | None = None
+    reader:      object
+    config:      object
+    note:        E_CoverageResult | None = None
+    format_name: str | None              = None
+    refusal:     str | None              = None
 
 
 def prepare(test_directory):
@@ -171,7 +181,7 @@ async def harvest(setup, configuration, bookkeeper, test, choice, run_id,
             record written to 'bookkeeper.coverage_path(test, choice)',
             else the token naming why none was.
 
-    'setup' is the run's CoverageSetup: the elected tool and what the
+    'setup' is the run's CoverageSetup: the named tool and what the
     run gathers. 'report' is the run's own E_TestRunResult; where it
     says the application did not testify, NOTHING IS READ and the
     answer is 'RUN_INCOMPLETE' (D-21). Else the reader's second call
@@ -207,21 +217,28 @@ async def harvest(setup, configuration, bookkeeper, test, choice, run_id,
 
 async def measured(setup, configuration, store, choice, run_id):
     """
-    RETURN: E_CoverageResult, what ONE coverage run of '(test, choice)'
-            came to: 'OK' with the record written, else the token
-            naming why none was.
+    RETURN: (E_CoverageResult, bool), what ONE coverage run of '(test,
+            choice)' came to: 'OK' with the record written, else the
+            token naming why none was; and the run's VERDICT against
+            'GOOD/' -- False where it did not match or did not testify.
 
     'configuration' is the coverage run's own -- coverage target and
-    wrapped call in place. The application is executed afresh and
-    NOTHING IS COMPARED: the run's only statement is its testimony
-    (D-21), which is the provision's report and the terminal token at
-    the end of its stdout. The caller holds the directory and lets no
+    wrapped call in place. The application is executed afresh. The
+    record's only statement is its testimony (D-21), the provision's
+    report and the terminal token at the end of its stdout. The verdict
+    is the test run's compare over the same subjects, for ONE purpose:
+    whether the run under the tool deviates from the test run (coverage
+    D-48). Nothing is booked. The caller holds the directory and lets no
     second run of it proceed meanwhile (D-22).
     """
     prepare(configuration.test_directory)
-    provision, _ = subject_provision.provider_of(configuration, store,
-                                                 choice, force_run=True)
+    judged_tuple = _judged_subject_tuple(configuration, choice)
+    provision, _ = subject_provision.provider_of(
+                       configuration, store, choice, force_run=True,
+                       subject_name_list=judged_tuple + ("stderr",))
     subjects = await provision.provide()
+    verdict  = await _verdict_of(configuration, store, choice, subjects,
+                                 judged_tuple)
     report   = subjects.provision.report
     #  THE TERMINAL TOKEN IS THE STATEMENT (D-21, R-70): a stream that
     #  does not end in it never completed, whatever the process said
@@ -230,5 +247,52 @@ async def measured(setup, configuration, store, choice, run_id):
        and ("stdout" not in subjects
             or not ends_in_terminal(subjects["stdout"].open())):
         report = E_TestRunResult.TERMINATED_WITHOUT_END
-    return await harvest(setup, configuration, store.bookkeeper,
-                         configuration.key_name, choice, run_id, report)
+    token = await harvest(setup, configuration, store.bookkeeper,
+                          configuration.key_name, choice, run_id, report)
+    return token, verdict
+
+
+def _judged_subject_tuple(configuration, choice):
+    """RETURN: tuple[str], the subjects a test run of the choice judges:
+    its declared 'output', else stdout alone; stderr never (E-5)."""
+    declared = configuration.choice_db.get(choice)
+    output   = getattr(declared, "output", None) if declared else None
+    judged   = tuple(output) if output else ("stdout",)
+    return tuple(name for name in judged if name != "stderr")
+
+
+class _Given:
+    """A groundwork over subjects already provided: the comparison reads
+    what the coverage run produced, it does not run it again."""
+    kind = "given"
+
+    def __init__(self, subjects):
+        """RETURN: _Given handing out 'subjects'."""
+        self.subjects = subjects
+
+    async def provide(self, stop_event=None):
+        """RETURN: the subjects handed in."""
+        return self.subjects
+
+
+async def _verdict_of(configuration, store, choice, subjects, judged_tuple):
+    """
+    RETURN: bool, the test run's verdict over the coverage run's
+            'subjects': each judged subject against its nominal, under
+            the choice's own compare setup and stderr rule (coverage
+            D-48). False where the provision did not deliver.
+    """
+    from .consume.equivalence_check import (EquivalenceCheck,
+                                            EquivalenceCheckConfig)
+    from .session import _compare_options, _nominal_db
+    ignored_f = configuration.choice_configuration(choice).stderr_ignored_f
+    result = await EquivalenceCheck(EquivalenceCheckConfig(
+                 name               = configuration.key_name,
+                 groundwork         = _Given(subjects),
+                 subjects           = _nominal_db(store,
+                                                  configuration.key_name,
+                                                  choice, judged_tuple),
+                 stderr_forbidden_f = not ignored_f,
+                 compare            = _compare_options(configuration,
+                                                       choice))).run()
+    return bool(result.verdict)

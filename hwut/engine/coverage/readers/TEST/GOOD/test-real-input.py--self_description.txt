@@ -1,0 +1,37 @@
+  OK  : cobertura       reference 'kcov-shell.xml' stands
+  OK  : cobertura       kcov-bin.xml           within the stated
+  OK  : cobertura       kcov-shell.xml         = stated []
+  OK  : cobertura       simplecov-export.xml   within the stated
+  OK  : gcov            reference 'c-classify.c.gcov' stands
+  OK  : gcov            ada-calc.adb.gcov      within the stated
+  OK  : gcov            c-classify.c.gcov      = stated ['branch']
+  OK  : gcov            cobol-calc.c.gcov      within the stated
+  OK  : gcov            d-calc.d.gcov          within the stated
+  OK  : gcov            fortran-calc.f90.gcov  within the stated
+  OK  : gcov            objc-calc.m.gcov       within the stated
+  OK  : gcov            vala-calc.vala.gcov    within the stated
+  OK  : gcov            vhdl-blinker.vhdl.gcov within the stated
+  OK  : ghdl_psl        reference 'psl.json' stands
+  OK  : ghdl_psl        psl.json               = stated ['cover']
+  OK  : go              reference 'cover.out' stands
+  OK  : go              cover.out              = stated []
+  OK  : jacoco          reference 'jacoco.xml' stands
+  OK  : jacoco          jacoco.xml             = stated []
+  OK  : lcov            reference 'llvm.info' stands
+  OK  : lcov            llvm.info              = stated []
+  OK  : lcov            node-c8.info           within the stated
+  OK  : lcov            node-typescript.info   within the stated
+  OK  : lcov            verilator-export.info  within the stated
+  OK  : luacov          reference 'luacov.report.out' stands
+  OK  : luacov          luacov.report.out      = stated []
+  OK  : python_coverage reference 'branches-a1.json' stands
+  OK  : python_coverage branches-a1.json       = stated ['branch']
+  OK  : python_coverage branches-a2.json       within the stated
+  OK  : simplecov       reference '.resultset.json' stands
+  OK  : simplecov       .resultset.json        = stated []
+  OK  : ucis            reference 'coverage.ucis.xml' stands
+  OK  : ucis            coverage.ucis.xml      = stated ['branch', 'toggle']
+  OK  : verilator       reference 'coverage.dat' stands
+  OK  : verilator       coverage.dat           = stated ['branch', 'cover', 'toggle']
+SUCCESS: every format reads what it says it can, from a real artefact.
+<hwut-end>

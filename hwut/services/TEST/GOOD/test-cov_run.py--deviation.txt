@@ -1,0 +1,55 @@
+$ hwut.cov.run -o <out>
+    | DIR  suite/TEST
+    | START test-changed.py  c                                                   ||1
+    | END   :                c ......................... no data [NO REC] [DEV]  ||0
+    | START test-hang.py  x                                                      ||1
+    | END   :             x ......................... incomplete [NO REC] [DEV]  ||0
+    | START test-healed.py  c                                                    ||1
+    | END   :               c .......................... no data [NO REC] [DEV]  ||0
+    | START test-new.py                                                          ||1
+    | END   test-new.py ............................ not in book [NO REC] [ ]    ||0
+    | START test-py.py  a                                                        ||1
+    | END   :           a ......................................... [REC] [ ]    ||0
+    | START :           b                                                        ||1
+    | END   :           b .............................. no data [NO REC] [ ]    ||0
+    | 
+    | ==============================================================================
+    | DIRECTORIES                                          1 rec, 5 no rec, <h:m:s>
+    | ------------------------------------------------------------------------------
+    |    suite/TEST . . . . . . . . . . . . . . . . . . . . . .   [PARTIAL]      1/6
+    | 
+    | ==============================================================================
+    | HINTS
+    | ------------------------------------------------------------------------------
+    | SETUP -- no coverage run possible
+    |     suite/TEST
+    |         test-new.py          no run id in GOOD/book.csv; accept first
+    | 
+    | RUN -- application did not testify
+    |     suite/TEST
+    |         test-hang.py  x      the run under the tool did not complete; nothing read
+    | 
+    | TOOL -- no usable data from tool
+    |     suite/TEST
+    |         test-changed.py  c   tool left nothing in OUT/COVERAGE
+    |         test-healed.py  c    :
+    |         test-py.py  b        :
+    | 
+    | HINT: use 'hwut.help' for explanation of subtle issues.
+    | ==============================================================================
+    | 
+    | RESULTS: 1 rec, 5 no rec, <s> [sec], <s> [sec] total
+    | |    rec     |                            no rec                             |
+    | COVERAGE DATA: <root>/out -- 1 test run(s), 1 source file(s)
+    [status 1]
+    the book {
+      test-py.py--a  report ok                       coverage <absent>
+      test-py.py--b  report ok                       coverage <absent>
+      test-hang.py--x report ok                       coverage <absent>
+      test-new.py    report -                        coverage <no entry>
+    }
+  OK  : the book calls 'test-healed.py c' failed
+  OK  : 'GOOD/book.csv' did not move by a byte: the label is never booked
+  OK  : the exit status is the record's word, not the label's
+SUCCESS: the coverage run says where it deviates from the test run, and nothing else.
+<hwut-end>

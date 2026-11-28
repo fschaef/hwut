@@ -13,6 +13,7 @@ STDERR {
                                  [--directories] [--orphans] [--books]
                                  [--constraints] [--links] [--relations]
                                  [--transient] [--wallflowers] [-p <platform>]...
+                                 [--exclude-platform <platform>]...
                                  [--exclude-local] [--directory=<path>]
 }
 STATUS: 2
@@ -30,6 +31,7 @@ STDERR {
                                  [--directories] [--orphans] [--books]
                                  [--constraints] [--links] [--relations]
                                  [--transient] [--wallflowers] [-p <platform>]...
+                                 [--exclude-platform <platform>]...
                                  [--exclude-local] [--directory=<path>]
 }
 STATUS: 2
@@ -47,6 +49,7 @@ STDERR {
                                  [--directories] [--orphans] [--books]
                                  [--constraints] [--links] [--relations]
                                  [--transient] [--wallflowers] [-p <platform>]...
+                                 [--exclude-platform <platform>]...
                                  [--exclude-local] [--directory=<path>]
 }
 STATUS: 2

@@ -1,4 +1,4 @@
-  0.41:run-ended:a/TEST,x y,TEST,false,test-failed,"say ""no""","tail, with ] inside",
+  0.41:run-ended:a/TEST,x y,TEST,false,test-failed,"say ""no""","tail, with ] inside",,,
   0.41:refused:suite/TEST "test-c.sh two": no nominal: stands, really
   0.41:dir-done:{"directory": "s", "good": true, "fail_db": {}}
   OK  : 't' first, two decimals, then the kind

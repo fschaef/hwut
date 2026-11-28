@@ -3,9 +3,9 @@ $ hwut.run --coverage --glob test-py*
 $ hwut.cov.run --glob test-py* -o <out>
     | DIR  suite/TEST
     | START test-py.py  a                                                        ||1
-    | END   :           a ............................................... [REC]  ||0
+    | END   :           a ......................................... [REC] [ ]    ||0
     | START :           b                                                        ||1
-    | END   :           b .................................... no data [NO REC]  ||0
+    | END   :           b .............................. no data [NO REC] [ ]    ||0
     | 
     | ==============================================================================
     | DIRECTORIES                                          1 rec, 1 no rec, <h:m:s>

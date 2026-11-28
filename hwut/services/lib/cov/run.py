@@ -36,8 +36,12 @@ THE PER-CASE RECORDS ('TMP/store/<test>--<choice>.cover') are what a
 single run leaves; they are gathered when the last directory is done
 and then removed.
 
-IT IS NOT A TEST RUN. Nothing is compared with 'GOOD/', no verdict is
-determined, and 'GOOD/book.csv' is not written.
+IT IS NOT A TEST RUN. 'GOOD/book.csv' is not written, and the exit
+status is the records' word. Each case carries ONE LABEL against the
+book (coverage D-48): '[ ]' the run under the tool came out as the
+book's last verdict, or the book has no word; '[DEV]' it contradicts
+it. Colour paints only: green brackets where the book says ok, red
+where it says fail, '[DEV]' on red. A case not run cannot deviate.
 
 IT IS RENDERED AS A RUN IS (display D-40): the same flow, DIRECTORIES,
 HINTS and RESULTS, by the same renderer, in the coverage run's own

@@ -2538,8 +2538,8 @@ Every face that selects cases reads its command line through 'parse_wish'; no fa
 services RATIONALE E-219.
 
 [[wish-platform-words]]
-'-p <platform>' adds a platform to those specified, 'local' among them unless '--exclude-local' takes it out; read where the face runs, each name once and in order, spelt back; refused by name elsewhere; '--exclude-local' with no '-p' refused; a '-p' no bubble requires is a NOTE.
-adm/WORK/spec/42-platforms.txt, section 2; intend/42 rulings 9, 11, 12.
+Without a platform word every defined platform is specified; '-p <platform>' narrows to those named, '--exclude-platform <platform>' takes one out, '--exclude-local' takes 'local' out; read where the face runs, each name once and in order, spelt back; refused by name elsewhere; words leaving no platform refused; a '-p' no bubble requires is a NOTE.
+adm/WORK/spec/42-platforms.txt, section 2; intend/42 rulings 9, 11, 12; engine/platforms RATIONALE PL-3.
 
 [[wish-far-argv]]
 For a bubble handed to a platform the wish becomes the far run's words: targets and directory rules re-rooted at the bubble, one outside dropped, a bare name kept, nothing wanted there -- not handed; every other word as given, no '-p', and '--as-platform=' naming the platform its 'local' is.
@@ -4698,7 +4698,7 @@ documents: services/RATIONALE.txt
 RATIONALE E-209.
 
 [[platform-words-taken]]
-'-p' and '--exclude-local' are taken by 'hwut.run' and 'hwut.play', and by 'hwut.sanitize.propose', which runs nothing; a '-p' no bubble requires is a NOTE, and '--exclude-local' alone is refused.
+'-p', '--exclude-platform' and '--exclude-local' are taken by 'hwut.run' and 'hwut.play', and by 'hwut.sanitize.propose', which runs nothing; a '-p' no bubble requires is a NOTE, and words leaving no defined platform are refused.
 adm/WORK/spec/42-platforms.txt, section 2; intend/42 rulings 9, 12.
 
 [[platform-words-refused]]

@@ -28,7 +28,7 @@ from   enum        import Enum
 from   pathlib     import Path
 from   typing      import Optional, Sequence
 
-from   .result                  import E_TestRunResult
+from   .result                  import E_TestRunResult, last_line_of
 from   ..procsitter.api  import (Procsitter,
                                         E_Containment)
 
@@ -75,6 +75,7 @@ class BuildOutcome:
     record:               object                # the attribution record
     built_target_list:    Sequence[str] = field(default_factory=tuple)
     missing_target_list:  Sequence[str] = field(default_factory=tuple)
+    detail:               str | None    = None  # last line of stderr
 
     @property
     def succeeded(self):
@@ -214,6 +215,9 @@ async def build(configuration, caps=None, stop_event=None, observer=None):
     outcome = BuildOutcome(report              = report,
                            record              = record,
                            built_target_list   = tuple(built),
-                           missing_target_list = tuple(missing))
+                           missing_target_list = tuple(missing),
+                           detail              = last_line_of(
+                               getattr(record, "stderr_last_100_lines",
+                                       "")))
     notify(observer, "built", report)
     return outcome

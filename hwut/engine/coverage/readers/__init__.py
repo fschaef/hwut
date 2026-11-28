@@ -11,7 +11,7 @@ DESCRIPTION
        '__init__.py'. Before the component split (session 2026-09-04)
        'reader.py' stood OUTSIDE this package and deferred importing
        it until 'framework_of' was actually called, so a caller who
-       elected no tool paid for none of them; that deferral is no
+       resolved no tool paid for none of them; that deferral is no
        longer reachable now that 'reader.py' lives inside the package
        whose loading it used to defer ('reader._load' says so at its
        own definition).
@@ -40,7 +40,8 @@ DESCRIPTION
            luacov               luacov report          lua
            jacoco               jacoco xml             java, kotlin,
                                                        scala, groovy
-           kcov                 -> cobertura           bash; witnessed
+           kcov                 cobertura xml          bash; DRIVEN, its
+                                                       own call (kcov.py)
            verilator            verilator native .dat  verilog: line,
                                                        branch arms,
                                                        toggle, cover
@@ -82,16 +83,15 @@ from . import verilator            # noqa: F401
 from . import ghdl_psl             # noqa: F401
 from . import simplecov            # noqa: F401
 from . import ucis                 # noqa: F401
+from . import kcov                 # noqa: F401
 
 
 #  TOOLS THAT SPEAK A FORMAT SOMEBODY ELSE'S READER ALREADY READS.
-#  An alias is not a second reader: it is the SAME object under a second
-#  name, so 'reader_of' answers one truth however the tool was spelled.
-#  AN ALIAS CLAIMS THE FORMAT AND NOTHING ELSE. It says 'this tool
-#  leaves a tracefile in OUT/COVERAGE'; it does NOT claim to know how to
-#  drive the tool. Where a tool needs its own wrapping or its own second
-#  call, it deserves a module, not a line here -- and until it has one,
-#  the alias simply finds no artifact and reports ABSENT, which is true.
+#  An alias is not a second reader: it is the SAME format under a second
+#  tool name, so a record names the tool that ran and the format it wrote.
+#  AN ALIAS CLAIMS THE FORMAT AND NOTHING ELSE (D-46): it is never called,
+#  offers no format, and no language may name it as its 'coverage'. A tool
+#  hwut is to drive deserves a module with its own call scheme.
 ALIAS_DB = {
     "gcovr":              "lcov",   # gcov -> tracefile
     "grcov":              "lcov",   # rust
@@ -102,43 +102,27 @@ ALIAS_DB = {
     "c8":                 "lcov",   # v8 coverage -> lcov, witnessed
     "coverlet":           "cobertura",  # .NET's usual CI output
     "scoverage":          "cobertura",  # scala, via its xml report
-    #  kcov stood among the tracefile speakers until it was WITNESSED
-    #  (2026-08-24): its output holds cobertura, codecov and sonarqube
-    #  documents and NO tracefile -- not one 'end_of_record' anywhere.
-    #  Its own helper scripts ('bash-helper*.sh') appear as 0% classes
-    #  and belong to the omit globs.
-    "kcov":               "cobertura",
+    #  kcov is no alias since 2026-11-26: hwut drives it ('kcov.py',
+    #  coverage D-46). Its output holds cobertura, codecov and sonarqube
+    #  documents and NO tracefile (witnessed 2026-08-24).
 }
 
 
 class _SharedFormatFramework(CCoverageFramework):
-    """One tool's name over another framework's format and invocation.
+    """One tool's name over another framework's FORMAT -- read only.
 
     'name' is THIS tool; the format is the one it writes, shared with
     the framework it reads through, so the record's provenance names
-    the TOOL that ran and the FORMAT it wrote -- different facts, both
-    wanted (D-7). Invocation is delegated too: the tools behind one
-    format are invoked alike or not at all.
+    the TOOL and the FORMAT -- different facts, both wanted (D-7). The
+    invocation is NOT shared (D-46): the alias has no call scheme, no
+    second call and offers no format, so no language may name it.
     """
     def __init__(self, name, through):
-        """RETURN: framework standing for 'name', reading and invoking
-        through 'through'."""
+        """RETURN: framework standing for 'name', reading through
+        'through'."""
         self.name    = name
         self.through = through
         self.format  = through.format
-
-    def specify_command_line(self, included_paths, omitted_paths,
-                             test_app, choice):
-        """RETURN: list[str] | None, the underlying framework's command
-        line."""
-        return self.through.specify_command_line(included_paths,
-                                                 omitted_paths, test_app,
-                                                 choice)
-
-    def report_argv(self, config, work_dir):
-        """RETURN: list[str] | None, the underlying framework's second
-        call."""
-        return self.through.report_argv(config, work_dir)
 
 
 for _name, _target in sorted(ALIAS_DB.items()):

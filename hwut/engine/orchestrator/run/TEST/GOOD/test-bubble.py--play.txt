@@ -1,12 +1,16 @@
-$ (linux/TEST) hwut.play test-b.sh   [exit 3]
+$ (linux/TEST) hwut.play --exclude-platform linux test-b.sh   [exit 3]
     NOTE  linux/TEST/: requires ghdl, held by linux; specified local
     nothing played: the directory is not run here
     OUT here: -
+$ (linux/TEST) hwut.play test-b.sh   [exit 0]
+         1 | test-b.sh
+    RECORDED: test-b.sh.txt (digest)
+    OUT here: ['test-b.sh.txt']
 $ (linux/TEST) hwut.play --exclude-local -p linux test-b.sh   [exit 0]
          1 | test-b.sh
     RECORDED: test-b.sh.txt (digest)
     OUT here: ['test-b.sh.txt']
-$ (both/TEST) hwut.play -p linux test-d.sh   [exit 0]
+$ (both/TEST) hwut.play -p local -p linux test-d.sh   [exit 0]
          1 | test-d.sh
     RECORDED: test-d.sh.txt (digest)
     OUT here: ['test-d.sh.txt']

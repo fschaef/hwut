@@ -10,11 +10,13 @@
   OK  : gcov         vala-calc.vala.gcov          annotates calc.vala, 3 line(s)
   OK  : gcov         vhdl-blinker.vhdl.gcov       annotates blinker.vhdl, 17 line(s)
   OK  : ghdl_psl     psl.json                     absorbed
+  OK  : go           cover.out                    read 1 file(s)
   OK  : jacoco       jacoco.xml                   absorbed
   OK  : lcov         llvm.info                    parsed 1 file(s)
   OK  : lcov         node-c8.info                 parsed 2 file(s)
   OK  : lcov         node-typescript.info         parsed 1 file(s)
   OK  : lcov         verilator-export.info        parsed 3 file(s)
+  OK  : luacov       luacov.report.out            read 1 file(s)
   OK  : python_coverage branches-a1.json             read 1 file(s)
   OK  : python_coverage branches-a2.json             read 1 file(s)
   OK  : simplecov    .resultset.json              absorbed

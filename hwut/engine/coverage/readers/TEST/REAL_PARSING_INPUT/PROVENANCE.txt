@@ -21,6 +21,10 @@ files does MY format have", and that is the directory to open.
     python_coverage/
                  coverage.py's json report over one python file, run
                  twice taking a different branch each time
+    go/          'go test -coverprofile=cover.out' over calc.go
+                 (go 1.24.7, mode set), 2026-11-26
+    luacov/      luacov.report.out: 'lua5.4 -lluacov calc.lua', then
+                 'luacov' (luacov 0.17.0, lua 5.4.6), 2026-11-26
 
 THIS DIRECTORY IS SCENARIO COVERAGE MADE CONCRETE (adm/DEVELOPMENT.txt):
 at least one real artefact per format, and every syntax element at

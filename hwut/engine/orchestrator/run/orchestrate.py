@@ -34,10 +34,12 @@ from ..exploration.tree_explorer   import (explore_tree, GATE_RUN,
                                            test_directory_name_tuple)
 from ..plan.bubble                 import (HANDED, NOT_RUN, RUN,
                                            case_refusal, decider,
-                                           decision_tuple, owner_of,
+                                           decision_tuple, missing_text,
+                                           owner_of, PlatformMissing,
                                            tool_absent_refusal_f)
 from ...                           import platforms
 from ..plan.wish                   import unrequired_platform_note_tuple
+from ..plan.label                  import parse_expression, selects_below_f
 from ..plan.form                   import E_NodeKind
 from ..plan.confinement            import uncapped_refusal_f
 from ..plan.determine              import EMPTY_SELECTION_STR
@@ -247,6 +249,11 @@ class CDirectoryWork:
                 if report is not None: extra["report"] = report
                 detail = detail_of(node.name())
                 if detail is not None: extra["detail"] = detail
+                label  = label_of(node.name()) \
+                         if node.kind.name == "TEST" else None
+                if label is not None:
+                    extra["book"]     = label[0] or ""
+                    extra["deviates"] = label[1]
                 good_f  = state is E_NodeState.ENDED_GOOD
                 verdict = _verdict(state, node.kind)
                 if not good_f and report == "test-app-launch-failed":
@@ -271,6 +278,9 @@ class CDirectoryWork:
         report_of  = getattr(dispatcher, "report_of",
                              lambda name: None)
         detail_of  = getattr(dispatcher, "detail_of",
+                             lambda name: None)
+        #  THE COVERAGE RUN'S LABEL (coverage D-48); a test run has none.
+        label_of   = getattr(dispatcher, "label_of",
                              lambda name: None)
         #  WHAT THE MACHINE LAST MEASURED, read per directory because
         #  'hwut-traces.csv' is per directory. A directory nobody has
@@ -673,32 +683,15 @@ def unstood_tuple(directory, app_set, fault_tuple, conf_fault_tuple=()):
         key=lambda pair: tuple(pair[0].partition(" ")[::2])))
 
 
-def orchestrate(root, wish, build_interview=None, label_view=None):
+def _walked(root, wish):
     """
-    RETURN: CTreePlan, what 'wish' comes to on the tree below 'root':
-            explored under the configuration tree, determined per
-            directory (P-17).
-
-    The Bookkeeper of each directory is made HERE and handed down,
-    and only where the wish asks the base. THE LABEL VIEW IS NOT: the
-    engine never opens 'HWUT_ROOT/labels.txt' -- a face builds it
-    ('services/lib/labels.view_at') and hands it in, and 'None' means no
-    label knowledge reaches the selection (disc-8).
-
-    WHICH BUBBLE RUNS WHERE is decided first, from the confs alone
-    ('plan/bubble.py', spec/42 section 3): confs refused raise
-    PlatformRefused HERE; a bubble not run here is not walked for tests --
-    nothing of it interviewed, nothing written -- and stands in the
-    plan's 'not_run_tuple'. A directory below requiring a tool its
-    bubble's platform does not announce is not entered (o-57), its NOTE
-    among the plan's warnings.
+    RETURN: tuple, what the walk below 'root' decided for 'wish' --
+              [0] the explored tree
+              [1] dict, path -> the decision RUN here
+              [2] dict, platform -> [decision handed, ...]
+              [3] list, the decisions NOT RUN, each at its outermost
+              [4] list, every directory's required tuple, for '-p' NOTEs
     """
-    #  THE REFUSALS FIRST (o-52, o-53): raised before anything is walked.
-    decision_tuple(root, wish)
-    #  EACH DIRECTORY DECIDED ON ITS OWN (intend/45 R-4): the walk asks the
-    #  gate at every level; what runs here is entered, what is handed is
-    #  gathered BY PLATFORM -- one far run each -- what no platform takes
-    #  is not run, and said once, at its outermost directory.
     decide       = decider(root, wish)
     decision_db  = {}                  # path -> the decision RUN here
     handed_db    = {}                  # platform -> [decision, ...]
@@ -746,6 +739,182 @@ def orchestrate(root, wish, build_interview=None, label_view=None):
                         bubble_gate=gate,
                         wanted_f=dir_wanted_f(wish, root),
                         entry_gate=entry_gate)
+    return tree, decision_db, handed_db, not_run_list, candidate_list
+
+
+def _owned_function(root, wish, label_view, walked):
+    """
+    RETURN: callable, 'owned(decision, label_f=True)' -> tuple of str, the
+            test directories, relative to 'root', that 'decision' holds
+            (none below a deeper decision) and the wish's directory rules
+            want -- and, with 'label_f' and a label the wish asks, of
+            which the label may select a run ('label.selects_below_f').
+    """
+    _, decision_db, handed_db, not_run_list, _ = walked
+    owner_list = sorted([d.path for d in not_run_list]
+                        + [d.path for g in handed_db.values() for d in g]
+                        + list(decision_db), key=len, reverse=True)
+    wanted_f   = dir_wanted_f(wish, root)
+    label_tree = None
+    if wish.asks_label_f() and label_view is not None:
+        label_tree = parse_expression(wish.label_spec)
+
+    def owned(decision, label_f=True):
+        """RETURN: tuple of str, as '_owned_function' says."""
+        found_list = []
+        for name in test_directory_name_tuple(decision.path):
+            path = os.path.normpath(os.path.join(decision.path, name))
+            owner = next((o for o in owner_list
+                          if path == o or path.startswith(o + os.sep)),
+                         None)
+            relative = os.path.relpath(path, root).replace(os.sep, "/")
+            if owner != decision.path: continue
+            if wanted_f is not None and not wanted_f(relative): continue
+            if label_f and label_tree is not None \
+               and not selects_below_f(label_view, label_tree, path,
+                                       _recorded_run_tuple(path)):
+                continue
+            found_list.append(relative)
+        return tuple(found_list)
+
+    return owned
+
+
+def _recorded_run_tuple(directory):
+    """
+    RETURN: tuple of (str, str), '(absolute file, choice)' for every run
+            the book of the test directory 'directory' records -- the
+            runs known to stand there without asking an application.
+            None, where no book stands: the runs are not known.
+    """
+    path = os.path.join(directory, "GOOD", "book.csv")
+    try:
+        with open(path, encoding="utf-8") as fh:
+            row_list = [line.rstrip("\n").split(";") for line in fh
+                        if line.strip() and not line.startswith("#")]
+    except OSError:
+        return None
+    if not row_list or row_list[0][:2] != ["test", "choice"]: return None
+    #  AN EMPTY TEST CELL is the row above's test (the register's own
+    #  shorthand).
+    run_list, test = [], ""
+    for row in row_list[1:]:
+        if len(row) < 2: continue
+        test = row[0] or test
+        run_list.append((os.path.join(directory, test), row[1] or None))
+    return tuple(run_list)
+
+
+def missing_platform_tuple(root, wish, label_view=None):
+    """
+    RETURN: tuple of (str, str, tuple of str), one per platform the next
+            'hwut.run' below 'root' needs and that is not ready now
+            ('platforms.is_ready'): its name, why -- missing, or its
+            image still to be built --, and the test directories
+            (relative to 'root') that need it, in the order the walk met
+            them. Empty where every platform needed is ready. Builds
+            nothing.
+
+    Raises PlatformRefused as 'decision_tuple' does.
+    """
+    decision_tuple(root, wish)
+    walked = _walked(root, wish)
+    owned  = _owned_function(root, wish, label_view, walked)
+    found_db = {}
+    pair_list = [(d, d.why) for d in walked[3] if d.reason == "reachable"]
+    for group in walked[2].values():
+        ready_f, why = platforms.is_ready(group[0].platform, group[0].spec)
+        if not ready_f: pair_list.extend((d, why) for d in group)
+    for decision, why in pair_list:
+        directory_tuple = owned(decision)
+        if not directory_tuple: continue
+        _, directory_list = found_db.setdefault(decision.platform,
+                                                (why, []))
+        directory_list.extend(directory_tuple)
+    return tuple((name, why, tuple(directory_list))
+                 for name, (why, directory_list) in found_db.items())
+
+
+def orchestrate(root, wish, build_interview=None, label_view=None):
+    """
+    RETURN: CTreePlan, what 'wish' comes to on the tree below 'root':
+            explored under the configuration tree, determined per
+            directory (P-17).
+
+    The Bookkeeper of each directory is made HERE and handed down,
+    and only where the wish asks the base. THE LABEL VIEW IS NOT: the
+    engine never opens 'HWUT_ROOT/labels.txt' -- a face builds it
+    ('services/lib/labels.view_at') and hands it in, and 'None' means no
+    label knowledge reaches the selection (disc-8).
+
+    WHICH BUBBLE RUNS WHERE is decided first, from the confs alone
+    ('plan/bubble.py', spec/42 section 3): confs refused raise
+    PlatformRefused HERE; a bubble not run here is not walked for tests --
+    nothing of it interviewed, nothing written -- and stands in the
+    plan's 'not_run_tuple'. A directory below requiring a tool its
+    bubble's platform does not announce is not entered (o-57), its NOTE
+    among the plan's warnings.
+    """
+    #  THE REFUSALS FIRST (o-52, o-53): raised before anything is walked.
+    decision_tuple(root, wish)
+    #  EACH DIRECTORY DECIDED ON ITS OWN (intend/45 R-4): the walk asks the
+    #  gate at every level; what runs here is entered, what is handed is
+    #  gathered BY PLATFORM -- one far run each -- what no platform takes
+    #  is not run, and said once, at its outermost directory.
+    walked = _walked(root, wish)
+    tree, decision_db, handed_db, not_run_list, candidate_list = walked
+    owned = _owned_function(root, wish, label_view, walked)
+    #  A PLATFORM MISSING STOPS THE RUN BEFORE IT BEGINS (ruled
+    #  2026-11-26): every platform is taken to stand; one a wanted
+    #  directory needs -- under the label the wish asks, where it asks
+    #  one (ruled 2026-11-27, "(b)") -- and that is not there is said,
+    #  with the words that take it out: nothing is interviewed, nothing
+    #  run, and nothing said of the tests it holds.
+    missing_list = [(d.platform, d.why)
+                    for d in not_run_list
+                    if d.reason == "reachable" and owned(d)]
+    if missing_list: raise PlatformMissing(missing_text(missing_list))
+    #  ONE FAR RUN PER PLATFORM (intend/45 R-4): the project's root, the
+    #  wish as given, '--as-platform' and the near run's platform words --
+    #  so the far run decides every directory as the near run did, and
+    #  runs exactly those decided for it. Under a label, a directory the
+    #  label selects nothing of is not handed (ruled 2026-11-27).
+    handed_list = []
+    for platform, group in handed_db.items():
+        if wish.asks_label_f():
+            group = [d for d in group if owned(d)]
+            if not group: continue
+        far_argv = wish.far_argv(".", platform)
+        if far_argv is None: continue
+        far_argv += wish.platform_word_list()
+        directory_tuple = tuple(
+            os.path.normpath(os.path.join(d.name, t)).replace(os.sep, "/")
+            for d in group for t in test_directory_name_tuple(d.path))
+        handed_list.append((replace(group[0], path=os.path.abspath(root),
+                                    name=".",
+                                    directory_tuple=directory_tuple),
+                            far_argv))
+    #  EVERY PLATFORM HANDED TO IS MADE READY BEFORE THE RUN BEGINS
+    #  (ruled 2026-11-26): its image built where it does not stand. One
+    #  that cannot be stops the run as a platform missing does, the
+    #  build's lines beside the reason; what a ready one said goes
+    #  before the first case.
+    ready_db, made_list = {}, []
+    for decision, _ in handed_list:
+        if decision.platform in ready_db: continue
+        line_list = []
+        ready_db[decision.platform] = (platforms.start(decision.platform,
+                                                       decision.spec,
+                                                       line_list.append),
+                                       line_list)
+        made_list.extend(line_list)
+    missing_list = [(name, why) for name, ((ready_f, why), _)
+                    in ready_db.items() if not ready_f]
+    if missing_list:
+        raise PlatformMissing(missing_text(
+                  missing_list, [line for name, (ready, line_list)
+                                 in ready_db.items() if not ready[0]
+                                 for line in line_list]))
     factory = None
     if wish.asks_base_f():
         def factory(directory):
@@ -765,44 +934,12 @@ def orchestrate(root, wish, build_interview=None, label_view=None):
     #  A '-p' NO DIRECTORY REQUIRES (spec/42 section 2): one NOTE each,
     #  asked of every directory decided.
     note_tuple = unrequired_platform_note_tuple(wish, candidate_list) \
-                 + pending_move_note_tuple(tree_plan)
-    #  ONE FAR RUN PER PLATFORM (intend/45 R-4): the project's root, the
-    #  wish as given, '--as-platform' and the near run's platform words --
-    #  so the far run decides every directory as the near run did, and
-    #  runs exactly those decided for it.
-    handed_list = []
-    for platform, group in handed_db.items():
-        far_argv = wish.far_argv(".", platform)
-        if far_argv is None: continue
-        if wish.exclude_local_f: far_argv.append("--exclude-local")
-        for name in wish.platform_tuple: far_argv += ["-p", name]
-        directory_tuple = tuple(
-            os.path.normpath(os.path.join(d.name, t)).replace(os.sep, "/")
-            for d in group for t in test_directory_name_tuple(d.path))
-        handed_list.append((replace(group[0], path=os.path.abspath(root),
-                                    name=".",
-                                    directory_tuple=directory_tuple),
-                            far_argv))
-    #  WHAT NO PLATFORM TOOK IS COUNTED (intend/45 R-6, (b) 2026-11-15):
-    #  its test directories, each at the not-run decision that holds it --
-    #  not one below a deeper decision of another kind.
-    owner_list = sorted([d.path for d in not_run_list]
-                        + [d.path for g in handed_db.values() for d in g]
-                        + list(decision_db), key=len, reverse=True)
-    #  WHAT THE WISH NEVER ASKED ABOUT is neither said nor counted.
-    wanted_f = dir_wanted_f(wish, root)
+                 + pending_move_note_tuple(tree_plan) + tuple(made_list)
     not_run_n, said_list = 0, []
     for decision in not_run_list:
-        mine_n = 0
-        for name in test_directory_name_tuple(decision.path):
-            path = os.path.normpath(os.path.join(decision.path, name))
-            owner = next((o for o in owner_list
-                          if path == o or path.startswith(o + os.sep)),
-                         None)
-            relative = os.path.relpath(path, root).replace(os.sep, "/")
-            if owner == decision.path \
-               and (wanted_f is None or wanted_f(relative)):
-                mine_n += 1
+        #  WHAT THE LABEL SELECTS NOTHING OF is not asked about: neither
+        #  said nor counted (ruled 2026-11-27).
+        mine_n = len(owned(decision))
         if mine_n:
             not_run_n += mine_n
             said_list.append(decision)

@@ -1,4 +1,4 @@
-$ hwut.run (no -p)   [exit 0]
+$ hwut.run --exclude-platform linux   [exit 0]
     DIRECTORIES  (counts: 3 ok, 0 fail)
        +--- TEST . . . . . . . . . . . . . . . . . . . . . . .       [OK]      1/1
        +--- both/TEST . . . . . . . . . . . . . . . . . . . . .      [OK]      1/1

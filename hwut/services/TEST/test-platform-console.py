@@ -28,13 +28,16 @@ PURPOSE: THE CONSOLE OF adm/WORK/spec/42-platforms.txt section 6 (plan/42
 
 CHOICES: available, reachable, handed;
 
-available  'hwut.run': linux/ stands in the tree where the walk meets it,
+available  'hwut.run --exclude-platform linux': linux/ stands in the tree
+           where the walk meets it,
            '[PLATFORM not available]', the reason beside; linux/inner/
            inherits ghdl and goes with it (intend/45 R-4).
 reachable  'hwut.run --exclude-local -p linux', a 'podman' that answers
-           1 -- the image absent, no recipe: one marker line where the
-           decision begins, 'available' or 'reachable'; nothing ran, no
-           RESULTS.
+           1 -- the image absent, no recipe: REFUSED before the run, the
+           platform missing named with its reason and the words that take
+           it out; no tree, nothing ran, no RESULTS (ruled 2026-11-26;
+           MEASURED before: a '[PLATFORM not reachable]' marker per
+           directory, '0 ok, 0 fail, 5 directories not run').
 handed     the same, a 'podman' that is this machine: '.' not available
            (none/ with it); every directory of linux/ and both/ -- one
            far run (intend/45 R-4) -- named with
@@ -142,6 +145,9 @@ def console(argv, podman_text=None):
                                          done.returncode))
     line_list, inside_f = done.stdout.splitlines(), False
     for line in line_list:
+        if line.startswith(("REFUSED", "         ")) and not inside_f:
+            print("    %s" % line.rstrip().replace(root, "<root>"))
+            continue
         if line.startswith("DIRECTORIES"):
             inside_f = True
             print("    DIRECTORIES  (counts: %s)"
@@ -167,7 +173,7 @@ if __name__ == "__main__":
         sys.exit(0)
     choice = sys.argv[1]
     if choice == "available":
-        console([])
+        console(["--exclude-platform", "linux"])
     elif choice == "reachable":
         console(["--exclude-local", "-p", "linux"], "#! /bin/sh\nexit 1\n")
     elif choice == "handed":

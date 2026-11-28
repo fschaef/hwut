@@ -335,7 +335,9 @@ $ hwut.cov.conv.to_pdf --help
 $ hwut.cov.formats --help
     NAME
         hwut.cov.formats -- the table of coverage tools, formats and aliases this
-        build READS, generated from the registry (coverage RATIONALE D-13, D-26).
+        build READS, the measures each format carries beside the lines, and the
+        tools hwut DRIVES with the formats each offers -- generated from the
+        registry (coverage RATIONALE D-13, D-26, D-46, D-49).
 
     USAGE
         hwut.cov.formats | --help

@@ -40,7 +40,9 @@ KIND_DB = {
     "run-ended":  ({"directory": str, "node": str, "node_kind": str,
                     "good": bool, "verdict": str}, {"cause": str,
                                                     "report": str,
-                                                    "detail": str}),
+                                                    "detail": str,
+                                                    "book": str,
+                                                    "deviates": bool}),
     "fault":      ({"directory": str, "text": str}, {}),
     "warning":    ({"text": str}, {}),
     "report":     ({"directory": str, "text": str}, {}),
@@ -90,6 +92,10 @@ _FIELD_TEXT_DB = {
                       "absent else",
     "detail":         "the report's numbers, where it has them: which "
                       "cap, the cap, the peak (O-19); absent else",
+    "book":           "coverage run: the book's last verdict of the "
+                      "case, 'true', 'false', '' where it has none",
+    "deviates":       "coverage run: its verdict contradicts the book "
+                      "(coverage D-48); never booked",
     "report":         "the operation's own word for WHY (open list, "
                       "e.g. 'pype-failed', 'test-app-stalled'); "
                       "absent where nothing finer than the verdict "

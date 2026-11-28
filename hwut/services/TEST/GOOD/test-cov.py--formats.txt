@@ -1,29 +1,36 @@
 $ hwut.cov.formats
     TOOLS READ BY THIS BUILD
-      tool               format                   reads through
-      c8                 lcov-tracefile           lcov
-      cargo-llvm-cov     lcov-tracefile           lcov
-      cobertura          cobertura-xml            -
-      coverage           coverage.py-json         -
-      coverlet           cobertura-xml            cobertura
-      gcov               gcov-annotated           -
-      gcovr              lcov-tracefile           lcov
-      ghdl               ghdl-psl-json            -
-      go                 go-coverprofile          -
-      grcov              lcov-tracefile           lcov
-      jacoco             jacoco-xml               -
-      kcov               cobertura-xml            cobertura
-      lcov               lcov-tracefile           -
-      llvm-cov           lcov-tracefile           lcov
-      luacov             luacov-report            -
-      node               lcov-tracefile           lcov
-      scoverage          cobertura-xml            cobertura
-      simplecov          simplecov-resultset      -
-      ucis               ucis-xml                 -
-      verilator          verilator-dat            -
-      verilator_coverage lcov-tracefile           lcov
+      tool               format                   reads through  measures
+      c8                 lcov-tracefile           lcov           lines
+      cargo-llvm-cov     lcov-tracefile           lcov           lines
+      cobertura          cobertura-xml            -              lines
+      coverage           coverage.py-json         -              lines, branch
+      coverlet           cobertura-xml            cobertura      lines
+      gcov               gcov-annotated           -              lines, branch
+      gcovr              lcov-tracefile           lcov           lines
+      ghdl               ghdl-psl-json            -              lines, cover
+      go                 go-coverprofile          -              lines
+      grcov              lcov-tracefile           lcov           lines
+      jacoco             jacoco-xml               -              lines
+      kcov               cobertura-xml            -              lines
+      lcov               lcov-tracefile           -              lines
+      llvm-cov           lcov-tracefile           lcov           lines
+      luacov             luacov-report            -              lines
+      node               lcov-tracefile           lcov           lines
+      scoverage          cobertura-xml            cobertura      lines
+      simplecov          simplecov-resultset      -              lines
+      ucis               ucis-xml                 -              lines, branch, toggle
+      verilator          verilator-dat            -              lines, branch, cover, toggle
+      verilator_coverage lcov-tracefile           lcov           lines
 
-    The candidates per language stand in 'language-setup' of 'HWUT_ROOT/setup.conf'.
+    TOOLS HWUT DRIVES -- the 'coverage' a language may name; '*' the default 'format'
+      tool               format                   measures
+      coverage           coverage.py-json*        lines, branch
+      gcov               gcov-annotated*          lines, branch
+      kcov               cobertura-xml*           lines
+
+    'measures': what a record of that format carries.
+    The tool per language stands in 'language-setup' of 'HWUT_ROOT/setup.conf'.
     [status 0]
 SUCCESS: the table has one author, the registry, and this is its printout.
 <hwut-end>

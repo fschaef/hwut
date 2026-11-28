@@ -13,7 +13,11 @@ PURPOSE: WHICH DIRECTORY RUNS WHERE (intend/45 R-1 .. R-7, 2026-11-15;
            requires                    hwut.conf files and its own, ADDED
                                        (o-57); said once for a subtree in
                                        a non-TEST hwut.conf (R-4)
-    S      the platforms specified     'Wish.specified_platform_set'
+    S      the platforms specified     'Wish.specified_platform_set':
+                                       every one of D and 'local' (ruled
+                                       2026-11-26); '-p' names only those
+                                       named; '--exclude-platform' takes
+                                       one out
     C(d)   the candidates              R(d) empty: {local}; else every
                                        platform of D announcing all of
                                        R(d), in D's order
@@ -21,7 +25,11 @@ PURPOSE: WHICH DIRECTORY RUNS WHERE (intend/45 R-1 .. R-7, 2026-11-15;
 
     F(d) == {}                     NOT RUN, reason 'available'
     first of F(d) is local         run here
-    first of F(d) not reachable    NOT RUN, reason 'reachable'
+    first of F(d) not reachable    NOT RUN, reason 'reachable' -- and
+                                   where a directory the wish wants is
+                                   so, the run is REFUSED before it
+                                   begins: PlatformMissing (ruled
+                                   2026-11-26)
     first of F(d) reachable        HANDED -- every directory handed to one
                                    platform goes in ONE far 'hwut.run'
                                    ('run/orchestrate.py'): the root, the
@@ -80,6 +88,8 @@ class CBubbleDecision:
     spec:           dict = None  # that platform's entry, 'recipe' absolute
     reason:         str = ""     # 'available', 'reachable' (NOT_RUN)
     text:           str = ""     # the NOTE's text (NOT_RUN)
+    why:            str = ""     # why the platform is not ready
+                                 # (NOT_RUN 'reachable')
     tool_tuple:     tuple = ()   # what the platform taken announces
     absent_tuple:   tuple = ()   # of (tool, programs): 'local' declares
                                  # it, its probe finds not (E-226)
@@ -90,6 +100,28 @@ class CBubbleDecision:
 class PlatformRefused(SelectionError):
     """The confs refused at the start (intend/26 o-52, o-53): a 'platform'
     in an inner root, or a tool 'HWUT_ROOT/tools.rst' does not explain."""
+
+
+class PlatformMissing(SelectionError):
+    """A platform a directory of the run needs cannot be made ready (ruled
+    2026-11-26): the run stops before it begins; 'missing_text' says it."""
+
+
+def missing_text(pair_iterable, detail_list=()):
+    """
+    RETURN: str, the refusal for the platforms missing -- one line per
+            '(name, why)' of 'pair_iterable', each name once, the lines
+            of 'detail_list' (what a failed build said), then the remedy:
+            the words that take them out, and where the help says more.
+    """
+    why_db = {}
+    for name, why in pair_iterable: why_db.setdefault(name, why)
+    line_list = ["PLATFORM missing: %s -- %s" % (name, why)
+                 for name, why in why_db.items()] + list(detail_list)
+    line_list.append("=> %s, or a label: 'hwut.help'"
+                     % " ".join("--exclude-platform %s" % name
+                                for name in why_db))
+    return ("\n" + " " * 9).join(line_list)
 
 
 from hwut.auxiliary.no_entry import TOOLS_FILE_NAME       # noqa: E402
@@ -108,8 +140,6 @@ def decision_tuple(top, wish):
     RootConfMissing where no root bounds 'top'.
     """
     top       = os.path.abspath(top)
-    shown     = _specified_shown(wish)
-    specified = wish.specified_platform_set()
     #  THE NEAREST ROOT IS THE PROJECT (intend/45 R-1, R-2): the climb
     #  stops at it; a root above it is beyond the radar, one below it a
     #  project of its own, never walked from here (R-3).
@@ -117,6 +147,14 @@ def decision_tuple(top, wish):
     declared  = ascended_spec(outermost)[0].platform_tuple or ()
     defined, absent = probed(declared, outermost,
                              wish.as_platform or LOCAL_PLATFORM)
+    specified, shown = _specified(wish, defined)
+    #  THE PLATFORM WORDS LEAVE NOTHING (ruled 2026-11-26): every defined
+    #  platform excluded is no run.
+    if not specified:
+        raise PlatformRefused("the platform words leave no platform: "
+                              "defined %s; excluded %s"
+                              % (", ".join(_defined_name_tuple(defined)),
+                                 ", ".join(wish.excluded_name_tuple())))
 
     #  A FILE AT ITS OLD PLACE IS REFUSED FIRST (CR-4), by name, with the
     #  remedy: read silently or not at all, it would be a set, a feature
@@ -186,8 +224,7 @@ def decider(top, wish):
     defined, absent = probed(ascended_spec(outermost)[0].platform_tuple
                              or (), outermost,
                              wish.as_platform or LOCAL_PLATFORM)
-    specified = wish.specified_platform_set()
-    shown     = _specified_shown(wish)
+    specified, shown = _specified(wish, defined)
 
     def decide(directory, required):
         """RETURN: CBubbleDecision of 'directory' requiring 'required'."""
@@ -388,7 +425,7 @@ def _decided(path, name, required, defined, specified, shown, as_platform,
     available_f, why = platforms.is_available(platform, spec)
     if not available_f:
         return CBubbleDecision(state=NOT_RUN, platform=platform, spec=spec,
-                               reason="reachable",
+                               reason="reachable", why=why,
                                text="%s/: platform '%s' not reachable: %s"
                                     % (name, platform, why),
                                tool_tuple=tool_tuple, **common)
@@ -492,14 +529,27 @@ def _unexplained_tuple(outermost, defined, read_list):
     return tuple(line_list)
 
 
-def _specified_shown(wish):
+def _defined_name_tuple(defined):
     """
-    RETURN: str, S as the NOTE says it: 'local' first where it is
-            specified, then the '-p' names in their order.
+    RETURN: tuple of str, 'local' and the names of 'defined', in D's
+            order, each once.
     """
-    name_list = [] if wish.exclude_local_f else [LOCAL_PLATFORM]
-    name_list += [n for n in wish.platform_tuple if n not in name_list]
-    return ", ".join(name_list)
+    return tuple(dict.fromkeys((LOCAL_PLATFORM,)
+                               + tuple(name for name, _ in defined)))
+
+
+def _specified(wish, defined):
+    """
+    RETURN: (frozenset, str), S for 'wish' over the platforms 'defined'
+            (ruled 2026-11-26), and S as the NOTE says it: in D's order,
+            'local' first, then the '-p' names D does not define.
+    """
+    name_tuple = _defined_name_tuple(defined)
+    specified  = wish.specified_platform_set(name_tuple)
+    name_list  = [n for n in name_tuple if n in specified]
+    name_list += [n for n in wish.platform_tuple
+                  if n in specified and n not in name_list]
+    return specified, ", ".join(name_list) or "none"
 
 
 def _name_of(path, top):

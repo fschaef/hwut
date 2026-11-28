@@ -33,7 +33,7 @@ import os
 import shlex
 from   dataclasses import replace
 
-from ...operations.build_action       import BuildConfig
+from ...operations.build_action       import BuildConfig, build
 from ...operations.configuration      import E_SourceKind
 from ...operations.coverage_action    import (CoverageSetup,
                                               E_CoverageResult, measured,
@@ -41,38 +41,41 @@ from ...operations.coverage_action    import (CoverageSetup,
 from ...operations.run.core           import application_argv
 from ...coverage.api                  import (OUTCOME_OK, CoverageConfig,
                                               CoverageRefused,
-                                              CoverageTraceDb, elect,
-                                              framework_of)
+                                              CoverageTraceDb,
+                                              serving_framework)
 from .adapter                         import stem_expanded
 from .dispatcher                      import TestRunDispatcher
 
 
 def coverage_setup_of(app, configuration, demand, entry):
     """
-    RETURN: CoverageSetup: the tool elected among the candidates of
-            the language entry 'entry' -- the first this machine has
-            -- what the run gathers, and the note 'NO_COVERAGE_TARGET'
-            where the test is COMPILED and its language states no
-            'coverage_target'; else no note.
+    RETURN: CoverageSetup: the framework of the ONE tool the language
+            entry 'entry' names and the format it writes (coverage
+            D-46), what the run gathers, and the note
+            'NO_COVERAGE_TARGET' where the test is COMPILED and its
+            language states no 'coverage_target'; else no note.
 
     Raises CoverageRefused where the test has no language, where no
-    entry stands for it, where the entry's candidate list is empty, or
-    where every candidate is absent here -- each named at the door.
+    entry stands for it, where the entry names no tool, or where the
+    tool is absent here -- each named at the door; no other tool is
+    tried.
     """
     if app.language is None:
         raise CoverageRefused(
-            "'%s' has no language: coverage needs one to elect a tool. "
+            "'%s' has no language: coverage needs one to know its tool. "
             "State 'language' in its header, or claim its extension in "
             "'language-setup' of 'HWUT_ROOT/setup.conf'." % app.source_file)
     if entry is None:
         raise CoverageRefused(
             "no 'language-setup' entry stands for language '%s' of '%s' "
             "in 'HWUT_ROOT/setup.conf'" % (app.language, app.source_file))
-    reader = framework_of(elect(app.language, entry.coverage))
+    reader, format_name = serving_framework(app.language, entry.coverage,
+                                            entry.coverage_format)
     note   = None
     if configuration.build is not None and entry.coverage_target is None:
         note = E_CoverageResult.NO_COVERAGE_TARGET
-    return CoverageSetup(reader=reader, config=demand, note=note)
+    return CoverageSetup(reader=reader, config=demand, note=note,
+                         format_name=format_name)
 
 
 def coverage_configuration_of(configuration, setup, entry):
@@ -142,7 +145,7 @@ def run_configuration_of(configuration, setup, choice):
     argv = setup.reader.specify_command_line(setup.config.include,
                                              setup.config.omit,
                                              test_app_of(configuration),
-                                             choice)
+                                             choice, setup.format_name)
     if argv is None: return configuration
     argv = list(argv)
     if choice is not None:
@@ -174,9 +177,10 @@ class CoverageRunDispatcher(TestRunDispatcher):
                  directory's path from the run's root. None: nobody
                  gathers.
 
-        Raises CoverageRefused where an application of the directory
-        cannot be served by any tool; DirectoryBusy where another live
-        process holds the directory.
+        An application no tool serves does not refuse the directory: its
+        cases are answered 'not-measurable', and the sentence naming
+        why is a notice once per application run (coverage D-47). Raises
+        DirectoryBusy where another live process holds the directory.
         """
         super().__init__(directory, entry, record=False,
                          variant_tuple=variant_tuple)
@@ -186,19 +190,23 @@ class CoverageRunDispatcher(TestRunDispatcher):
         language_setup = getattr(directory_spec, "language_setup",
                                  None) or {}
         self.setup_db  = {}
-        try:
-            for app in entry.app_set:
-                configuration = self.config_db[app.source_file]
-                language_entry = language_setup.get(app.language)
+        for app in entry.app_set:
+            configuration  = self.config_db[app.source_file]
+            language_entry = language_setup.get(app.language)
+            try:
                 setup = coverage_setup_of(app, configuration, demand,
                                           language_entry)
-                self.setup_db[app.source_file]  = setup
-                self.config_db[app.source_file] = \
-                    coverage_configuration_of(configuration, setup,
-                                              language_entry)
-        except CoverageRefused:
-            self.lock.__exit__(None, None, None)
-            raise
+            except CoverageRefused as refusal:
+                #  NOT MEASURABLE IS PER CASE (D-47): the rest of the
+                #  directory is measured.
+                setup = CoverageSetup(
+                            reader=None, config=demand,
+                            note=E_CoverageResult.NOT_MEASURABLE,
+                            refusal=str(refusal))
+            self.setup_db[app.source_file]  = setup
+            self.config_db[app.source_file] = \
+                coverage_configuration_of(configuration, setup,
+                                          language_entry)
         #  THE BUILD ACTIONS name configurations; they must name the
         #  coverage run's.
         self.build_db = {action: self.config_db[configuration.source_file]
@@ -210,6 +218,10 @@ class CoverageRunDispatcher(TestRunDispatcher):
         self.outcome_db = {}
         self.relative_directory = relative_directory
         self.run_list           = run_list
+        self.unmeasurable_set   = set()        # applications noticed
+        #  node name -> (book's verdict token or None, deviates_f): the
+        #  LABEL of each case (coverage D-48); never written anywhere.
+        self.label_db           = {}
 
     async def close(self):
         """RETURN: None. The trace of this run written under 'TMP/',
@@ -228,12 +240,21 @@ class CoverageRunDispatcher(TestRunDispatcher):
         RETURN: bool, True where a record of that run stands now.
                 False where none does; 'report_of' names why.
         """
+        configuration = self.config_db[node.file]
+        book    = self.bookkeeper.result(configuration.key_name, node.choice)
+        book    = None if book is None else str(book["verdict"])
+        self.label_db[node.name()] = (book, False)
         try:
             async with self.cov_lock:
-                token = await self._measured(node)
+                token, verdict = await self._measured(node)
         except CoverageRefused as refusal:
             self.report_db[node.name()] = str(refusal)
             return False
+        #  DEVIATION (D-48): the run under the tool came out otherwise
+        #  than the book's last word. No book verdict: no information.
+        if verdict is not None and book in ("true", "false"):
+            self.label_db[node.name()] = (book,
+                                          verdict != (book == "true"))
         key = (self.config_db[node.file].key_name, node.choice)
         if token is E_CoverageResult.OK:
             self.outcome_db[key] = OUTCOME_OK
@@ -246,18 +267,55 @@ class CoverageRunDispatcher(TestRunDispatcher):
         self.report_db[node.name()] = str(token)
         return False
 
+    async def run_build(self, node):
+        """
+        RETURN: bool, the coverage target built -- as the test run's
+                build, with the STAGE NAMED where it failed (ruled
+                2026-11-26): the detail names the coverage target the
+                language entry asks for and the last line the build
+                tool wrote to stderr, so 'build failed' is never said
+                without what and why.
+        """
+        configuration = self.build_db.get(node.action)
+        if configuration is None or configuration.build is None:
+            return await super().run_build(node)
+        outcome = await build(configuration)
+        if not outcome.succeeded:
+            self.report_db[node.name()] = outcome.report.value
+            target = ", ".join(configuration.build.target_list)
+            self.detail_db[node.name()] = (
+                "coverage target '%s'%s" % (target, ": %s" % outcome.detail
+                                            if outcome.detail else ""))
+        return outcome.succeeded
+
+    def label_of(self, node_name):
+        """
+        RETURN: (str | None, bool), the case's LABEL (coverage D-48): the
+                book's last verdict token ('true', 'false', None where it
+                has none) and whether the coverage run's verdict
+                contradicts it; a case never run cannot deviate.
+        """
+        return self.label_db.get(node_name, (None, False))
+
     async def _measured(self, node):
         """
-        RETURN: E_CoverageResult, what the one run came to: 'OK' with
-                the record written, else the token naming why none
-                was.
+        RETURN: (E_CoverageResult, bool | None), what the one run came
+                to: 'OK' with the record written, else the token naming
+                why none was; and its verdict against 'GOOD/', None
+                where the case was not run (it cannot deviate).
         """
         configuration = self.config_db[node.file]
         setup         = self.setup_db[node.file]
-        if setup.note is not None: return setup.note
+        if setup.refusal is not None \
+           and node.file not in self.unmeasurable_set:
+            self.unmeasurable_set.add(node.file)
+            self.notice_list.append("NOT MEASURABLE %s: %s"
+                                    % (configuration.key_name,
+                                       setup.refusal))
+        if setup.note is not None: return setup.note, None
         run_id = self.bookkeeper.run_id_of(configuration.key_name,
                                            node.choice)
-        if run_id is None: return E_CoverageResult.NOT_REGISTERED
+        if run_id is None: return E_CoverageResult.NOT_REGISTERED, None
 
         return await measured(setup,
                               run_configuration_of(configuration, setup,

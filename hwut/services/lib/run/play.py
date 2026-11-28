@@ -290,7 +290,8 @@ def _decided_elsewhere(directory, wish, arguments, word_list, write):
     from ....engine import platforms
     from ....engine.orchestrator.plan.bubble import (HANDED, NOT_RUN,
                                                      PlatformRefused,
-                                                     governing_decision)
+                                                     governing_decision,
+                                                     missing_text)
     from ....engine.orchestrator.exploration.tree_explorer import \
         root_conf_directory
     try:
@@ -301,6 +302,12 @@ def _decided_elsewhere(directory, wish, arguments, word_list, write):
     except RootConfMissing:
         return None                     # said where the play reads its tree
     #  THE DIRECTORY IS DECIDED AS THE RUN DECIDES IT (intend/45 R-4).
+    #  A PLATFORM MISSING (ruled 2026-11-26): refused, with the words
+    #  that take it out.
+    if decision.state == NOT_RUN and decision.reason == "reachable":
+        write("REFUSED: %s" % missing_text(((decision.platform,
+                                             decision.why),)))
+        return E_ExitCode.REFUSED
     if decision.state == NOT_RUN:
         write("NOTE  %s" % decision.text)
         write("nothing played: the directory is not run here")
@@ -309,10 +316,8 @@ def _decided_elsewhere(directory, wish, arguments, word_list, write):
     name, spec = decision.platform, decision.spec
     ready_f, why = platforms.start(name, spec, write)
     if not ready_f:
-        write("NOTE  %s/: platform '%s' not reachable: %s"
-              % (decision.name, name, why))
-        write("nothing played: the directory is not run here")
-        return E_ExitCode.EMPTY
+        write("REFUSED: %s" % missing_text(((name, why),)))
+        return E_ExitCode.REFUSED
     far_argv = ["hwut.play", "--as-platform=%s" % name] + list(word_list)
     for flag in ("raw", "pyped", "stderr", "plain", "all"):
         if getattr(arguments, flag): far_argv.append("--" + flag)

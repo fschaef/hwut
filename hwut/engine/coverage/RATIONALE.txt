@@ -1854,3 +1854,244 @@ COST      The output-visitor vocabulary is a second one beside the
           read lcov, Cobertura or JaCoCo), C-4a (FN has no producer),
           C-4c (MC/DC, and its lcov line), B-24 ('to_pdf' checking its
           packages).
+
+
+D-46  ONE TOOL AND ONE FORMAT PER LANGUAGE, NAMED IN THE CONF
+                                                              (2026-10-05)
+------------------------------------------------------------------------------
+CORRECTS  D-2's ordered candidate list and 'elect' taking the first the
+          machine has; D-23's alias as 'a framework over another's
+          format AND INVOCATION'.
+PROBLEM   The election hides which tool will run: the answer depends on
+          the machine, and two machines measure one test with two tools
+          under one configuration. The alias inherits the call of the
+          format's own framework: 'kcov' is elected as cobertura's
+          alias, whose 'call_scheme' is None, so kcov is never put on
+          the command line. MEASURED 2026-11-24 on 'demo/bash' with a
+          logging 'kcov' first on PATH: kcov elected, never called, 24
+          runs 'no-data-provided', and the hint 'no usable data from
+          tool' blames a tool that never ran.
+DECISION  RULED 2026-10-05 in chat, recorded in TODO B-25 and played
+          back 2026-11-24: "language-setup.<lang> { coverage = "<tool>"
+          format = "<format>" }, format optional (the tool's fixed
+          default otherwise); a tool absent from the machine refuses
+          by name; no fallback; specify_command_line(..., format);
+          ALIAS_DB stops claiming invocation."
+          ONE TOOL, NAMED: 'coverage' is a string, not a list. The
+          validator refuses a list by name.
+          THE FORMAT is the second determinant: what the tool is asked
+          to write, and so which reader harvests. Absent, the tool's
+          own fixed default (D-49 restricts what may be named).
+          ABSENT FROM THE MACHINE: a refusal naming the tool and the
+          language, at the door. No second candidate is tried.
+          'specify_command_line(included_paths, omitted_paths,
+          test_app, choice, format)': the scheme function receives the
+          format, so one tool may be called differently per format.
+          THE ALIAS NAMES A FORMAT ONLY. A tool that writes a known
+          format and has no call scheme of its own is read-only: it is
+          never offered as the 'coverage' of a language. A tool hwut
+          calls has a module with its own 'call_scheme' (README 7).
+COST      D-2's GRAVEYARD line 'a single tool per language: a machine
+          without it has no coverage at all' is now the rule: such a
+          machine refuses by name, which is the point. The shipped
+          'language-setup' entries are rewritten from lists to one
+          tool each; languages whose listed tools hwut cannot call
+          (bash: kcov, bashcov) name none until a call scheme exists
+          (TODO B-25 step 7; bash: D-51).
+GRAVEYARD The candidate list kept, election made stable by a ranking:
+          still a machine deciding what the configuration says.
+
+
+D-47  A TEST WITHOUT A TOOL IS NOT MEASURABLE; ITS DIRECTORY STILL IS
+                                                              (2026-11-24)
+------------------------------------------------------------------------------
+PROBLEM   The coverage dispatcher resolves a tool for EVERY application
+          of the directory when it is built, and one refusal omits the
+          whole directory. MEASURED 2026-11-24, BASE c7efbe9:
+          'demo/c': 'protocol.sh' (bash, no tool) -> 'CoverageRefused',
+          directory '[OMITTED] 0/1', exit 1. A wish does not narrow it:
+          '--exclude protocol.sh' omits the directory alike. Every
+          shipped demo (python, bash, c) is omitted before 'protocol.sh'
+          is reached, because 'delivery.json' -- an application stated
+          by 'execute' -- has no language at all.
+DECISION  RULED (voice session): "selbstverständlich sollten wir nur
+          die Tests als nicht gemessen anzeigen, für die wir kein Tool
+          haben."
+          RULED, same day, on the playback that an application with no
+          language falls under it: "R1 ja".
+          NOT MEASURABLE is per case: a test whose language names no
+          tool, whose tool is absent, or which has no language is not
+          run under coverage; its cases stand in the flow as 'not
+          measurable [NO REC]' and in the SETUP hints. The rest of the
+          directory is measured. The dispatcher keeps each
+          application's refusal; a case the wish selected says it, the
+          sentence once per application as a directory NOTE.
+COST      A new token in 'E_CoverageResult', 'not-measurable', and its
+          row in the coverage run's one reason table
+          ('engine/display/coverage_reason.py', display D-40), not in
+          'failure.py', which holds the test run's. A directory with
+          any such case ends PARTIAL, as one with a 'no-data-provided'
+          case does. Regression: 'services/TEST/test-cov_run.py
+          unmeasurable'; the old code fails it in two claims.
+          RULED (voice, 2026-11-26), the stages before the run: "wenn
+          eine vorherige Stufe eben scheitert, dann gilt der Test als
+          ... not measurable" -- as a failed build, deploy or provision
+          fails a test run's case. The reason names the stage: the
+          coverage run's word for an unsupported case is 'not
+          measurable', and its BUILD hint names the coverage target the
+          language asks for and the build tool's last line ("No rule to
+          make target 'door.cov.exe'"). MEASURED before: 'supporter
+          failed; not run', and 'build failed' with neither. Regression:
+          'services/TEST/test-cov_run.py stage'.
+          MEASURED, against what was said in that session: the coverage
+          target IS a template already -- 'language-setup.<lang>.
+          coverage_target', '%' the stem (R-74), absent meaning
+          'no-coverage-target' and no silent default. What demo/c lacked
+          was the make rule, which the hint now names.
+GRAVEYARD The directory refusal kept, with a remedy line: one test
+          without a tool still costs every measurement beside it.
+
+
+D-48  THE COVERAGE RUN SAYS WHETHER IT DEVIATES FROM THE TEST RUN
+                                                              (2026-11-24)
+------------------------------------------------------------------------------
+REFINES   D-38: the coverage run now determines a verdict -- for one
+          purpose only, and books nothing.
+PROBLEM   A coverage tool runs the application under its own hand and
+          may change what it prints. D-38 measured the extreme (every
+          case cut short under coverage.py); a quieter change goes
+          unseen, and a record of a run that behaved otherwise than the
+          test run measures a different behaviour.
+DECISION  RULED (voice session), R2: coverage run and test run stay
+          separate (D-38 stands). "The test is always pure, without
+          coverage tools, which may influence the output."
+          RULED (voice session), R3: "hwut.cov.run always shows one
+          label slot per case against the book: [ ] = no deviation
+          from the test run (also where the book has no entry: no
+          information); [DEV] = the coverage run's verdict contradicts
+          the book. Colour is a gimmick only: green brackets where the
+          book says OK, red where it says FAIL, red background for DEV.
+          No other marker. A case not measurable cannot deviate. The
+          label is never written to book.csv and does not change the
+          exit code. The coverage run's only verdict task is whether
+          it matches the test run."
+          THE VERDICT is the test run's own: the coverage run's output
+          judged against 'GOOD/' by the same compare; a run that did
+          not testify is FAIL, as in the test run. Against the book's
+          last verdict of that case it is '[ ]' or '[DEV]'.
+COST      The coverage run reads 'GOOD/' and the book; it still writes
+          neither, and its output must not land where 'hwut.diff'
+          reads the test run's.
+GRAVEYARD A deviation counted into the exit code: the coverage run
+          would judge the subject, which is the test run's office.
+
+
+D-49  THE FORMAT IS OFFERED PER TOOL, AND ONLY WHERE A READER EXISTS
+                                                              (2026-11-24)
+------------------------------------------------------------------------------
+PROBLEM   D-46 lets a conf name a format. A tool writes several; hwut
+          reads some of them. Which may be named, and why name one?
+DECISION  RULED (voice session), R4: "The format is offered per tool,
+          restricted to formats a reader exists for; anything else
+          refused at validation, by name. Reason: a format may carry
+          measures another lacks (e.g. MC/DC). hwut.cov.formats gains a
+          column: which measures arrive per tool x format."
+          Each callable tool names the formats it can be asked for and
+          its default among them. A format outside that list, or one
+          no reader reads, is refused when 'setup.conf' is validated,
+          naming the tool, the format and the formats offered.
+          Each format states the measures its reader seats beside the
+          lines ('CCoverageFormat.measure_tuple', in the reader's own
+          module); each tool hwut drives states its formats, the
+          default first ('offered_format_tuple').
+COST      'hwut.cov.formats' gains a MEASURES column and a section of
+          the tools hwut drives, both generated from those two
+          statements (D-13). Today each driven tool offers ONE format,
+          its default: coverage.py's 'xml' and 'lcov' and gcov's JSON
+          are not witnessed here, and a second format is admitted with
+          a real artefact (TODO B-25 step 7). HELD by
+          'readers/TEST/test-real-input.py self_description' (D-50,
+          ruled 2026-11-26): one reference artefact per format yields
+          exactly the stated measures, every other no more; go and
+          luacov, with no real artefact, stand as UNCHECKED.
+
+
+D-50  WHAT A FILE'S TOOL CANNOT REPORT IS MARKED AT THE FILE, AS ON A MENU
+                                                              (2026-11-24)
+------------------------------------------------------------------------------
+PROBLEM   A converter's index shows '-' where a source has no entry for
+          a measure. Three facts read alike: the measure was taken; the
+          tool and format of that source CANNOT report it; they can, and
+          the source has no such point. Absence and emptiness collapse
+          in the reader's eye.
+DECISION  RULED (2026-11-24): "so wie ein Menü mit hochgestellten
+          Markern -- (A) enthält Alkohol, (N) Nüsse, (V) vegan --, eben
+          bei den Files, die unter Coverage stehen. Unten gibt es dann
+          eine Legende. Das Ganze nur, wenn das Format es hergibt."
+          RULED (2026-11-26), the marker's spelling: "(a) passt" -- the
+          measure's own tag from 'measure.py' (BR, MC, TG, CP, FN), the
+          one the pages already use for points.
+          A MARKER STANDS AT A SOURCE for a measure its formats cannot
+          report: the measure is in no 'measure_tuple' (D-49) of the
+          formats that wrote its records. Several formats on one
+          source: marked only where none of them reports it. No marker:
+          what is shown can be measured; '0/0' stays '0/0'.
+          A MARKER IS RELATIVE TO THE PAGE: only for a measure some
+          source of the same output reports -- a column that exists. A
+          python page is not marked for toggles.
+          THE LEGEND below names each marker that occurs, the measure
+          and the formats that cannot report it.
+          WHERE THE FORMAT ALLOWS: html ('<sup>', legend under the
+          index), tex and pdf ('^{BR}', legend under the index), json
+          (no marker: the field 'unreportable' of the source). lcov,
+          cobertura, jacoco: nothing -- the foreign format has no place
+          for it. 'to_humans' re-spells one '.cover' whose header names
+          its format, and marks nothing.
+          A FORMAT THIS BUILD DOES NOT KNOW BY NAME gives no
+          information, and no marker.
+COST      'SourceSummary' carries the source's formats and what they
+          can report; the engine names a format's measures by the
+          format's name. A wrong 'measure_tuple' is now a wrong marker
+          on a user's page; 'test-real-input.py self_description'
+          holds the statements against real artefacts.
+          RULED (voice, 2026-11-26), on whether a run could detect a
+          tool that fails to deliver a measure it states: "wir können
+          nicht unterscheiden, ob ein Tool daran scheitert, Branches zu
+          detektieren oder ob die Software selbst keine Branches hat
+          ... wir lassen einfach die Finger weg davon." The check is a
+          test of hwut's own claim, "aber nicht als Feature".
+
+
+D-51  KCOV IS DRIVEN, FIRST FOR BASH                          (2026-11-26)
+------------------------------------------------------------------------------
+PROBLEM   D-46 left bash without a tool: kcov, the one at hand, stood as
+          a read-only alias, and B-25 step 7 owed a call scheme against a
+          real artefact.
+DECISION  RULED (voice, 2026-11-26): "kcov kommt mit auf die Liste,
+          zuerst für Bash" -- and the rule for every further tool: one
+          enters only where it can be installed and tested against a
+          real result ("das klingt schon mal sehr gut").
+          'readers/kcov.py': a framework over the Cobertura format with
+          its own call scheme; 'language-setup.bash.coverage = "kcov"'.
+          MEASURED 2026-11-26 (kcov bbaa197 built from source -- Ubuntu
+          24.04 packages none), each a line of the module:
+            - a bare script name is sought on PATH: './' is prefixed;
+            - kcov makes no nested output path: it writes into
+              'OUT/COVERAGE' itself;
+            - it parses the whole script directory unless
+              '--bash-dont-parse-binary-dir': 44 'sources' for one test;
+            - it measures its own helpers unless
+              '--exclude-pattern=/OUT/COVERAGE/';
+            - its document stands in '<program>.<hash>/'; 'kcov-merged/'
+              is not always written and is not read;
+            - its 'filename' is relative to the COMMON ROOT of what it
+              measured, so the Cobertura reader joins a relative name to
+              its '<source>' where it stands on this machine.
+          'support/demo/bash' through 'hwut.cov.run': 24 of 27 recorded;
+          'screen.sh' open/scroll incomplete as in the test run here (no
+          libvterm), 'delivery.json' not measurable (no language).
+COST      A machine without kcov answers every bash test 'not measurable:
+          kcov is not on this machine'. What arrives is lines only: kcov
+          writes no branch for bash, and the Cobertura reader keeps none
+          (D-43). Regression: 'readers/TEST/test-readers.py kcov',
+          machine-independent; the run itself is measured, not paged.

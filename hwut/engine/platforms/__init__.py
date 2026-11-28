@@ -84,6 +84,16 @@ def is_available(name, spec):
     return _module_of(name, spec).is_available(name, spec)
 
 
+def is_ready(name, spec):
+    """
+    RETURN: (True, ""), the platform 'name' runs a bubble now with
+            nothing to make first -- its image stands.
+            (False, why), else -- 'why' one line: what is missing, or
+            what the next run must make first.
+    """
+    return _module_of(name, spec).is_ready(name, spec)
+
+
 def start(name, spec, write, log=None):
     """
     RETURN: (True, ""), the platform is ready to run a bubble.

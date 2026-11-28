@@ -41,8 +41,8 @@ class CoverageConfig:
 class CoverageRefused(ValueError):
     """A coverage run that cannot be served, named at the door.
 
-    Raised where the language resolves to no candidate, where no
-    candidate is available on this machine, or where a configuration
+    Raised where the language names no tool, where the tool is one hwut
+    does not drive or this machine lacks (D-46), or where a configuration
     asks for two things that cannot both hold ('record_timing' beside
     'record_coverage'; 'interactive' beside 'record_coverage').
 

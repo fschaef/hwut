@@ -70,12 +70,14 @@ class Shown(CRunReportReceiver):
               % (kind, ", ".join(sorted(fields))))
 
     def on_run_ended(self, when, directory, node, node_kind, good,
-                     verdict, cause=None, report=None, detail=None):
+                     verdict, cause=None, report=None, detail=None,
+                     book=None, deviates=None):
         """RETURN: None. The named surface, shown."""
         print("    run-ended when=%s directory=%s node=%s good=%s "
-              "verdict=%s cause=%s report=%s detail=%s"
+              "verdict=%s cause=%s report=%s detail=%s book=%s "
+              "deviates=%s"
               % (when, directory, node, good, verdict, cause, report,
-                 detail))
+                 detail, book, deviates))
 
     def on_tree_done(self, when, good, fail_n, meta_n=0, skip_n=0,
                      not_run_n=0):

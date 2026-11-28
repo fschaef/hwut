@@ -11,7 +11,7 @@
          go                 go-coverprofile          
          grcov              lcov-tracefile           through lcov
          jacoco             jacoco-xml               
-         kcov               cobertura-xml            through cobertura
+         kcov               cobertura-xml            
          lcov               lcov-tracefile           
          llvm-cov           lcov-tracefile           through lcov
          luacov             luacov-report            

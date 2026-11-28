@@ -345,7 +345,7 @@ def test_conf():
          '\n'
          '    language-setup {\n'
          '        python   { interpreter = "python3.12 -u"\n'
-         '                   coverage    = "coverage run" }\n'
+         '                   coverage    = "coverage" }\n'
          '        heartfun { interpreter = \"heartfun\" }\n'
          '    }\n'
          '\n'

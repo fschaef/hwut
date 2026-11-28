@@ -255,7 +255,7 @@ case "$1" in
         done ;;
     coverage_serial)
         mkdir -p ../HWUT_ROOT
-        printf 'hwut {\n    language-setup { python { extensions = [".py"] interpreter = "python3" coverage = ["coverage"] } }\n}\n' \
+        printf 'hwut {\n    language-setup { python { extensions = [".py"] interpreter = "python3" coverage = "coverage" } }\n}\n' \
                > ../HWUT_ROOT/setup.conf
         printf 'def f(x):\n    if x > 0:\n        return "pos"\n    return "neg"\n' > unit.py
         cat > test-a.py <<'PAGE'

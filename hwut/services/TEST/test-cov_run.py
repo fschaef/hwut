@@ -9,6 +9,9 @@
 #         real   { }
 #         run    { }
 #         trace  { features = ["cov-run-trace", "help-explains-coverage"] }
+#         unmeasurable { }
+#         deviation    { }
+#         stage        { }
 #     }
 #     tolerance { eq_pattern = ["SUCCESS.*"] }
 #     interactive = true
@@ -40,12 +43,12 @@ PURPOSE: 'hwut.cov.run' END TO END -- the coverage run through the real
 
     The tool is the WITNESS reader, registered here and NAMED IN THE
     FIXTURE'S OWN 'HWUT_ROOT/setup.conf' -- 'language-setup { python {
-    coverage = ["witness"] } }' (coverage D-26, the one source) -- with
-    a 'witness' executable placed on PATH so that election finds it. The
+    coverage = "witness" } }' (coverage D-26, D-46) -- with a
+    'witness' executable placed on PATH so that the machine has it. The
     run is deterministic on any machine: the chain is the unit, not a
     real coverage tool.
 
-CHOICES: run, real, door, trace, output;
+CHOICES: run, real, door, trace, output, unmeasurable, deviation, stage;
 
 run     'hwut.cov.run' over the directory: one line per case says
         '[REC]' or why none stands; the one the register lacks is
@@ -67,6 +70,26 @@ output  the output directory (D-42): the test run ids, the groups of
         refused.
 door    'hwut.run' does not take '--coverage' (D-38); a wish narrows
         the coverage run; a wish that asks for nothing is EMPTY.
+unmeasurable
+        a test no tool serves is NOT MEASURABLE, per case, and the
+        rest of its directory is measured (coverage D-47, ruled
+        2026-11-24): one whose language names no tool, one with no
+        language. Each is named once, with its reason. MEASURED before,
+        BASE c7efbe9, 'support/demo/c': 'protocol.sh' alone omitted the
+        directory, '[OMITTED] 0/1', exit 1; '--exclude' did not help.
+deviation
+        one LABEL slot per case against the book (coverage D-48, ruled
+        2026-11-24): '[ ]' where the run under the tool agrees with the
+        book or the book has no word, '[DEV]' where it contradicts it --
+        a case the tool changes, a case the book calls failed that now
+        matches. Neither the book nor the exit status moves. MEASURED
+        before: no slot; nothing compared.
+stage   a stage before the run fails -- here the build of a compiled
+        test whose make knows no coverage target: its cases are NOT
+        MEASURABLE, as a failed stage fails a test run's case, and the
+        BUILD hint names the coverage target asked for and what make
+        said (ruled 2026-11-26). MEASURED before: 'supporter failed;
+        not run' and 'build failed', neither the target nor the why.
 ______________________________________________________________________________
 """
 import io
@@ -104,7 +127,7 @@ hwut {
     language-setup {
         python { extensions  = [".py"]
                  interpreter = "python3"
-                 coverage    = ["witness"] }
+                 coverage    = "witness" }
     }
 }
 """
@@ -134,6 +157,7 @@ class WitnessFramework(CCoverageFramework):
     format = WitnessFormat()
 
     call_scheme = "python3 {test} --witness {choice}"
+    offered_format_tuple = (format.name,)          # coverage D-49
 
     def report_argv(self, config, work_dir):
         """RETURN: None: no second call."""
@@ -584,6 +608,125 @@ def test_output():
                 "run, every covered range with who executed it.")
 
 
+def test_unmeasurable():
+    """Not measurable is per case; the directory is measured (D-47)."""
+    root = fixture()
+    tree_boundary(root, ROOT_CONF.replace(
+        "    }\n}\n",
+        "        bash   { extensions  = [\".sh\"] }\n    }\n}\n"))
+    test = os.path.join(root, "suite", "TEST")
+    for name, body in (("test-sh.sh", "#! /bin/sh\n# @hwut { choices = "
+                                       "[\"s\"] }\n"),
+                       ("test-k.ksh", "#! /bin/sh\n# @hwut { choices = "
+                                      "[\"k\"] }\n")):
+        path = os.path.join(test, name)
+        with open(path, "w") as fh:
+            fh.write(body + 'case "$1" in --hwut-info) echo "CHOICES: '
+                     '%s;"; exit 0;; esac\necho %s\necho "<hwut-end>"\n'
+                     % (name[5], name[5]))
+        os.chmod(path, 0o755)
+        with open(os.path.join(test, "GOOD", "%s--%s.txt"
+                               % (name, name[5])), "w") as fh:
+            fh.write("%s\n<hwut-end>\n" % name[5])
+        Bookkeeper(test).note_accept(name, name[5])
+    status = call("hwut.cov.run", [], root)
+    found, output = show_output(root)
+    run_db = {} if output is None else output.run_db
+    ok = check([
+        (run_db == {("suite/TEST", "test-py.py", "a"): "00"},
+         "the served test is measured beside the unserved ones"),
+        ("suite/TEST/py.py.cover" in found,
+         "and its source has its coverage file"),
+        (status == 1,
+         "the exit status says cases are without a record"),
+    ])
+    shutil.rmtree(root)
+    verdict(ok, "a test no tool serves costs no measurement beside it.")
+
+
+def test_deviation():
+    """The label: the coverage run against the book (D-48)."""
+    root = fixture()
+    test = os.path.join(root, "suite", "TEST")
+
+    def put(name, body, good):
+        """RETURN: None. A test 'name', choice 'c', with its nominal."""
+        path = os.path.join(test, name)
+        with open(path, "w") as fh:
+            fh.write(script(name, ["c"], body, name[5:]))
+        os.chmod(path, 0o755)
+        with open(os.path.join(test, "GOOD", "%s--c.txt" % name), "w") as fh:
+            fh.write(good)
+
+    #  'changed': the tool's presence changes what it prints.
+    put("test-changed.py",
+        'print("under tool" if "--witness" in sys.argv else "plain")\n'
+        'print("<hwut-end>")\n', "plain\n<hwut-end>\n")
+    #  'healed': the book says FAIL -- a test run against a wrong
+    #  nominal -- and the nominal is then right.
+    put("test-healed.py", 'print("h")\nprint("<hwut-end>")\n',
+        "wrong\n<hwut-end>\n")
+    for name in ("test-changed.py", "test-healed.py"):
+        Bookkeeper(test).note_accept(name, "c")
+    run_main(["--glob", "test-healed.py", "--directory=%s" % root,
+              "--silent"], [].append)
+    with open(os.path.join(test, "GOOD", "test-healed.py--c.txt"),
+              "w") as fh:
+        fh.write("h\n<hwut-end>\n")
+    before = book_bytes(root)
+    status = call("hwut.cov.run", [], root)
+    after  = book_bytes(root)
+    show_book(root)
+    keeper = Bookkeeper(test)
+    ok = check([
+        (str(keeper.result("test-healed.py", "c")["verdict"]) == "false",
+         "the book calls 'test-healed.py c' failed"),
+        (before == after,
+         "'GOOD/book.csv' did not move by a byte: the label is never "
+         "booked"),
+        (status == 1,
+         "the exit status is the record's word, not the label's"),
+    ])
+    shutil.rmtree(root)
+    verdict(ok, "the coverage run says where it deviates from the test "
+                "run, and nothing else.")
+
+
+def test_stage():
+    """A failed stage leaves its cases not measurable, and names itself."""
+    root = fixture()
+    tree_boundary(root, ROOT_CONF.replace(
+        "    }\n}\n",
+        "        c      { extensions  = [\".c\"]\n"
+        "                 coverage    = \"gcov\"\n"
+        "                 coverage_target = \"%.cov.exe\" }\n    }\n}\n"))
+    tool = os.path.join(root, "bin", "gcov")        # the machine has it
+    with open(tool, "w") as fh: fh.write("#! /bin/sh\nexit 0\n")
+    os.chmod(tool, 0o755)
+    test = os.path.join(root, "suite", "TEST")
+    with open(os.path.join(test, "test-k.c"), "w") as fh:
+        fh.write('/* @hwut { build { framework = "make", target = "%.exe" }\n'
+                 '            choices = ["k"] } */\nint main(void) '
+                 '{ return 0; }\n')
+    with open(os.path.join(test, "Makefile"), "w") as fh:
+        fh.write("test-k.exe: test-k.c\n\tcc -o $@ $<\n")
+    with open(os.path.join(test, "hwut.conf"), "w") as fh:   # no wallflower
+        fh.write('hwut {\n    ignore = ["Makefile"]\n}\n')
+    with open(os.path.join(test, "GOOD", "test-k.c--k.txt"), "w") as fh:
+        fh.write("<hwut-end>\n")
+    Bookkeeper(test).note_accept("test-k.c", "k")
+    status = call("hwut.cov.run", ["--glob", "test-k.c"], root)
+    found, output = show_output(root)
+    ok = check([
+        (status == 1, "the exit status says a case is without a record"),
+        (not (output.run_db if output is not None else {}),
+         "nothing was recorded for the case"),
+    ])
+    shutil.rmtree(root)
+    verdict(ok, "a failed stage leaves its cases not measurable, and the "
+                "build hint says what and why.")
+
+
 if __name__ == "__main__":
     HwutRunner(
         argv       = sys.argv,
@@ -594,6 +737,9 @@ if __name__ == "__main__":
             "output": test_output,
             "trace": test_trace,
             "door": test_door,
+            "unmeasurable": test_unmeasurable,
+            "deviation": test_deviation,
+            "stage": test_stage,
         },
         happy      = "SUCCESS.*",
     ).run()
